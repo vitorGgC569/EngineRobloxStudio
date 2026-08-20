@@ -151,6 +151,15 @@ function Content.load()
 			reach = 10, attackEvery = 2.4, score = 35,
 			profile = "heavy",
 			rig = {
+				-- The brute gets the fifteen-joint skeleton.
+				--
+				-- Elbows and knees only exist on R15, and a boss is where they
+				-- pay: a two-handed overhead needs an elbow to fold, and a
+				-- shoulder alone can only point the arm at the ground. The
+				-- smaller enemies stay R6 on purpose — nine joints each,
+				-- fourteen of them on screen at once, for motion nobody reads
+				-- at that distance.
+				rigType = "R15",
 				scale = 1.5, shape = "hulk", bulky = true,
 				body = Color3.fromRGB(112, 100, 92),
 				accent = Color3.fromRGB(198, 120, 60),

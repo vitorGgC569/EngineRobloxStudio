@@ -436,6 +436,22 @@ def cmd_publish(args: argparse.Namespace) -> int:
     return 1
 
 
+# ============================== runnable examples ===========================
+def cmd_example(args: argparse.Namespace) -> int:
+    """Run the engine's own examples inside Studio."""
+    from cli import example as ex
+
+    try:
+        report = ex.run(args.module)
+    except ex.BridgeError as exc:
+        print(f"example: {exc}")
+        return 1
+    print(ex.render(report))
+    if report.get("error"):
+        return 1
+    return 0 if report.get("ok", True) else 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="forge", description="Forge — the authoring half")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -514,6 +530,10 @@ def main(argv: list[str] | None = None) -> int:
                        help="push live to running servers instead of saving privately")
     p_pub.add_argument("--check", action="store_true", help="only test the credential")
     p_pub.set_defaults(func=cmd_publish)
+
+    p_ex = sub.add_parser("example", help="run the engine's runnable examples")
+    p_ex.add_argument("module", nargs="?", default=None)
+    p_ex.set_defaults(func=cmd_example)
 
     p_engine = sub.add_parser("engine", help="list the engine's modules and public API")
     p_engine.add_argument("--json", action="store_true")

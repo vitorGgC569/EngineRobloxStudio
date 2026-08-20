@@ -164,19 +164,35 @@ return function(Testing)
 	Testing.scenario("every enemy in Content builds into a usable rig", function(t)
 		for _, id in Data.ids("enemy") do
 			local def = Data.expect("enemy", id)
-			local model = t:spawnEnemy({
-				name = def.name,
-				scale = def.rig.scale,
-				shape = def.rig.shape,
-				bulky = def.rig.bulky,
-				health = def.health,
-			}, Testing.config.stageOrigin)
+			--[[
+				The real spec, not a copy of four of its fields.
+
+				A test that rebuilds the spec by hand tests the copy. This game
+				already shipped a bug of exactly that shape — `weapon` and
+				`spikes` set in Content, dropped on the way to the builder — and
+				a scenario written the same way would have passed through it.
+			]]
+			local spec = table.clone(def.rig)
+			spec.name = def.name
+			spec.health = def.health
+			local model = t:spawnEnemy(spec, Testing.config.stageOrigin)
 
 			local humanoid = model:FindFirstChildOfClass("Humanoid")
 			t:expect(humanoid ~= nil, def.name .. " has no Humanoid")
 			t:expect(model:FindFirstChild("HumanoidRootPart") ~= nil,
 				def.name .. " has no HumanoidRootPart")
 			t:expectAlive(model, def.name .. " spawned dead")
+
+			-- The skeleton the content asked for is the skeleton it got.
+			local wanted = def.rig.rigType or "R6"
+			local joints = 0
+			for _, d in model:GetDescendants() do
+				if d:IsA("Motor6D") then
+					joints += 1
+				end
+			end
+			t:expect(joints >= (wanted == "R15" and 15 or 6), string.format(
+				"%s asked for %s and got %d joints", def.name, wanted, joints))
 		end
 	end)
 end

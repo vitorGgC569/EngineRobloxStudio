@@ -1,8 +1,31 @@
 {
-  "generatedAt": "2026-08-20T14:10:50+00:00",
+  "generatedAt": "2026-08-20T14:18:40+00:00",
   "engine": "Forge",
-  "modules": 50,
-  "functions": 714,
+  "modules": 51,
+  "functions": 718,
+  "examples": [
+    "Anim",
+    "Capability",
+    "Catalog",
+    "Collab",
+    "Combat",
+    "Core",
+    "Data",
+    "Feel",
+    "IK",
+    "LiveOps",
+    "Material",
+    "Nav",
+    "Net",
+    "Rig",
+    "Save",
+    "Scene",
+    "Telemetry",
+    "Testing",
+    "UI",
+    "Weapon",
+    "World"
+  ],
   "index": [
     {
       "name": "Ability",
@@ -93,6 +116,11 @@
       "name": "Events",
       "summary": "Events — the spine everything else listens to",
       "functions": 13
+    },
+    {
+      "name": "Examples",
+      "summary": "Examples — one runnable demonstration per module",
+      "functions": 4
     },
     {
       "name": "Feel",
@@ -3175,6 +3203,54 @@
           "summary": "",
           "examples": [],
           "line": 226
+        }
+      ],
+      "describes": true
+    },
+    {
+      "name": "Examples",
+      "file": "forge/luau/Forge/Examples/init.lua",
+      "lines": 344,
+      "summary": "Examples — one runnable demonstration per module. A documented example rots. It is written once, the API moves, and nobody notices until an agent copies it and gets an error. This project has been bitten by that exact shape all day: a comment describing a call that was no longer true is worse than no comment, because it is believed. So these are not snippets in a docstring. Each one is a function that actually runs inside the live game, does the thing, asserts something small about the result, and cleans up after itself. `forge example --all` runs every one of them; if the API moves, the example fails, and it fails in CI rather than in an agent's hands. --- What an example is for ---------------------------------------------- Not test coverage — `Testing` does that, and these deliberately assert almost nothing. An example answers \"what does using this module look like\", which is the question an agent has when it has never seen the engine and is deciding whether a module is the right tool. That is why each one is short, uses the shortest path through its module, and reads top to bottom.",
+      "examples": [
+        "forge example Combat      run one\nforge example --all       run all of them"
+      ],
+      "functions": [
+        {
+          "name": "Examples.names",
+          "signature": "Examples.names()",
+          "kind": "function",
+          "returns": "{ string }",
+          "summary": "=================================== run ====================================",
+          "examples": [],
+          "line": 285
+        },
+        {
+          "name": "Examples.run",
+          "signature": "Examples.run(name: string)",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "Run one example and report what happened. Failures are returned rather than thrown: running twenty examples and stopping at the first broken one hides the other nineteen, and the whole point is to find out which parts of the surface have drifted.",
+          "examples": [],
+          "line": 301
+        },
+        {
+          "name": "Examples.runAll",
+          "signature": "Examples.runAll()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 318
+        },
+        {
+          "name": "Examples.describe",
+          "signature": "Examples.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 339
         }
       ],
       "describes": true

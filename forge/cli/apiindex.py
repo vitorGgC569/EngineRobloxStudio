@@ -184,6 +184,18 @@ def read_module(path: Path) -> Module:
     return module
 
 
+def _example_modules() -> list[str]:
+    """Module names that `Forge.Examples` can demonstrate."""
+    import re
+
+    path = ENGINE / "Examples" / "init.lua"
+    if not path.exists():
+        return []
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    body = text[text.index("Examples.of = {"):] if "Examples.of = {" in text else ""
+    return sorted(set(re.findall(r"^	(\w+) = function", body, re.M)))
+
+
 def build() -> dict:
     modules: list[Module] = []
     for path in sorted(ENGINE.rglob("*.lua")):
@@ -199,6 +211,10 @@ def build() -> dict:
         "engine": "Forge",
         "modules": len(modules),
         "functions": total,
+        # Which modules have a runnable example. An agent choosing a module
+        # can then ask for a call that is known to work rather than one that
+        # was merely written down.
+        "examples": _example_modules(),
         "index": [
             {"name": m.name, "summary": m.summary.split(".")[0][:160],
              "functions": len(m.functions)}

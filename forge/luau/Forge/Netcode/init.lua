@@ -121,9 +121,25 @@ end
 -- One-way latency estimate. Half the round trip, which is the standard
 -- approximation and wrong only when the route is asymmetric.
 function Netcode.latency(player: Player?): number
-	--[[
+	return Netcode.rtt(player) / 2
+end
+
+--[[
 	Test controls. Deliberately public: the whole point is being able to set
 	200ms from outside and watch what happens, without a build.
+
+	These were, until now, defined *inside* `Netcode.latency`. Its declaration
+	had no body, so the parser read the next three `function` statements as its
+	contents and the final `return` as its only statement — which means
+	`simulate`, `broadcastSimulation` and `resetStats` did not exist until
+	something happened to call `latency` first.
+
+	That is the real reason the latency sweep never produced a number. The
+	wiring order fixed earlier was a second, genuine bug on top of this one:
+	even with a channel to speak on, the function that broadcasts a simulation
+	setting was nil until lag compensation had run at least once. It compiled,
+	it type-checked, and it was found by a scenario calling `simulate` and
+	getting "attempt to call a nil value".
 ]]
 function Netcode.simulate(latencyMs: number?, lossFraction: number?)
 	Netcode.config.simulatedLatency = math.max(0, (latencyMs or 0) / 1000)
@@ -146,9 +162,6 @@ function Netcode.resetStats()
 	for key in counters do
 		counters[key] = 0
 	end
-end
-
-return Netcode.rtt(player) / 2
 end
 
 -- ============================ position history ==============================

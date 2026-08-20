@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-20T17:28:26+00:00",
+  "generatedAt": "2026-08-20T17:35:01+00:00",
   "engine": "Forge",
   "modules": 53,
   "functions": 736,
@@ -4873,7 +4873,7 @@
     {
       "name": "Netcode",
       "file": "forge/luau/Forge/Netcode/init.lua",
-      "lines": 786,
+      "lines": 799,
       "summary": "Netcode — prediction, reconciliation, lag compensation and interpolation. `Net` is the transport: typed, validated, rate limited. It says nothing about *time*, and time is the whole problem in an action game. Without this layer the loop is: which means every action costs a round trip. At 50ms nobody notices. At 150ms the swing lags the click. At 200ms it reads as rubber. With it: Four pieces, and each solves a different symptom: prediction      your own actions feel instant reconciliation  a rejected action is undone, not left desynced rewind          a hit that looked good on your screen counts interpolation   other people and enemies move smoothly, not in steps What this is not ---------------- It is not rollback netcode for a fighting game and does not pretend to be. Roblox owns the physics step and does not expose a deterministic rewind of the whole simulation. What it does is make *gameplay actions* feel local and *hit detection* fair, which is the part players feel.",
       "examples": [
         "input -> server -> authoritative state -> client sees it",
@@ -4903,9 +4903,9 @@
           "signature": "Netcode.simulate(latencyMs: number?, lossFraction: number?)",
           "kind": "function",
           "returns": null,
-          "summary": "Test controls. Deliberately public: the whole point is being able to set 200ms from outside and watch what happens, without a build.",
+          "summary": "Test controls. Deliberately public: the whole point is being able to set 200ms from outside and watch what happens, without a build. These were, until now, defined *inside* `Netcode.latency`. Its declaration had no body, so the parser read the next three `function` statements as its contents and the final `return` as its only statement — which means `simulate`, `broadcastSimulation` and `resetStats` did not exist until something happened to call `latency` first. That is the real reason the latency sweep never produced a number. The wiring order fixed earlier was a second, genuine bug on top of this one: even with a channel to speak on, the function that broadcasts a simulation setting was nil until lag compensation had run at least once. It compiled, it type-checked, and it was found by a scenario calling `simulate` and getting \"attempt to call a nil value\".",
           "examples": [],
-          "line": 128
+          "line": 144
         },
         {
           "name": "Netcode.broadcastSimulation",
@@ -4914,7 +4914,7 @@
           "returns": null,
           "summary": "Broadcast a simulation setting to every client. Server-side entry point for a latency sweep driven from outside the game.",
           "examples": [],
-          "line": 135
+          "line": 151
         },
         {
           "name": "Netcode.resetStats",
@@ -4923,7 +4923,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 142
+          "line": 158
         },
         {
           "name": "Netcode.track",
@@ -4932,7 +4932,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 166
+          "line": 179
         },
         {
           "name": "Netcode.untrack",
@@ -4941,7 +4941,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 174
+          "line": 187
         },
         {
           "name": "Netcode.startHistory",
@@ -4950,7 +4950,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 178
+          "line": 191
         },
         {
           "name": "Netcode.positionAt",
@@ -4959,7 +4959,7 @@
           "returns": "CFrame?",
           "summary": "Where a model was at `when`, interpolated between the two nearest samples.",
           "examples": [],
-          "line": 201
+          "line": 214
         },
         {
           "name": "Netcode.rewind",
@@ -4970,7 +4970,7 @@
           "examples": [
             "Netcode.rewind(player, function()\nlocal hits = Combat.arc(origin, direction, { range = 9 })\nend)"
           ],
-          "line": 235
+          "line": 248
         },
         {
           "name": "Netcode.define",
@@ -4979,7 +4979,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 314
+          "line": 327
         },
         {
           "name": "Netcode.defineMany",
@@ -4988,7 +4988,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 319
+          "line": 332
         },
         {
           "name": "Netcode.wire",
@@ -5000,7 +5000,7 @@
             "runs after terrain generation and takes seconds;",
             "and sat in a bounded `WaitForChild` for a remote that did not exist\nyet."
           ],
-          "line": 348
+          "line": 361
         },
         {
           "name": "Netcode.perform",
@@ -5009,7 +5009,7 @@
           "returns": "number?",
           "summary": "",
           "examples": [],
-          "line": 571
+          "line": 584
         },
         {
           "name": "Netcode.pendingCount",
@@ -5018,7 +5018,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 620
+          "line": 633
         },
         {
           "name": "Netcode.interpolate",
@@ -5027,7 +5027,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 643
+          "line": 656
         },
         {
           "name": "Netcode.stopInterpolating",
@@ -5036,7 +5036,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 655
+          "line": 668
         },
         {
           "name": "Netcode.startInterpolation",
@@ -5045,7 +5045,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 659
+          "line": 672
         },
         {
           "name": "Netcode.describe",
@@ -5054,7 +5054,7 @@
           "returns": "{ [string]: any }",
           "summary": "================================= describe =================================",
           "examples": [],
-          "line": 693
+          "line": 706
         }
       ],
       "describes": true

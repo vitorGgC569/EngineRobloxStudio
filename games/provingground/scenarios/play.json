@@ -7,11 +7,9 @@
   },
   "steps": [
     {
-      "reset": {},
-      "comment": "visual evidence must come from a fresh, exact-build session"
-    },
-    {
-      "attach": {},
+      "attach": {
+        "timeout": 240
+      },
       "fatal": true,
       "comment": "capture only once the bridge controls a real player"
     }

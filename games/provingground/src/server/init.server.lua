@@ -29,6 +29,7 @@ local Save = Forge.Save
 local Rig = Forge.Rig
 local Debug = Forge.Debug
 local Reference = Forge.Reference
+local World = Forge.World
 
 local startedAt = os.clock()
 
@@ -179,7 +180,29 @@ local function onCharacter(player: Player, character: Model)
 	-- Roblox's own Animate script writes the same joints Forge does.
 	Rig.stripDefaultAnimate(character)
 
-	character:PivotTo(CFrame.new(Arena.spawnPoint + Vector3.new(math.random(-6, 6), 0, math.random(-6, 6))))
+	--[[
+		Spread the spawn, but measure the ground where they land.
+
+		This scattered players around the centre while keeping the centre's
+		height, and the arena is a bowl: every offset lands on ground that is
+		higher than the middle, so the character was placed *underneath* it.
+		They fell through, hit FallenPartsDestroyHeight, respawned and did it
+		again — which is also why anything trying to attach to a player found
+		no Character.
+
+		`Arena.spawnPoint` stays as the fallback for the case where nothing is
+		under the offset at all; a spawn slightly off is better than a spawn
+		nowhere.
+	]]
+	local offset = Vector3.new(math.random(-6, 6), 0, math.random(-6, 6))
+	local wanted = Arena.spawnPoint + offset
+	local ground = World.surface(wanted.X, wanted.Z)
+	if ground then
+		-- Four studs of clearance under the pivot, so the feet start above the
+		-- surface and settle onto it rather than starting inside it.
+		wanted = ground + Vector3.new(0, 4, 0)
+	end
+	character:PivotTo(CFrame.new(wanted))
 
 	-- A new body is a new weapon: Weapon keys off the character model, so the
 	-- old one's ammo goes with the old one's corpse.

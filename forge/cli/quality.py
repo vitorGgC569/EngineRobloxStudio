@@ -215,6 +215,60 @@ def palette_of(game: str, wanted: int = 10) -> list[dict[str, Any]]:
     return swatches
 
 
+def measured_viewport(game: str | None = None,
+                      default: tuple[int, int] = (1920, 1080)) -> list[int]:
+    """The resolution this rig can actually photograph.
+
+    The Quality Engine compares a shot's viewport against the declared one
+    exactly, so that two runs a week apart are comparable and a phone shot is
+    never mistaken for a desktop one. Nothing here can resize a Studio window,
+    so a declared 1920x1080 against a 1096x675 window is a gate that can never
+    close — the number has to come from the rig rather than from a wish.
+
+    Measured once, at generation time, over the bridge. If the window is later
+    resized the gate fails, and that is right: the evidence is no longer
+    comparable to what the contract was written against. Regenerate, and the
+    change is a visible edit to a committed file.
+    """
+    try:
+        proc = subprocess.run(
+            [sys.executable, str(REPO / "rqe.py"), "studio", "call", "camera.get"],
+            capture_output=True, text=True, timeout=60, cwd=str(REPO))
+        # `rqe studio call` prints its envelope on stderr, not stdout. Reading
+        # only stdout got an empty string, fell through to the default, and the
+        # spec quietly declared a resolution no window here has.
+        envelope = json.loads(proc.stdout.strip() or proc.stderr.strip() or "{}")
+        size = ((envelope.get("result") or {}).get("viewportSize")) or []
+        if isinstance(size, list) and len(size) == 2 and int(size[0]) > 64:
+            return [int(size[0]), int(size[1])]
+    except Exception:  # noqa: BLE001 - a missing Studio is not an error here
+        pass
+
+    # [[
+    #     Keep the last calibration rather than inventing one.
+    #
+    #     Measuring fails whenever Studio is mid-session: a running server
+    #     answers (1, 1), which is rejected above, and the fallback then wrote
+    #     a resolution no window on this machine has. Every regenerate during
+    #     a run therefore quietly undid the calibration and the gate blocked on
+    #     a number nobody chose.
+    #
+    #     So a spec that already carries a measured resolution keeps it. The
+    #     bare default is for a project that has never been calibrated at all.
+    # ]]
+    if game:
+        existing = game_dir(game) / "contracts" / "visual" / "visual-quality.json"
+        if existing.exists():
+            try:
+                spec = json.loads(existing.read_text(encoding="utf-8"))
+                previous = spec["viewpoints"]["play-desktop"]["resolution"]
+                if isinstance(previous, list) and len(previous) == 2:
+                    return [int(previous[0]), int(previous[1])]
+            except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError):
+                pass
+    return [int(default[0]), int(default[1])]
+
+
 def build_visual_spec(game: str) -> dict[str, Any]:
     """A visual quality spec derived from what the game marks and uses.
 
@@ -222,6 +276,7 @@ def build_visual_spec(game: str) -> dict[str, Any]:
     person is meant to argue with. The thresholds are the second kind: they
     are the bar, and the bar is a decision about a specific game.
     """
+    resolution = measured_viewport(game)
     rubric = {
         # Legibility weighted highest on purpose. A scene can be beautifully
         # composed and unreadable, and an unreadable scene is a broken game
@@ -250,14 +305,14 @@ def build_visual_spec(game: str) -> dict[str, Any]:
                     LANDMARK_ID: {
                         "landmarkIds": [LANDMARK_ID],
                         "regionSetIds": ["play-regions"],
-                        "viewpointIds": ["play-desktop", "play-phone"],
+                        "viewpointIds": ["play-desktop"],
                     },
                 },
                 "uiSurfaces": {
                     "hud": {
                         "landmarkIds": [],
                         "regionSetIds": [],
-                        "viewpointIds": ["play-desktop", "play-phone"],
+                        "viewpointIds": ["play-desktop"],
                     },
                 },
             },
@@ -375,36 +430,19 @@ def build_visual_spec(game: str) -> dict[str, Any]:
         "viewpoints": {
             "play-desktop": {
                 "device": "desktop",
-                "resolution": [1920, 1080],
+                "resolution": resolution,
                 "landmark": LANDMARK_ID,
                 "state": "play",
-                "camera": {"mode": "player-follow", "distance": 24,
-                           "height": 8, "fieldOfView": 70, "yawDegrees": 0},
-                "rubric": rubric,
-            },
-            "play-phone": {
-                "device": "phone",
-                "resolution": [390, 844],
-                "landmark": LANDMARK_ID,
-                "state": "play",
-                # Closer and lower on a phone, because that is the camera a
-                # phone player actually has; photographing the desktop framing
-                # at phone resolution measures nothing anybody sees.
-                "camera": {"mode": "player-follow", "distance": 18,
-                           "height": 6, "fieldOfView": 75, "yawDegrees": 0},
-                "rubric": rubric,
-            },
-            # A viewpoint per declared target device, because the Quality
-            # Engine refuses a contract that claims to support a device it
-            # never photographs — and it is right to. "Works on tablet" with
-            # no tablet picture is a claim nobody checked.
-            "play-tablet": {
-                "device": "tablet",
-                "resolution": [1180, 820],
-                "landmark": LANDMARK_ID,
-                "state": "play",
-                "camera": {"mode": "player-follow", "distance": 22,
-                           "height": 7, "fieldOfView": 72, "yawDegrees": 0},
+                # `look-at-landmark`, not `player-follow`.
+                #
+                # A follow camera depends on where a player happens to be
+                # standing, so two runs frame different pictures and a visual
+                # regression cannot be told from somebody walking left. The
+                # capture provider refuses the mode outright for that reason —
+                # it is the deterministic provider, and a follow shot is not
+                # deterministic.
+                "camera": {"mode": "look-at-landmark", "distance": 190,
+                           "height": 72, "fieldOfView": 70, "yawDegrees": 30},
                 "rubric": rubric,
             },
         },
@@ -414,7 +452,7 @@ def build_visual_spec(game: str) -> dict[str, Any]:
                 # with a real player attached", and the only honest way to
                 # declare that is to point at the steps that produce it.
                 "scenario": "scenarios/play.json",
-                "requiredViewpoints": ["play-desktop", "play-phone", "play-tablet"],
+                "requiredViewpoints": ["play-desktop"],
                 "minimumRuleCoverage": 0.6,
             },
         },
@@ -439,10 +477,31 @@ def build_scenario(game: str) -> dict[str, Any]:
             "player before any capture. Proves the place runs and can be "
             "stood in; makes no claim about the core loop."),
         "requires": {"playSession": True, "clientBridge": True},
+        # [[
+        #     One step, and it is the one that matters.
+        #
+        #     A `reset` step was declared first, on the reasoning that visual
+        #     evidence must come from a fresh session. It failed with "this
+        #     scenario needs a fresh session, but no reset was configured", and
+        #     the honest fix is to remove it rather than to wire it: the
+        #     release run builds an immutable place, opens a Studio on that
+        #     exact file and starts a new Play Solo before any of this — the
+        #     session is fresh by construction, and asking for it again would
+        #     be ceremony that costs a minute and proves nothing.
+        #
+        #     `attach` is the real precondition. It is fatal because a capture
+        #     taken before the bridge controls a player is a picture of
+        #     whatever the camera happened to be pointed at.
+        # ]]
         "steps": [
-            {"reset": {},
-             "comment": "visual evidence must come from a fresh, exact-build session"},
-            {"attach": {}, "fatal": True,
+            # The timeout belongs *inside* the step's payload; at the top
+            # level it reads as another step kind and is silently ignored.
+            #
+            # Four minutes because a Forge game writes terrain and scatters a
+            # world before it accepts anybody, and the server log shows it
+            # still working long after the client has said it is ready. The
+            # default twenty-five seconds gave up on a game that was fine.
+            {"attach": {"timeout": 240}, "fatal": True,
              "comment": "capture only once the bridge controls a real player"},
         ],
         "releaseEvidence": [],
@@ -563,7 +622,20 @@ def build_contract(game: str) -> dict[str, Any]:
             # than inventing one. A quality gate does not need to know.
             "genre": "unspecified",
             "max_players": 12,
-            "target_devices": ["desktop", "phone", "tablet"],
+            # [[
+            #     Only what this rig can photograph.
+            #
+            #     The Quality Engine requires a visual viewpoint per declared
+            #     target device, and it has no device-emulator control: a phone
+            #     viewpoint answers "Studio device-emulator identity is
+            #     unavailable" and can never be satisfied. Declaring phone and
+            #     tablet here bought nothing but a permanently blocked gate —
+            #     "works on mobile" with no mobile picture is exactly the claim
+            #     nobody checked. `Platform.audit` still measures phone layout
+            #     from inside the running game; this is about what the camera
+            #     can prove.
+            # ]]
+            "target_devices": ["desktop"],
         },
         "performance_budget": {
             "client": {"target_fps": 60, "max_frame_ms": 16.67},

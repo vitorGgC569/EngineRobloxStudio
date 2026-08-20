@@ -3853,7 +3853,8 @@
       "methodVersion": 1,
       "effect": "mutation",
       "contexts": [
-        "client"
+        "run",
+        "server"
       ],
       "idempotency": "naturally-idempotent",
       "availability": "supported",
@@ -3925,6 +3926,12 @@
               "string",
               "null"
             ]
+          },
+          "player": {
+            "type": "string"
+          },
+          "elapsedMsClient": {
+            "type": "number"
           }
         },
         "additionalProperties": false
@@ -3934,7 +3941,8 @@
       "methodVersion": 1,
       "effect": "mutation",
       "contexts": [
-        "client"
+        "run",
+        "server"
       ],
       "idempotency": "naturally-idempotent",
       "availability": "supported",
@@ -4034,6 +4042,12 @@
           },
           "atBottom": {
             "type": "boolean"
+          },
+          "player": {
+            "type": "string"
+          },
+          "elapsedMsClient": {
+            "type": "number"
           }
         },
         "additionalProperties": false
@@ -4043,7 +4057,8 @@
       "methodVersion": 1,
       "effect": "read",
       "contexts": [
-        "client"
+        "run",
+        "server"
       ],
       "idempotency": "safe-retry",
       "availability": "supported",
@@ -4096,6 +4111,12 @@
           },
           "mouseEnabled": {
             "type": "boolean"
+          },
+          "player": {
+            "type": "string"
+          },
+          "elapsedMsClient": {
+            "type": "number"
           }
         },
         "additionalProperties": false
@@ -4105,7 +4126,8 @@
       "methodVersion": 1,
       "effect": "read",
       "contexts": [
-        "client"
+        "run",
+        "server"
       ],
       "idempotency": "safe-retry",
       "availability": "supported",
@@ -4161,6 +4183,12 @@
           },
           "offscreen": {
             "type": "integer"
+          },
+          "player": {
+            "type": "string"
+          },
+          "elapsedMsClient": {
+            "type": "number"
           }
         },
         "additionalProperties": false

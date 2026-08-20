@@ -16,8 +16,7 @@
             "play-regions"
           ],
           "viewpointIds": [
-            "play-desktop",
-            "play-phone"
+            "play-desktop"
           ]
         }
       },
@@ -26,8 +25,7 @@
           "landmarkIds": [],
           "regionSetIds": [],
           "viewpointIds": [
-            "play-desktop",
-            "play-phone"
+            "play-desktop"
           ]
         }
       }
@@ -278,63 +276,17 @@
     "play-desktop": {
       "device": "desktop",
       "resolution": [
-        1920,
-        1080
+        1096,
+        675
       ],
       "landmark": "arena-ring",
       "state": "play",
       "camera": {
-        "mode": "player-follow",
-        "distance": 24,
-        "height": 8,
+        "mode": "look-at-landmark",
+        "distance": 190,
+        "height": 72,
         "fieldOfView": 70,
-        "yawDegrees": 0
-      },
-      "rubric": {
-        "composition": 0.2,
-        "hierarchy": 0.2,
-        "legibility": 0.25,
-        "materiality": 0.15,
-        "polish": 0.2
-      }
-    },
-    "play-phone": {
-      "device": "phone",
-      "resolution": [
-        390,
-        844
-      ],
-      "landmark": "arena-ring",
-      "state": "play",
-      "camera": {
-        "mode": "player-follow",
-        "distance": 18,
-        "height": 6,
-        "fieldOfView": 75,
-        "yawDegrees": 0
-      },
-      "rubric": {
-        "composition": 0.2,
-        "hierarchy": 0.2,
-        "legibility": 0.25,
-        "materiality": 0.15,
-        "polish": 0.2
-      }
-    },
-    "play-tablet": {
-      "device": "tablet",
-      "resolution": [
-        1180,
-        820
-      ],
-      "landmark": "arena-ring",
-      "state": "play",
-      "camera": {
-        "mode": "player-follow",
-        "distance": 22,
-        "height": 7,
-        "fieldOfView": 72,
-        "yawDegrees": 0
+        "yawDegrees": 30
       },
       "rubric": {
         "composition": 0.2,
@@ -349,9 +301,7 @@
     "play": {
       "scenario": "scenarios/play.json",
       "requiredViewpoints": [
-        "play-desktop",
-        "play-phone",
-        "play-tablet"
+        "play-desktop"
       ],
       "minimumRuleCoverage": 0.6
     }

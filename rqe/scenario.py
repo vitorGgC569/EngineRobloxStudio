@@ -299,7 +299,29 @@ class ScenarioRunner:
             return ("PASS" if ok else "FAIL"), detail, (None if ok else "could not start a fresh play session")
 
         if kind == "attach":
-            detail = self.bridge.actor_attach(spec.get("player"))
+            # [[
+            #     Attaching is a race, not a claim.
+            #
+            #     A Play Solo player exists a moment before their Character
+            #     replicates, and the release run attaches as soon as the
+            #     session appears — so this failed with "the player has no
+            #     Character yet", the state scenario was marked FAIL, and every
+            #     capture linked to it was rejected for having no passing
+            #     scenario. The picture was fine; nothing had spawned yet.
+            #
+            #     Bounded, so a game that genuinely never spawns anybody still
+            #     fails rather than hanging.
+            # ]]
+            deadline = time.monotonic() + float(spec.get("timeout", 25))
+            detail: dict[str, Any] = {}
+            while True:
+                try:
+                    detail = self.bridge.actor_attach(spec.get("player"))
+                    break
+                except Exception as exc:  # noqa: BLE001
+                    if time.monotonic() >= deadline:
+                        return "FAIL", {"error": str(exc)}, str(exc)
+                    time.sleep(1.0)
             self._baseline = dict(detail.get("playerAttributes") or {})
             self._attached_real_player = bool(detail.get("isRealPlayer"))
             return ("PASS" if detail.get("isRealPlayer") else "FAIL"), detail, (

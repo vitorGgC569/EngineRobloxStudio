@@ -87,6 +87,7 @@ stage.Parent = Workspace
 
 local rig = Rig.build({
 	name = "PoseSubject",
+	rigType = %(rigType)s,
 	scale = %(scale)s,
 	shape = "biped",
 	body = Color3.fromRGB(150, 152, 160),
@@ -214,12 +215,22 @@ return {
 
 
 def preview(clip: str, samples: int = 6, duration: float = 1.0,
-            scale: float = 1.0, at: tuple[float, float, float] = (0, 20, 0)) -> dict:
+            scale: float = 1.0, rig_type: str = "R15",
+            at: tuple[float, float, float] = (0, 20, 0)) -> dict:
+    """Pose a clip and report it.
+
+    R15 by default, because that is what a player actually is and it is the
+    only rig with the elbows and knees the joint map grew. Pass "R6" to see
+    what an enemy built by `Rig.build` will do with the same clip — they are
+    genuinely different, and a clip that reads well on one can be limp on the
+    other.
+    """
     source = _POSE_LUAU % {
         "clip": json.dumps(clip),
         "samples": samples,
         "duration": duration,
         "scale": scale,
+        "rigType": json.dumps(rig_type),
         "x": at[0], "y": at[1], "z": at[2],
     }
     return bridge_exec(source) or {}

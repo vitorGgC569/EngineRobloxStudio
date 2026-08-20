@@ -197,7 +197,27 @@ return {
 				high and the spread modest reads as two hands on one weapon,
 				which is the only thing this pose has to say.
 			]]
-			rightArm = { k(0, -40, 14, 0), k(0.30, -72, 20, -10), k(0.8, -80, 28, -16) },
+			rightArm = { k(0, -40, 14, 0), k(0.30, -72, 20, -10), k(0.8, -78, 24, -14) },
+			--[[
+				The elbows, which is the whole reason the joint map grew.
+
+				Shoulders alone can only *aim* an arm. An archer's draw arm is
+				bent hard at the elbow with the hand at the cheek, and no
+				shoulder angle reproduces that: pointing the arm far enough
+				back swings the whole limb away from the bow, which is exactly
+				what "he holds it with one hand" looked like.
+
+				The bow arm stays nearly straight, as it must. R6 rigs have no
+				elbow joint and simply ignore these two tracks.
+			]]
+			--
+			-- The sign was measured, not chosen. Sweeping the elbow through
+			-- nine angles with the shoulder held in the draw pose and reading
+			-- the hand-to-head distance gave a clean minimum at +60 degrees;
+			-- the first attempt used -104, which is the far end of the same
+			-- sweep and pushed the hand further away than a straight arm.
+			leftForearm = { k(0, 14, 0, 0), k(0.30, 6, 0, 0), k(0.8, 4, 0, 0) },
+			rightForearm = { k(0, 16, 0, 0), k(0.30, 44, 0, 0), k(0.8, 66, 0, 0) },
 			torso = { k(0, 0, 0, 0), k(0.30, 0, 0, -12), k(0.8, -3, 0, -22) },
 			head = { k(0, 0, 0, 0), k(0.8, -3, 0, -14) },
 		},
@@ -212,8 +232,12 @@ return {
 		tracks = {
 			-- Follows through from where bow_draw now leaves the arm, not from
 			-- the wide pose it used to end in.
-			rightArm = { k(0, -80, 28, -16), k(0.06, -74, 46, -20), k(0.44, -34, 14, -6) },
+			rightArm = { k(0, -78, 24, -14), k(0.06, -72, 40, -18), k(0.44, -34, 14, -6) },
 			leftArm = { k(0, -92, -8, 0), k(0.06, -96, -12, 0), k(0.44, -38, -12, 0) },
+			-- The draw hand springs open and the elbow straightens: that snap
+			-- is the release, far more than anything the shoulder does.
+			rightForearm = { k(0, 66, 0, 0), k(0.06, 30, 0, 0), k(0.44, 16, 0, 0) },
+			leftForearm = { k(0, 4, 0, 0), k(0.44, 14, 0, 0) },
 			torso = { k(0, -3, 0, -22), k(0.08, -1, 0, -12), k(0.44, 0, 0, 0) },
 			head = { k(0, -3, 0, -14), k(0.44, 0, 0, 0) },
 		},

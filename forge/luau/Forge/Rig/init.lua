@@ -17,10 +17,13 @@
 			weapon = nil,
 		})
 
-	The skeleton is always R6-shaped, because R6 joint names are what Anim maps
-	most reliably and six joints are enough for readable motion. `shape` changes
-	the posture, not the bone count — a quadruped is an R6 rig with a pitched
-	torso, which reads correctly and costs nothing.
+	R6 by default: six joints, and `shape` changes the posture rather than the
+	bone count -- a quadruped is an R6 rig with a pitched torso, which reads
+	correctly and costs nothing.
+
+	`rigType = "R15"` builds the fifteen-part skeleton instead, with elbows,
+	knees, wrists and ankles. That exists because shoulders alone can only aim
+	an arm, never fold one, and an archer's draw hand belongs at the cheek.
 ]]
 
 local Workspace = game:GetService("Workspace")
@@ -43,6 +46,7 @@ export type Spec = {
 	weapon: string?, -- "sword" | "axe" | "greatsword" | "staff"
 	collide: boolean?,
 	detail: boolean?, -- false strips the silhouette parts; the joints are unchanged
+	rigType: string?, -- "R6" (default) or "R15", which has elbows, knees and wrists
 }
 
 local function newPart(name: string, size: Vector3, color: Color3, material: Enum.Material, parent: Instance): BasePart
@@ -198,7 +202,181 @@ local function decorate(model: Model, spec: Spec, parts: any, s: number, bulk: n
 	end
 end
 
+-- ================================== R15 =====================================
+--[[
+	A fifteen-part rig, built in code.
+
+	`Rig.build` has always produced R6: six boxes, six joints, and a whole
+	engine of animation written against them. That was fine until the joint map
+	grew elbows and knees, at which point there was nowhere to see them —
+	the pose previewer builds its subject with this module, so a preview of an
+	elbow bend on an R6 rig shows an arm that does not bend.
+
+	The joint names here are not invented. They were read off a live R15
+	character through the bridge: Root, Waist, Neck, then Shoulder/Elbow/Wrist
+	and Hip/Knee/Ankle on each side. Names that do not match a real character
+	would make every clip in the engine silently miss.
+
+	--- The joint convention -----------------------------------------------
+
+	A Motor6D holds `p1.CFrame = p0.CFrame * C0 * C1:inverse()`. Every joint
+	below puts C0 at the attachment point on the parent and C1 at the matching
+	point on the child, with no baked rotation. That is what makes a rotation
+	about X read as "bend forward" — the assumption `Anim.rigs.R15` is written
+	against. R6's joints carry legacy quarter-turns and its map compensates;
+	inheriting those here would have silently mirrored every clip.
+]]
+local function buildR15(spec: Spec): Model
+	local s = spec.scale or 1
+	local body = spec.body or Color3.fromRGB(126, 126, 130)
+	local accent = spec.accent or Color3.fromRGB(84, 84, 88)
+	local material = spec.material or Enum.Material.SmoothPlastic
+	local bulk = (spec.bulky or spec.shape == "hulk") and 1.3 or 1
+
+	local model = Instance.new("Model")
+	model.Name = spec.name or "Rig"
+
+	local function part(name: string, size: Vector3, colour: Color3): BasePart
+		return newPart(name, size * s, colour, material, model)
+	end
+
+	-- Proportions of a standard R15, near enough that clips authored for one
+	-- read correctly on the other.
+	local rootSize = Vector3.new(2 * bulk, 2, 1 * bulk)
+	local lowerTorsoSize = Vector3.new(2 * bulk, 0.8, 1 * bulk)
+	local upperTorsoSize = Vector3.new(2 * bulk, 1.2, 1 * bulk)
+	local headSize = Vector3.new(1.2, 1.2, 1.2)
+	local upperArmSize = Vector3.new(0.8 * bulk, 1.4, 0.8 * bulk)
+	local lowerArmSize = Vector3.new(0.7 * bulk, 1.2, 0.7 * bulk)
+	local handSize = Vector3.new(0.7 * bulk, 0.6, 0.7 * bulk)
+	local upperLegSize = Vector3.new(0.9 * bulk, 1.4, 0.9 * bulk)
+	local lowerLegSize = Vector3.new(0.8 * bulk, 1.4, 0.8 * bulk)
+	local footSize = Vector3.new(0.9 * bulk, 0.5, 1.2)
+
+	local root = part("HumanoidRootPart", rootSize, body)
+	root.Transparency = 1
+	root.CanCollide = spec.collide ~= false
+	model.PrimaryPart = root
+
+	local lowerTorso = part("LowerTorso", lowerTorsoSize, body)
+	local upperTorso = part("UpperTorso", upperTorsoSize, body)
+	local head = part("Head", headSize, accent)
+
+	local limbs = {}
+	for _, side in { "Right", "Left" } do
+		limbs[side] = {
+			upperArm = part(side .. "UpperArm", upperArmSize, body),
+			lowerArm = part(side .. "LowerArm", lowerArmSize, body),
+			hand = part(side .. "Hand", handSize, accent),
+			upperLeg = part(side .. "UpperLeg", upperLegSize, accent),
+			lowerLeg = part(side .. "LowerLeg", lowerLegSize, accent),
+			foot = part(side .. "Foot", footSize, accent),
+		}
+	end
+
+	--[[
+		Attach the top of `child` under the given point on `parent`.
+
+		The Motor6D is re-parented to the *child*, which is where Roblox puts
+		it on a real R15 character -- `RightUpperArm.RightShoulder`, not
+		`UpperTorso.RightShoulder`. `Anim` searches by name and would have found
+		them either way, but anything that walks a rig expecting the real
+		layout would not, and a rig that is R15 in every respect except where
+		its joints live is a trap for the next reader.
+	]]
+	local function joint(name: string, p0: BasePart, p1: BasePart, at: Vector3)
+		local m = motor(name, p0, p1, CFrame.new(at * s), CFrame.new(0, p1.Size.Y / 2, 0))
+		m.Parent = p1
+		return m
+	end
+
+	joint("Root", root, lowerTorso, Vector3.new(0, -rootSize.Y / 2 + lowerTorsoSize.Y, 0))
+	joint("Waist", lowerTorso, upperTorso, Vector3.new(0, lowerTorsoSize.Y / 2 + upperTorsoSize.Y, 0))
+	joint("Neck", upperTorso, head, Vector3.new(0, upperTorsoSize.Y / 2 + headSize.Y, 0))
+
+	for _, side in { "Right", "Left" } do
+		local sign = side == "Right" and 1 or -1
+		local L = limbs[side]
+
+		joint(side .. "Shoulder", upperTorso, L.upperArm,
+			Vector3.new(sign * (upperTorsoSize.X / 2 + upperArmSize.X / 2),
+				upperTorsoSize.Y / 2 - 0.1 + upperArmSize.Y, 0))
+		joint(side .. "Elbow", L.upperArm, L.lowerArm,
+			Vector3.new(0, -upperArmSize.Y / 2 + lowerArmSize.Y, 0))
+		joint(side .. "Wrist", L.lowerArm, L.hand,
+			Vector3.new(0, -lowerArmSize.Y / 2 + handSize.Y, 0))
+
+		joint(side .. "Hip", lowerTorso, L.upperLeg,
+			Vector3.new(sign * upperLegSize.X / 2, -lowerTorsoSize.Y / 2 + upperLegSize.Y, 0))
+		joint(side .. "Knee", L.upperLeg, L.lowerLeg,
+			Vector3.new(0, -upperLegSize.Y / 2 + lowerLegSize.Y, 0))
+		joint(side .. "Ankle", L.lowerLeg, L.foot,
+			Vector3.new(0, -lowerLegSize.Y / 2 + footSize.Y, 0))
+	end
+
+	if spec.eyes then
+		for _, sign in { -1, 1 } do
+			local eye = newPart("Eye", Vector3.new(0.16, 0.16, 0.1) * s, spec.eyes, Enum.Material.Neon, head)
+			weld(head, eye, CFrame.new(0.3 * s * sign, 0.12 * s, -0.62 * s))
+		end
+	end
+
+	local humanoid = Instance.new("Humanoid")
+	humanoid.RigType = Enum.HumanoidRigType.R15
+	humanoid.DisplayDistanceType = Enum.HumanoidDisplayDistanceType.None
+	humanoid.HealthDisplayType = Enum.HumanoidHealthDisplayType.AlwaysOff
+	humanoid.BreakJointsOnDeath = false
+	humanoid.Parent = model
+
+	--[[
+		Seat every part once.
+
+		A Motor6D positions its child only when something moves; parts left
+		stacked at the origin stay stacked, and the rig renders as a pile of
+		boxes until the first animation frame. Walking the chain once here puts
+		everything where the joints say it belongs.
+	]]
+	root.CFrame = CFrame.new()
+	local ordered = {
+		{ "Root", root, lowerTorso }, { "Waist", lowerTorso, upperTorso },
+		{ "Neck", upperTorso, head },
+	}
+	for _, side in { "Right", "Left" } do
+		local L = limbs[side]
+		table.insert(ordered, { side .. "Shoulder", upperTorso, L.upperArm })
+		table.insert(ordered, { side .. "Elbow", L.upperArm, L.lowerArm })
+		table.insert(ordered, { side .. "Wrist", L.lowerArm, L.hand })
+		table.insert(ordered, { side .. "Hip", lowerTorso, L.upperLeg })
+		table.insert(ordered, { side .. "Knee", L.upperLeg, L.lowerLeg })
+		table.insert(ordered, { side .. "Ankle", L.lowerLeg, L.foot })
+	end
+	for _, row in ordered do
+		local name, parent, child = row[1], row[2] :: BasePart, row[3] :: BasePart
+		local m = child:FindFirstChild(name) :: Motor6D?
+		if m then
+			child.CFrame = parent.CFrame * m.C0 * m.C1:Inverse()
+		end
+	end
+
+	if spec.weapon then
+		Rig.attachWeapon(model, spec.weapon, accent, s)
+	end
+
+	model:SetAttribute("ForgeRig", true)
+	model:SetAttribute("RigScale", s)
+	model:SetAttribute("RigShape", "biped")
+	model:SetAttribute("RigType", "R15")
+	return model
+end
+
 function Rig.build(spec: Spec): Model
+	-- R6 stays the default: every enemy, every clip and every joint sign in
+	-- this engine was authored against it. R15 is opt-in until something has
+	-- actually looked at one.
+	if spec.rigType == "R15" then
+		return buildR15(spec)
+	end
+
 	local s = spec.scale or 1
 	local shape = spec.shape or "biped"
 	local body = spec.body or Color3.fromRGB(126, 126, 130)

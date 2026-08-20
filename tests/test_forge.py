@@ -322,6 +322,44 @@ class ShootingTests(unittest.TestCase):
         self.assertNotIn("charge", handler.split("Weapon.fire")[0])
 
 
+class EditorPersistenceTests(unittest.TestCase):
+    """An editor that cannot keep its work is an inspector."""
+
+    def test_save_and_pull_agree_on_where_scenes_live(self) -> None:
+        """The engine publishes and the CLI collects; both must name the same place.
+
+        `Editor.save` writes a StringValue under `Workspace.ForgeScenes`, and
+        `forge scene pull` reads from there. Nothing connects the two but this
+        string, so a rename on either side would silently pull nothing — which
+        is exactly the failure the first version of the puller had.
+        """
+        engine = (ENGINE / "Editor" / "init.lua").read_text(encoding="utf-8")
+        cli = (REPO / "forge/cli/scene.py").read_text(encoding="utf-8")
+        self.assertIn("ForgeScenes", engine)
+        self.assertIn("ForgeScenes", cli)
+
+    def test_the_puller_does_not_trust_dm_properties(self) -> None:
+        """`dm.properties` omits StringValue.Value, so reading it pulls nothing."""
+        cli = (REPO / "forge/cli/scene.py").read_text(encoding="utf-8")
+        pull = cli[cli.index("def pull("):cli.index("_PUSH_LUAU")]
+        self.assertNotIn('_call("dm.properties"', pull)
+        self.assertIn("bridge.exec", pull)
+
+
+class RigTests(unittest.TestCase):
+    def test_r15_joint_names_match_a_real_character(self) -> None:
+        """These were read off a live rig; a typo makes every clip miss silently."""
+        rig = (ENGINE / "Rig" / "init.lua").read_text(encoding="utf-8")
+        anim = (ENGINE / "Anim" / "init.lua").read_text(encoding="utf-8")
+        # The builder composes side-specific names ("Right" .. "Elbow"), so the
+        # literals are the suffixes, not the full joint names.
+        for joint in ('"Root"', '"Waist"', '"Neck"', '"Shoulder"', '"Elbow"',
+                      '"Wrist"', '"Hip"', '"Knee"', '"Ankle"'):
+            self.assertIn(joint, rig, f"R15 builder never makes {joint}")
+        for joint in ("RightElbow", "RightKnee", "RightWrist", "RightAnkle"):
+            self.assertIn(joint, anim, f"joint map does not drive {joint}")
+
+
 class ScaffoldGuardTests(unittest.TestCase):
     def test_force_refuses_a_directory_forge_did_not_create(self) -> None:
         """--force once ate a real project that shared a name. Never again."""

@@ -347,9 +347,36 @@ def cmd_pose(args: argparse.Namespace) -> int:
     """Pose a rig from a clip in the open place and report the result."""
     from cli import pose
 
-    report = pose.preview(args.clip, samples=args.samples, duration=args.duration)
+    report = pose.preview(args.clip, samples=args.samples, duration=args.duration,
+                          rig_type=args.rig)
     print(pose.render(report))
     return 1 if report.get("error") else 0
+
+
+# ============================== scene round trip ============================
+def cmd_scene(args: argparse.Namespace) -> int:
+    """Move a scene between a live session and the repository."""
+    from cli import scene as scenes
+
+    try:
+        if args.step == "list":
+            live = scenes.list_live()
+            if live:
+                for scene_name in live:
+                    print("  " + scene_name)
+            else:
+                print("the session has published no scenes")
+            return 0
+        if args.step == "pull":
+            written = scenes.pull(args.game, args.name)
+            print(f"{len(written)} scene(s) pulled")
+            return 0
+        result = scenes.push(args.game, args.name)
+        print(f"pushed {result.get('name')} ({result.get('placements')} placements)")
+        return 0
+    except scenes.BridgeError as exc:
+        print(f"scene: {exc}")
+        return 1
 
 
 def main(argv: list[str] | None = None) -> int:
@@ -404,7 +431,15 @@ def main(argv: list[str] | None = None) -> int:
     p_pose.add_argument("clip")
     p_pose.add_argument("--samples", type=int, default=6)
     p_pose.add_argument("--duration", type=float, default=1.0)
+    p_pose.add_argument("--rig", default="R15", choices=("R15", "R6"),
+                        help="which rig to pose; R15 has elbows and knees")
     p_pose.set_defaults(func=cmd_pose)
+
+    p_scene = sub.add_parser("scene", help="pull a scene out of a live session, or push one in")
+    p_scene.add_argument("step", choices=("pull", "push", "list"))
+    p_scene.add_argument("game", nargs="?", default="provingground")
+    p_scene.add_argument("name", nargs="?", default=None)
+    p_scene.set_defaults(func=cmd_scene)
 
     p_engine = sub.add_parser("engine", help="list the engine's modules and public API")
     p_engine.add_argument("--json", action="store_true")

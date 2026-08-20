@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-08-20T17:35:01+00:00",
+  "generatedAt": "2026-08-20T18:28:30+00:00",
   "engine": "Forge",
-  "modules": 53,
-  "functions": 736,
+  "modules": 54,
+  "functions": 743,
   "examples": [
     "Anim",
     "Capability",
@@ -11,14 +11,20 @@
     "Combat",
     "Core",
     "Data",
+    "Debug",
     "Destruction",
+    "Entity",
+    "Events",
     "Examples",
     "Feel",
     "IK",
+    "Inventory",
     "LiveOps",
     "Material",
     "Nav",
     "Net",
+    "Platform",
+    "Progression",
     "Rig",
     "Save",
     "Scene",
@@ -189,6 +195,11 @@
       "name": "Netcode",
       "summary": "Netcode — prediction, reconciliation, lag compensation and interpolation",
       "functions": 19
+    },
+    {
+      "name": "Platform",
+      "summary": "Platform — is this game actually playable on the device in front of you? `Input` already abstracts keyboard, gamepad and touch, and a test asserts every action ",
+      "functions": 7
     },
     {
       "name": "Presets",
@@ -3321,7 +3332,7 @@
     {
       "name": "Examples",
       "file": "forge/luau/Forge/Examples/init.lua",
-      "lines": 383,
+      "lines": 467,
       "summary": "Examples — one runnable demonstration per module. A documented example rots. It is written once, the API moves, and nobody notices until an agent copies it and gets an error. This project has been bitten by that exact shape all day: a comment describing a call that was no longer true is worse than no comment, because it is believed. So these are not snippets in a docstring. Each one is a function that actually runs inside the live game, does the thing, asserts something small about the result, and cleans up after itself. `forge example --all` runs every one of them; if the API moves, the example fails, and it fails in CI rather than in an agent's hands. --- What an example is for ---------------------------------------------- Not test coverage — `Testing` does that, and these deliberately assert almost nothing. An example answers \"what does using this module look like\", which is the question an agent has when it has never seen the engine and is deciding whether a module is the right tool. That is why each one is short, uses the shortest path through its module, and reads top to bottom.",
       "examples": [
         "forge example Combat      run one\nforge example --all       run all of them"
@@ -3334,7 +3345,7 @@
           "returns": "{ string }",
           "summary": "=================================== run ====================================",
           "examples": [],
-          "line": 324
+          "line": 408
         },
         {
           "name": "Examples.run",
@@ -3343,7 +3354,7 @@
           "returns": "{ [string]: any }",
           "summary": "Run one example and report what happened. Failures are returned rather than thrown: running twenty examples and stopping at the first broken one hides the other nineteen, and the whole point is to find out which parts of the surface have drifted.",
           "examples": [],
-          "line": 340
+          "line": 424
         },
         {
           "name": "Examples.runAll",
@@ -3352,7 +3363,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 357
+          "line": 441
         },
         {
           "name": "Examples.describe",
@@ -3361,7 +3372,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 378
+          "line": 462
         }
       ],
       "describes": true
@@ -5055,6 +5066,85 @@
           "summary": "================================= describe =================================",
           "examples": [],
           "line": 706
+        }
+      ],
+      "describes": true
+    },
+    {
+      "name": "Platform",
+      "file": "forge/luau/Forge/Platform/init.lua",
+      "lines": 290,
+      "summary": "Platform — is this game actually playable on the device in front of you? `Input` already abstracts keyboard, gamepad and touch, and a test asserts every action declares a touch binding. That proves an action is *bindable* on a phone. It says nothing about whether the HUD fits, whether the buttons are big enough to hit, whether anything is hidden behind the Roblox topbar, or whether the frame budget survives a device with a tenth of the fill rate. Those are the four ways a Roblox game is unplayable on mobile while passing every test, and this measures all four. --- Why measure rather than design --------------------------------------- Because a layout that was fine at 1920x1080 is a layout nobody checked at 390x844, and the person who finds out is a player holding a phone. A viewport is a number; \"looks fine\" is not.",
+      "examples": [
+        "local report = Platform.audit()\n--> { device = \"Phone\", offscreen = {...}, tooSmall = {...}, ... }"
+      ],
+      "functions": [
+        {
+          "name": "Platform.viewport",
+          "signature": "Platform.viewport()",
+          "kind": "function",
+          "returns": "Vector2",
+          "summary": "================================= device ===================================",
+          "examples": [],
+          "line": 49
+        },
+        {
+          "name": "Platform.device",
+          "signature": "Platform.device()",
+          "kind": "function",
+          "returns": "string",
+          "summary": "What this is running on. Deliberately derived from input capability and viewport rather than from a single flag: Roblox reports `TouchEnabled` on laptops with touchscreens and `KeyboardEnabled` on tablets with a case, so either one alone mislabels a real device somebody is holding.",
+          "examples": [],
+          "line": 62
+        },
+        {
+          "name": "Platform.isSmallScreen",
+          "signature": "Platform.isSmallScreen()",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "",
+          "examples": [],
+          "line": 79
+        },
+        {
+          "name": "Platform.audit",
+          "signature": "Platform.audit(root: Instance?)",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "Every visible element that a device this size would break. Three questions per element, and each one corresponds to a bug that ships: * Is any of it outside the viewport? A HUD anchored for a wide screen * Is it under the Roblox topbar? The top 36 pixels belong to Roblox, and * Is it too small to hit? A 24-pixel button is fine with a mouse and a",
+          "examples": [
+            "puts its right-hand panel past the edge of a phone, where it is not\nmerely ugly but unreachable.",
+            "anything there is covered by controls the player cannot move.",
+            "coin toss with a thumb."
+          ],
+          "line": 101
+        },
+        {
+          "name": "Platform.auditAs",
+          "signature": "Platform.auditAs(deviceName: string, root: Instance?)",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 175
+        },
+        {
+          "name": "Platform.sceneBudget",
+          "signature": "Platform.sceneBudget(deviceName: string?)",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 249
+        },
+        {
+          "name": "Platform.describe",
+          "signature": "Platform.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 273
         }
       ],
       "describes": true

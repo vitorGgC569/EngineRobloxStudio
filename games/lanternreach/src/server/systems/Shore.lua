@@ -22,6 +22,8 @@ local World = Forge.World
 local Scene = Forge.Scene
 local Streaming = Forge.Streaming
 local Assets = Forge.Assets
+local Catalog = Forge.Catalog
+local Material = Forge.Material
 local Rng = Forge.Core.Rng
 local Visual = Forge.Visual
 local Debug = Forge.Debug
@@ -160,6 +162,57 @@ local function registerProps()
 end
 
 -- ================================== build ===================================
+--[[
+	Planting from the verified catalogue.
+
+	The shore's props are Scene placements built from parts, which reads as a
+	place and not as a photograph. Catalogue foliage is the cheap half of the
+	difference: Synty pieces are textured MeshParts, already loaded, measured
+	and scanned for scripts before they earned an entry, so this costs no
+	upload and no invented asset id.
+
+	Also `Catalog`'s second consumer. A curated set that only one game reads is
+	that game's asset list.
+]]
+function Shore.plant(parent: Instance, points: { Vector3 }): number
+	local pieces = Catalog.byCategory("foliage")
+	if #pieces == 0 then
+		return 0
+	end
+	local stream = Rng.stream("shore.planting")
+	local placed = 0
+
+	for _, point in points do
+		local entry = pieces[stream:int(1, #pieces)]
+		local model = Catalog.load(entry)
+		if model then
+			model.Name = "Reed"
+			local turn = CFrame.Angles(0, stream:number(0, 6.28), 0)
+			if model:IsA("Model") then
+				model:PivotTo(CFrame.new(point) * turn)
+			elseif model:IsA("BasePart") then
+				(model :: BasePart).CFrame = CFrame.new(point) * turn
+			end
+			for _, d in model:GetDescendants() do
+				if d:IsA("BasePart") then
+					d.Anchored = true
+					-- Plants are not cover and must not block the Keeper's round.
+					d.CanCollide = false
+				end
+			end
+			if model:IsA("BasePart") then
+				(model :: BasePart).Anchored = true
+				;(model :: BasePart).CanCollide = false
+			end
+			Material.renderFidelity(model, Enum.RenderFidelity.Automatic)
+			Material.shadowBudget(model, 4)
+			model.Parent = parent
+			placed += 1
+		end
+	end
+	return placed
+end
+
 function Shore.start()
 	local t0 = os.clock()
 	registerProps()

@@ -16,6 +16,10 @@ local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 
 local Forge = require(ReplicatedStorage:WaitForChild("Forge"))
+
+-- The engine contract this project was scaffolded against. Keep it: an engine
+-- that moves under a game fails far from the line that caused it.
+Forge.require("0.2.0")
 local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
 
 local Rng = Forge.Core.Rng
@@ -93,7 +97,27 @@ if systems then
 	end
 end
 
--- 6. The seam. This is what lets the Quality Engine measure meaning and not
+--[[
+	6. The live suite.
+
+	Runs after every system is up, because a suite that starts first tests a
+	game that does not exist yet. Studio only: the scenarios build and destroy
+	real instances, which does not belong in a session somebody is playing.
+
+	`forge gametest` reads the report this publishes. That command is the only
+	thing in this project that can answer "does the game still work" without a
+	person watching a screen, and it needs this line to have anything to read.
+]]
+if Config.selfTest then
+	task.defer(function()
+		local report = Forge.Testing.runAndPublish(script:FindFirstChild("tests"))
+		Debug.info(string.format(
+			"self test: %d passed, %d failed, %d hung",
+			report.passed or 0, report.failed or 0, report.timedOut or 0))
+	end)
+end
+
+-- 7. The seam. This is what lets the Quality Engine measure meaning and not
 --    just geometry. Removing it does not break the game; it blinds the
 --    validator, which is worse.
 Debug.expose()

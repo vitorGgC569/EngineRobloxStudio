@@ -318,6 +318,90 @@ Examples.of = {
 		-- Self-describing, so `--all` proves the runner itself is reachable.
 		return { available = #Forge.Examples.names() }
 	end,
+
+	Entity = function(Forge, at)
+		local Entity = Forge.Entity
+		local marker = Instance.new("Part")
+		marker.Anchored = true
+		marker.CFrame = CFrame.new(at)
+		marker.Parent = stage()
+
+		local id = Entity.create({
+			name = "example_thing",
+			instance = marker,
+			tags = { "example" },
+			components = { Note = { text = "hello", count = 3 } },
+		})
+		local note = Entity.get(id, "Note")
+		local tagged = #Entity.withTag("example")
+		Entity.destroy(id, true)
+		return { componentRead = note and note.text or nil, taggedFound = tagged }
+	end,
+
+	Inventory = function(Forge)
+		local Inventory = Forge.Inventory
+		Inventory.defineItem("example_stone", { name = "Stone", stack = 10 })
+		local key = "example:" .. tostring(math.random(1, 1e9))
+		local bag = Inventory.create(key, { slots = 4 })
+
+		Inventory.add(bag, "example_stone", 6)
+		local held = Inventory.count(bag, "example_stone")
+		Inventory.remove(bag, "example_stone", 2)
+		local left = Inventory.count(bag, "example_stone")
+		Inventory.destroy(key)
+		return { added = held, afterRemoving2 = left, slots = 4 }
+	end,
+
+	Progression = function(Forge)
+		local Progression = Forge.Progression
+		Progression.define("example_track", {
+			curve = function(level: number)
+				return 100 * level
+			end,
+		})
+		local track = Progression.track("example_track", "example_subject")
+		Progression.award(track, 150)
+		return {
+			fraction = math.floor(Progression.progressFraction(track) * 100) / 100,
+			required = Progression.required(track),
+		}
+	end,
+
+	Events = function(Forge)
+		local Events = Forge.Events
+		local heard = 0
+		-- `Events.on` hands back a listener id, not a connection object. The
+		-- first version of this example called `:Disconnect()` on a number,
+		-- which is exactly the kind of drift a runnable example exists to
+		-- catch — and it caught itself on the first run.
+		local id = Events.on("example.happened", function()
+			heard += 1
+		end)
+		Events.emit("example.happened", { n = 1 })
+		Events.off("example.happened", id)
+
+		-- Proof the removal took: a second emit must not be heard.
+		Events.emit("example.happened", { n = 2 })
+		return { delivered = heard, listeningAfterOff = Events.count("example.happened") }
+	end,
+
+	Platform = function(Forge)
+		local Platform = Forge.Platform
+		local budget = Platform.sceneBudget("Phone")
+		return {
+			device = Platform.device(),
+			viewport = Platform.viewport(),
+			partsAgainstPhoneBudget = string.format("%d/%d", budget.parts, budget.partBudget),
+			withinBudget = budget.ok,
+		}
+	end,
+
+	Debug = function(Forge)
+		local Debug = Forge.Debug
+		local knob = Debug.tunable("example.knob", 7)
+		Debug.count("example.counter")
+		return { tunableReads = knob(), counted = Debug.counter("example.counter") }
+	end,
 }
 
 -- =================================== run ====================================

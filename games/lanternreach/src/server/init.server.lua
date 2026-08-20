@@ -12,6 +12,10 @@ local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 
 local Forge = require(ReplicatedStorage:WaitForChild("Forge"))
+
+-- The engine contract this game was written against. Before 1.0 the minor
+-- number carries breaking changes, so a mismatch here is a real one.
+Forge.require("0.2.0")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Content = require(Shared:WaitForChild("Content"))
@@ -87,14 +91,60 @@ Save.configure({
 })
 Save.start()
 
+local Weather = Forge.Weather
+local LiveOps = Forge.LiveOps
+local Destruction = Forge.Destruction
+
 local Systems = script:WaitForChild("systems")
 local Shore = require(Systems.Shore)
 local Salvage = require(Systems.Salvage)
 local Keeper = require(Systems.Keeper)
 
+--[[
+	Weather, config and destruction, from the engine.
+
+	Not decoration on this list: until now every module built for Proving
+	Ground had exactly one consumer, which makes it indistinguishable from that
+	game's own code living in the engine folder. A second game using the same
+	surface is what proves an API is an API.
+
+	Each one earns its place here on its own terms. A night shore is the most
+	natural home weather will ever have; salvage rates are exactly the kind of
+	number worth changing without a release; and a cache that bursts open is a
+	better answer than one that vanishes.
+]]
+Weather.installDefaults()
+LiveOps.defineMany({
+	["salvage.maxCaches"] = 12,
+	["salvage.respawnSeconds"] = 25,
+	["flag.nightFog"] = true,
+})
+LiveOps.start()
+
+Destruction.define("cache", {
+	shards = 10,
+	spread = 14,
+	upward = 10,
+	life = 6,
+	scale = 1.2,
+})
+
 Shore.start()
 Salvage.start()
 Keeper.start()
+
+--[[
+	Fog and rain over the shelf.
+
+	Server-side here rather than client-side, unlike Proving Ground: this game
+	has no pinned hour to protect, and the tide's mood is part of what it is.
+	The condition is set once and cycled slowly; clients render whatever is in
+	force.
+]]
+if LiveOps.enabled("nightFog") then
+	Weather.set("overcast", { immediate = true })
+	Weather.cycle({ "overcast", "rain", "overcast", "clear" }, 240)
+end
 
 -- The editor edits the same scene the streamer is serving, so a piece moved in
 -- the overlay lands in the chunk it now belongs to instead of the one it used
@@ -205,6 +255,29 @@ task.defer(function()
 end)
 
 -- ================================ the seam ==================================
+--[[
+	The live suite, if this is Studio.
+
+	Last, after every system is up: a suite that starts before the game does
+	tests a game that does not exist yet. Deferred so bootstrap returns first.
+
+	The point of running it *here* is not this game's coverage. It is that
+	`Testing` was built inside Proving Ground and had only ever run there,
+	which made it a Proving Ground helper with an engine address. A second game
+	running the same harness against inventories, entities and dialogue instead
+	of combat is what makes it engine surface.
+]]
+if Config.selfTest then
+	task.defer(function()
+		local Testing = Forge.Testing
+		local suite = script:FindFirstChild("tests")
+		local report = Testing.runAndPublish(suite)
+		Debug.info(string.format(
+			"self test: %d passed, %d failed, %d hung",
+			report.passed or 0, report.failed or 0, report.timedOut or 0))
+	end)
+end
+
 Debug.expose()
 
 Debug.probe("session", function()

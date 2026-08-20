@@ -14,6 +14,7 @@ local Workspace = game:GetService("Workspace")
 local Forge = require(ReplicatedStorage:WaitForChild("Forge"))
 local Assets = Forge.Assets
 local Dialogue = Forge.Dialogue
+local Nav = Forge.Nav
 local Events = Forge.Events
 local Interaction = Forge.Interaction
 local Inventory = Forge.Inventory
@@ -157,6 +158,43 @@ function Keeper.sync(player: Player)
 end
 
 -- ================================== start ===================================
+--[[
+	The Keeper walks a round instead of standing still.
+
+	A shopkeeper rooted to one spot is the clearest signal a world is a menu
+	with scenery. `Nav` gives this one a patrol over the same navmesh the tide
+	shelf already has, and the standoff keeps it from walking into whoever is
+	talking to it.
+
+	This is also the second consumer `Nav` needed. Until now it existed only
+	for Proving Ground's enemies, which made it that game's chase code with an
+	engine address rather than a navigation layer.
+]]
+local function walkTheRound(model: Model)
+	local home = model:GetPivot().Position
+	local stops = {
+		home,
+		home + Vector3.new(18, 0, 6),
+		home + Vector3.new(4, 0, 22),
+		home + Vector3.new(-14, 0, 10),
+	}
+	local index = 1
+
+	Nav.follow(model, {
+		standoff = 2,
+		target = function()
+			return stops[index]
+		end,
+		onArrive = function()
+			-- Pause at each stop. A patrol with no dwell reads as pacing.
+			task.delay(6, function()
+				index = (index % #stops) + 1
+			end)
+		end,
+		parameters = { AgentRadius = 2, AgentHeight = 5, AgentCanJump = false },
+	})
+end
+
 function Keeper.start()
 	registerActions()
 

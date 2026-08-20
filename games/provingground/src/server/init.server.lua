@@ -15,6 +15,10 @@ local Players = game:GetService("Players")
 local Workspace = game:GetService("Workspace")
 
 local Forge = require(ReplicatedStorage:WaitForChild("Forge"))
+
+-- The engine contract this game was written against. Before 1.0 the minor
+-- number carries breaking changes, so a mismatch here is a real one.
+Forge.require("0.2.0")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
 local Content = require(Shared:WaitForChild("Content"))

@@ -452,6 +452,27 @@ def cmd_example(args: argparse.Namespace) -> int:
     return 0 if report.get("ok", True) else 1
 
 
+# ================================ asset upload ==============================
+def cmd_upload(args: argparse.Namespace) -> int:
+    """Upload a local file to Roblox and register the id it comes back with."""
+    from cli import upload as up
+
+    try:
+        record = up.upload(Path(args.path), args.user, name=args.name,
+                           declared_type=args.type, wait=args.wait)
+    except up.UploadError as exc:
+        print(f"upload: {exc}")
+        return 1
+
+    print(f"{record['reference']}  ({record['moderation']})")
+    if record["moderation"] == "Approved":
+        registry = up.register(record["reference"], record)
+        print(f"  registered in {registry.relative_to(REPO_ROOT)}")
+    else:
+        print("  not registered: only an approved asset may pass the doctor")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="forge", description="Forge — the authoring half")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -534,6 +555,14 @@ def main(argv: list[str] | None = None) -> int:
     p_ex = sub.add_parser("example", help="run the engine's runnable examples")
     p_ex.add_argument("module", nargs="?", default=None)
     p_ex.set_defaults(func=cmd_example)
+
+    p_up = sub.add_parser("upload", help="upload an image or sound and register its id")
+    p_up.add_argument("path")
+    p_up.add_argument("--user", required=True, help="the creator's Roblox user id")
+    p_up.add_argument("--name", default=None)
+    p_up.add_argument("--type", default=None, choices=("Image", "Audio"))
+    p_up.add_argument("--wait", type=int, default=180, help="seconds to wait for moderation")
+    p_up.set_defaults(func=cmd_upload)
 
     p_engine = sub.add_parser("engine", help="list the engine's modules and public API")
     p_engine.add_argument("--json", action="store_true")

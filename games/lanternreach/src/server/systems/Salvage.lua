@@ -19,6 +19,7 @@ local Events = Forge.Events
 local Interaction = Forge.Interaction
 local Inventory = Forge.Inventory
 local Progression = Forge.Progression
+local Destruction = Forge.Destruction
 local Net = Forge.Net
 local Rng = Forge.Core.Rng
 local Sched = Forge.Core.Sched
@@ -163,6 +164,29 @@ function Salvage.open(player: Player, entityId: number)
 	})
 
 	Debug.count("salvage.opened")
+
+	--[[
+		The cache bursts rather than vanishing.
+
+		`Entity.destroy` removed the model outright, which reads as the crate
+		being deleted rather than opened — the player's own action producing an
+		absence. `Destruction` throws shards taken from the model's own parts,
+		so a hull throws hull and a crate throws crate, and its budget means a
+		busy shore degrades to fewer shards instead of to a frame nobody has.
+
+		`destroy = false` because `Entity.destroy` below still owns the model's
+		lifetime; two things destroying one instance is how a nil-parent error
+		reaches a player.
+	]]
+	local instance = Entity.instance(entityId)
+	if instance then
+		Destruction.break_(instance, {
+			recipe = "cache",
+			from = player.Character and player.Character:GetPivot().Position or position,
+			destroy = false,
+		})
+	end
+
 	Entity.destroy(entityId)
 	liveCaches -= 1
 end

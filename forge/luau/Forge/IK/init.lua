@@ -156,8 +156,23 @@ local function stepFoot(character: Model, side: string, state: any, dt: number)
 	local target = math.max(0.2, (upperLength + lowerLength) - lift)
 	local hipAngle, kneeAngle = IK.solveTwoBone(upperLength, lowerLength, target)
 
-	setJointTransform(kneeJoint, state.kneeBase[side] * CFrame.Angles(kneeAngle, 0, 0))
-	setJointTransform(hipJoint, state.hipBase[side] * CFrame.Angles(-hipAngle * 0.5, 0, 0))
+	--[[
+		Compose with the animation; do not replace it.
+
+		The first version wrote `restPose * correction`, which discarded
+		whatever the animator had just put in the joint. That is not a subtle
+		bug: `Stepped` fires *after* `RenderStepped`, so this ran last every
+		frame and the walk cycle was overwritten by a static IK pose. The
+		character stood with its legs locked and slid across the floor — a
+		freeze, reported as one, and caused by the correction being applied to
+		the wrong thing.
+
+		Reading the joint's current value first means the clip still decides
+		what the legs are doing and this only adds the amount needed to reach
+		the ground.
+	]]
+	setJointTransform(kneeJoint, jointTransform(kneeJoint) * CFrame.Angles(kneeAngle, 0, 0))
+	setJointTransform(hipJoint, jointTransform(hipJoint) * CFrame.Angles(-hipAngle * 0.5, 0, 0))
 end
 
 function IK.footPlant(character: Model, options: any?): any
@@ -175,6 +190,8 @@ function IK.footPlant(character: Model, options: any?): any
 		kneeBase[side] = jointTransform(kneeJoint)
 	end
 
+	-- Kept for `clearFootPlant` to put the legs back, not for the per-frame
+	-- correction, which composes with whatever the animator wrote.
 	local state = { hipBase = hipBase, kneeBase = kneeBase }
 	planted[character] = state
 	if opts.maxDrop then
@@ -206,6 +223,19 @@ function IK.footPlant(character: Model, options: any?): any
 end
 
 function IK.clearFootPlant(character: Model)
+	local state = planted[character]
+	if state then
+		for _, side in { "Right", "Left" } do
+			local hipJoint = findJoint(character, side .. "Hip")
+			local kneeJoint = findJoint(character, side .. "Knee")
+			if hipJoint and state.hipBase[side] then
+				setJointTransform(hipJoint, state.hipBase[side])
+			end
+			if kneeJoint and state.kneeBase[side] then
+				setJointTransform(kneeJoint, state.kneeBase[side])
+			end
+		end
+	end
 	planted[character] = nil
 end
 

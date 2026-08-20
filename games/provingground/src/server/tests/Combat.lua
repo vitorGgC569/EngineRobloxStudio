@@ -30,7 +30,7 @@ local Data = Forge.Data
 return function(Testing)
 	-- ============================== damage ==================================
 	Testing.scenario("damage reduces health and stops at zero", function(t)
-		local enemy = t:spawnEnemy({ name = "Dummy", health = 100 }, Vector3.new(0, 200, 0))
+		local enemy = t:spawnEnemy({ name = "Dummy", health = 100 }, Testing.config.stageOrigin)
 		t:expectAlive(enemy)
 
 		Combat.damage(enemy, { amount = 40, kind = "test" })
@@ -45,8 +45,8 @@ return function(Testing)
 	end)
 
 	Testing.scenario("armour reduces damage without ever reaching immunity", function(t)
-		local bare = t:spawnEnemy({ name = "Bare", health = 500 }, Vector3.new(0, 200, 0))
-		local armoured = t:spawnEnemy({ name = "Armoured", health = 500 }, Vector3.new(6, 200, 0))
+		local bare = t:spawnEnemy({ name = "Bare", health = 500 }, Testing.config.stageOrigin)
+		local armoured = t:spawnEnemy({ name = "Armoured", health = 500 }, Testing.config.stageOrigin + Vector3.new(6, 0, 0))
 		armoured:SetAttribute("Armor", 100)
 
 		Combat.damage(bare, { amount = 100, kind = "test" })
@@ -60,7 +60,7 @@ return function(Testing)
 	end)
 
 	Testing.scenario("invulnerability windows actually block damage", function(t)
-		local enemy = t:spawnEnemy({ name = "Rolling", health = 200 }, Vector3.new(0, 200, 0))
+		local enemy = t:spawnEnemy({ name = "Rolling", health = 200 }, Testing.config.stageOrigin)
 		Combat.grantIFrames(enemy, 1)
 
 		Combat.damage(enemy, { amount = 50, kind = "test" })
@@ -72,7 +72,7 @@ return function(Testing)
 	end)
 
 	Testing.scenario("the killed signal fires exactly once", function(t)
-		local enemy = t:spawnEnemy({ name = "Once", health = 30 }, Vector3.new(0, 200, 0))
+		local enemy = t:spawnEnemy({ name = "Once", health = 30 }, Testing.config.stageOrigin)
 		local fired = 0
 		local conn = Combat.killed:Connect(function(model)
 			if model == enemy then
@@ -92,7 +92,7 @@ return function(Testing)
 
 	-- ============================== weapons =================================
 	Testing.scenario("a weapon refuses to fire faster than its cadence", function(t)
-		local shooter = t:spawnBot(Vector3.new(0, 200, 0))
+		local shooter = t:spawnBot(Testing.config.stageOrigin)
 		Weapon.equip(shooter, "handcannon")
 
 		local origin = shooter:GetPivot().Position
@@ -105,7 +105,7 @@ return function(Testing)
 	end)
 
 	Testing.scenario("a magazine empties and reloads", function(t)
-		local shooter = t:spawnBot(Vector3.new(0, 200, 0))
+		local shooter = t:spawnBot(Testing.config.stageOrigin)
 		local state = Weapon.equip(shooter, "handcannon")
 		local def = Weapon.definition("handcannon")
 		local origin = shooter:GetPivot().Position
@@ -143,7 +143,7 @@ return function(Testing)
 	end)
 
 	Testing.scenario("a charged weapon refuses an undrawn shot", function(t)
-		local archer = t:spawnBot(Vector3.new(0, 200, 0))
+		local archer = t:spawnBot(Testing.config.stageOrigin)
 		Weapon.equip(archer, "longbow")
 		local origin = archer:GetPivot().Position
 
@@ -170,7 +170,7 @@ return function(Testing)
 				shape = def.rig.shape,
 				bulky = def.rig.bulky,
 				health = def.health,
-			}, Vector3.new(0, 200, 0))
+			}, Testing.config.stageOrigin)
 
 			local humanoid = model:FindFirstChildOfClass("Humanoid")
 			t:expect(humanoid ~= nil, def.name .. " has no Humanoid")

@@ -70,6 +70,15 @@ Testing.config = {
 	timeout = 20,
 	-- Where spawned things go, so cleanup is one Destroy rather than a hunt.
 	containerName = "ForgeTestStage",
+	--[[
+		Where scenarios spawn, by default.
+
+		Far from any playfield rather than merely high above it. Height alone
+		is not distance: anything unanchored falls back down into the game, and
+		anything that raycasts finds the world below it. Scenarios may pass
+		their own position; this is the safe default when they do not care.
+	]]
+	stageOrigin = Vector3.new(0, 5000, 20000),
 }
 
 -- ================================ registry ==================================
@@ -123,8 +132,27 @@ local function newContext(name: string, container: Folder): any
 	}, Context)
 end
 
+--[[
+	Own an instance for the length of the scenario, and hold it still.
+
+	Anchored, because a rig from `Rig.build` is unanchored and has a Humanoid:
+	spawned at test altitude it falls, lands in the middle of whatever someone
+	is playing, and is deleted a second later. That is exactly what it looks
+	like from the player's seat — bodies dropping out of the sky and vanishing
+	— and it is the test suite doing it.
+
+	A scenario that genuinely needs physics unanchors what it spawned; that is
+	one line and an explicit decision, which is the right way round.
+]]
 function Context:track(instance: Instance): Instance
 	table.insert(self.spawned, instance)
+	if instance:IsA("Model") then
+		for _, d in instance:GetDescendants() do
+			if d:IsA("BasePart") then
+				d.Anchored = true
+			end
+		end
+	end
 	instance.Parent = self.container
 	return instance
 end

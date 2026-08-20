@@ -407,6 +407,35 @@ def cmd_api(args: argparse.Namespace) -> int:
     return 0
 
 
+# ================================ publishing ================================
+def cmd_publish(args: argparse.Namespace) -> int:
+    """Upload the built place as a new version of a Roblox experience."""
+    from cli import publish as pub
+
+    try:
+        if args.check:
+            result = pub.check_key()
+            print(f"key: {'authenticates' if result['ok'] else 'rejected'} "
+                  f"(HTTP {result['status']}) -- {result['meaning']}")
+            return 0 if result["ok"] else 1
+
+        result = pub.publish(args.game, release=args.release,
+                             universe_id=args.universe, place_id=args.place)
+    except pub.PublishError as exc:
+        print(f"publish: {exc}")
+        return 1
+
+    if result.get("ok"):
+        print(f"{result['versionType']} version {result.get('versionNumber')} "
+              f"({result['bytes']} bytes)")
+        if result["versionType"] == "Saved":
+            print("  saved to version history; live servers are untouched")
+        return 0
+    print(f"publish: HTTP {result['status']} -- {result.get('hint')}")
+    print(f"  {result.get('body')}")
+    return 1
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="forge", description="Forge — the authoring half")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -476,6 +505,15 @@ def main(argv: list[str] | None = None) -> int:
     p_api = sub.add_parser("api", help="write a machine-readable index of the engine")
     p_api.add_argument("--module", default=None, help="print one module instead")
     p_api.set_defaults(func=cmd_api)
+
+    p_pub = sub.add_parser("publish", help="upload the built place to a Roblox experience")
+    p_pub.add_argument("game", nargs="?", default="provingground")
+    p_pub.add_argument("--universe", default=None)
+    p_pub.add_argument("--place", default=None)
+    p_pub.add_argument("--release", action="store_true",
+                       help="push live to running servers instead of saving privately")
+    p_pub.add_argument("--check", action="store_true", help="only test the credential")
+    p_pub.set_defaults(func=cmd_publish)
 
     p_engine = sub.add_parser("engine", help="list the engine's modules and public API")
     p_engine.add_argument("--json", action="store_true")

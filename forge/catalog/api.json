@@ -1,5 +1,5 @@
 {
-  "generatedAt": "2026-08-20T13:20:38+00:00",
+  "generatedAt": "2026-08-20T13:34:42+00:00",
   "engine": "Forge",
   "modules": 50,
   "functions": 713,
@@ -3422,7 +3422,7 @@
     {
       "name": "IK",
       "file": "forge/luau/Forge/IK/init.lua",
-      "lines": 298,
+      "lines": 328,
       "summary": "IK — putting a hand or a foot where the world is, not where the clip said. Forward kinematics, which is everything this engine has done so far, works from the shoulder outwards: you choose angles and the hand ends up wherever that puts it. It is exact, cheap and completely blind to the world. A walk clip authored on flat ground puts a foot six inches into a slope, and a two-handed grip authored for one weapon misses the next one. Inverse kinematics runs the other way: you name the point the hand or foot must reach and it solves for the angles. Two bones and a hinge is the whole problem, and it has a closed-form answer — no iteration, no solver, no per-frame cost worth measuring. --- Where this sits ------------------------------------------------------ IK runs *after* the animator has posed the skeleton, as a correction. That order matters: the clip still decides what the body is doing, and this only adjusts the last two bones of a limb so the end lands correctly. Running it first, or instead, gives you a character that reaches things beautifully and has no performance. R15 only, and honestly so. An R6 rig has no elbow or knee, so there is no second bone to solve for and nothing here can help it.",
       "examples": [
         "IK.footPlant(character, { maxDrop = 3 })     -- feet follow the ground\nIK.reach(character, \"right\", targetPosition) -- hand goes to a point"
@@ -3444,7 +3444,7 @@
           "returns": "any",
           "summary": "",
           "examples": [],
-          "line": 163
+          "line": 178
         },
         {
           "name": "IK.clearFootPlant",
@@ -3453,7 +3453,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 208
+          "line": 225
         },
         {
           "name": "IK.reach",
@@ -3462,7 +3462,7 @@
           "returns": "boolean",
           "summary": "Put a hand on a point in the world. Used for the thing that has been visibly wrong in this project all day: a second hand that should be on the bow and is instead near it. With a solved elbow the hand goes *to* the grip rather than approximately toward it, and the same call works for a ladder rung, a door handle or a ledge. Returns whether the point was reachable. A caller that ignores that will happily animate a character straining at something two studs too far away.",
           "examples": [],
-          "line": 224
+          "line": 254
         },
         {
           "name": "IK.holdWith",
@@ -3471,7 +3471,7 @@
           "returns": "RBXScriptConnection",
           "summary": "Hold a hand on a gripped object, every frame. The off hand of a two-handed weapon is the classic case: the weapon is welded to one hand and the other has to follow it wherever the animation takes it. Solved rather than authored, it stays correct for every clip and every weapon, including ones written later.",
           "examples": [],
-          "line": 275
+          "line": 305
         },
         {
           "name": "IK.describe",
@@ -3480,7 +3480,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 285
+          "line": 315
         }
       ],
       "describes": true
@@ -6461,7 +6461,7 @@
     {
       "name": "Testing",
       "file": "forge/luau/Forge/Testing/init.lua",
-      "lines": 409,
+      "lines": 437,
       "summary": "Testing — assertions about a game that is actually running. Every other check in this project reads source. The compiler reads syntax, the doctor reads structure, the unit tests read text. None of them can tell you whether an attack lands, whether an enemy dies, or whether a save survives a rejoin — and those are the only questions that matter. So this runs inside the live game. It drives real characters through real systems and asserts on real state. Nothing here is mocked: a test that hits a fake enemy with a fake sword proves that the fakes agree with each other. --- Why bots and not mocks --------------------------------------------- A bot here is a real `Rig` with a real `Humanoid`, spawned into the real world, moved by the real movement code and damaged by the real damage pipeline. When one of these tests fails it is because the game is broken, not because a stub drifted. That is the entire point: this suite is the thing that was missing when every genuine bug in this project had to be found by a person watching a screen. --- Determinism --------------------------------------------------------- Scenarios are given their own RNG stream and their own container, and the world is put back afterwards. Two runs of the same suite see the same numbers, so a failure is reproducible rather than a story about one afternoon.",
       "examples": [
         "Testing.scenario(\"a third hit finishes a husk\", function(t)\nlocal enemy = t:spawnEnemy(\"husk\", Vector3.new(0, 5, 0))\nlocal hero = t:spawnBot(Vector3.new(0, 5, 6))",
@@ -6477,7 +6477,7 @@
           "returns": null,
           "summary": "================================ registry ==================================",
           "examples": [],
-          "line": 76
+          "line": 85
         },
         {
           "name": "Testing.clear",
@@ -6486,7 +6486,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 86
+          "line": 95
         },
         {
           "name": "Testing.count",
@@ -6495,7 +6495,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 90
+          "line": 99
         },
         {
           "name": "Testing.names",
@@ -6504,16 +6504,16 @@
           "returns": "{ string }",
           "summary": "",
           "examples": [],
-          "line": 94
+          "line": 103
         },
         {
           "name": "Context:track",
           "signature": "Context:track(instance: Instance)",
           "kind": "method",
           "returns": "Instance",
-          "summary": "",
+          "summary": "Own an instance for the length of the scenario, and hold it still. Anchored, because a rig from `Rig.build` is unanchored and has a Humanoid: spawned at test altitude it falls, lands in the middle of whatever someone is playing, and is deleted a second later. That is exactly what it looks like from the player's seat — bodies dropping out of the sky and vanishing — and it is the test suite doing it. A scenario that genuinely needs physics unanchors what it spawned; that is one line and an explicit decision, which is the right way round.",
           "examples": [],
-          "line": 126
+          "line": 147
         },
         {
           "name": "Context:spawnEnemy",
@@ -6522,7 +6522,7 @@
           "returns": "Model",
           "summary": "A real enemy, built by the same code the game uses. Deliberately not a stub with a Health attribute: the value of this suite is that it exercises `Rig.build`, the Humanoid, the damage pipeline and every modifier the game installed. A stub would pass while the real thing was broken, which is the failure mode being designed out.",
           "examples": [],
-          "line": 140
+          "line": 168
         },
         {
           "name": "Context:spawnBot",
@@ -6531,7 +6531,7 @@
           "returns": "Model",
           "summary": "",
           "examples": [],
-          "line": 156
+          "line": 184
         },
         {
           "name": "Context:face",
@@ -6540,7 +6540,7 @@
           "returns": null,
           "summary": "Point one model at another. Combat is directional almost everywhere, so a test that forgets this fails for the wrong reason.",
           "examples": [],
-          "line": 165
+          "line": 193
         },
         {
           "name": "Context:wait",
@@ -6549,7 +6549,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 175
+          "line": 203
         },
         {
           "name": "Context:waitUntil",
@@ -6558,7 +6558,7 @@
           "returns": "boolean",
           "summary": "Wait for something to become true, or give up. The alternative — a fixed sleep long enough for the slowest machine — makes a suite that is both slow and flaky. This is fast when the game is fast and still correct when it is not.",
           "examples": [],
-          "line": 189
+          "line": 217
         },
         {
           "name": "Context:expect",
@@ -6567,7 +6567,7 @@
           "returns": null,
           "summary": "================================ assertions ================================",
           "examples": [],
-          "line": 201
+          "line": 229
         },
         {
           "name": "Context:expectEqual",
@@ -6576,7 +6576,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 208
+          "line": 236
         },
         {
           "name": "Context:expectNear",
@@ -6585,7 +6585,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 217
+          "line": 245
         },
         {
           "name": "Context:expectAlive",
@@ -6594,7 +6594,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 226
+          "line": 254
         },
         {
           "name": "Context:expectDead",
@@ -6603,7 +6603,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 230
+          "line": 258
         },
         {
           "name": "Context:cleanup",
@@ -6612,7 +6612,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 234
+          "line": 262
         },
         {
           "name": "Testing.run",
@@ -6621,7 +6621,7 @@
           "returns": "{ [string]: any }",
           "summary": "Run every registered scenario and report. Each case runs inside a coroutine with a deadline, because the most common way a live test fails is not an assertion but a hang: something waits for an event that a broken system never fires. A hang that takes the whole suite down teaches nothing; a hang reported as a timeout on one named scenario points straight at the break.",
           "examples": [],
-          "line": 264
+          "line": 292
         },
         {
           "name": "Testing.publish",
@@ -6630,7 +6630,7 @@
           "returns": null,
           "summary": "Publish the last report where a tool outside the game can read it. A StringValue under ReplicatedStorage, the same channel `Debug.expose` uses and for the same reason: it replicates, so it is readable from a play session that no edit-mode command can reach. The alternative — returning the report to a caller — only works if the caller is inside the same Lua VM, which a CLI never is.",
           "examples": [],
-          "line": 347
+          "line": 375
         },
         {
           "name": "Testing.runAndPublish",
@@ -6639,7 +6639,7 @@
           "returns": "{ [string]: any }",
           "summary": "Load a game's scenarios, run them, and publish the result. One call, so a game's bootstrap can opt in with a single line and a CLI has one thing to trigger.",
           "examples": [],
-          "line": 372
+          "line": 400
         },
         {
           "name": "Testing.describe",
@@ -6648,7 +6648,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 400
+          "line": 428
         }
       ],
       "describes": true

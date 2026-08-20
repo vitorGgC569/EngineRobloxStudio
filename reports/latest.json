@@ -4,11 +4,11 @@
     "version": "0.1.0"
   },
   "project": "C:\\Users\\vitor\\OneDrive\\Desktop\\RobloxGamesMCP",
-  "generatedAt": "2026-08-12T03:28:29.945223+00:00",
+  "generatedAt": "2026-08-20T01:58:28.630568+00:00",
   "summary": {
     "executed": 38,
-    "PASS": 35,
-    "WARN": 2,
+    "PASS": 37,
+    "WARN": 0,
     "FAIL": 1,
     "critical": 1,
     "major": 0,
@@ -17,7 +17,7 @@
   "scores": {
     "structural": 25.0,
     "security": 100.0,
-    "visual": 86.7,
+    "visual": 100.0,
     "geometry": 100.0,
     "gameplay": 100.0,
     "navigation": 100.0,
@@ -29,7 +29,8 @@
   },
   "releaseAllowed": false,
   "releaseReasons": [
-    "1 critical failure(s)"
+    "1 critical failure(s)",
+    "legacy audit is diagnostic only; fixture/headless evidence cannot release a build"
   ],
   "evidence": [
     {
@@ -87,7 +88,14 @@
         ],
         "missing": []
       },
-      "source": "filesystem"
+      "source": "filesystem",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "security.asset_scripts",
@@ -100,7 +108,14 @@
         "scriptsScanned": 28,
         "findings": []
       },
-      "source": "static-luau-scan"
+      "source": "static-luau-scan",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "security.asset_manifest",
@@ -121,7 +136,14 @@
         },
         "issues": []
       },
-      "source": "asset-manifest-validator"
+      "source": "asset-manifest-validator",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "visual.asset_quality",
@@ -172,7 +194,14 @@
         "assetCount": 4,
         "issues": []
       },
-      "source": "visual-asset-validator"
+      "source": "visual-asset-validator",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "visual.snapshot_bundle",
@@ -250,22 +279,29 @@
         "snapshotCount": 10,
         "issues": []
       },
-      "source": "visual-snapshot-validator"
+      "source": "visual-snapshot-validator",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "studio.runtime_capture",
       "probe": "studio_runtime_capture",
       "category": "visual",
-      "status": "WARN",
+      "status": "PASS",
       "severity": "major",
-      "message": "Capturas runtime do Studio ainda não estão disponíveis",
+      "message": "Capturas runtime do Studio presentes e identificadas",
       "details": {
-        "status": "WARN",
-        "studioDetected": false,
+        "status": "PASS",
+        "studioDetected": true,
         "processRunning": false,
-        "executablePath": null,
-        "captureAdapter": "not-connected",
-        "liveStudioCapture": false,
+        "executablePath": "C:\\Users\\vitor\\AppData\\Local\\Roblox\\Versions\\version-b2d03e4efaa04174\\RobloxStudioBeta.exe",
+        "captureAdapter": "runtime-manifest",
+        "liveStudioCapture": true,
         "runtime": {
           "manifestPath": "reports/studio-runtime/manifest.json",
           "liveStudioCapture": true,
@@ -296,20 +332,18 @@
               "bytes": 680645
             }
           ],
-          "issues": [
-            "runtime snapshot ausente: shop-runtime.png",
-            "runtime snapshot ausente: mine-runtime.png",
-            "runtime snapshot ausente: plot-runtime.png",
-            "runtime snapshot ausente: floor-runtime.png",
-            "runtime snapshot ausente: mobile-store-runtime.png"
-          ]
+          "issues": []
         },
-        "issues": [
-          "Roblox Studio não foi detectado no ambiente atual",
-          "captura runtime bloqueada; somente evidência headless/source-preview está disponível"
-        ]
+        "issues": []
       },
-      "source": "studio-detector"
+      "source": "studio-detector",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "contract.schema",
@@ -321,7 +355,14 @@
       "details": {
         "issues": []
       },
-      "source": "contract-validator"
+      "source": "contract-validator",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "contract.probe_coverage",
@@ -375,7 +416,14 @@
           "visual_spec_schema"
         ]
       },
-      "source": "probe-registry"
+      "source": "probe-registry",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.ground_support",
@@ -390,7 +438,14 @@
         "unsupportedPoints": [],
         "maxGap": 1.5
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.spawn_clearance",
@@ -402,7 +457,14 @@
       "details": {
         "clearance": true
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.spawn_support",
@@ -414,7 +476,14 @@
       "details": {
         "supportPart": "SpawnPad"
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.path_exists",
@@ -431,7 +500,14 @@
           "PlayerPlot"
         ]
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.objective_reachable",
@@ -447,7 +523,14 @@
           "MineEntrance"
         ]
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.collision_overlap",
@@ -459,7 +542,14 @@
       "details": {
         "overlaps": []
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.floating_objects",
@@ -471,7 +561,14 @@
       "details": {
         "objects": []
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.buried_objects",
@@ -483,7 +580,14 @@
       "details": {
         "objects": []
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.door_clearance",
@@ -501,7 +605,14 @@
           }
         ]
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.stairs_validity",
@@ -520,7 +631,14 @@
           }
         ]
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.interaction_distance",
@@ -545,7 +663,14 @@
           }
         ]
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.floor_progression",
@@ -558,7 +683,14 @@
         "prompt": "PurchaseFloorPrompt",
         "responsive": true
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.camera_obstruction",
@@ -570,7 +702,14 @@
       "details": {
         "obstructions": []
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.ui_visibility",
@@ -607,7 +746,14 @@
           }
         ]
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.ui_overflow",
@@ -654,7 +800,14 @@
           ]
         }
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.card_gallery",
@@ -692,7 +845,14 @@
           }
         ]
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.button_interaction",
@@ -705,7 +865,14 @@
         "input": "activate PurchasePrompt",
         "response": true
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.remote_security",
@@ -719,7 +886,14 @@
         "rateLimits": true,
         "serverPurchaseDistanceGuard": true
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.runtime_error",
@@ -731,7 +905,14 @@
       "details": {
         "consoleErrors": 0
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.memory_growth",
@@ -744,7 +925,14 @@
         "memoryGrowthMb": 1.8,
         "budgetMb": 5
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.instance_growth",
@@ -756,7 +944,14 @@
       "details": {
         "instanceGrowth": 0
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.duplicate_connections",
@@ -768,7 +963,14 @@
       "details": {
         "duplicateConnections": 0
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.persistence",
@@ -791,7 +993,14 @@
           ]
         }
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.multiplayer_isolation",
@@ -803,7 +1012,14 @@
       "details": {
         "multiplayerIsolation": true
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.performance_budget",
@@ -818,7 +1034,14 @@
         "targetFrameMs": 16.67,
         "maxWorkspaceInstances": 25000
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.asset_security",
@@ -832,7 +1055,14 @@
         "assetManifestIssues": [],
         "assetPartCount": 46
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.visual_quality",
@@ -852,7 +1082,14 @@
         ],
         "visualAssetIssues": []
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.visual_snapshot_bundle",
@@ -867,22 +1104,29 @@
         "snapshotCount": 10,
         "issues": []
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "probe.studio_runtime_capture",
       "probe": "studio_runtime_capture",
       "category": "visual",
-      "status": "WARN",
+      "status": "PASS",
       "severity": "major",
-      "message": "Capturas runtime do Studio pendentes; headless não é evidência live",
+      "message": "Capturas runtime do Studio validadas",
       "details": {
-        "status": "WARN",
-        "studioDetected": false,
+        "status": "PASS",
+        "studioDetected": true,
         "processRunning": false,
-        "executablePath": null,
-        "captureAdapter": "not-connected",
-        "liveStudioCapture": false,
+        "executablePath": "C:\\Users\\vitor\\AppData\\Local\\Roblox\\Versions\\version-b2d03e4efaa04174\\RobloxStudioBeta.exe",
+        "captureAdapter": "runtime-manifest",
+        "liveStudioCapture": true,
         "runtime": {
           "manifestPath": "reports/studio-runtime/manifest.json",
           "liveStudioCapture": true,
@@ -913,20 +1157,18 @@
               "bytes": 680645
             }
           ],
-          "issues": [
-            "runtime snapshot ausente: shop-runtime.png",
-            "runtime snapshot ausente: mine-runtime.png",
-            "runtime snapshot ausente: plot-runtime.png",
-            "runtime snapshot ausente: floor-runtime.png",
-            "runtime snapshot ausente: mobile-store-runtime.png"
-          ]
+          "issues": []
         },
-        "issues": [
-          "Roblox Studio não foi detectado no ambiente atual",
-          "captura runtime bloqueada; somente evidência headless/source-preview está disponível"
-        ]
+        "issues": []
       },
-      "source": "headless-runtime"
+      "source": "headless-runtime",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     },
     {
       "id": "agent.scenario.purchase_first_pack",
@@ -941,7 +1183,7 @@
         "actionRecords": [
           {
             "sequence": 1,
-            "timestamp": "2026-08-12T03:28:29.945223+00:00",
+            "timestamp": "2026-08-20T01:58:28.630568+00:00",
             "before": {
               "mode": "blackbox",
               "screenshot": "headless://frame/000003.png",
@@ -1030,7 +1272,7 @@
           },
           {
             "sequence": 2,
-            "timestamp": "2026-08-12T03:28:29.945223+00:00",
+            "timestamp": "2026-08-20T01:58:28.630568+00:00",
             "before": {
               "mode": "blackbox",
               "screenshot": "headless://frame/000006.png",
@@ -1115,7 +1357,7 @@
           },
           {
             "sequence": 3,
-            "timestamp": "2026-08-12T03:28:29.945223+00:00",
+            "timestamp": "2026-08-20T01:58:28.630568+00:00",
             "before": {
               "mode": "blackbox",
               "screenshot": "headless://frame/000009.png",
@@ -1203,7 +1445,14 @@
           }
         ]
       },
-      "source": "game-agent-bridge"
+      "source": "game-agent-bridge",
+      "validationLevel": "NOT_VALIDATED",
+      "observedAt": null,
+      "runId": null,
+      "buildHash": null,
+      "coverage": null,
+      "conclusive": true,
+      "truncated": false
     }
   ],
   "runtimeTrace": {
@@ -1422,12 +1671,12 @@
       "snapshotCount": 10
     },
     "studioRuntime": {
-      "status": "WARN",
-      "studioDetected": false,
+      "status": "PASS",
+      "studioDetected": true,
       "processRunning": false,
-      "executablePath": null,
-      "captureAdapter": "not-connected",
-      "liveStudioCapture": false,
+      "executablePath": "C:\\Users\\vitor\\AppData\\Local\\Roblox\\Versions\\version-b2d03e4efaa04174\\RobloxStudioBeta.exe",
+      "captureAdapter": "runtime-manifest",
+      "liveStudioCapture": true,
       "runtime": {
         "manifestPath": "reports/studio-runtime/manifest.json",
         "liveStudioCapture": true,
@@ -1458,18 +1707,9 @@
             "bytes": 680645
           }
         ],
-        "issues": [
-          "runtime snapshot ausente: shop-runtime.png",
-          "runtime snapshot ausente: mine-runtime.png",
-          "runtime snapshot ausente: plot-runtime.png",
-          "runtime snapshot ausente: floor-runtime.png",
-          "runtime snapshot ausente: mobile-store-runtime.png"
-        ]
+        "issues": []
       },
-      "issues": [
-        "Roblox Studio não foi detectado no ambiente atual",
-        "captura runtime bloqueada; somente evidência headless/source-preview está disponível"
-      ]
+      "issues": []
     },
     "missingPaths": [],
     "serverPurchaseDistanceGuard": true
@@ -1543,7 +1783,7 @@
           },
           "evidence": {
             "sequence": 1,
-            "timestamp": "2026-08-12T03:28:29.945223+00:00",
+            "timestamp": "2026-08-20T01:58:28.630568+00:00",
             "before": {
               "mode": "blackbox",
               "screenshot": "headless://frame/000003.png",
@@ -1682,7 +1922,7 @@
           },
           "evidence": {
             "sequence": 2,
-            "timestamp": "2026-08-12T03:28:29.945223+00:00",
+            "timestamp": "2026-08-20T01:58:28.630568+00:00",
             "before": {
               "mode": "blackbox",
               "screenshot": "headless://frame/000006.png",
@@ -1817,7 +2057,7 @@
           },
           "evidence": {
             "sequence": 3,
-            "timestamp": "2026-08-12T03:28:29.945223+00:00",
+            "timestamp": "2026-08-20T01:58:28.630568+00:00",
             "before": {
               "mode": "blackbox",
               "screenshot": "headless://frame/000009.png",
@@ -1944,7 +2184,7 @@
     "actionRecords": [
       {
         "sequence": 1,
-        "timestamp": "2026-08-12T03:28:29.945223+00:00",
+        "timestamp": "2026-08-20T01:58:28.630568+00:00",
         "before": {
           "mode": "blackbox",
           "screenshot": "headless://frame/000003.png",
@@ -2033,7 +2273,7 @@
       },
       {
         "sequence": 2,
-        "timestamp": "2026-08-12T03:28:29.945223+00:00",
+        "timestamp": "2026-08-20T01:58:28.630568+00:00",
         "before": {
           "mode": "blackbox",
           "screenshot": "headless://frame/000006.png",
@@ -2118,7 +2358,7 @@
       },
       {
         "sequence": 3,
-        "timestamp": "2026-08-12T03:28:29.945223+00:00",
+        "timestamp": "2026-08-20T01:58:28.630568+00:00",
         "before": {
           "mode": "blackbox",
           "screenshot": "headless://frame/000009.png",

@@ -18,7 +18,7 @@ CardCatalog.Cards = {
 		effect = "Reveals nearby ore nodes.",
 		effectStyle = "lantern",
 		runtimeAssetId = nil,
-		localPreviewPath = nil,
+		localPreviewPath = "assets/generated/cards/field-lantern-v1.png",
 	},
 	tunnel_mole = {
 		id = "tunnel_mole",
@@ -28,7 +28,7 @@ CardCatalog.Cards = {
 		effect = "Dig actions recharge 5% faster.",
 		effectStyle = "moss_sparks",
 		runtimeAssetId = nil,
-		localPreviewPath = nil,
+		localPreviewPath = "assets/generated/cards/tunnel-mole-v1.png",
 	},
 	mossback_badger_engineer = {
 		id = "mossback_badger_engineer",
@@ -68,7 +68,7 @@ CardCatalog.Cards = {
 		effect = "Adds 20% income on unlocked floors.",
 		effectStyle = "crown_flare",
 		runtimeAssetId = nil,
-		localPreviewPath = nil,
+		localPreviewPath = "assets/generated/cards/ridge-warden-v1.png",
 	},
 }
 

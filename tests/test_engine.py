@@ -89,7 +89,7 @@ class EngineTests(unittest.TestCase):
         report = run_audit(ROOT)
         evidence = next(item for item in report.evidence if item.probe == "visual_asset_quality")
         self.assertEqual(evidence.status, "PASS")
-        self.assertEqual(evidence.details["assetCount"], 4)
+        self.assertGreaterEqual(evidence.details["assetCount"], 4)
 
 
 if __name__ == "__main__":

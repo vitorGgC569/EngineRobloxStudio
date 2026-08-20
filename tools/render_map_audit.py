@@ -260,12 +260,12 @@ def make_card_gallery():
     else:
         draw.rectangle((55, 115, 1545, 795), fill=COLORS["panel"])
     cards = [
-        ("FIELD LANTERN", "COMMON", COLORS["muted"], None, "+5% ore yield"),
-        ("TUNNEL MOLE", "UNCOMMON", COLORS["teal"], None, "+8% build speed"),
+        ("FIELD LANTERN", "COMMON", COLORS["muted"], ROOT / "assets/generated/cards/field-lantern-v1.png", "+5% ore yield"),
+        ("TUNNEL MOLE", "UNCOMMON", COLORS["teal"], ROOT / "assets/generated/cards/tunnel-mole-v1.png", "+8% build speed"),
         ("MOSSBACK BADGER", "RARE", "#5aa7ff", ROOT / "assets/generated/cards/mossback-badger-engineer-v1.png", "+12% build speed"),
         ("COPPER LYNX", "EPIC", COLORS["copper_light"], ROOT / "assets/generated/cards/copper-lynx-prospector-v1.png", "+18% ore yield"),
         ("STORM RAVEN", "LEGENDARY", "#b383ff", ROOT / "assets/generated/cards/storm-raven-surveyor-v1.png", "reveal objectives"),
-        ("RIDGE WARDEN", "MYTHIC", COLORS["gold"], None, "all systems tuned"),
+        ("RIDGE WARDEN", "MYTHIC", COLORS["gold"], ROOT / "assets/generated/cards/ridge-warden-v1.png", "all systems tuned"),
     ]
     card_w, card_h = 216, 410
     gap = 18
@@ -286,7 +286,7 @@ def make_card_gallery():
         draw.line((x + 14, y + 310, x + card_w - 14, y + 310), fill="#536676", width=1)
         draw.text((x + 14, y + 328), effect, font=FONT_TINY, fill=COLORS["muted"])
         draw.text((x + card_w - 14, y + 370), f"{index + 1:02d}", font=FONT_LABEL, fill=accent, anchor="ra")
-    draw_footer(image, "ASSET PREVIEW • três artes geradas presentes; demais cartas usam fallback até upload Roblox")
+    draw_footer(image, "ASSET PREVIEW • todas as 6 artes conceituais presentes e registradas; aguardando upload Roblox para runtime")
     return image
 
 

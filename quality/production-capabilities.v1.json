@@ -1274,7 +1274,9 @@
       "gaps": [
         "Nothing published: the produced mesh has not been uploaded, so integration remains unproven."
       ],
-      "limitations": []
+      "limitations": [
+        "Requires Blender 3.6+ and local worker process availability; cannot author soft body or skeletal rigs directly."
+      ]
     },
     {
       "id": "client.ui.measure",

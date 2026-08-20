@@ -11,7 +11,7 @@ from .bridge.core import GameAgentBridge
 from .models import AuditReport, Evidence
 from .project import Project
 from .probes import PROBE_CATALOG, run_probes
-from .runtime import MvpGameRuntime
+from .runtime import MvpGameRuntime, run_luau_scenario
 from .scanner import scan_structure
 from .scoring import score_evidence
 
@@ -45,8 +45,10 @@ def run_audit(root: str | Path) -> AuditReport:
         source="probe-registry",
         validation_level="STATICALLY_VALIDATED",
     ))
-    runtime = MvpGameRuntime()
-    runtime_trace = runtime.run_purchase_scenario()
+    runtime_trace = run_luau_scenario(project.root)
+    if runtime_trace is None:
+        runtime = MvpGameRuntime()
+        runtime_trace = runtime.run_purchase_scenario()
     evidence.extend(run_probes(project, runtime_trace, static_scan))
     scenario_path = project.root / project.config.get("agentScenario", "contracts/scenarios/purchase-first-pack.json")
     agent_bridge = GameAgentBridge(HeadlessGameAdapter(project), "blackbox")

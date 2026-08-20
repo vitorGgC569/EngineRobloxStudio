@@ -38,7 +38,11 @@ class FakeCaptureBackend:
 
     def grab(self, _window: WindowIdentity, output: Path) -> tuple[int, int]:
         output.parent.mkdir(parents=True, exist_ok=True)
-        Image.new("RGB", (32, 18), (20, 80, 120)).save(output, "PNG")
+        img = Image.new("RGB", (32, 18))
+        for x in range(32):
+            for y in range(18):
+                img.putpixel((x, y), (x * 7 % 256, y * 13 % 256, (x + y) * 5 % 256))
+        img.save(output, "PNG")
         return 32, 18
 
 

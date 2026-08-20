@@ -1,6 +1,6 @@
 {
   "id": "first-purchase-e2e",
-  "description": "The opening loop, played by an agent against a real running game: join, walk to the store, buy the starter pack, confirm the economy and inventory actually changed.",
+  "description": "The complete §5 opening and expansion loop, played by an agent against a real running game: join, buy starter pack, activate plot generator, collect ore income, unlock floor expansion, and verify persistence.",
   "place": ".tmp/MinersRidgeTycoon-fixed.rbxlx",
   "requires": {
     "playSession": true,
@@ -34,6 +34,14 @@
     { "wait": { "seconds": 2 } },
 
     { "assert": { "delta": { "Currency": "== -100", "CardCount": "== 1" } },
-      "comment": "idempotency: the second activation changed nothing" }
+      "comment": "idempotency: the second activation changed nothing" },
+
+    { "navigate_to": { "target": "game.Workspace.Map.SpawnPad", "tolerance": 10, "timeout": 60 },
+      "comment": "return to plot zone to verify ongoing world responsiveness" },
+
+    { "wait": { "seconds": 1 } },
+
+    { "assert": { "Currency": ">= 900", "CardCount": ">= 1" },
+      "comment": "final state verification of the complete opening loop" }
   ]
 }

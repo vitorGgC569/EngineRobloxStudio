@@ -1,13 +1,13 @@
 # Roblox Quality Engine
 
 Projeto: `C:\Users\vitor\OneDrive\Desktop\RobloxGamesMCP`
-Gerado: `2026-08-12T03:28:29.945223+00:00`
+Gerado: `2026-08-20T01:58:28.630568+00:00`
 
 ## Resultado
 
 - Checks executados: **38**
-- PASS: **35**
-- WARN: **2**
+- PASS: **37**
+- WARN: **0**
 - FAIL: **1**
 - Release: **BLOCKED**
 
@@ -23,7 +23,7 @@ Gerado: `2026-08-12T03:28:29.945223+00:00`
 - security: **100.0/100**
 - structural: **25.0/100**
 - ui: **100.0/100**
-- visual: **86.7/100**
+- visual: **100.0/100**
 
 ## Evidências
 
@@ -34,7 +34,7 @@ Gerado: `2026-08-12T03:28:29.945223+00:00`
 | PASS | info | `asset_manifest` | Manifesto de assets alocado, aprovado e validado |
 | PASS | info | `visual_asset_quality` | Artes raster geradas têm resolução e proporção válidas |
 | PASS | info | `visual_snapshot_bundle` | Pacote de prints visuais presente e decodificável |
-| WARN | major | `studio_runtime_capture` | Capturas runtime do Studio ainda não estão disponíveis |
+| PASS | major | `studio_runtime_capture` | Capturas runtime do Studio presentes e identificadas |
 | PASS | info | `contract_schema` | Game Contract válido |
 | FAIL | critical | `contract_coverage` | Há requisitos sem probe executável |
 | PASS | major | `ground_support` | A área alvo possui suporte dentro do gap permitido |
@@ -65,12 +65,13 @@ Gerado: `2026-08-12T03:28:29.945223+00:00`
 | PASS | critical | `asset_security` | Assets e scripts passaram pelo sandbox scanner |
 | PASS | minor | `visual_quality` | Snapshots visuais e artes acima do limiar |
 | PASS | major | `visual_snapshot_bundle` | Pacote de prints visuais validado |
-| WARN | major | `studio_runtime_capture` | Capturas runtime do Studio pendentes; headless não é evidência live |
+| PASS | major | `studio_runtime_capture` | Capturas runtime do Studio validadas |
 | PASS | critical | `agent_blackbox_scenario` | Agente completou o fluxo humano de compra |
 
 ## Bloqueios
 
 - 1 critical failure(s)
+- legacy audit is diagnostic only; fixture/headless evidence cannot release a build
 
 ## Runtime scenario trace
 

@@ -109,6 +109,30 @@
       "functionalProbe": "floor_purchase_prompt"
     },
     {
+      "key": "field_lantern_v1",
+      "displayName": "Field Lantern card art",
+      "source": "generated-raster",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["StarterPlayerScripts.CardGallery", "CardCatalog.field_lantern"],
+      "maxInstances": 1,
+      "functionalProbe": "card_gallery_visibility",
+      "localFile": "assets/generated/cards/field-lantern-v1.png",
+      "runtimeReference": "pending-roblox-upload"
+    },
+    {
+      "key": "tunnel_mole_v1",
+      "displayName": "Tunnel Mole card art",
+      "source": "generated-raster",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["StarterPlayerScripts.CardGallery", "CardCatalog.tunnel_mole"],
+      "maxInstances": 1,
+      "functionalProbe": "card_gallery_visibility",
+      "localFile": "assets/generated/cards/tunnel-mole-v1.png",
+      "runtimeReference": "pending-roblox-upload"
+    },
+    {
       "key": "copper_lynx_prospector_v1",
       "displayName": "Copper Lynx Prospector card art",
       "source": "generated-raster",
@@ -145,6 +169,18 @@
       "runtimeReference": "pending-roblox-upload"
     },
     {
+      "key": "ridge_warden_v1",
+      "displayName": "Ridge Warden card art",
+      "source": "generated-raster",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["StarterPlayerScripts.CardGallery", "CardCatalog.ridge_warden"],
+      "maxInstances": 1,
+      "functionalProbe": "card_gallery_visibility",
+      "localFile": "assets/generated/cards/ridge-warden-v1.png",
+      "runtimeReference": "pending-roblox-upload"
+    },
+    {
       "key": "card_gallery_panel_v1",
       "displayName": "Copperridge card gallery UI backdrop",
       "source": "generated-raster",
@@ -154,6 +190,54 @@
       "maxInstances": 1,
       "functionalProbe": "ui_visibility",
       "localFile": "assets/generated/ui/card-gallery-panel-v1.png",
+      "runtimeReference": "pending-roblox-upload"
+    },
+    {
+      "key": "hud_currency_coin_v1",
+      "displayName": "Minimalist HUD Gold Coin Icon",
+      "source": "generated-raster",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["StarterGui.Hud.CurrencyDisplay"],
+      "maxInstances": 1,
+      "functionalProbe": "ui_visibility",
+      "localFile": "assets/generated/hud/hud_currency_coin_1787191378282.jpg",
+      "runtimeReference": "pending-roblox-upload"
+    },
+    {
+      "key": "hud_pickaxe_mining_v1",
+      "displayName": "Minimalist HUD Mining Pickaxe Icon",
+      "source": "generated-raster",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["StarterGui.Hud.MiningAction"],
+      "maxInstances": 1,
+      "functionalProbe": "ui_visibility",
+      "localFile": "assets/generated/hud/hud_pickaxe_mining_1787191394864.jpg",
+      "runtimeReference": "pending-roblox-upload"
+    },
+    {
+      "key": "hud_backpack_inv_v1",
+      "displayName": "Minimalist HUD Inventory Backpack Icon",
+      "source": "generated-raster",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["StarterGui.Hud.InventoryButton"],
+      "maxInstances": 1,
+      "functionalProbe": "ui_visibility",
+      "localFile": "assets/generated/hud/hud_backpack_inv_1787191412449.jpg",
+      "runtimeReference": "pending-roblox-upload"
+    },
+    {
+      "key": "hud_glass_container_v1",
+      "displayName": "Minimalist Glassmorphism HUD Panel Frame",
+      "source": "generated-raster",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["StarterGui.Hud.HeaderFrame"],
+      "maxInstances": 1,
+      "functionalProbe": "ui_visibility",
+      "localFile": "assets/generated/hud/hud_glass_container_1787191436802.jpg",
       "runtimeReference": "pending-roblox-upload"
     }
   ]

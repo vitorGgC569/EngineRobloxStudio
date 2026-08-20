@@ -262,6 +262,52 @@ def register_scene_tools(server: Any) -> Any:
         handler=scene_optimize,
     ))
 
+    def scene_inspect(arguments: dict[str, Any]) -> dict[str, Any]:
+        plan = _plan_from(arguments)
+        modules: dict[str, int] = {}
+        regions: dict[str, int] = {}
+        variants: dict[str, int] = {}
+        xs, ys, zs = [], [], []
+
+        for p in plan.placements:
+            modules[p.module_id] = modules.get(p.module_id, 0) + 1
+            if p.region:
+                regions[p.region] = regions.get(p.region, 0) + 1
+            if p.variant:
+                variants[p.variant] = variants.get(p.variant, 0) + 1
+            xs.append(p.position[0])
+            ys.append(p.position[1])
+            zs.append(p.position[2])
+
+        bbox = {
+            "min": [min(xs), min(ys), min(zs)] if xs else [0, 0, 0],
+            "max": [max(xs), max(ys), max(zs)] if xs else [0, 0, 0],
+        }
+
+        return {
+            "kitId": plan.kit_id,
+            "seed": plan.seed,
+            "totalPlacements": len(plan.placements),
+            "modules": modules,
+            "regions": regions,
+            "variants": variants,
+            "boundingBox": bbox,
+            "operations": list(plan.operations),
+        }
+
+    server.register(Tool(
+        name="scene_inspect",
+        description="Inspect a scene composition plan: total placements, module breakdown, regions, and bounding box.",
+        input_schema={
+            "type": "object",
+            "required": ["plan"],
+            "properties": {
+                "plan": {"type": "object"},
+            },
+        },
+        handler=scene_inspect,
+    ))
+
     server.register(Tool(
         name="ui_click",
         description=(

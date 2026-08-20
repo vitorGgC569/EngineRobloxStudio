@@ -299,6 +299,48 @@ class OpenCloudClient:
             headers=self._headers(),
         ), SCOPES["datastore"])
 
+    def set_datastore_entry(
+        self,
+        universe_id: str,
+        datastore: str,
+        entry_id: str,
+        value: Any,
+        *,
+        scope: str = "global",
+    ) -> CloudResult:
+        """Write or update one entry in an Open Cloud data store."""
+        if not self.api_key:
+            return self._blocked(SCOPES.get("datastore_write", "universe.datastore:write"))
+        return self._send(HttpRequest(
+            method="POST",
+            url=(
+                f"{self.api_root}/cloud/v2/universes/{universe_id}"
+                f"/data-stores/{datastore}/scopes/{scope}/entries?id={entry_id}"
+            ),
+            headers=self._headers("application/json"),
+            body=json_body(value) if isinstance(value, (dict, list)) else json_body({"value": value}),
+        ), SCOPES.get("datastore_write", "universe.datastore:write"))
+
+    def delete_datastore_entry(
+        self,
+        universe_id: str,
+        datastore: str,
+        entry_id: str,
+        *,
+        scope: str = "global",
+    ) -> CloudResult:
+        """Delete one test entry in an Open Cloud data store."""
+        if not self.api_key:
+            return self._blocked(SCOPES.get("datastore_write", "universe.datastore:write"))
+        return self._send(HttpRequest(
+            method="DELETE",
+            url=(
+                f"{self.api_root}/cloud/v2/universes/{universe_id}"
+                f"/data-stores/{datastore}/scopes/{scope}/entries/{entry_id}"
+            ),
+            headers=self._headers(),
+        ), SCOPES.get("datastore_write", "universe.datastore:write"))
+
     # -- assets -----------------------------------------------------------
 
     def asset(self, asset_id: str) -> CloudResult:

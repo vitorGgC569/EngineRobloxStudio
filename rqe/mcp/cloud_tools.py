@@ -173,4 +173,40 @@ def register_cloud_tools(server: EngineMcpServer) -> EngineMcpServer:
         handler=cloud_datastore,
     ))
 
+    def cloud_datastore_test_session(arguments: dict[str, Any]) -> dict[str, Any]:
+        from ..cloud.datastore_harness import DatastoreHarness
+
+        universe, _ = _target(arguments)
+        datastore = str(arguments.get("datastore") or "RQE_PersistenceTest")
+        run_id = str(arguments.get("runId") or "datastore-test-adhoc")
+        simulated = bool(arguments.get("simulated", False))
+        harness = DatastoreHarness(client=_client(), simulated=simulated)
+        receipt = harness.run_test_session(
+            universe_id=universe,
+            datastore=datastore,
+            run_id=run_id,
+            scope=str(arguments.get("scope") or "global"),
+        )
+        return receipt.to_dict()
+
+    server.register(Tool(
+        name="cloud_datastore_test_session",
+        description=(
+            "Run an end-to-end DataStore transactional test session (write, read, update, verify, cleanup) "
+            "against Open Cloud or a simulated test sandbox. Produces an immutable persistence receipt."
+        ),
+        input_schema={
+            "type": "object",
+            "additionalProperties": False,
+            "properties": {
+                "universeId": {"type": "string"},
+                "datastore": {"type": "string"},
+                "runId": {"type": "string"},
+                "scope": {"type": "string"},
+                "simulated": {"type": "boolean"},
+            },
+        },
+        handler=cloud_datastore_test_session,
+    ))
+
     return server

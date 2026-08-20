@@ -41,6 +41,16 @@ IK.config = {
 	-- cliff does not stretch a leg down to the sea.
 	maxDrop = 4,
 	footOffset = 0.5,
+	--[[
+		The most this may ever shorten a leg.
+
+		A safety rail rather than a tuning value. Foot planting exists to take
+		up a few tenths of a stud on a slope; anything asking for more is a bad
+		reading, and without a cap a bad reading folds the character into a
+		crouch in front of the player. Capped, the worst case is a foot that
+		hovers slightly, which nobody notices.
+	]]
+	maxLift = 1.2,
 }
 
 -- =============================== two bones ==================================
@@ -125,21 +135,36 @@ local function stepFoot(character: Model, side: string, state: any, dt: number)
 		return
 	end
 
-	local origin = hip.Position
+	--[[
+		Measure from the hip *joint*, not from the middle of the thigh.
+
+		`hip.Position` is the centre of the upper leg part, half its length
+		below the joint it hangs from. Treating it as the joint made the rest
+		pose look almost a stud shorter than it is, so every frame reported a
+		ground that was "higher than expected" and the solver folded the legs
+		to take up slack that was never there. The character stood in a deep
+		crouch on flat ground.
+
+		The joint is at the top of the part; the leg reaches one upper plus one
+		lower below it. Both are read off the rig rather than assumed, so a
+		scaled or bulky rig is correct without a special case.
+	]]
+	local hipJointY = hip.Position.Y + hip.Size.Y / 2
+	local fullLength = hip.Size.Y + shin.Size.Y
+
 	local params = RaycastParams.new()
 	params.FilterType = Enum.RaycastFilterType.Exclude
 	params.FilterDescendantsInstances = { character }
 
-	local drop = IK.config.maxDrop
-	local hit = Workspace:Raycast(origin, Vector3.new(0, -(hip.Size.Y + shin.Size.Y + drop), 0), params)
+	local from = Vector3.new(hip.Position.X, hipJointY, hip.Position.Z)
+	local hit = Workspace:Raycast(from, Vector3.new(0, -(fullLength + IK.config.maxDrop), 0), params)
 
 	local wanted = 0
 	if hit then
-		local restY = origin.Y - (hip.Size.Y + shin.Size.Y)
-		local groundY = hit.Position.Y + IK.config.footOffset
-		-- Only ever shorten the leg. Extending it to chase ground below the
-		-- rest pose is what makes characters do the splits on stairs.
-		wanted = math.max(0, groundY - restY)
+		local reachNeeded = hipJointY - (hit.Position.Y + IK.config.footOffset)
+		-- Only ever shorten. Extending past the rest pose to chase ground
+		-- below it is what makes characters do the splits on stairs.
+		wanted = math.clamp(fullLength - reachNeeded, 0, IK.config.maxLift)
 	end
 
 	state[side] = state[side] or 0
@@ -147,7 +172,7 @@ local function stepFoot(character: Model, side: string, state: any, dt: number)
 	state[side] += (wanted - state[side]) * blend
 
 	local lift = state[side]
-	if lift < 0.01 then
+	if lift < 0.02 then
 		return
 	end
 
@@ -312,14 +337,38 @@ function IK.holdWith(character: Model, side: string, attachment: BasePart, offse
 	end)
 end
 
+--[[
+	How much each planted foot is currently lifting.
+
+	Exists to be measured. Foot IK has broken this project's character twice —
+	once by overwriting the animation and once by folding the legs — and both
+	times the symptom was visual and the cause was a number. A correction that
+	reads above a few tenths of a stud on flat ground is wrong, and now that is
+	checkable without looking at anything.
+]]
+function IK.lift(character: Model): { [string]: number }
+	local state = planted[character]
+	if not state then
+		return {}
+	end
+	return {
+		right = math.floor((state.Right or 0) * 1000) / 1000,
+		left = math.floor((state.Left or 0) * 1000) / 1000,
+	}
+end
+
 function IK.describe(): { [string]: any }
 	local count = 0
-	for _ in planted do
+	local lifts: { [string]: any } = {}
+	for character in planted do
 		count += 1
+		lifts[character.Name] = IK.lift(character)
 	end
 	return {
 		footPlanted = count,
 		running = plantConn ~= nil,
+		lifts = lifts,
+		maxLift = IK.config.maxLift,
 		requires = "R15 (a two-bone limb needs an elbow and a knee)",
 	}
 end

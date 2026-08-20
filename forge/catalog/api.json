@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-08-20T13:34:42+00:00",
+  "generatedAt": "2026-08-20T13:57:52+00:00",
   "engine": "Forge",
   "modules": 50,
-  "functions": 713,
+  "functions": 714,
   "index": [
     {
       "name": "Ability",
@@ -107,7 +107,7 @@
     {
       "name": "IK",
       "summary": "IK — putting a hand or a foot where the world is, not where the clip said",
-      "functions": 6
+      "functions": 7
     },
     {
       "name": "Input",
@@ -3422,7 +3422,7 @@
     {
       "name": "IK",
       "file": "forge/luau/Forge/IK/init.lua",
-      "lines": 328,
+      "lines": 377,
       "summary": "IK — putting a hand or a foot where the world is, not where the clip said. Forward kinematics, which is everything this engine has done so far, works from the shoulder outwards: you choose angles and the hand ends up wherever that puts it. It is exact, cheap and completely blind to the world. A walk clip authored on flat ground puts a foot six inches into a slope, and a two-handed grip authored for one weapon misses the next one. Inverse kinematics runs the other way: you name the point the hand or foot must reach and it solves for the angles. Two bones and a hinge is the whole problem, and it has a closed-form answer — no iteration, no solver, no per-frame cost worth measuring. --- Where this sits ------------------------------------------------------ IK runs *after* the animator has posed the skeleton, as a correction. That order matters: the clip still decides what the body is doing, and this only adjusts the last two bones of a limb so the end lands correctly. Running it first, or instead, gives you a character that reaches things beautifully and has no performance. R15 only, and honestly so. An R6 rig has no elbow or knee, so there is no second bone to solve for and nothing here can help it.",
       "examples": [
         "IK.footPlant(character, { maxDrop = 3 })     -- feet follow the ground\nIK.reach(character, \"right\", targetPosition) -- hand goes to a point"
@@ -3435,7 +3435,7 @@
           "returns": "(number, number)",
           "summary": "Solve a two-bone chain. Given the length of the upper and lower bone and the straight-line distance to the target, the law of cosines gives both joint angles directly. Returns the shoulder-side and elbow-side angles in radians. The clamp is the important part. If the target is further than both bones can reach, the honest answer is \"point straight at it and fall short\" — the alternative is a NaN from `math.acos` of something greater than one, which propagates into a CFrame and makes the whole limb vanish.",
           "examples": [],
-          "line": 59
+          "line": 69
         },
         {
           "name": "IK.footPlant",
@@ -3444,7 +3444,7 @@
           "returns": "any",
           "summary": "",
           "examples": [],
-          "line": 178
+          "line": 203
         },
         {
           "name": "IK.clearFootPlant",
@@ -3453,7 +3453,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 225
+          "line": 250
         },
         {
           "name": "IK.reach",
@@ -3462,7 +3462,7 @@
           "returns": "boolean",
           "summary": "Put a hand on a point in the world. Used for the thing that has been visibly wrong in this project all day: a second hand that should be on the bow and is instead near it. With a solved elbow the hand goes *to* the grip rather than approximately toward it, and the same call works for a ladder rung, a door handle or a ledge. Returns whether the point was reachable. A caller that ignores that will happily animate a character straining at something two studs too far away.",
           "examples": [],
-          "line": 254
+          "line": 279
         },
         {
           "name": "IK.holdWith",
@@ -3471,7 +3471,16 @@
           "returns": "RBXScriptConnection",
           "summary": "Hold a hand on a gripped object, every frame. The off hand of a two-handed weapon is the classic case: the weapon is welded to one hand and the other has to follow it wherever the animation takes it. Solved rather than authored, it stays correct for every clip and every weapon, including ones written later.",
           "examples": [],
-          "line": 305
+          "line": 330
+        },
+        {
+          "name": "IK.lift",
+          "signature": "IK.lift(character: Model)",
+          "kind": "function",
+          "returns": "{ [string]: number }",
+          "summary": "How much each planted foot is currently lifting. Exists to be measured. Foot IK has broken this project's character twice — once by overwriting the animation and once by folding the legs — and both times the symptom was visual and the cause was a number. A correction that reads above a few tenths of a stud on flat ground is wrong, and now that is checkable without looking at anything.",
+          "examples": [],
+          "line": 349
         },
         {
           "name": "IK.describe",
@@ -3480,7 +3489,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 315
+          "line": 360
         }
       ],
       "describes": true
@@ -4181,7 +4190,7 @@
     {
       "name": "Material",
       "file": "forge/luau/Forge/Material/init.lua",
-      "lines": 272,
+      "lines": 306,
       "summary": "Material — physically based surfaces. Everything this engine has rendered so far has been `Part.Material` and a colour: SmoothPlastic, Wood, Slate. Those are Roblox's *legacy* materials, and they carry no normal map, no roughness and no metalness. A rock made of them is a coloured box with a noise texture, and no amount of lighting work fixes it, because there is nothing in the surface for light to catch. Two mechanisms replace that, and they are for different things: `SurfaceAppearance` overrides one MeshPart's textures. It is how a specific model gets its own colour, normal, metalness and roughness maps. `MaterialVariant` replaces a whole legacy material everywhere at once. Register a variant named for `Enum.Material.Slate` and every Slate surface in the game — including terrain — picks it up. That is the lever worth pulling first, because it upgrades the entire world in one call without touching a single part. --- On ids --------------------------------------------------------------- Every texture id here goes through `Assets`, which refuses anything that has not been loaded successfully once. That is deliberate: a wrong texture id does not error, it renders as a flat grey surface, which is exactly the sort of silent failure that survives every static check and is discovered by a person squinting at a screenshot.",
       "examples": [
         "Material.define(\"mossy_rock\", {\nbase = Enum.Material.Slate,\ncolor = \"rbxassetid://...\",\nnormal = \"rbxassetid://...\",\nroughness = \"rbxassetid://...\",\nstudsPerTile = 8,\n})\nMaterial.applyTerrain(Enum.Material.Slate, \"mossy_rock\")"
@@ -4200,10 +4209,10 @@
           "name": "Material.defineMany",
           "signature": "Material.defineMany(table_: { [string]: any })",
           "kind": "function",
-          "returns": null,
-          "summary": "",
+          "returns": "number",
+          "summary": "Define several, and report how many this build could actually take. Returns the count rather than nothing, so a caller can tell the difference between \"PBR is on\" and \"PBR silently did nothing here\" — which from a screenshot look identical.",
           "examples": [],
-          "line": 100
+          "line": 130
         },
         {
           "name": "Material.get",
@@ -4212,7 +4221,7 @@
           "returns": "MaterialVariant?",
           "summary": "",
           "examples": [],
-          "line": 106
+          "line": 140
         },
         {
           "name": "Material.names",
@@ -4221,7 +4230,7 @@
           "returns": "{ string }",
           "summary": "",
           "examples": [],
-          "line": 110
+          "line": 144
         },
         {
           "name": "Material.applyTerrain",
@@ -4230,7 +4239,7 @@
           "returns": "boolean",
           "summary": "Make a legacy material render as a variant, everywhere. One call and every Slate surface in the world changes, terrain included. This is the highest-leverage thing in the module and the reason variants beat per-part appearances for world-scale work.",
           "examples": [],
-          "line": 127
+          "line": 161
         },
         {
           "name": "Material.clearTerrain",
@@ -4239,7 +4248,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 142
+          "line": 176
         },
         {
           "name": "Material.surface",
@@ -4248,7 +4257,7 @@
           "returns": "Instance?",
           "summary": "Give one MeshPart its own textures. `SurfaceAppearance` is a child of the part, not a property, and a part may only have one — so an existing appearance is replaced rather than duplicated, which Roblox would otherwise refuse at runtime.",
           "examples": [],
-          "line": 153
+          "line": 187
         },
         {
           "name": "Material.paint",
@@ -4257,7 +4266,7 @@
           "returns": "number",
           "summary": "Apply a defined material to a part and everything under it. Sets the base material as well as the variant name, because a part whose `MaterialVariant` names something its `Material` does not match renders as the plain base — a silent mismatch that looks like the texture failed to load.",
           "examples": [],
-          "line": 187
+          "line": 221
         },
         {
           "name": "Material.renderFidelity",
@@ -4266,7 +4275,7 @@
           "returns": "number",
           "summary": "Render distance per model. Roblox has no author-facing LOD, but `MeshPart.RenderFidelity` is the part of it that matters most: `Precise` on every rock in a forest is how a scene with a good frame budget spends all of it on geometry nobody can see. `Automatic` lets Roblox drop fidelity with distance. It is almost always the right answer for scatter, and almost always the wrong one for anything the player stands next to.",
           "examples": [],
-          "line": 225
+          "line": 259
         },
         {
           "name": "Material.shadowBudget",
@@ -4275,7 +4284,7 @@
           "returns": "number",
           "summary": "Stop small props from casting shadows. A shadow costs roughly what the geometry costs. On a pebble it buys nothing, and a field of scattered pebbles each casting one is a measurable share of a frame for detail no player will ever notice missing.",
           "examples": [],
-          "line": 248
+          "line": 282
         },
         {
           "name": "Material.describe",
@@ -4284,7 +4293,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 262
+          "line": 296
         }
       ],
       "describes": true
@@ -4677,7 +4686,7 @@
     {
       "name": "Netcode",
       "file": "forge/luau/Forge/Netcode/init.lua",
-      "lines": 765,
+      "lines": 786,
       "summary": "Netcode — prediction, reconciliation, lag compensation and interpolation. `Net` is the transport: typed, validated, rate limited. It says nothing about *time*, and time is the whole problem in an action game. Without this layer the loop is: which means every action costs a round trip. At 50ms nobody notices. At 150ms the swing lags the click. At 200ms it reads as rubber. With it: Four pieces, and each solves a different symptom: prediction      your own actions feel instant reconciliation  a rejected action is undone, not left desynced rewind          a hit that looked good on your screen counts interpolation   other people and enemies move smoothly, not in steps What this is not ---------------- It is not rollback netcode for a fighting game and does not pretend to be. Roblox owns the physics step and does not expose a deterministic rewind of the whole simulation. What it does is make *gameplay actions* feel local and *hit detection* fair, which is the part players feel.",
       "examples": [
         "input -> server -> authoritative state -> client sees it",

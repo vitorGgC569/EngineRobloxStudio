@@ -13,4 +13,8 @@ return {
 	-- write to a DataStore, neither of which belongs in a session someone is
 	-- actually playing.
 	selfTest = game:GetService("RunService"):IsStudio(),
+
+	-- Inverse-kinematic foot placement on the player. Off until measured:
+	-- see the comment where it is read.
+	footPlanting = false,
 }

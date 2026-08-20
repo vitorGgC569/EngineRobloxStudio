@@ -754,11 +754,32 @@ if IS_SERVER then
 end
 
 --[[
-	Wire at load.
+	Wire at load, but never yield while doing it.
 
-	The channel must not depend on a game reaching its own netcode setup: the
-	server has to own these remotes before any client asks for one.
+	The channel must not depend on a game reaching its own netcode setup -- the
+	server has to own these remotes before any client asks for one. Calling
+	`wire()` here outright achieved that on the server and broke the client
+	outright:
+
+	  * on the client, `Net.on` resolves its remote with `WaitForChild`, which
+	    yields;
+	  * yielding inside a ModuleScript's top level means the `require` yields;
+	  * the lazy loader in `Forge/init.lua` is re-entered while that require is
+	    suspended, and Roblox answers "cannot resume non-suspended awaiting
+	    coroutine".
+
+	The whole client script died on its first `Forge.Netcode`, so no animator
+	was ever built and the character slid around with no animation at all. One
+	line of load-time convenience took out every system below it.
+
+	The server still wires synchronously: it creates the remotes itself, so its
+	`WaitForChild` returns without suspending. The client defers, which costs a
+	frame and costs nothing else.
 ]]
-Netcode.wire()
+if IS_SERVER then
+	Netcode.wire()
+else
+	task.defer(Netcode.wire)
+end
 
 return Netcode

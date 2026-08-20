@@ -80,8 +80,31 @@ function Material.define(name: string, spec: any): MaterialVariant?
 
 	local mv = variant :: MaterialVariant
 	mv.Name = name
-	mv.BaseMaterial = spec.base or Enum.Material.Slate
-	mv.StudsPerTile = spec.studsPerTile or Material.config.studsPerTile
+
+	--[[
+		`BaseMaterial` is plugin-only.
+
+		A normal game script cannot write it: Roblox answers "the current
+		thread cannot write 'BaseMaterial' (lacking capability Plugin)" and
+		throws. A bare assignment here killed the whole client script on its
+		way past — no animator, no HUD, a character sliding around with no
+		animation at all — for a cosmetic feature.
+
+		That is the same shape as `Terrain.Decoration`, and this module has
+		`Capability` for exactly this reason. Going through it means a variant
+		that cannot be configured at runtime is a variant this build does not
+		get, not a client that stops running.
+
+		The real place for variants is the place file, authored in Studio,
+		where the plugin capability exists. `Material.define` is for the cases
+		where that is possible; `Material.paint` and `applyTerrain` work on
+		variants that are already there regardless of who made them.
+	]]
+	if not Capability.set(mv, "BaseMaterial", spec.base or Enum.Material.Slate) then
+		mv:Destroy()
+		return nil
+	end
+	Capability.set(mv, "StudsPerTile", spec.studsPerTile or Material.config.studsPerTile)
 
 	Capability.set(mv, "ColorMap", spec.color or "")
 	Capability.set(mv, "NormalMap", spec.normal or "")
@@ -97,10 +120,21 @@ function Material.define(name: string, spec: any): MaterialVariant?
 	return mv
 end
 
-function Material.defineMany(table_: { [string]: any })
+--[[
+	Define several, and report how many this build could actually take.
+
+	Returns the count rather than nothing, so a caller can tell the difference
+	between "PBR is on" and "PBR silently did nothing here" — which from a
+	screenshot look identical.
+]]
+function Material.defineMany(table_: { [string]: any }): number
+	local made = 0
 	for name, spec in table_ do
-		Material.define(name, spec)
+		if Material.define(name, spec) then
+			made += 1
+		end
 	end
+	return made
 end
 
 function Material.get(name: string): MaterialVariant?

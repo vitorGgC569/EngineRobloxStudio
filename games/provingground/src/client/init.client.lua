@@ -153,13 +153,20 @@ end)())
 	variant, and an invented texture id renders as flat grey, which is exactly
 	the silent failure this project has been bitten by three times.
 ]]
-Material.defineMany({
+local pbr = Material.defineMany({
 	arena_rock = { base = Enum.Material.Slate, studsPerTile = 12 },
 	arena_ground = { base = Enum.Material.Ground, studsPerTile = 16 },
 	arena_path = { base = Enum.Material.Sand, studsPerTile = 10 },
 })
-Material.applyTerrain(Enum.Material.Slate, "arena_rock")
-Material.applyTerrain(Enum.Material.Ground, "arena_ground")
+if pbr > 0 then
+	Material.applyTerrain(Enum.Material.Slate, "arena_rock")
+	Material.applyTerrain(Enum.Material.Ground, "arena_ground")
+else
+	-- Expected at runtime: MaterialVariant needs the plugin capability, so
+	-- variants belong in the place file. Said out loud rather than left as a
+	-- world that quietly looks the same as before.
+	print("[visual] no MaterialVariant at runtime; author them into the place")
+end
 
 local Sky = require(ReplicatedStorage.Forge.Visual.Sky)
 Sky.install()
@@ -290,7 +297,22 @@ local function onCharacter(character: Model)
 		R15 only, and it says so rather than failing quietly if the rig has no
 		knee.
 	]]
-	IK.footPlant(character, { maxDrop = 3 })
+	--[[
+		Off until it is measured.
+
+		Foot planting has broken this character twice: once by overwriting the
+		animator's pose, once by folding the legs into a crouch on flat ground.
+		Both were visual symptoms of a numeric mistake, and both reached a
+		player before anyone knew.
+
+		The geometry is fixed and capped now, but "fixed" is what was believed
+		the last two times. It stays behind a switch until `IK.lift` reads a
+		few hundredths of a stud on level ground, which is a number rather than
+		an opinion.
+	]]
+	if Config.footPlanting then
+		IK.footPlant(character, { maxDrop = 3 })
+	end
 
 	-- Says out loud what the animator found. A rig whose joints do not resolve
 	-- animates nothing and reports nothing, which is exactly how a stiff,

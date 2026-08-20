@@ -93,10 +93,18 @@ local function flushPending(transport: any, pending: { any }): boolean
 	return false
 end
 
+--- Responses from commands still running on their own threads.
+---
+--- Module scope, and it has to be. This was a local inside `loop`, so the
+--- `flusher` below — written afterwards, at module level, referring to the
+--- same name — resolved a *global* that is nil. `#pending` on nil throws, and
+--- it threw every fiftieth of a second for the life of every session: an error
+--- in the log of every game this validator has ever looked at, and a flusher
+--- that never flushed anything. The name looked in scope and was not.
+local pending = {}
+
 local function loop()
 	local backoff = Config.RECONNECT_DELAY_SECONDS
-	--- Responses from commands still running on their own threads.
-	local pending = {}
 	--- Number of commands dispatched by the current session that have not yet
 	--- produced a response. A command such as `run.start` changes the Studio
 	--- context before its settle window finishes. Re-handshaking while it is

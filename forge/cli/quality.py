@@ -87,82 +87,71 @@ def _config_value(game: str, key: str, default: Any = None) -> Any:
     return default
 
 
-#: The probes a Forge game can meaningfully answer, and how much each matters.
+#: What may be required, taken from the probe registry rather than from a wish.
 #:
-#: Not every probe in the catalogue: several were written for a specific
-#: tycoon and ask about plots and card galleries. Including them would produce
-#: a contract that fails for reasons unrelated to quality, and a gate that
-#: fails for irrelevant reasons is a gate people disable.
-FORGE_REQUIREMENTS: list[dict[str, Any]] = [
-    # Structure — the cheapest checks and the ones that catch a broken project.
-    {"id": "project_topology", "probe": "structural_integrity",
-     "type": "structural", "severity": "critical"},
-    {"id": "contract_is_valid", "probe": "contract_schema",
-     "type": "structural", "severity": "critical"},
+#: `quality/probe-registry.v1.json` is the authority: it maps a probe to the
+#: producer that may answer it, and a requirement naming anything else comes
+#: back UNPRODUCIBLE — "no producer is registered for this probe" — however
+#: much evidence sits in the same file under that name.
+#:
+#: Two earlier versions of this list got that wrong in different ways. The
+#: first asked for probes out of the catalogue that `rqe release` never emits.
+#: The second asked for probes it does emit but that are not registered, which
+#: reads identically from the outside and is just as unpassable.
+#:
+#: So this is the registry's AVAILABLE set, and nothing else.
+#:
+#: **Not covered**: gameplay, geometry, UI, persistence and multiplayer. The
+#: release path has no registered producer for them. Forge's own live suite
+#: covers persistence and multiplayer — thirty-eight scenarios against a
+#: published place with a real DataStore — and `Platform.audit` measures phone
+#: layout from inside the running game. Two gates, each honest about its reach,
+#: beats one that claims both and proves neither.
+def forge_requirements(game: str) -> list[dict[str, Any]]:
+    return [
+        # Structure — the cheapest checks, and the ones that catch a broken
+        # project before anything expensive runs.
+        {"id": "project_topology", "probe": "structural_integrity",
+         "type": "structural", "severity": "critical"},
+        {"id": "contract_is_valid", "probe": "contract_schema",
+         "type": "structural", "severity": "critical"},
+        {"id": "visual_spec_is_valid", "probe": "visual_spec_schema",
+         "type": "structural", "severity": "critical"},
+        # No fixture may reach the gate: a JSON file somebody wrote is not
+        # evidence about a running game, and this is the check that says so.
+        {"id": "no_fixture_evidence", "probe": "fixture_excluded",
+         "type": "structural", "severity": "critical"},
+        {"id": "the_build_is_what_it_claims", "probe": "product_truth_alignment",
+         "type": "structural", "severity": "major"},
 
-    # Security — asset provenance and the wire. Forge has strong opinions here
-    # and this is where they get checked rather than asserted.
-    {"id": "assets_are_traceable", "probe": "asset_security",
-     "type": "security", "severity": "critical"},
-    {"id": "remotes_are_validated", "probe": "remote_security",
-     "type": "security", "severity": "critical"},
+        # Security — asset provenance and what the source is allowed to do.
+        {"id": "assets_are_traceable", "probe": "asset_security",
+         "type": "security", "severity": "critical"},
 
-    # Geometry — what a world built by `World.scatter` gets wrong.
-    {"id": "spawn_is_supported", "probe": "spawn_support",
-     "type": "geometry", "severity": "critical"},
-    {"id": "nothing_floats", "probe": "floating_objects",
-     "type": "geometry", "severity": "major"},
-    {"id": "nothing_is_buried", "probe": "buried_objects",
-     "type": "geometry", "severity": "minor"},
-    {"id": "props_do_not_intersect", "probe": "collision_overlap",
-     "type": "geometry", "severity": "major"},
+        # Runtime — a console error is a defect regardless of what else passed.
+        {"id": "no_console_errors", "probe": "runtime_error",
+         "type": "runtime", "severity": "critical"},
 
-    # Navigation — now that Forge has a navmesh layer, this is answerable.
-    {"id": "spawn_reaches_objectives", "probe": "path_exists",
-     "type": "navigation", "severity": "critical"},
-    {"id": "objectives_are_reachable", "probe": "objective_reachable",
-     "type": "navigation", "severity": "critical"},
+        # Performance — measured in the session against the contract's budgets,
+        # rather than profiled by hand afterwards.
+        {"id": "within_frame_budget", "probe": "performance_budget",
+         "type": "performance", "severity": "major"},
 
-    # Gameplay — the world is standable and its interactions are usable.
-    {"id": "spawn_is_clear", "probe": "spawn_clearance",
-     "type": "gameplay", "severity": "critical"},
-    {"id": "interactions_are_in_reach", "probe": "interaction_distance",
-     "type": "gameplay", "severity": "major"},
+        # Navigation — answerable now that Forge has a navmesh layer.
+        {"id": "objectives_are_reachable", "probe": "objective_reachable",
+         "type": "navigation", "severity": "major"},
 
-    # UI — the half Forge's own tests cannot see.
-    {"id": "ui_fits_the_screen", "probe": "ui_overflow",
-     "type": "ui", "severity": "major"},
-    {"id": "ui_is_visible", "probe": "ui_visibility",
-     "type": "ui", "severity": "major"},
-
-    # Visual — the entire reason this marriage is worth making.
-    {"id": "the_world_photographs_well", "probe": "visual_quality",
-     "type": "visual", "severity": "minor"},
-    {"id": "snapshots_exist", "probe": "visual_snapshot_bundle",
-     "type": "visual", "severity": "major"},
-    {"id": "camera_is_not_blocked", "probe": "camera_obstruction",
-     "type": "visual", "severity": "minor"},
-
-    # Performance — Forge measures frame cost in its own suite; this measures
-    # the budgets that suite cannot see.
-    {"id": "within_instance_budget", "probe": "performance_budget",
-     "type": "performance", "severity": "major"},
-    {"id": "no_connection_leak", "probe": "duplicate_connections",
-     "type": "performance", "severity": "major"},
-    {"id": "no_instance_growth", "probe": "instance_growth",
-     "type": "performance", "severity": "major"},
-
-    # Persistence and multiplayer — proven by Forge's scenarios, checked here
-    # from the outside, which is a different and complementary thing.
-    {"id": "progress_survives_rejoin", "probe": "persistence",
-     "type": "persistence", "severity": "critical"},
-    {"id": "players_are_isolated", "probe": "multiplayer_isolation",
-     "type": "multiplayer", "severity": "critical"},
-
-    # Runtime — a console error is a defect regardless of what else passed.
-    {"id": "no_console_errors", "probe": "runtime_error",
-     "type": "runtime", "severity": "critical"},
-]
+        # Visual — the entire reason this marriage is worth making. The last
+        # two are measured from the tags `Forge.Mark` puts on the world: the
+        # subject of the scene is found, and it is visible from the viewpoint
+        # a player actually gets.
+        {"id": "assets_look_authored", "probe": "visual_asset_quality",
+         "type": "visual", "severity": "minor"},
+        {"id": "the_landmark_reads", "probe": f"visual.landmark.{LANDMARK_ID}.visibility",
+         "type": "visual", "severity": "major"},
+        {"id": "the_place_photographs", "probe": "visual.viewpoint.play-desktop.capture",
+         "type": "visual", "severity": "major"},
+    ]
 
 
 # ============================== the visual spec ==============================
@@ -525,6 +514,16 @@ def build_quality_focus(game: str, viewpoints: list[str]) -> dict[str, Any]:
         focus = json.loads(canonical.read_text(encoding="utf-8"))
 
     focus.setdefault("schemaVersion", 1)
+
+    # A required category with no target is refused by the measurement plan,
+    # and the canonical focus has no notion of observability — it was written
+    # before anything asked whether the validator had actually reached Studio.
+    # A hundred, because "the bridge answered" is not a thing to be partly true.
+    domains = focus.setdefault("domains", {})
+    domains.setdefault("observability", {
+        "targetScore": 100,
+        "focus": "the run could prove it was talking to a live Studio session",
+    })
     review = focus.setdefault("visualReview", {})
     review["requiredSnapshots"] = viewpoints
     # 95 is the canonical bar and it is a decision, not a fact. Left where it
@@ -598,18 +597,50 @@ def build_contract(game: str) -> dict[str, Any]:
     """A contract derived from what this Forge game actually is."""
     name = _config_value(game, "name", game) or game
     containers = _config_value(game, "containers", []) or []
-    categories = sorted({requirement["type"] for requirement in FORGE_REQUIREMENTS})
+    requirement_specs = forge_requirements(game)
+    categories = sorted({item["type"] for item in requirement_specs})
 
     requirements = []
-    for entry in FORGE_REQUIREMENTS:
+    for entry in requirement_specs:
         requirements.append({
             **entry,
             "validation": {
-                # Anything a probe can answer from the filesystem is allowed to;
-                # everything else has to come from a live session. That
-                # distinction is the RQE's whole discipline and worth keeping.
                 "minimum_level": "STATICALLY_VALIDATED",
-                "allowed_sources": ["filesystem", "studio-runtime"],
+                # [[
+                #     The producers this pipeline actually stamps evidence with.
+                #
+                #     This said `["filesystem", "studio-runtime"]`, which reads
+                #     like the right distinction and names almost nothing: only
+                #     one probe in the whole run reports `filesystem`, and
+                #     `studio-runtime` is not a producer at all. Every other
+                #     piece of evidence — geometry, performance, navigation,
+                #     the visual family — was discarded for coming from a
+                #     source the requirement had not heard of, and each
+                #     category scored zero while its evidence sat in the same
+                #     file.
+                #
+                #     The discipline is kept where it belongs: `fixture` and
+                #     `headless-runtime` are refused by the release gate, so
+                #     neither a hand-written JSON nor a Python reimplementation
+                #     can stand in for a running game.
+                # ]]
+                "allowed_sources": [
+                    "filesystem",
+                    "static-luau-scan",
+                    "contract-validator",
+                    "visual-spec-validator",
+                    "visual-asset-validator",
+                    "visual-snapshot-validator",
+                    "asset-manifest-validator",
+                    "release-orchestrator",
+                    "release-static-validator",
+                    "studio-detector",
+                    "studio-bridge",
+                    "studio-quality-validator",
+                    "product-truth-validator",
+                    "capture.studio",
+                    "scenario.runner",
+                ],
             },
         })
 
@@ -678,6 +709,9 @@ def build_contract(game: str) -> dict[str, Any]:
                 "geometry": "RUNTIME_VALIDATED",
                 "navigation": "RUNTIME_VALIDATED",
                 "runtime": "RUNTIME_VALIDATED",
+                # The bridge either answered from the live session or it did
+                # not; nothing about that can be established from source.
+                "observability": "RUNTIME_VALIDATED",
                 "performance": "RUNTIME_VALIDATED",
                 "visual": "VISUALLY_VALIDATED",
                 "ui": "E2E_VALIDATED",

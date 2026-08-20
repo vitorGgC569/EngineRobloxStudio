@@ -33,16 +33,11 @@
   },
   "release_gate": {
     "required_categories": [
-      "gameplay",
-      "geometry",
-      "multiplayer",
       "navigation",
       "performance",
-      "persistence",
       "runtime",
       "security",
       "structural",
-      "ui",
       "visual"
     ],
     "forbidden_sources": [
@@ -51,16 +46,11 @@
     ],
     "minimum_requirement_coverage": 1,
     "minimum_category_coverage": {
-      "gameplay": 1,
-      "geometry": 1,
-      "multiplayer": 1,
       "navigation": 1,
       "performance": 1,
-      "persistence": 1,
       "runtime": 1,
       "security": 1,
       "structural": 1,
-      "ui": 1,
       "visual": 1
     },
     "minimum_validation_by_type": {
@@ -69,6 +59,7 @@
       "geometry": "RUNTIME_VALIDATED",
       "navigation": "RUNTIME_VALIDATED",
       "runtime": "RUNTIME_VALIDATED",
+      "observability": "RUNTIME_VALIDATED",
       "performance": "RUNTIME_VALIDATED",
       "visual": "VISUALLY_VALIDATED",
       "ui": "E2E_VALIDATED",
@@ -95,7 +86,20 @@
         "minimum_level": "STATICALLY_VALIDATED",
         "allowed_sources": [
           "filesystem",
-          "studio-runtime"
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
         ]
       }
     },
@@ -108,7 +112,98 @@
         "minimum_level": "STATICALLY_VALIDATED",
         "allowed_sources": [
           "filesystem",
-          "studio-runtime"
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "visual_spec_is_valid",
+      "probe": "visual_spec_schema",
+      "type": "structural",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "no_fixture_evidence",
+      "probe": "fixture_excluded",
+      "type": "structural",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "the_build_is_what_it_claims",
+      "probe": "product_truth_alignment",
+      "type": "structural",
+      "severity": "major",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
         ]
       }
     },
@@ -121,254 +216,20 @@
         "minimum_level": "STATICALLY_VALIDATED",
         "allowed_sources": [
           "filesystem",
-          "studio-runtime"
-        ]
-      }
-    },
-    {
-      "id": "remotes_are_validated",
-      "probe": "remote_security",
-      "type": "security",
-      "severity": "critical",
-      "validation": {
-        "minimum_level": "STATICALLY_VALIDATED",
-        "allowed_sources": [
-          "filesystem",
-          "studio-runtime"
-        ]
-      }
-    },
-    {
-      "id": "spawn_is_supported",
-      "probe": "spawn_support",
-      "type": "geometry",
-      "severity": "critical",
-      "validation": {
-        "minimum_level": "STATICALLY_VALIDATED",
-        "allowed_sources": [
-          "filesystem",
-          "studio-runtime"
-        ]
-      }
-    },
-    {
-      "id": "nothing_floats",
-      "probe": "floating_objects",
-      "type": "geometry",
-      "severity": "major",
-      "validation": {
-        "minimum_level": "STATICALLY_VALIDATED",
-        "allowed_sources": [
-          "filesystem",
-          "studio-runtime"
-        ]
-      }
-    },
-    {
-      "id": "nothing_is_buried",
-      "probe": "buried_objects",
-      "type": "geometry",
-      "severity": "minor",
-      "validation": {
-        "minimum_level": "STATICALLY_VALIDATED",
-        "allowed_sources": [
-          "filesystem",
-          "studio-runtime"
-        ]
-      }
-    },
-    {
-      "id": "props_do_not_intersect",
-      "probe": "collision_overlap",
-      "type": "geometry",
-      "severity": "major",
-      "validation": {
-        "minimum_level": "STATICALLY_VALIDATED",
-        "allowed_sources": [
-          "filesystem",
-          "studio-runtime"
-        ]
-      }
-    },
-    {
-      "id": "spawn_reaches_objectives",
-      "probe": "path_exists",
-      "type": "navigation",
-      "severity": "critical",
-      "validation": {
-        "minimum_level": "STATICALLY_VALIDATED",
-        "allowed_sources": [
-          "filesystem",
-          "studio-runtime"
-        ]
-      }
-    },
-    {
-      "id": "objectives_are_reachable",
-      "probe": "objective_reachable",
-      "type": "navigation",
-      "severity": "critical",
-      "validation": {
-        "minimum_level": "STATICALLY_VALIDATED",
-        "allowed_sources": [
-          "filesystem",
-          "studio-runtime"
-        ]
-      }
-    },
-    {
-      "id": "spawn_is_clear",
-      "probe": "spawn_clearance",
-      "type": "gameplay",
-      "severity": "critical",
-      "validation": {
-        "minimum_level": "STATICALLY_VALIDATED",
-        "allowed_sources": [
-          "filesystem",
-          "studio-runtime"
-        ]
-      }
-    },
-    {
-      "id": "interactions_are_in_reach",
-      "probe": "interaction_distance",
-      "type": "gameplay",
-      "severity": "major",
-      "validation": {
-        "minimum_level": "STATICALLY_VALIDATED",
-        "allowed_sources": [
-          "filesystem",
-          "studio-runtime"
-        ]
-      }
-    },
-    {
-      "id": "ui_fits_the_screen",
-      "probe": "ui_overflow",
-      "type": "ui",
-      "severity": "major",
-      "validation": {
-        "minimum_level": "STATICALLY_VALIDATED",
-        "allowed_sources": [
-          "filesystem",
-          "studio-runtime"
-        ]
-      }
-    },
-    {
-      "id": "ui_is_visible",
-      "probe": "ui_visibility",
-      "type": "ui",
-      "severity": "major",
-      "validation": {
-        "minimum_level": "STATICALLY_VALIDATED",
-        "allowed_sources": [
-          "filesystem",
-          "studio-runtime"
-        ]
-      }
-    },
-    {
-      "id": "the_world_photographs_well",
-      "probe": "visual_quality",
-      "type": "visual",
-      "severity": "minor",
-      "validation": {
-        "minimum_level": "STATICALLY_VALIDATED",
-        "allowed_sources": [
-          "filesystem",
-          "studio-runtime"
-        ]
-      }
-    },
-    {
-      "id": "snapshots_exist",
-      "probe": "visual_snapshot_bundle",
-      "type": "visual",
-      "severity": "major",
-      "validation": {
-        "minimum_level": "STATICALLY_VALIDATED",
-        "allowed_sources": [
-          "filesystem",
-          "studio-runtime"
-        ]
-      }
-    },
-    {
-      "id": "camera_is_not_blocked",
-      "probe": "camera_obstruction",
-      "type": "visual",
-      "severity": "minor",
-      "validation": {
-        "minimum_level": "STATICALLY_VALIDATED",
-        "allowed_sources": [
-          "filesystem",
-          "studio-runtime"
-        ]
-      }
-    },
-    {
-      "id": "within_instance_budget",
-      "probe": "performance_budget",
-      "type": "performance",
-      "severity": "major",
-      "validation": {
-        "minimum_level": "STATICALLY_VALIDATED",
-        "allowed_sources": [
-          "filesystem",
-          "studio-runtime"
-        ]
-      }
-    },
-    {
-      "id": "no_connection_leak",
-      "probe": "duplicate_connections",
-      "type": "performance",
-      "severity": "major",
-      "validation": {
-        "minimum_level": "STATICALLY_VALIDATED",
-        "allowed_sources": [
-          "filesystem",
-          "studio-runtime"
-        ]
-      }
-    },
-    {
-      "id": "no_instance_growth",
-      "probe": "instance_growth",
-      "type": "performance",
-      "severity": "major",
-      "validation": {
-        "minimum_level": "STATICALLY_VALIDATED",
-        "allowed_sources": [
-          "filesystem",
-          "studio-runtime"
-        ]
-      }
-    },
-    {
-      "id": "progress_survives_rejoin",
-      "probe": "persistence",
-      "type": "persistence",
-      "severity": "critical",
-      "validation": {
-        "minimum_level": "STATICALLY_VALIDATED",
-        "allowed_sources": [
-          "filesystem",
-          "studio-runtime"
-        ]
-      }
-    },
-    {
-      "id": "players_are_isolated",
-      "probe": "multiplayer_isolation",
-      "type": "multiplayer",
-      "severity": "critical",
-      "validation": {
-        "minimum_level": "STATICALLY_VALIDATED",
-        "allowed_sources": [
-          "filesystem",
-          "studio-runtime"
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
         ]
       }
     },
@@ -381,7 +242,150 @@
         "minimum_level": "STATICALLY_VALIDATED",
         "allowed_sources": [
           "filesystem",
-          "studio-runtime"
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "within_frame_budget",
+      "probe": "performance_budget",
+      "type": "performance",
+      "severity": "major",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "objectives_are_reachable",
+      "probe": "objective_reachable",
+      "type": "navigation",
+      "severity": "major",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "assets_look_authored",
+      "probe": "visual_asset_quality",
+      "type": "visual",
+      "severity": "minor",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "the_landmark_reads",
+      "probe": "visual.landmark.arena-ring.visibility",
+      "type": "visual",
+      "severity": "major",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "the_place_photographs",
+      "probe": "visual.viewpoint.play-desktop.capture",
+      "type": "visual",
+      "severity": "major",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
         ]
       }
     }

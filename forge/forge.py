@@ -490,7 +490,7 @@ def cmd_quality(args: argparse.Namespace) -> int:
 
     print(f"  {descriptor.relative_to(REPO_ROOT)}")
     print(f"  {contract.relative_to(REPO_ROOT)}  "
-          f"({len(quality.FORGE_REQUIREMENTS)} requirements)")
+          f"({len(quality.forge_requirements(args.game))} requirements)")
 
     if args.generate:
         print()

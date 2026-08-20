@@ -1,0 +1,291 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "hollowreach",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-hollowreach",
+      "productId": "hollowreach",
+      "revision": "1.0.0",
+      "seed": 85993936,
+      "genre": "tycoon",
+      "templateId": "template-tycoon-v1",
+      "sourceRoot": "games/hollowreach",
+      "artifactRoot": "artifacts/products/hollowreach",
+      "productIntentRef": {
+        "productId": "hollowreach",
+        "artifactId": "hollowreach.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/hollowreach/definition/product-intent.json",
+        "sha256": "5cb5fa0f70ff629b3f6e2b2f92faeda649d611c902e6a1524a163be5aa99d778"
+      },
+      "referenceBundleRef": {
+        "productId": "hollowreach",
+        "artifactId": "hollowreach.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/hollowreach/definition/reference-bundle.json",
+        "sha256": "77e14adcd6411436524f8a270b68207819aeb3801fdcb15e90c5187895d5489b"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a plot grid around a shared hub",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "economy, inventory, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/hollowreach/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/hollowreach/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/hollowreach/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/hollowreach/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "core-loop",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "traversal",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "hollowreach",
+            "artifactId": "hollowreach.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/hollowreach/definition/release-quality.json",
+            "sha256": "5f0b0eaf2a3670f8f028d1d4e284d69545d4e0743582117567821724c929e9f4"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "hollowreach",
+          "artifactId": "hollowreach.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/hollowreach/production_plan"
+        },
+        {
+          "productId": "hollowreach",
+          "artifactId": "hollowreach.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/hollowreach/source_bundle"
+        },
+        {
+          "productId": "hollowreach",
+          "artifactId": "hollowreach.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/hollowreach/asset_manifest"
+        },
+        {
+          "productId": "hollowreach",
+          "artifactId": "hollowreach.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/hollowreach/build_place"
+        },
+        {
+          "productId": "hollowreach",
+          "artifactId": "hollowreach.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/hollowreach/integration_manifest"
+        },
+        {
+          "productId": "hollowreach",
+          "artifactId": "hollowreach.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/hollowreach/measurement_run"
+        },
+        {
+          "productId": "hollowreach",
+          "artifactId": "hollowreach.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/hollowreach/scenario_results"
+        },
+        {
+          "productId": "hollowreach",
+          "artifactId": "hollowreach.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/hollowreach/capture_bundle"
+        },
+        {
+          "productId": "hollowreach",
+          "artifactId": "hollowreach.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/hollowreach/quality_review"
+        },
+        {
+          "productId": "hollowreach",
+          "artifactId": "hollowreach.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/hollowreach/repair_plan"
+        },
+        {
+          "productId": "hollowreach",
+          "artifactId": "hollowreach.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/hollowreach/regression_run"
+        },
+        {
+          "productId": "hollowreach",
+          "artifactId": "hollowreach.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/hollowreach/release_candidate"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,160 @@
+{
+  "schemaVersion": 1,
+  "policy": {
+    "externalToolboxAssets": "blocked_until_review",
+    "requireScriptScan": true,
+    "requireAllocation": true,
+    "generatedRasterRuntime": "require-roblox-upload-before-live-use",
+    "maxWorkspaceInstances": 25000
+  },
+  "assets": [
+    {
+      "key": "ridge_exchange",
+      "displayName": "Ridge Exchange shop",
+      "source": "native-procedural",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["Map.BasicPackStore"],
+      "maxInstances": 1,
+      "functionalProbe": "purchase_prompt"
+    },
+    {
+      "key": "old_lantern_mine",
+      "displayName": "Old Lantern Mine gate",
+      "source": "native-procedural",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["Map.MineEntrance"],
+      "maxInstances": 1,
+      "functionalProbe": "objective_reachable"
+    },
+    {
+      "key": "claim_beacon",
+      "displayName": "Plot claim beacon",
+      "source": "native-procedural",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["Map.PlotA", "Map.PlotB", "Map.PlotC", "Map.PlotD"],
+      "maxInstances": 4,
+      "functionalProbe": "plot_isolation"
+    },
+    {
+      "key": "lantern_post",
+      "displayName": "Lantern path light",
+      "source": "native-procedural",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["Map.MainPlaza", "Map.Paths"],
+      "maxInstances": 24,
+      "functionalProbe": "lighting_readability"
+    },
+    {
+      "key": "ore_cluster",
+      "displayName": "Copper ore cluster",
+      "source": "native-procedural",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["Map.MainPlaza", "Map.MineEntrance", "Map.PlotDecor"],
+      "maxInstances": 20,
+      "functionalProbe": "asset_security"
+    },
+    {
+      "key": "pine_tree",
+      "displayName": "Ridge pine tree",
+      "source": "native-procedural",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["Map.MainPlaza", "Map.WorldBorder"],
+      "maxInstances": 14,
+      "functionalProbe": "camera_obstruction"
+    },
+    {
+      "key": "mine_cart",
+      "displayName": "Mine cart prop",
+      "source": "native-procedural",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["Map.MineEntrance"],
+      "maxInstances": 2,
+      "functionalProbe": "camera_obstruction"
+    },
+    {
+      "key": "ridge_bench",
+      "displayName": "Plaza bench prop",
+      "source": "native-procedural",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["Map.MainPlaza"],
+      "maxInstances": 6,
+      "functionalProbe": "collision_overlap"
+    },
+    {
+      "key": "ore_crate",
+      "displayName": "Ore crate stack",
+      "source": "native-procedural",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["Map.BasicPackStore", "Map.MineEntrance", "Map.PlotDecor"],
+      "maxInstances": 12,
+      "functionalProbe": "asset_security"
+    },
+    {
+      "key": "ridge_lift",
+      "displayName": "Ridge Lift floor progression structure",
+      "source": "native-procedural",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["Map.FloorLift"],
+      "maxInstances": 1,
+      "functionalProbe": "floor_purchase_prompt"
+    },
+    {
+      "key": "copper_lynx_prospector_v1",
+      "displayName": "Copper Lynx Prospector card art",
+      "source": "generated-raster",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["StarterPlayerScripts.CardGallery", "CardCatalog.copper_lynx_prospector"],
+      "maxInstances": 1,
+      "functionalProbe": "card_gallery_visibility",
+      "localFile": "assets/generated/cards/copper-lynx-prospector-v1.png",
+      "runtimeReference": "pending-roblox-upload"
+    },
+    {
+      "key": "mossback_badger_engineer_v1",
+      "displayName": "Mossback Badger Engineer card art",
+      "source": "generated-raster",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["StarterPlayerScripts.CardGallery", "CardCatalog.mossback_badger_engineer"],
+      "maxInstances": 1,
+      "functionalProbe": "card_gallery_visibility",
+      "localFile": "assets/generated/cards/mossback-badger-engineer-v1.png",
+      "runtimeReference": "pending-roblox-upload"
+    },
+    {
+      "key": "storm_raven_surveyor_v1",
+      "displayName": "Storm Raven Surveyor card art",
+      "source": "generated-raster",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["StarterPlayerScripts.CardGallery", "CardCatalog.storm_raven_surveyor"],
+      "maxInstances": 1,
+      "functionalProbe": "card_gallery_visibility",
+      "localFile": "assets/generated/cards/storm-raven-surveyor-v1.png",
+      "runtimeReference": "pending-roblox-upload"
+    },
+    {
+      "key": "card_gallery_panel_v1",
+      "displayName": "Copperridge card gallery UI backdrop",
+      "source": "generated-raster",
+      "status": "approved",
+      "scriptScan": "clean",
+      "allocatedTo": ["StarterPlayerScripts.CardGallery", "CardGallery.Background"],
+      "maxInstances": 1,
+      "functionalProbe": "ui_visibility",
+      "localFile": "assets/generated/ui/card-gallery-panel-v1.png",
+      "runtimeReference": "pending-roblox-upload"
+    }
+  ]
+}

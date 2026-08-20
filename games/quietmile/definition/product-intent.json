@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "productId": "quietmile",
+  "pitch": "Caminhada por uma vila abandonada: encontre cartas, reconstrua a historia, abra o portao final.",
+  "topology": "hub-and-zones",
+  "progression": "unlock_graph-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/quietmile/tokens/quietmile-siege.json",
+  "coreLoop": [
+    "collect",
+    "unlock",
+    "upgrade"
+  ]
+}

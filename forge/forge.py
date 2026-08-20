@@ -1,0 +1,347 @@
+"""Forge — the authoring half.
+
+Deliberately thin. Every line of Python here is scaffolding, checking or
+plumbing to the Studio bridge; none of it writes gameplay. The moment this
+file starts emitting Luau, Forge has become the thing it was built to replace.
+
+    python forge/forge.py new mygame
+    python forge/forge.py doctor mygame
+    python forge/forge.py build mygame
+    python forge/forge.py probe --hub http://127.0.0.1:8790
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import subprocess
+import sys
+from pathlib import Path
+
+sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
+
+from forge.cli import doctor as doctor_module  # noqa: E402
+from forge.cli import scaffold as scaffold_module  # noqa: E402
+
+REPO_ROOT = Path(__file__).resolve().parent.parent
+
+
+def _resolve(target: str) -> Path:
+    path = Path(target)
+    if path.exists():
+        return path.resolve()
+    for base in (REPO_ROOT / "games", REPO_ROOT):
+        candidate = base / target
+        if candidate.exists():
+            return candidate.resolve()
+    raise SystemExit(f"forge: no project at '{target}'")
+
+
+# --------------------------------------------------------------------------
+
+
+def cmd_new(args: argparse.Namespace) -> int:
+    destination = Path(args.into).resolve() if args.into else (REPO_ROOT / "games")
+    destination.mkdir(parents=True, exist_ok=True)
+    try:
+        root = scaffold_module.create(args.name, destination, vendor=args.vendor, force=args.force)
+    except (ValueError, FileExistsError, FileNotFoundError) as exc:
+        raise SystemExit(f"forge: {exc}")
+
+    print(f"created {root}")
+    print()
+    print("  next:")
+    print(f"    python forge/forge.py doctor {root.name}")
+    print(f"    python forge/forge.py build {root.name}")
+    print()
+    print("  the skeleton has no gameplay in it. write systems in src/server/systems/.")
+    return 0
+
+
+def cmd_doctor(args: argparse.Namespace) -> int:
+    root = _resolve(args.project)
+    findings = doctor_module.run(root)
+
+    if args.json:
+        print(
+            json.dumps(
+                [
+                    {"severity": f.severity, "file": f.file, "line": f.line, "message": f.message}
+                    for f in findings
+                ],
+                indent=2,
+            )
+        )
+    else:
+        errors = sum(1 for f in findings if f.severity == "error")
+        warnings = sum(1 for f in findings if f.severity == "warning")
+        notes = sum(1 for f in findings if f.severity == "note")
+
+        if not findings:
+            print(f"forge doctor: {root.name} - nothing to report")
+        else:
+            print(f"forge doctor: {root.name}")
+            print()
+            for finding in findings:
+                print(finding.render(root))
+            print()
+            print(f"  {errors} error(s), {warnings} warning(s), {notes} note(s)")
+            print()
+            print("  these are authoring notes, not a release gate. Fix what is real,")
+            print("  ignore what is not, and ship when the game is good.")
+
+    return 1 if any(f.severity == "error" for f in findings) and args.strict else 0
+
+
+def cmd_build(args: argparse.Namespace) -> int:
+    root = _resolve(args.project)
+    project_file = root / "default.project.json"
+    if not project_file.exists():
+        raise SystemExit(f"forge: no default.project.json in {root}")
+
+    output = Path(args.output) if args.output else root / f"{root.name}.rbxlx"
+    command = ["rojo", "build", str(project_file), "--output", str(output)]
+    print(" ".join(command))
+    try:
+        result = subprocess.run(command, cwd=root, capture_output=True, text=True)
+    except FileNotFoundError:
+        raise SystemExit("forge: rojo is not on PATH. Install it from https://rojo.space")
+
+    if result.stdout.strip():
+        print(result.stdout.strip())
+    if result.returncode != 0:
+        print(result.stderr.strip(), file=sys.stderr)
+        return result.returncode
+
+    size = output.stat().st_size if output.exists() else 0
+    print(f"built {output} ({size / 1024:.0f} KB)")
+    return 0
+
+
+def cmd_probe(args: argparse.Namespace) -> int:
+    """Read a running game's own account of itself, through the Studio bridge.
+
+    This is the half that Forge does not own. It calls the Quality Engine's hub
+    and asks it to invoke `ReplicatedStorage.ForgeDebug`, which the game
+    published by calling `Debug.expose()`.
+    """
+    import urllib.error
+    import urllib.request
+
+    # dm.properties, not a bindable invoke: a BindableFunction's OnInvoke lives
+    # in one Lua VM, so a server-side handler is invisible to the client-side
+    # command and every call returns null. A replicated StringValue is readable
+    # from any context.
+    if args.command == "snapshot":
+        params = {"path": args.path + ".Snapshot", "properties": ["Value"]}
+    else:
+        params = {"path": args.path + ".Result", "properties": ["Value"]}
+
+    payload = {"method": "dm.properties", "params": params, "id": 1}
+    request = urllib.request.Request(
+        args.hub.rstrip("/") + "/rpc",
+        data=json.dumps(payload).encode("utf-8"),
+        headers={"Content-Type": "application/json"},
+    )
+    try:
+        with urllib.request.urlopen(request, timeout=args.timeout) as response:
+            body = json.loads(response.read().decode("utf-8"))
+    except urllib.error.URLError as exc:
+        print(f"forge: cannot reach the hub at {args.hub} ({exc.reason})", file=sys.stderr)
+        print("       start it with: python rqe.py studio serve", file=sys.stderr)
+        return 2
+    except Exception as exc:  # noqa: BLE001
+        print(f"forge: probe failed: {exc}", file=sys.stderr)
+        return 2
+
+    # The hub nests: { result: { ok, result: { properties: { Value } } } }.
+    result = body.get("result", body)
+    for _ in range(3):
+        if isinstance(result, dict) and "properties" in result:
+            props = result.get("properties") or {}
+            if "Value" in props:
+                result = props["Value"]
+                break
+        if isinstance(result, dict) and "result" in result:
+            result = result["result"]
+            continue
+        break
+    if isinstance(result, str):
+        try:
+            result = json.loads(result)
+        except json.JSONDecodeError:
+            pass
+    if result in (None, "", {}):
+        print("forge: nothing published yet. Did the game call Debug.expose()?", file=sys.stderr)
+        return 1
+    print(json.dumps(result, indent=2))
+    return 0
+
+
+def cmd_bench(args: argparse.Namespace) -> int:
+    """Ask a running game to benchmark itself, and print the distribution.
+
+    Median and p95, not mean: the mean hides the frame that took 40ms, and that
+    frame is the one a player felt.
+    """
+    import urllib.error
+    import urllib.request
+
+    # Driven through the Debug command channel. `instance.update` runs in "run"
+    # context, which is what `rqe studio call run.start` produces — and a
+    # headless run is the right place to benchmark anyway, with no player
+    # competing for the frame.
+    command = {
+        "method": "instance.update",
+        "params": {
+            "path": "ReplicatedStorage.ForgeDebug.Command",
+            "properties": {"Value": json.dumps({"cmd": "bench", "entities": args.entities, "anchors": args.anchors})},
+        },
+        "id": 1,
+    }
+
+    def call(body: dict) -> dict:
+        request = urllib.request.Request(
+            args.hub.rstrip("/") + "/rpc",
+            data=json.dumps(body).encode("utf-8"),
+            headers={"Content-Type": "application/json"},
+        )
+        with urllib.request.urlopen(request, timeout=args.timeout) as response:
+            return json.loads(response.read().decode("utf-8"))
+
+    try:
+        call(command)
+    except urllib.error.URLError as exc:
+        print(f"forge: cannot reach the hub at {args.hub} ({exc.reason})", file=sys.stderr)
+        print("       start it with: python rqe.py studio serve", file=sys.stderr)
+        return 2
+    except Exception as exc:  # noqa: BLE001
+        print(f"forge: bench failed to start: {exc}", file=sys.stderr)
+        return 2
+
+    import time
+
+    time.sleep(6)
+    read = {
+        "method": "dm.properties",
+        "params": {"path": "ReplicatedStorage.ForgeDebug.Result", "properties": ["Value"]},
+        "id": 2,
+    }
+    try:
+        body = call(read)
+    except Exception as exc:  # noqa: BLE001
+        print(f"forge: could not read the result: {exc}", file=sys.stderr)
+        return 2
+
+    result = body.get("result", body)
+    for _ in range(3):
+        if isinstance(result, dict) and "properties" in result:
+            result = (result.get("properties") or {}).get("Value")
+            break
+        if isinstance(result, dict) and "result" in result:
+            result = result["result"]
+            continue
+        break
+    if isinstance(result, str):
+        try:
+            result = json.loads(result)
+        except json.JSONDecodeError:
+            pass
+
+    if not isinstance(result, dict) or not result.get("results"):
+        print("forge: no benchmark result. Is the game running with Debug.expose()?", file=sys.stderr)
+        return 1
+
+    print(f"forge bench  |  {result.get('players', 0)} player(s)  "
+          f"heartbeat {result.get('heartbeatMs', 0):.2f}ms  memory {result.get('memoryMb', 0)}MB")
+    print()
+    print(f"  {'case':<38} {'median':>9} {'p95':>9} {'max':>9}")
+    for name in sorted(result["results"]):
+        entry = result["results"][name]
+        if "error" in entry:
+            print(f"  {name:<38} {entry['error'][:40]}")
+            continue
+        print(f"  {name:<38} {entry['medianMs']:>8.3f}ms {entry['p95Ms']:>8.3f}ms {entry['maxMs']:>8.3f}ms")
+    print()
+    print("  not measured here (needs real clients):")
+    for item in result.get("notMeasured", []):
+        print(f"    - {item}")
+    return 0
+
+
+def cmd_engine(args: argparse.Namespace) -> int:
+    """What the engine offers, so an agent does not have to guess."""
+    engine = REPO_ROOT / "forge" / "luau" / "Forge"
+    modules = []
+    for child in sorted(engine.iterdir()):
+        if child.is_dir() and (child / "init.lua").exists():
+            source = (child / "init.lua").read_text(encoding="utf-8", errors="replace")
+            functions = sorted(
+                set(
+                    line.split("function ")[1].split("(")[0].strip()
+                    for line in source.splitlines()
+                    if line.startswith("function ") and "." in line
+                )
+            )
+            lines = len(source.splitlines())
+            modules.append({"module": child.name, "lines": lines, "api": functions})
+
+    if args.json:
+        print(json.dumps(modules, indent=2))
+        return 0
+
+    for entry in modules:
+        print(f"{entry['module']}  ({entry['lines']} lines)")
+        for name in entry["api"]:
+            print(f"    {name}")
+        print()
+    return 0
+
+
+def main(argv: list[str] | None = None) -> int:
+    parser = argparse.ArgumentParser(prog="forge", description="Forge — the authoring half")
+    sub = parser.add_subparsers(dest="command", required=True)
+
+    p_new = sub.add_parser("new", help="scaffold an empty project wired to the engine")
+    p_new.add_argument("name")
+    p_new.add_argument("--into", help="where to create it (default: games/)")
+    p_new.add_argument("--vendor", action="store_true", help="copy the engine into the project")
+    p_new.add_argument("--force", action="store_true")
+    p_new.set_defaults(func=cmd_new)
+
+    p_doc = sub.add_parser("doctor", help="authoring-time checks over a project's Luau")
+    p_doc.add_argument("project")
+    p_doc.add_argument("--json", action="store_true")
+    p_doc.add_argument("--strict", action="store_true", help="exit non-zero on any error")
+    p_doc.set_defaults(func=cmd_doctor)
+
+    p_build = sub.add_parser("build", help="rojo build the project into a place file")
+    p_build.add_argument("project")
+    p_build.add_argument("--output")
+    p_build.set_defaults(func=cmd_build)
+
+    p_probe = sub.add_parser("probe", help="ask a running game to describe itself")
+    p_probe.add_argument("--hub", default="http://127.0.0.1:8790")
+    p_probe.add_argument("--path", default="ReplicatedStorage.ForgeDebug")
+    p_probe.add_argument("--command", default="snapshot")
+    p_probe.add_argument("--argument")
+    p_probe.add_argument("--timeout", type=float, default=30)
+    p_probe.set_defaults(func=cmd_probe)
+
+    p_bench = sub.add_parser("bench", help="run the load suite inside a live session and print the numbers")
+    p_bench.add_argument("--hub", default="http://127.0.0.1:8790")
+    p_bench.add_argument("--entities", type=int, default=2000)
+    p_bench.add_argument("--anchors", type=int, default=30)
+    p_bench.add_argument("--timeout", type=float, default=120)
+    p_bench.set_defaults(func=cmd_bench)
+
+    p_engine = sub.add_parser("engine", help="list the engine's modules and public API")
+    p_engine.add_argument("--json", action="store_true")
+    p_engine.set_defaults(func=cmd_engine)
+
+    args = parser.parse_args(argv)
+    return args.func(args)
+
+
+if __name__ == "__main__":
+    raise SystemExit(main())

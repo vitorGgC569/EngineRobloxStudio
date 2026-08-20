@@ -1,0 +1,904 @@
+{
+  "bridge": {
+    "name": "Game Agent Bridge",
+    "version": "0.1.0",
+    "mode": "blackbox"
+  },
+  "started": true,
+  "operations": [
+    "game.start",
+    "game.stop",
+    "game.observe",
+    "game.act",
+    "game.walk",
+    "game.navigate_human",
+    "game.navigate_pathfinding",
+    "game.navigate_direct",
+    "game.look",
+    "game.interact",
+    "game.find",
+    "game.open_inventory",
+    "game.click_button",
+    "game.explore_area",
+    "game.return_to_plot",
+    "game.inspect_nearby",
+    "game.get_ui",
+    "game.get_player",
+    "game.raycast",
+    "game.run_scenario",
+    "game.assert",
+    "game.replay",
+    "game.spawn_agents"
+  ],
+  "memory": [
+    {
+      "kind": "observation",
+      "observation": {
+        "mode": "blackbox",
+        "screenshot": "headless://frame/000001.png",
+        "visibleUi": [
+          {
+            "text": "$1000",
+            "visible": true
+          },
+          {
+            "text": "Inventory",
+            "visible": true
+          }
+        ],
+        "nearby": [],
+        "events": [
+          {
+            "event": "spawn",
+            "success": null
+          }
+        ]
+      }
+    },
+    {
+      "kind": "observation",
+      "observation": {
+        "mode": "blackbox",
+        "screenshot": "headless://frame/000002.png",
+        "visibleUi": [
+          {
+            "text": "$1000",
+            "visible": true
+          },
+          {
+            "text": "Inventory",
+            "visible": true
+          }
+        ],
+        "nearby": [],
+        "events": [
+          {
+            "event": "spawn",
+            "success": null
+          }
+        ]
+      }
+    },
+    {
+      "kind": "observation",
+      "observation": {
+        "mode": "blackbox",
+        "screenshot": "headless://frame/000003.png",
+        "visibleUi": [
+          {
+            "text": "$1000",
+            "visible": true
+          },
+          {
+            "text": "Inventory",
+            "visible": true
+          }
+        ],
+        "nearby": [],
+        "events": [
+          {
+            "event": "spawn",
+            "success": null
+          }
+        ]
+      }
+    },
+    {
+      "kind": "observation",
+      "observation": {
+        "mode": "blackbox",
+        "screenshot": "headless://frame/000004.png",
+        "visibleUi": [
+          {
+            "text": "$1000",
+            "visible": true
+          },
+          {
+            "text": "Inventory",
+            "visible": true
+          },
+          {
+            "text": "[E] Buy mining pack - $100",
+            "visible": true
+          }
+        ],
+        "nearby": [
+          {
+            "type": "ProximityPrompt",
+            "name": "PurchasePrompt",
+            "distance": 4.8,
+            "actionText": "Buy mining pack"
+          }
+        ],
+        "events": [
+          {
+            "event": "spawn",
+            "success": null
+          }
+        ]
+      }
+    },
+    {
+      "kind": "action",
+      "record": {
+        "sequence": 1,
+        "timestamp": "2026-08-11T16:07:42.066439+00:00",
+        "before": {
+          "mode": "blackbox",
+          "screenshot": "headless://frame/000003.png",
+          "visibleUi": [
+            {
+              "text": "$1000",
+              "visible": true
+            },
+            {
+              "text": "Inventory",
+              "visible": true
+            }
+          ],
+          "nearby": [],
+          "events": [
+            {
+              "event": "spawn",
+              "success": null
+            }
+          ]
+        },
+        "action": {
+          "type": "walk_to",
+          "target": "BasicPackStore",
+          "timeout": 8,
+          "controller": "human"
+        },
+        "after": {
+          "mode": "blackbox",
+          "screenshot": "headless://frame/000004.png",
+          "visibleUi": [
+            {
+              "text": "$1000",
+              "visible": true
+            },
+            {
+              "text": "Inventory",
+              "visible": true
+            },
+            {
+              "text": "[E] Buy mining pack - $100",
+              "visible": true
+            }
+          ],
+          "nearby": [
+            {
+              "type": "ProximityPrompt",
+              "name": "PurchasePrompt",
+              "distance": 4.8,
+              "actionText": "Buy mining pack"
+            }
+          ],
+          "events": [
+            {
+              "event": "spawn",
+              "success": null
+            }
+          ]
+        },
+        "result": "PASS",
+        "reason": null,
+        "details": {
+          "success": true,
+          "controller": "human",
+          "target": "BasicPackStore",
+          "elapsed": 3.27,
+          "distance": 4.84,
+          "route": [
+            "Spawn",
+            "MainPlaza",
+            "BasicPackStore",
+            "PlayerPlot"
+          ],
+          "actions": [
+            {
+              "type": "keyboard_sequence",
+              "keys": [
+                "W",
+                "W",
+                "D",
+                "W"
+              ]
+            }
+          ]
+        }
+      }
+    },
+    {
+      "kind": "assertion",
+      "status": "PASS",
+      "details": {
+        "assertion": {
+          "type": "visible_text",
+          "value": "Buy mining pack"
+        },
+        "expected": "Buy mining pack",
+        "actual": [
+          {
+            "text": "$1000",
+            "visible": true
+          },
+          {
+            "text": "Inventory",
+            "visible": true
+          },
+          {
+            "text": "[E] Buy mining pack - $100",
+            "visible": true
+          }
+        ]
+      }
+    },
+    {
+      "kind": "observation",
+      "observation": {
+        "mode": "blackbox",
+        "screenshot": "headless://frame/000006.png",
+        "visibleUi": [
+          {
+            "text": "$1000",
+            "visible": true
+          },
+          {
+            "text": "Inventory",
+            "visible": true
+          },
+          {
+            "text": "[E] Buy mining pack - $100",
+            "visible": true
+          }
+        ],
+        "nearby": [
+          {
+            "type": "ProximityPrompt",
+            "name": "PurchasePrompt",
+            "distance": 4.8,
+            "actionText": "Buy mining pack"
+          }
+        ],
+        "events": [
+          {
+            "event": "spawn",
+            "success": null
+          }
+        ]
+      }
+    },
+    {
+      "kind": "observation",
+      "observation": {
+        "mode": "blackbox",
+        "screenshot": "headless://frame/000007.png",
+        "visibleUi": [
+          {
+            "text": "$900",
+            "visible": true
+          },
+          {
+            "text": "Inventory",
+            "visible": true
+          },
+          {
+            "text": "[E] Buy mining pack - $100",
+            "visible": true
+          }
+        ],
+        "nearby": [
+          {
+            "type": "ProximityPrompt",
+            "name": "PurchasePrompt",
+            "distance": 4.8,
+            "actionText": "Buy mining pack"
+          }
+        ],
+        "events": [
+          {
+            "event": "spawn",
+            "success": null
+          },
+          {
+            "event": "purchase",
+            "success": null
+          }
+        ]
+      }
+    },
+    {
+      "kind": "action",
+      "record": {
+        "sequence": 2,
+        "timestamp": "2026-08-11T16:07:42.066439+00:00",
+        "before": {
+          "mode": "blackbox",
+          "screenshot": "headless://frame/000006.png",
+          "visibleUi": [
+            {
+              "text": "$1000",
+              "visible": true
+            },
+            {
+              "text": "Inventory",
+              "visible": true
+            },
+            {
+              "text": "[E] Buy mining pack - $100",
+              "visible": true
+            }
+          ],
+          "nearby": [
+            {
+              "type": "ProximityPrompt",
+              "name": "PurchasePrompt",
+              "distance": 4.8,
+              "actionText": "Buy mining pack"
+            }
+          ],
+          "events": [
+            {
+              "event": "spawn",
+              "success": null
+            }
+          ]
+        },
+        "action": {
+          "type": "interact",
+          "target": "PurchasePrompt"
+        },
+        "after": {
+          "mode": "blackbox",
+          "screenshot": "headless://frame/000007.png",
+          "visibleUi": [
+            {
+              "text": "$900",
+              "visible": true
+            },
+            {
+              "text": "Inventory",
+              "visible": true
+            },
+            {
+              "text": "[E] Buy mining pack - $100",
+              "visible": true
+            }
+          ],
+          "nearby": [
+            {
+              "type": "ProximityPrompt",
+              "name": "PurchasePrompt",
+              "distance": 4.8,
+              "actionText": "Buy mining pack"
+            }
+          ],
+          "events": [
+            {
+              "event": "spawn",
+              "success": null
+            },
+            {
+              "event": "purchase",
+              "success": null
+            }
+          ]
+        },
+        "result": "PASS",
+        "reason": null,
+        "details": {
+          "success": true,
+          "target": "PurchasePrompt",
+          "event": "package_purchased",
+          "currencyDelta": -100,
+          "inventoryDelta": 1
+        }
+      }
+    },
+    {
+      "kind": "assertion",
+      "status": "PASS",
+      "details": {
+        "assertion": {
+          "type": "visible_text",
+          "value": "$900"
+        },
+        "expected": "$900",
+        "actual": [
+          {
+            "text": "$900",
+            "visible": true
+          },
+          {
+            "text": "Inventory",
+            "visible": true
+          },
+          {
+            "text": "[E] Buy mining pack - $100",
+            "visible": true
+          }
+        ]
+      }
+    },
+    {
+      "kind": "observation",
+      "observation": {
+        "mode": "blackbox",
+        "screenshot": "headless://frame/000009.png",
+        "visibleUi": [
+          {
+            "text": "$900",
+            "visible": true
+          },
+          {
+            "text": "Inventory",
+            "visible": true
+          },
+          {
+            "text": "[E] Buy mining pack - $100",
+            "visible": true
+          }
+        ],
+        "nearby": [
+          {
+            "type": "ProximityPrompt",
+            "name": "PurchasePrompt",
+            "distance": 4.8,
+            "actionText": "Buy mining pack"
+          }
+        ],
+        "events": [
+          {
+            "event": "spawn",
+            "success": null
+          },
+          {
+            "event": "purchase",
+            "success": null
+          }
+        ]
+      }
+    },
+    {
+      "kind": "observation",
+      "observation": {
+        "mode": "blackbox",
+        "screenshot": "headless://frame/000010.png",
+        "visibleUi": [
+          {
+            "text": "$900",
+            "visible": true
+          },
+          {
+            "text": "Inventory",
+            "visible": true
+          },
+          {
+            "text": "[E] Buy mining pack - $100",
+            "visible": true
+          }
+        ],
+        "nearby": [
+          {
+            "type": "ProximityPrompt",
+            "name": "PurchasePrompt",
+            "distance": 4.8,
+            "actionText": "Buy mining pack"
+          }
+        ],
+        "events": [
+          {
+            "event": "spawn",
+            "success": null
+          },
+          {
+            "event": "purchase",
+            "success": null
+          }
+        ]
+      }
+    },
+    {
+      "kind": "action",
+      "record": {
+        "sequence": 3,
+        "timestamp": "2026-08-11T16:07:42.066439+00:00",
+        "before": {
+          "mode": "blackbox",
+          "screenshot": "headless://frame/000009.png",
+          "visibleUi": [
+            {
+              "text": "$900",
+              "visible": true
+            },
+            {
+              "text": "Inventory",
+              "visible": true
+            },
+            {
+              "text": "[E] Buy mining pack - $100",
+              "visible": true
+            }
+          ],
+          "nearby": [
+            {
+              "type": "ProximityPrompt",
+              "name": "PurchasePrompt",
+              "distance": 4.8,
+              "actionText": "Buy mining pack"
+            }
+          ],
+          "events": [
+            {
+              "event": "spawn",
+              "success": null
+            },
+            {
+              "event": "purchase",
+              "success": null
+            }
+          ]
+        },
+        "action": {
+          "type": "interact",
+          "target": "PurchasePrompt"
+        },
+        "after": {
+          "mode": "blackbox",
+          "screenshot": "headless://frame/000010.png",
+          "visibleUi": [
+            {
+              "text": "$900",
+              "visible": true
+            },
+            {
+              "text": "Inventory",
+              "visible": true
+            },
+            {
+              "text": "[E] Buy mining pack - $100",
+              "visible": true
+            }
+          ],
+          "nearby": [
+            {
+              "type": "ProximityPrompt",
+              "name": "PurchasePrompt",
+              "distance": 4.8,
+              "actionText": "Buy mining pack"
+            }
+          ],
+          "events": [
+            {
+              "event": "spawn",
+              "success": null
+            },
+            {
+              "event": "purchase",
+              "success": null
+            }
+          ]
+        },
+        "result": "FAIL",
+        "reason": "already_purchased_or_insufficient_funds",
+        "details": {
+          "success": false,
+          "reason": "already_purchased_or_insufficient_funds",
+          "target": "PurchasePrompt",
+          "idempotent": true
+        }
+      }
+    },
+    {
+      "kind": "assertion",
+      "status": "PASS",
+      "details": {
+        "assertion": {
+          "type": "visible_text",
+          "value": "$900"
+        },
+        "expected": "$900",
+        "actual": [
+          {
+            "text": "$900",
+            "visible": true
+          },
+          {
+            "text": "Inventory",
+            "visible": true
+          },
+          {
+            "text": "[E] Buy mining pack - $100",
+            "visible": true
+          }
+        ]
+      }
+    }
+  ],
+  "actionRecords": [
+    {
+      "sequence": 1,
+      "timestamp": "2026-08-11T16:07:42.066439+00:00",
+      "before": {
+        "mode": "blackbox",
+        "screenshot": "headless://frame/000003.png",
+        "visibleUi": [
+          {
+            "text": "$1000",
+            "visible": true
+          },
+          {
+            "text": "Inventory",
+            "visible": true
+          }
+        ],
+        "nearby": [],
+        "events": [
+          {
+            "event": "spawn",
+            "success": null
+          }
+        ]
+      },
+      "action": {
+        "type": "walk_to",
+        "target": "BasicPackStore",
+        "timeout": 8,
+        "controller": "human"
+      },
+      "after": {
+        "mode": "blackbox",
+        "screenshot": "headless://frame/000004.png",
+        "visibleUi": [
+          {
+            "text": "$1000",
+            "visible": true
+          },
+          {
+            "text": "Inventory",
+            "visible": true
+          },
+          {
+            "text": "[E] Buy mining pack - $100",
+            "visible": true
+          }
+        ],
+        "nearby": [
+          {
+            "type": "ProximityPrompt",
+            "name": "PurchasePrompt",
+            "distance": 4.8,
+            "actionText": "Buy mining pack"
+          }
+        ],
+        "events": [
+          {
+            "event": "spawn",
+            "success": null
+          }
+        ]
+      },
+      "result": "PASS",
+      "reason": null,
+      "details": {
+        "success": true,
+        "controller": "human",
+        "target": "BasicPackStore",
+        "elapsed": 3.27,
+        "distance": 4.84,
+        "route": [
+          "Spawn",
+          "MainPlaza",
+          "BasicPackStore",
+          "PlayerPlot"
+        ],
+        "actions": [
+          {
+            "type": "keyboard_sequence",
+            "keys": [
+              "W",
+              "W",
+              "D",
+              "W"
+            ]
+          }
+        ]
+      }
+    },
+    {
+      "sequence": 2,
+      "timestamp": "2026-08-11T16:07:42.066439+00:00",
+      "before": {
+        "mode": "blackbox",
+        "screenshot": "headless://frame/000006.png",
+        "visibleUi": [
+          {
+            "text": "$1000",
+            "visible": true
+          },
+          {
+            "text": "Inventory",
+            "visible": true
+          },
+          {
+            "text": "[E] Buy mining pack - $100",
+            "visible": true
+          }
+        ],
+        "nearby": [
+          {
+            "type": "ProximityPrompt",
+            "name": "PurchasePrompt",
+            "distance": 4.8,
+            "actionText": "Buy mining pack"
+          }
+        ],
+        "events": [
+          {
+            "event": "spawn",
+            "success": null
+          }
+        ]
+      },
+      "action": {
+        "type": "interact",
+        "target": "PurchasePrompt"
+      },
+      "after": {
+        "mode": "blackbox",
+        "screenshot": "headless://frame/000007.png",
+        "visibleUi": [
+          {
+            "text": "$900",
+            "visible": true
+          },
+          {
+            "text": "Inventory",
+            "visible": true
+          },
+          {
+            "text": "[E] Buy mining pack - $100",
+            "visible": true
+          }
+        ],
+        "nearby": [
+          {
+            "type": "ProximityPrompt",
+            "name": "PurchasePrompt",
+            "distance": 4.8,
+            "actionText": "Buy mining pack"
+          }
+        ],
+        "events": [
+          {
+            "event": "spawn",
+            "success": null
+          },
+          {
+            "event": "purchase",
+            "success": null
+          }
+        ]
+      },
+      "result": "PASS",
+      "reason": null,
+      "details": {
+        "success": true,
+        "target": "PurchasePrompt",
+        "event": "package_purchased",
+        "currencyDelta": -100,
+        "inventoryDelta": 1
+      }
+    },
+    {
+      "sequence": 3,
+      "timestamp": "2026-08-11T16:07:42.066439+00:00",
+      "before": {
+        "mode": "blackbox",
+        "screenshot": "headless://frame/000009.png",
+        "visibleUi": [
+          {
+            "text": "$900",
+            "visible": true
+          },
+          {
+            "text": "Inventory",
+            "visible": true
+          },
+          {
+            "text": "[E] Buy mining pack - $100",
+            "visible": true
+          }
+        ],
+        "nearby": [
+          {
+            "type": "ProximityPrompt",
+            "name": "PurchasePrompt",
+            "distance": 4.8,
+            "actionText": "Buy mining pack"
+          }
+        ],
+        "events": [
+          {
+            "event": "spawn",
+            "success": null
+          },
+          {
+            "event": "purchase",
+            "success": null
+          }
+        ]
+      },
+      "action": {
+        "type": "interact",
+        "target": "PurchasePrompt"
+      },
+      "after": {
+        "mode": "blackbox",
+        "screenshot": "headless://frame/000010.png",
+        "visibleUi": [
+          {
+            "text": "$900",
+            "visible": true
+          },
+          {
+            "text": "Inventory",
+            "visible": true
+          },
+          {
+            "text": "[E] Buy mining pack - $100",
+            "visible": true
+          }
+        ],
+        "nearby": [
+          {
+            "type": "ProximityPrompt",
+            "name": "PurchasePrompt",
+            "distance": 4.8,
+            "actionText": "Buy mining pack"
+          }
+        ],
+        "events": [
+          {
+            "event": "spawn",
+            "success": null
+          },
+          {
+            "event": "purchase",
+            "success": null
+          }
+        ]
+      },
+      "result": "FAIL",
+      "reason": "already_purchased_or_insufficient_funds",
+      "details": {
+        "success": false,
+        "reason": "already_purchased_or_insufficient_funds",
+        "target": "PurchasePrompt",
+        "idempotent": true
+      }
+    }
+  ]
+}

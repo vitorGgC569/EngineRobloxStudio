@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "cinderpost",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-cinderpost",
+      "productId": "cinderpost",
+      "revision": "1.0.0",
+      "seed": 202508,
+      "genre": "tycoon",
+      "templateId": "template-tycoon-v1",
+      "sourceRoot": "games/cinderpost",
+      "artifactRoot": "artifacts/products/cinderpost",
+      "productIntentRef": {
+        "productId": "cinderpost",
+        "artifactId": "cinderpost.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/cinderpost/definition/product-intent.json",
+        "sha256": "3049f9b82ec08acd00f8cdf770f72e63a9a6aab66df7e2117611bb3d29ad9331"
+      },
+      "referenceBundleRef": {
+        "productId": "cinderpost",
+        "artifactId": "cinderpost.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/cinderpost/definition/reference-bundle.json",
+        "sha256": "794ede419a5b3ea444f562c72c49f47505ebeb66a0241b93f2a4360f9abdf61e"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a plot grid around a shared hub",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "economy, inventory, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/cinderpost/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/cinderpost/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/cinderpost/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/cinderpost/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "core-loop",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "cinderpost",
+            "artifactId": "cinderpost.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/cinderpost/definition/release-quality.json",
+            "sha256": "02743fda2eab2d9f01a8cc70e92875e4e968d3a10fd0c99a7630340e35828bad"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "cinderpost",
+          "artifactId": "cinderpost.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/cinderpost/production_plan"
+        },
+        {
+          "productId": "cinderpost",
+          "artifactId": "cinderpost.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/cinderpost/source_bundle"
+        },
+        {
+          "productId": "cinderpost",
+          "artifactId": "cinderpost.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/cinderpost/asset_manifest"
+        },
+        {
+          "productId": "cinderpost",
+          "artifactId": "cinderpost.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/cinderpost/build_place"
+        },
+        {
+          "productId": "cinderpost",
+          "artifactId": "cinderpost.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/cinderpost/integration_manifest"
+        },
+        {
+          "productId": "cinderpost",
+          "artifactId": "cinderpost.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/cinderpost/measurement_run"
+        },
+        {
+          "productId": "cinderpost",
+          "artifactId": "cinderpost.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/cinderpost/scenario_results"
+        },
+        {
+          "productId": "cinderpost",
+          "artifactId": "cinderpost.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/cinderpost/capture_bundle"
+        },
+        {
+          "productId": "cinderpost",
+          "artifactId": "cinderpost.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/cinderpost/quality_review"
+        },
+        {
+          "productId": "cinderpost",
+          "artifactId": "cinderpost.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/cinderpost/repair_plan"
+        },
+        {
+          "productId": "cinderpost",
+          "artifactId": "cinderpost.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/cinderpost/regression_run"
+        },
+        {
+          "productId": "cinderpost",
+          "artifactId": "cinderpost.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/cinderpost/release_candidate"
+        }
+      ]
+    }
+  ]
+}

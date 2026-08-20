@@ -1,0 +1,31 @@
+{
+  "scenario": "first-purchase-e2e",
+  "status": "FAIL",
+  "validationLevel": "E2E_VALIDATED",
+  "startedAt": "2026-08-11T02:41:30Z",
+  "steps": {
+    "total": 1,
+    "passed": 0,
+    "failed": 1
+  },
+  "results": [
+    {
+      "index": 1,
+      "step": "reset",
+      "spec": {
+        "comment": "gameplay state survives a run: without a fresh player the second pass starts already owning the pack and fails for the wrong reason"
+      },
+      "status": "FAIL",
+      "reason": "could not start a fresh play session",
+      "elapsedMs": 91609.0,
+      "detail": {
+        "keySent": "F5",
+        "focusedWindow": "C:\\Users\\vitor\\OneDrive\\Desktop\\RobloxGamesMCP\\.tmp\\MinersRidgeTycoon-fixed.rbxlx - Roblox Studio",
+        "waited": true,
+        "seconds": 90.6,
+        "playSessions": [],
+        "started": false
+      }
+    }
+  ]
+}

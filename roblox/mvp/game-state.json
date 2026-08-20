@@ -1,0 +1,83 @@
+{
+  "game": {
+    "name": "Miner's Ridge Tycoon",
+    "placeId": 0,
+    "maxPlayers": 8
+  },
+  "spawn": {
+    "position": [0, 3, 0],
+    "supported": true,
+    "supportPart": "SpawnPad",
+    "clearance": true
+  },
+  "geometry": {
+    "groundSupport": {
+      "target": "BasicPackStore",
+      "maxGap": 1.5,
+      "samples": [
+        {"point": "center", "supported": true, "gap": 0.2},
+        {"point": "north-west", "supported": true, "gap": 0.3},
+        {"point": "north-east", "supported": true, "gap": 0.3},
+        {"point": "south-west", "supported": true, "gap": 0.4},
+        {"point": "south-east", "supported": true, "gap": 0.4},
+        {"point": "north", "supported": true, "gap": 0.2},
+        {"point": "east", "supported": true, "gap": 0.4},
+        {"point": "south", "supported": true, "gap": 0.2},
+        {"point": "west", "supported": true, "gap": 0.3}
+      ]
+    },
+    "overlaps": [],
+    "floating": [],
+    "buried": [],
+    "doors": [{"name": "MineGate", "clearance": 4.0, "required": 3.0}],
+    "stairs": [{"name": "PlotSteps", "valid": true, "riser": 0.8, "tread": 2.5}]
+  },
+  "validation": {
+    "pathExists": true,
+    "path": ["Spawn", "MainPlaza", "BasicPackStore", "PlayerPlot"],
+    "objectiveReachable": true,
+    "objectives": ["BasicPackStore", "PlayerPlot", "MineEntrance"],
+    "interactions": [
+      {"name": "PurchasePrompt", "reachable": true, "distance": 7.5, "maxDistance": 12},
+      {"name": "PurchaseFloorPrompt", "reachable": true, "distance": 8.0, "maxDistance": 12}
+    ],
+    "floorPurchasePromptResponsive": true,
+    "cardGalleryResponsive": true,
+    "cameraObstructions": [],
+    "purchaseButtonResponsive": true
+  },
+  "ui": {
+    "visualScore": 0.92,
+    "snapshots": ["spawn", "shop", "mine", "plot", "mobile-store"],
+    "elements": [
+      {"name": "CurrencyLabel", "visible": true},
+      {"name": "InventoryButton", "visible": true},
+      {"name": "PurchasePrompt", "visible": true},
+      {"name": "CardGalleryButton", "visible": true},
+      {"name": "CardCollectionPanel", "visible": true},
+      {"name": "UpgradeFloorButton", "visible": true}
+    ],
+    "mobile": {
+      "phone": {"viewport": [390, 844]},
+      "tablet": {"viewport": [1024, 768]},
+      "elements": [
+        {"name": "CurrencyLabel", "withinViewport": true},
+        {"name": "InventoryButton", "withinViewport": true},
+        {"name": "PurchasePrompt", "withinViewport": true},
+        {"name": "CardGalleryButton", "withinViewport": true},
+        {"name": "UpgradeFloorButton", "withinViewport": true}
+      ]
+    }
+  },
+  "network": {
+    "rateLimits": true,
+    "remotes": [{"name": "PurchaseBasicPack", "serverAuthoritative": true}]
+  },
+  "performance": {
+    "frameMs": 12.4,
+    "workspaceInstances": 184,
+    "memoryGrowthMb": 1.8,
+    "maxMemoryGrowthMb": 5,
+    "assetPartCount": 46
+  }
+}

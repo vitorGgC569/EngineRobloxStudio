@@ -1,0 +1,295 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "skyharbor",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-skyharbor",
+      "productId": "skyharbor",
+      "revision": "1.0.0",
+      "seed": 98928446,
+      "genre": "racing",
+      "templateId": "template-racing-v1",
+      "sourceRoot": "games/skyharbor",
+      "artifactRoot": "artifacts/products/skyharbor",
+      "productIntentRef": {
+        "productId": "skyharbor",
+        "artifactId": "skyharbor.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/skyharbor/definition/product-intent.json",
+        "sha256": "5008da39c29195d3cf1e15941d89584e5860de70e4c00c47e947ae3eac932243"
+      },
+      "referenceBundleRef": {
+        "productId": "skyharbor",
+        "artifactId": "skyharbor.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/skyharbor/definition/reference-bundle.json",
+        "sha256": "699e8a0e321a3e77aa8e5aacbf60c7556905ab89e5f2c5e8d1160acbe56267f8"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a sequence of gated level volumes",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "economy, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/skyharbor/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/skyharbor/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/skyharbor/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/skyharbor/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "race",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "storefront-art",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "skyharbor",
+            "artifactId": "skyharbor.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/skyharbor/definition/release-quality.json",
+            "sha256": "e69f388e600f30fce677b2fae1667e695232b70cdca8fb4f51d2590b38d1f8e0"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "skyharbor",
+          "artifactId": "skyharbor.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/skyharbor/production_plan"
+        },
+        {
+          "productId": "skyharbor",
+          "artifactId": "skyharbor.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/skyharbor/source_bundle"
+        },
+        {
+          "productId": "skyharbor",
+          "artifactId": "skyharbor.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/skyharbor/asset_manifest"
+        },
+        {
+          "productId": "skyharbor",
+          "artifactId": "skyharbor.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/skyharbor/build_place"
+        },
+        {
+          "productId": "skyharbor",
+          "artifactId": "skyharbor.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/skyharbor/integration_manifest"
+        },
+        {
+          "productId": "skyharbor",
+          "artifactId": "skyharbor.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/skyharbor/measurement_run"
+        },
+        {
+          "productId": "skyharbor",
+          "artifactId": "skyharbor.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/skyharbor/scenario_results"
+        },
+        {
+          "productId": "skyharbor",
+          "artifactId": "skyharbor.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/skyharbor/capture_bundle"
+        },
+        {
+          "productId": "skyharbor",
+          "artifactId": "skyharbor.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/skyharbor/quality_review"
+        },
+        {
+          "productId": "skyharbor",
+          "artifactId": "skyharbor.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/skyharbor/repair_plan"
+        },
+        {
+          "productId": "skyharbor",
+          "artifactId": "skyharbor.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/skyharbor/regression_run"
+        },
+        {
+          "productId": "skyharbor",
+          "artifactId": "skyharbor.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/skyharbor/release_candidate"
+        }
+      ]
+    }
+  ]
+}

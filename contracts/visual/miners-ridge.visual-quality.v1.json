@@ -1,0 +1,246 @@
+{
+  "$schema": "../../schemas/visual-quality-spec.v1.schema.json",
+  "schemaVersion": 1,
+  "specId": "miners-ridge.visual-quality",
+  "revision": 1,
+  "units": {
+    "distance": "stud",
+    "density": "visualRootsPer1000SquareStuds",
+    "colorDifference": "CIEDE2000"
+  },
+  "classification": {
+    "candidateTag": "RQEVisualCandidate",
+    "rootTag": "RQEVisualRoot",
+    "typeAttribute": "VisualType",
+    "variantAttribute": "VisualVariant",
+    "assetKeyAttribute": "AssetKey",
+    "regionTag": "RQEVisualRegion",
+    "regionProfileAttribute": "VisualRegionProfile",
+    "landmarkTag": "RQELandmark",
+    "landmarkAnchorTag": "RQELandmarkAnchor",
+    "excludeTag": "RQEVisualExclude",
+    "minimumClassifiedFraction": 0.98
+  },
+  "palette": {
+    "swatches": [
+      {"id": "grass", "rgb": [115, 198, 88], "roles": ["ground", "nature"]},
+      {"id": "grass-dark", "rgb": [88, 170, 68], "roles": ["ground", "shadow"]},
+      {"id": "path-red", "rgb": [226, 92, 82], "roles": ["path", "accent"]},
+      {"id": "path-white", "rgb": [240, 240, 236], "roles": ["path", "surface"]},
+      {"id": "trim-gold", "rgb": [248, 208, 74], "roles": ["accent", "reward"]},
+      {"id": "pavement", "rgb": [214, 214, 208], "roles": ["ground", "structure"]},
+      {"id": "brick", "rgb": [206, 176, 138], "roles": ["structure", "warm"]},
+      {"id": "brick-dark", "rgb": [151, 116, 82], "roles": ["structure", "shadow"]},
+      {"id": "wood", "rgb": [132, 90, 61], "roles": ["structure", "prop"]},
+      {"id": "stone", "rgb": [128, 133, 140], "roles": ["structure", "mine"]},
+      {"id": "slate", "rgb": [57, 65, 78], "roles": ["roof", "shadow"]},
+      {"id": "ink", "rgb": [31, 37, 49], "roles": ["text", "outline"]},
+      {"id": "metal", "rgb": [157, 164, 174], "roles": ["machine", "structure"]},
+      {"id": "white", "rgb": [248, 248, 245], "roles": ["surface", "text"]},
+      {"id": "leaf", "rgb": [58, 143, 72], "roles": ["nature", "vegetation"]}
+    ],
+    "maximumDeltaE": 18,
+    "maximumOffPaletteFraction": 0.05
+  },
+  "objectTypes": {
+    "building": {
+      "selector": {"tag": "RQEVisualRoot", "attributeEquals": {"VisualType": "building"}},
+      "minimumInstances": 4,
+      "maximumInstances": 24,
+      "scale": {
+        "boundsMethod": "oriented-box",
+        "minimumSize": [8, 6, 8],
+        "maximumSize": [120, 100, 120],
+        "maximumRelativeMad": 0.85,
+        "groupByAttribute": "VisualVariant"
+      }
+    },
+    "interactive": {
+      "selector": {"tag": "RQEVisualRoot", "attributeEquals": {"VisualType": "interactive"}},
+      "minimumInstances": 5,
+      "maximumInstances": 80,
+      "scale": {
+        "boundsMethod": "oriented-box",
+        "minimumSize": [0.5, 0.5, 0.5],
+        "maximumSize": [32, 32, 32],
+        "maximumRelativeMad": 0.7,
+        "groupByAttribute": "VisualVariant"
+      }
+    },
+    "vegetation": {
+      "selector": {"tag": "RQEVisualRoot", "attributeEquals": {"VisualType": "vegetation"}},
+      "minimumInstances": 12,
+      "maximumInstances": 300,
+      "scale": {
+        "boundsMethod": "oriented-box",
+        "minimumSize": [0.5, 1, 0.5],
+        "maximumSize": [36, 60, 36],
+        "maximumRelativeMad": 0.65,
+        "groupByAttribute": "VisualVariant"
+      }
+    }
+  },
+  "regionProfiles": {
+    "hub": {
+      "density": {
+        "minimumRootsPer1000SquareStuds": 1.2,
+        "maximumRootsPer1000SquareStuds": 20,
+        "minimumFootprintCoverage": 0.12
+      },
+      "heightVariation": {"minimumP90MinusP10": 4, "maximumP90MinusP10": 80},
+      "materialVariety": {"minimumDistinctMaterials": 4, "maximumDominantFraction": 0.7},
+      "repetition": {"maximumIdenticalVariantRun": 4, "minimumVariantEntropy": 0.7}
+    },
+    "plot": {
+      "density": {
+        "minimumRootsPer1000SquareStuds": 0.8,
+        "maximumRootsPer1000SquareStuds": 18,
+        "minimumFootprintCoverage": 0.1
+      },
+      "heightVariation": {"minimumP90MinusP10": 3, "maximumP90MinusP10": 70},
+      "materialVariety": {"minimumDistinctMaterials": 3, "maximumDominantFraction": 0.78},
+      "repetition": {"maximumIdenticalVariantRun": 5, "minimumVariantEntropy": 0.5}
+    },
+    "mine": {
+      "density": {
+        "minimumRootsPer1000SquareStuds": 1,
+        "maximumRootsPer1000SquareStuds": 24,
+        "minimumFootprintCoverage": 0.15
+      },
+      "heightVariation": {"minimumP90MinusP10": 6, "maximumP90MinusP10": 100},
+      "materialVariety": {"minimumDistinctMaterials": 4, "maximumDominantFraction": 0.75},
+      "repetition": {"maximumIdenticalVariantRun": 4, "minimumVariantEntropy": 0.65}
+    }
+  },
+  "regionSets": {
+    "hub-regions": {
+      "selector": {"tag": "RQEVisualRegion", "attributeEquals": {"VisualRegionProfile": "hub"}},
+      "profile": "hub",
+      "minimumRegions": 1,
+      "maximumRegions": 2,
+      "minimumProfileCoverage": 1
+    },
+    "plot-regions": {
+      "selector": {"tag": "RQEVisualRegion", "attributeEquals": {"VisualRegionProfile": "plot"}},
+      "profile": "plot",
+      "minimumRegions": 4,
+      "maximumRegions": 8,
+      "minimumProfileCoverage": 1
+    },
+    "mine-regions": {
+      "selector": {"tag": "RQEVisualRegion", "attributeEquals": {"VisualRegionProfile": "mine"}},
+      "profile": "mine",
+      "minimumRegions": 1,
+      "maximumRegions": 3,
+      "minimumProfileCoverage": 1
+    }
+  },
+  "landmarks": {
+    "spawn": {
+      "selector": {"tag": "RQELandmark", "attributeEquals": {"LandmarkId": "spawn"}},
+      "anchorSelector": {"tag": "RQELandmarkAnchor", "attributeEquals": {"LandmarkId": "spawn"}},
+      "maximumDistance": 90,
+      "sampleSpacing": 10,
+      "eyeHeight": 5,
+      "raysPerAnchor": 9,
+      "minimumVisibleAnchorFraction": 0.8,
+      "maximumBlindSpotDegrees": 70,
+      "minimumRegionsVisibleFrom": 2
+    },
+    "shop": {
+      "selector": {"tag": "RQELandmark", "attributeEquals": {"LandmarkId": "shop"}},
+      "anchorSelector": {"tag": "RQELandmarkAnchor", "attributeEquals": {"LandmarkId": "shop"}},
+      "maximumDistance": 110,
+      "sampleSpacing": 10,
+      "eyeHeight": 5,
+      "raysPerAnchor": 9,
+      "minimumVisibleAnchorFraction": 0.75,
+      "maximumBlindSpotDegrees": 80,
+      "minimumRegionsVisibleFrom": 2
+    },
+    "mine": {
+      "selector": {"tag": "RQELandmark", "attributeEquals": {"LandmarkId": "mine"}},
+      "anchorSelector": {"tag": "RQELandmarkAnchor", "attributeEquals": {"LandmarkId": "mine"}},
+      "maximumDistance": 140,
+      "sampleSpacing": 12,
+      "eyeHeight": 5,
+      "raysPerAnchor": 9,
+      "minimumVisibleAnchorFraction": 0.7,
+      "maximumBlindSpotDegrees": 90,
+      "minimumRegionsVisibleFrom": 2
+    },
+    "plot": {
+      "selector": {"tag": "RQELandmark", "attributeEquals": {"LandmarkId": "plot"}},
+      "anchorSelector": {"tag": "RQELandmarkAnchor", "attributeEquals": {"LandmarkId": "plot"}},
+      "maximumDistance": 100,
+      "sampleSpacing": 10,
+      "eyeHeight": 5,
+      "raysPerAnchor": 9,
+      "minimumVisibleAnchorFraction": 0.75,
+      "maximumBlindSpotDegrees": 85,
+      "minimumRegionsVisibleFrom": 2
+    }
+  },
+  "viewpoints": {
+    "spawn": {
+      "device": "desktop",
+      "resolution": [1920, 1080],
+      "landmark": "spawn",
+      "state": "initial",
+      "camera": {"mode": "look-at-landmark", "distance": 42, "height": 13, "fieldOfView": 70, "yawDegrees": 28},
+      "rubric": {"composition": 0.25, "hierarchy": 0.2, "legibility": 0.2, "materiality": 0.15, "polish": 0.2}
+    },
+    "shop": {
+      "device": "desktop",
+      "resolution": [1920, 1080],
+      "landmark": "shop",
+      "state": "initial",
+      "camera": {"mode": "look-at-landmark", "distance": 35, "height": 10, "fieldOfView": 65, "yawDegrees": -25},
+      "rubric": {"composition": 0.2, "hierarchy": 0.25, "legibility": 0.25, "materiality": 0.15, "polish": 0.15}
+    },
+    "mine": {
+      "device": "desktop",
+      "resolution": [1920, 1080],
+      "landmark": "mine",
+      "state": "initial",
+      "camera": {"mode": "look-at-landmark", "distance": 55, "height": 16, "fieldOfView": 72, "yawDegrees": 35},
+      "rubric": {"composition": 0.3, "hierarchy": 0.2, "legibility": 0.15, "materiality": 0.2, "polish": 0.15}
+    },
+    "plot": {
+      "device": "desktop",
+      "resolution": [1920, 1080],
+      "landmark": "plot",
+      "state": "developed",
+      "camera": {"mode": "look-at-landmark", "distance": 48, "height": 18, "fieldOfView": 70, "yawDegrees": -32},
+      "rubric": {"composition": 0.25, "hierarchy": 0.2, "legibility": 0.15, "materiality": 0.2, "polish": 0.2}
+    },
+    "mobile-store": {
+      "device": "phone",
+      "resolution": [390, 844],
+      "landmark": "shop",
+      "state": "initial",
+      "camera": {"mode": "player-follow", "distance": 18, "height": 6, "fieldOfView": 75, "yawDegrees": 0},
+      "rubric": {"composition": 0.15, "hierarchy": 0.25, "legibility": 0.35, "materiality": 0.1, "polish": 0.15}
+    },
+    "tablet-plot": {
+      "device": "tablet",
+      "resolution": [1024, 768],
+      "landmark": "plot",
+      "state": "developed",
+      "camera": {"mode": "player-follow", "distance": 24, "height": 8, "fieldOfView": 72, "yawDegrees": 0},
+      "rubric": {"composition": 0.2, "hierarchy": 0.2, "legibility": 0.3, "materiality": 0.1, "polish": 0.2}
+    }
+  },
+  "evaluationStates": {
+    "initial": {
+      "scenario": "contracts/scenarios/first-purchase-e2e.json",
+      "requiredViewpoints": ["spawn", "shop", "mine", "mobile-store"],
+      "minimumRuleCoverage": 1
+    },
+    "developed": {
+      "scenario": "contracts/scenarios/purchase-first-pack.json",
+      "requiredViewpoints": ["plot", "tablet-plot"],
+      "minimumRuleCoverage": 1
+    }
+  }
+}

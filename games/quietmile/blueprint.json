@@ -1,0 +1,305 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "quietmile",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-quietmile",
+      "productId": "quietmile",
+      "revision": "1.0.0",
+      "seed": 97352734,
+      "genre": "collection",
+      "templateId": "template-collection-v1",
+      "sourceRoot": "games/quietmile",
+      "artifactRoot": "artifacts/products/quietmile",
+      "productIntentRef": {
+        "productId": "quietmile",
+        "artifactId": "quietmile.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/quietmile/definition/product-intent.json",
+        "sha256": "afde9bd382e07c690818f72f9e9721fe33af4c02ce1c76a3328941067063446e"
+      },
+      "referenceBundleRef": {
+        "productId": "quietmile",
+        "artifactId": "quietmile.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/quietmile/definition/reference-bundle.json",
+        "sha256": "8dd87ffa74a90e03d4d7e2c572c6d840a0c428b447392fbe13881d0f21151788"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a hub with portals, and one traversable zone per declared zone",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "economy, inventory, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/quietmile/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/quietmile/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/quietmile/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/quietmile/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "core-loop",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "zone-start-kit",
+          "type": "MODEL",
+          "strategy": "CREATE",
+          "requiredForRelease": true,
+          "consumers": [
+            "world"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "zone-deep-kit",
+          "type": "MODEL",
+          "strategy": "CREATE",
+          "requiredForRelease": true,
+          "consumers": [
+            "world"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "quietmile",
+            "artifactId": "quietmile.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/quietmile/definition/release-quality.json",
+            "sha256": "2fb3cbe00f3125a1215a6383ecc8404fb0348dad4e3db2f5415d73a646fc6283"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "quietmile",
+          "artifactId": "quietmile.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/quietmile/production_plan"
+        },
+        {
+          "productId": "quietmile",
+          "artifactId": "quietmile.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/quietmile/source_bundle"
+        },
+        {
+          "productId": "quietmile",
+          "artifactId": "quietmile.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/quietmile/asset_manifest"
+        },
+        {
+          "productId": "quietmile",
+          "artifactId": "quietmile.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/quietmile/build_place"
+        },
+        {
+          "productId": "quietmile",
+          "artifactId": "quietmile.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/quietmile/integration_manifest"
+        },
+        {
+          "productId": "quietmile",
+          "artifactId": "quietmile.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/quietmile/measurement_run"
+        },
+        {
+          "productId": "quietmile",
+          "artifactId": "quietmile.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/quietmile/scenario_results"
+        },
+        {
+          "productId": "quietmile",
+          "artifactId": "quietmile.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/quietmile/capture_bundle"
+        },
+        {
+          "productId": "quietmile",
+          "artifactId": "quietmile.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/quietmile/quality_review"
+        },
+        {
+          "productId": "quietmile",
+          "artifactId": "quietmile.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/quietmile/repair_plan"
+        },
+        {
+          "productId": "quietmile",
+          "artifactId": "quietmile.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/quietmile/regression_run"
+        },
+        {
+          "productId": "quietmile",
+          "artifactId": "quietmile.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/quietmile/release_candidate"
+        }
+      ]
+    }
+  ]
+}

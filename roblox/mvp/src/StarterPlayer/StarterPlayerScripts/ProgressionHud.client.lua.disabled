@@ -1,0 +1,109 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local player = Players.LocalPlayer
+local floorRemote = ReplicatedStorage:WaitForChild("Remotes"):WaitForChild("UpgradeFloor")
+
+local palette = {
+	ink = Color3.fromRGB(18, 27, 38),
+	panel = Color3.fromRGB(29, 42, 54),
+	panelSoft = Color3.fromRGB(39, 54, 65),
+	white = Color3.fromRGB(242, 243, 236),
+	muted = Color3.fromRGB(174, 188, 192),
+	teal = Color3.fromRGB(55, 196, 181),
+	gold = Color3.fromRGB(242, 193, 83),
+	copper = Color3.fromRGB(211, 121, 58),
+}
+
+local function stylePanel(instance, color, radius, strokeColor)
+	instance.BackgroundColor3 = color
+	instance.BackgroundTransparency = 0.04
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, radius or 12)
+	corner.Parent = instance
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = strokeColor or palette.gold
+	stroke.Thickness = 1.5
+	stroke.Transparency = 0.2
+	stroke.Parent = instance
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "ProgressionHud"
+gui.DisplayOrder = 21
+gui.IgnoreGuiInset = false
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local root = Instance.new("Frame")
+root.Name = "ProgressionRoot"
+root.BackgroundTransparency = 1
+root.Size = UDim2.fromScale(1, 1)
+root.Parent = gui
+
+local panel = Instance.new("Frame")
+panel.Name = "FloorPanel"
+panel.Size = UDim2.fromOffset(220, 86)
+panel.Position = UDim2.new(1, -242, 0, 206)
+stylePanel(panel, palette.panel, 12, palette.gold)
+panel.Parent = root
+
+local title = Instance.new("TextLabel")
+title.Name = "FloorTitle"
+title.BackgroundTransparency = 1
+title.Size = UDim2.fromOffset(190, 22)
+title.Position = UDim2.fromOffset(15, 8)
+title.TextColor3 = palette.gold
+title.Font = Enum.Font.GothamBlack
+title.TextSize = 15
+title.TextXAlignment = Enum.TextXAlignment.Left
+title.Parent = panel
+
+local meta = Instance.new("TextLabel")
+meta.Name = "FloorMeta"
+meta.BackgroundTransparency = 1
+meta.Size = UDim2.fromOffset(190, 18)
+meta.Position = UDim2.fromOffset(15, 29)
+meta.TextColor3 = palette.muted
+meta.Font = Enum.Font.Gotham
+meta.TextSize = 11
+meta.TextXAlignment = Enum.TextXAlignment.Left
+meta.Parent = panel
+
+local upgrade = Instance.new("TextButton")
+upgrade.Name = "UpgradeFloorButton"
+upgrade.Size = UDim2.fromOffset(190, 28)
+upgrade.Position = UDim2.fromOffset(15, 51)
+upgrade.TextColor3 = palette.white
+upgrade.Font = Enum.Font.GothamBold
+upgrade.TextSize = 11
+upgrade.AutoButtonColor = true
+stylePanel(upgrade, palette.panelSoft, 8, palette.copper)
+upgrade.Parent = panel
+
+local function refresh()
+	local level = player:GetAttribute("FloorLevel") or 1
+	local name = player:GetAttribute("FloorName") or "Groundworks"
+	local multiplier = player:GetAttribute("FloorMultiplier") or 1
+	title.Text = "FLOOR " .. tostring(level) .. "  /  " .. string.upper(name)
+	meta.Text = string.format("Income multiplier  %.2fx", multiplier)
+	if level >= 5 then
+		upgrade.Text = "MAX FLOOR REACHED"
+		upgrade.Active = false
+		upgrade.AutoButtonColor = false
+	else
+		upgrade.Text = "BUY NEXT FLOOR  /  VISIT LIFT"
+		upgrade.Active = true
+		upgrade.AutoButtonColor = true
+	end
+end
+
+upgrade.MouseButton1Click:Connect(function()
+	floorRemote:FireServer()
+end)
+player:GetAttributeChangedSignal("FloorLevel"):Connect(refresh)
+player:GetAttributeChangedSignal("FloorName"):Connect(refresh)
+player:GetAttributeChangedSignal("FloorMultiplier"):Connect(refresh)
+refresh()
+
+return nil

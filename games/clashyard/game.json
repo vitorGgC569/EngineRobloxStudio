@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "id": "clashyard",
+  "genre": "tycoon",
+  "theme": "arena",
+  "pitch": "Arena PvP de curta duracao: escolha um campeao, lute em partidas de tres minutos, suba de rank.",
+  "coreLoop": [
+    "collect",
+    "process",
+    "upgrade",
+    "sell",
+    "unlock"
+  ],
+  "world": {
+    "topology": "grid_plots",
+    "zones": []
+  },
+  "progression": {
+    "kind": "tiered",
+    "tiers": 8,
+    "firstTierSeconds": 45.0,
+    "sessionMinutes": 15.0
+  },
+  "economy": {
+    "currencies": [
+      {
+        "id": "cash",
+        "displayName": "Cash",
+        "earnedBy": [
+          "collect",
+          "process",
+          "sell"
+        ],
+        "spentOn": [
+          "upgrade",
+          "unlock"
+        ],
+        "premium": false
+      }
+    ]
+  },
+  "systems": [
+    "economy",
+    "progression",
+    "save",
+    "inventory",
+    "analytics"
+  ],
+  "monetization": [],
+  "tokenSet": "games/clashyard/tokens/clashyard-grove.json",
+  "concurrentPlayers": 1,
+  "privateSpace": false
+}

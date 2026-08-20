@@ -1,0 +1,39 @@
+{
+  "id": "first-purchase-e2e",
+  "description": "The opening loop, played by an agent against a real running game: join, walk to the store, buy the starter pack, confirm the economy and inventory actually changed.",
+  "place": ".tmp/MinersRidgeTycoon-fixed.rbxlx",
+  "requires": {
+    "playSession": true,
+    "clientBridge": true
+  },
+  "steps": [
+    { "reset": {},
+      "comment": "gameplay state survives a run: without a fresh player the second pass starts already owning the pack and fails for the wrong reason" },
+
+    { "attach": {}, "fatal": true },
+
+    { "assert": { "PlotName": "!= nil", "Currency": ">= 100" },
+      "comment": "the game must have assigned a plot and starting funds before anything else is meaningful" },
+
+    { "navigate_to": { "target": "game.Workspace.Map.BasicPackStore.Counter", "tolerance": 5, "timeout": 60 } },
+
+    { "expect_prompt_in_range": { "prompt": "PurchasePrompt", "radius": 60 },
+      "comment": "standing close enough is part of the test: a prompt a player cannot reach is a failure" },
+
+    { "interact": { "prompt": "game.Workspace.Map.BasicPackStore.Counter.PurchasePrompt" } },
+
+    { "wait": { "seconds": 2 } },
+
+    { "assert": { "delta": { "Currency": "== -100", "CardCount": "== 1" } },
+      "comment": "the purchase must cost currency and grant exactly one card" },
+
+    { "interact": { "prompt": "game.Workspace.Map.BasicPackStore.Counter.PurchasePrompt" },
+      "fatal": false,
+      "comment": "activating twice must not duplicate the reward" },
+
+    { "wait": { "seconds": 2 } },
+
+    { "assert": { "delta": { "Currency": "== -100", "CardCount": "== 1" } },
+      "comment": "idempotency: the second activation changed nothing" }
+  ]
+}

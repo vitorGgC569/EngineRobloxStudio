@@ -1,0 +1,108 @@
+{
+  "$schema": "../schemas/game-contract.schema.json",
+  "schemaVersion": 1,
+  "contractId": "miners-ridge.contract",
+  "game": {
+    "name": "Miner's Ridge Tycoon",
+    "genre": "tycoon",
+    "max_players": 8,
+    "target_devices": ["desktop", "phone", "tablet"]
+  },
+  "performance_budget": {
+    "client": {"target_fps": 60, "max_frame_ms": 16.67},
+    "instances": {"max_workspace": 25000},
+    "mobile": {"mandatory": true}
+  },
+  "visualQuality": {
+    "spec": "visual/miners-ridge.visual-quality.v1.json",
+    "specId": "miners-ridge.visual-quality",
+    "schemaMajor": 1,
+    "required": true,
+    "release": {
+      "minimumScore": 95,
+      "minimumRuleCoverage": 1.0,
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "missingEvidence": "FAIL"
+    }
+  },
+  "release_gate": {
+    "required_categories": [
+      "structural", "security", "visual", "geometry", "gameplay",
+      "navigation", "ui", "runtime", "performance", "persistence", "multiplayer"
+    ],
+    "forbidden_sources": ["headless-runtime"],
+    "minimum_requirement_coverage": 1.0,
+    "minimum_category_coverage": {
+      "structural": 1.0,
+      "security": 1.0,
+      "visual": 1.0,
+      "geometry": 1.0,
+      "gameplay": 1.0,
+      "navigation": 1.0,
+      "ui": 1.0,
+      "runtime": 1.0,
+      "performance": 1.0,
+      "persistence": 1.0,
+      "multiplayer": 1.0
+    },
+    "minimum_validation_by_type": {
+      "structural": "STATICALLY_VALIDATED",
+      "security": "RUNTIME_VALIDATED",
+      "geometry": "RUNTIME_VALIDATED",
+      "navigation": "RUNTIME_VALIDATED",
+      "runtime": "RUNTIME_VALIDATED",
+      "performance": "RUNTIME_VALIDATED",
+      "visual": "VISUALLY_VALIDATED",
+      "ui": "VISUALLY_VALIDATED",
+      "scenario": "E2E_VALIDATED",
+      "gameplay": "RUNTIME_VALIDATED",
+      "persistence": "E2E_VALIDATED",
+      "multiplayer": "E2E_VALIDATED"
+    },
+    "maximum_evidence_age_seconds_by_level": {
+      "STATICALLY_VALIDATED": 604800,
+      "RUNTIME_VALIDATED": 86400,
+      "VISUALLY_VALIDATED": 86400,
+      "E2E_VALIDATED": 86400
+    },
+    "minimum_visual_score": 95,
+    "require_trustworthy_captures": true
+  },
+  "requirements": [
+    {"id": "required_project_topology_exists", "probe": "structural_integrity", "type": "structural", "severity": "critical", "validation": {"minimum_level": "STATICALLY_VALIDATED", "allowed_sources": ["filesystem"]}},
+    {"id": "release_contract_is_valid", "probe": "contract_schema", "type": "structural", "severity": "critical", "validation": {"minimum_level": "STATICALLY_VALIDATED", "allowed_sources": ["contract-validator"]}},
+    {"id": "release_excludes_declared_fixture", "probe": "fixture_excluded", "type": "structural", "severity": "critical", "validation": {"minimum_level": "STATICALLY_VALIDATED", "allowed_sources": ["release-orchestrator"]}},
+    {"id": "visual_spec_is_valid", "probe": "visual_spec_schema", "type": "structural", "severity": "critical", "validation": {"minimum_level": "STATICALLY_VALIDATED", "allowed_sources": ["visual-spec-validator"]}},
+    {"id": "product_truth_matches_the_runtime_build", "probe": "product_truth_alignment", "type": "structural", "severity": "critical", "validation": {"minimum_level": "RUNTIME_VALIDATED", "allowed_sources": ["product-truth-validator"]}},
+    {"id": "player_can_spawn", "probe": "spawn_clearance", "type": "gameplay", "severity": "critical"},
+    {"id": "spawn_is_supported", "probe": "spawn_support", "type": "geometry", "severity": "critical"},
+    {"id": "player_can_reach_plot", "probe": "path_exists", "type": "navigation", "from": "Spawn", "to": "PlayerPlot", "severity": "critical"},
+    {"id": "objectives_are_reachable", "probe": "objective_reachable", "type": "navigation", "severity": "critical"},
+    {"id": "package_can_be_purchased", "probe": "button_interaction", "type": "scenario", "severity": "critical"},
+    {"id": "purchased_package_persists", "probe": "persistence", "type": "persistence", "severity": "critical"},
+    {"id": "purchase_is_idempotent", "probe": "button_interaction", "type": "gameplay", "severity": "critical", "validation": {"minimum_level": "E2E_VALIDATED"}},
+    {"id": "no_floating_buildings", "probe": "floating_objects", "type": "geometry", "severity": "major"},
+    {"id": "no_buried_objects", "probe": "buried_objects", "type": "geometry", "severity": "minor"},
+    {"id": "no_collision_overlap", "probe": "collision_overlap", "type": "geometry", "severity": "major"},
+    {"id": "doors_are_passable", "probe": "door_clearance", "type": "gameplay", "severity": "major"},
+    {"id": "stairs_are_usable", "probe": "stairs_validity", "type": "gameplay", "severity": "major"},
+    {"id": "store_prompt_is_reachable", "probe": "interaction_distance", "type": "gameplay", "severity": "major"},
+    {"id": "floor_progression_is_buyable", "probe": "floor_progression", "type": "gameplay", "severity": "major"},
+    {"id": "card_gallery_is_visible", "probe": "card_gallery", "type": "ui", "severity": "major"},
+    {"id": "camera_is_not_blocked", "probe": "camera_obstruction", "type": "visual", "severity": "minor"},
+    {"id": "ui_is_visible", "probe": "ui_visibility", "type": "ui", "severity": "major"},
+    {"id": "mobile_ui_valid", "probe": "ui_overflow", "type": "ui", "devices": ["phone", "tablet"], "severity": "major"},
+    {"id": "remote_rejects_invalid_payloads", "probe": "remote_security", "type": "security", "severity": "critical", "validation": {"minimum_level": "E2E_VALIDATED"}},
+    {"id": "runtime_has_no_errors", "probe": "runtime_error", "type": "runtime", "severity": "critical"},
+    {"id": "memory_does_not_grow_suspiciously", "probe": "memory_growth", "type": "performance", "severity": "major"},
+    {"id": "instances_are_cleaned_up", "probe": "instance_growth", "type": "performance", "severity": "major"},
+    {"id": "connections_are_not_duplicated", "probe": "duplicate_connections", "type": "performance", "severity": "major"},
+    {"id": "players_are_isolated", "probe": "multiplayer_isolation", "type": "multiplayer", "severity": "critical"},
+    {"id": "performance_budget_is_met", "probe": "performance_budget", "type": "performance", "severity": "major"},
+    {"id": "assets_are_safe", "probe": "asset_security", "type": "security", "severity": "critical", "validation": {"minimum_level": "STATICALLY_VALIDATED", "allowed_sources": ["release-static-validator"]}},
+    {"id": "visual_snapshots_are_healthy", "probe": "visual_quality", "type": "visual", "severity": "minor"},
+    {"id": "generated_visual_assets_are_valid", "probe": "visual_asset_quality", "type": "visual", "severity": "major", "validation": {"minimum_level": "STATICALLY_VALIDATED", "allowed_sources": ["visual-asset-validator"]}},
+    {"id": "visual_snapshot_bundle_is_valid", "probe": "visual_snapshot_bundle", "type": "visual", "severity": "major"},
+    {"id": "studio_runtime_captures_are_available", "probe": "studio_runtime_capture", "type": "visual", "severity": "major"}
+  ]
+}

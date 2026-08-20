@@ -1,0 +1,295 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "anime-card-farm",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-anime-card-farm",
+      "productId": "anime-card-farm",
+      "revision": "1.0.0",
+      "seed": 62955899,
+      "genre": "collection",
+      "templateId": "template-collection-v1",
+      "sourceRoot": "games/anime-card-farm",
+      "artifactRoot": "artifacts/products/anime-card-farm",
+      "productIntentRef": {
+        "productId": "anime-card-farm",
+        "artifactId": "anime-card-farm.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/anime-card-farm/definition/product-intent.json",
+        "sha256": "0195232e7f29b723e6e287e5fb8a530a8154382c74276aa7257ede77fdcba951"
+      },
+      "referenceBundleRef": {
+        "productId": "anime-card-farm",
+        "artifactId": "anime-card-farm.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/anime-card-farm/definition/reference-bundle.json",
+        "sha256": "a6d0a80b665992d686fb9bd19647f3f225c5258ff57d4cd74cb5091376cb03df"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a hub with portals, and one traversable zone per declared zone",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "economy, inventory, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/anime-card-farm/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/anime-card-farm/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/anime-card-farm/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/anime-card-farm/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "core-loop",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "zone-farm-kit",
+          "type": "MODEL",
+          "strategy": "CREATE",
+          "requiredForRelease": true,
+          "consumers": [
+            "world"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "anime-card-farm",
+            "artifactId": "anime-card-farm.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/anime-card-farm/definition/release-quality.json",
+            "sha256": "549750a8ea97ca7eaf61116a9cc407422f5aded59628b3fc3e47acf3f1985853"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/anime-card-farm/production_plan"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/anime-card-farm/source_bundle"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/anime-card-farm/asset_manifest"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/anime-card-farm/build_place"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/anime-card-farm/integration_manifest"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/anime-card-farm/measurement_run"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/anime-card-farm/scenario_results"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/anime-card-farm/capture_bundle"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/anime-card-farm/quality_review"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/anime-card-farm/repair_plan"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/anime-card-farm/regression_run"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/anime-card-farm/release_candidate"
+        }
+      ]
+    }
+  ]
+}

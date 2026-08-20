@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "productId": "brightacre",
+  "pitch": "Farm tycoon: plante, colha, venda na feira, expanda seus lotes e contrate ajudantes.",
+  "topology": "grid-plots",
+  "progression": "tiered-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/brightacre/tokens/brightacre-grove.json",
+  "coreLoop": [
+    "collect",
+    "process",
+    "upgrade",
+    "sell",
+    "unlock"
+  ]
+}

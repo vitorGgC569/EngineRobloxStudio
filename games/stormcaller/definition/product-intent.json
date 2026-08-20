@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "productId": "stormcaller",
+  "pitch": "Batalhas de magos em ilhas flutuantes: combine elementos, destrua o cristal inimigo, evite cair.",
+  "topology": "grid-plots",
+  "progression": "tiered-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/stormcaller/tokens/stormcaller-grove.json",
+  "coreLoop": [
+    "collect",
+    "process",
+    "upgrade",
+    "sell",
+    "unlock"
+  ]
+}

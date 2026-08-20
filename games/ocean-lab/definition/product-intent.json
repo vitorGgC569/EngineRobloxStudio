@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "productId": "ocean-lab",
+  "pitch": "A submarine lab tycoon: explore reefs, collect specimens, automate research.",
+  "topology": "hub-and-zones",
+  "progression": "tiered-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 6,
+  "tokenSet": "tokens/brickfarm.json",
+  "coreLoop": [
+    "explore",
+    "collect",
+    "process",
+    "upgrade",
+    "unlock"
+  ]
+}

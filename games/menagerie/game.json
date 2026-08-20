@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "id": "menagerie",
+  "genre": "collection",
+  "theme": "colecione criaturas raras",
+  "pitch": "Colecione criaturas raras num santuario: incube ovos, cuide dos bichos, complete o album, troque duplicatas.",
+  "coreLoop": [
+    "collect",
+    "unlock",
+    "upgrade"
+  ],
+  "world": {
+    "topology": "hub_and_zones",
+    "zones": [
+      {
+        "id": "start",
+        "theme": "colecione criaturas raras",
+        "difficulty": 1,
+        "unlockedAtTier": 0
+      },
+      {
+        "id": "deep",
+        "theme": "colecione criaturas raras",
+        "difficulty": 3,
+        "unlockedAtTier": 4
+      }
+    ]
+  },
+  "progression": {
+    "kind": "unlock_graph",
+    "tiers": 8,
+    "firstTierSeconds": 45.0,
+    "sessionMinutes": 15.0
+  },
+  "economy": {
+    "currencies": [
+      {
+        "id": "cash",
+        "displayName": "Cash",
+        "earnedBy": [
+          "collect"
+        ],
+        "spentOn": [
+          "unlock",
+          "upgrade"
+        ],
+        "premium": false
+      }
+    ]
+  },
+  "systems": [
+    "inventory",
+    "progression",
+    "save",
+    "economy",
+    "analytics"
+  ],
+  "monetization": [],
+  "tokenSet": "games/menagerie/tokens/menagerie-siege.json",
+  "concurrentPlayers": 1,
+  "privateSpace": false
+}

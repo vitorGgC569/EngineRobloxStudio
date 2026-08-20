@@ -1,0 +1,313 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "nightfall",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-nightfall",
+      "productId": "nightfall",
+      "revision": "1.0.0",
+      "seed": 35396569,
+      "genre": "survival",
+      "templateId": "template-survival-v1",
+      "sourceRoot": "games/nightfall",
+      "artifactRoot": "artifacts/products/nightfall",
+      "productIntentRef": {
+        "productId": "nightfall",
+        "artifactId": "nightfall.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/nightfall/definition/product-intent.json",
+        "sha256": "49ee41a9cc00ef6a54123bfd4b3a09d79072511a0b94894e0b57af560226a10a"
+      },
+      "referenceBundleRef": {
+        "productId": "nightfall",
+        "artifactId": "nightfall.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/nightfall/definition/reference-bundle.json",
+        "sha256": "bfc28c1809dcf912961cecd704cd6352d7f82391db68b43bac177b7466c63286"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a continuous landmass with regions and landmarks",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "crafting, inventory, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/nightfall/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/nightfall/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/nightfall/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/nightfall/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "traversal",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "core-loop",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "crafting",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "survival",
+          "class": "FAILURE",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "zone-forest-kit",
+          "type": "MODEL",
+          "strategy": "CREATE",
+          "requiredForRelease": true,
+          "consumers": [
+            "world"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "nightfall",
+            "artifactId": "nightfall.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/nightfall/definition/release-quality.json",
+            "sha256": "033ba32a2857c413942fe0e6bb4f82caa464155f9ca9790e10d786f39bf019f2"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "nightfall",
+          "artifactId": "nightfall.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/nightfall/production_plan"
+        },
+        {
+          "productId": "nightfall",
+          "artifactId": "nightfall.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/nightfall/source_bundle"
+        },
+        {
+          "productId": "nightfall",
+          "artifactId": "nightfall.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/nightfall/asset_manifest"
+        },
+        {
+          "productId": "nightfall",
+          "artifactId": "nightfall.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/nightfall/build_place"
+        },
+        {
+          "productId": "nightfall",
+          "artifactId": "nightfall.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/nightfall/integration_manifest"
+        },
+        {
+          "productId": "nightfall",
+          "artifactId": "nightfall.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/nightfall/measurement_run"
+        },
+        {
+          "productId": "nightfall",
+          "artifactId": "nightfall.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/nightfall/scenario_results"
+        },
+        {
+          "productId": "nightfall",
+          "artifactId": "nightfall.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/nightfall/capture_bundle"
+        },
+        {
+          "productId": "nightfall",
+          "artifactId": "nightfall.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/nightfall/quality_review"
+        },
+        {
+          "productId": "nightfall",
+          "artifactId": "nightfall.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/nightfall/repair_plan"
+        },
+        {
+          "productId": "nightfall",
+          "artifactId": "nightfall.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/nightfall/regression_run"
+        },
+        {
+          "productId": "nightfall",
+          "artifactId": "nightfall.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/nightfall/release_candidate"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,897 @@
+{
+  "runId": "run-00012",
+  "startedAt": "2026-08-10T20:49:28.286427+00:00",
+  "completedAt": "2026-08-10T20:49:36.138245+00:00",
+  "validationLevel": "RUNTIME_VALIDATED",
+  "studioContext": "run",
+  "contextsObserved": [
+    "edit",
+    "run"
+  ],
+  "place": {
+    "placeName": "MinersRidgeTycoon-qa-v7.rbxlx",
+    "placeId": 0,
+    "gameId": 0,
+    "studioVersion": "0.733.0.7330989"
+  },
+  "status": "PASS",
+  "counts": {
+    "PASS": 11,
+    "WARN": 0,
+    "FAIL": 0
+  },
+  "measurements": {
+    "studio": {
+      "studioVersion": "0.733.0.7330989",
+      "isRunning": false,
+      "placeId": 0,
+      "workspaceDescendants": 2,
+      "gameId": 0,
+      "jobId": "",
+      "serviceChildCounts": {
+        "Players": 0,
+        "StarterPlayer": 2,
+        "Lighting": 0,
+        "SoundService": 0,
+        "Workspace": 2,
+        "StarterGui": 0,
+        "Teams": 0,
+        "ServerScriptService": 3,
+        "ReplicatedStorage": 1
+      },
+      "context": "edit",
+      "placeName": "MinersRidgeTycoon-qa-v7.rbxlx"
+    },
+    "runStart": {
+      "baselineDirty": false,
+      "started": true,
+      "generatedDescendants": 370,
+      "workspaceDescendants": 372,
+      "alreadyRunning": false,
+      "settleSeconds": 6,
+      "baselineDescendants": 2,
+      "context": "run",
+      "isRunning": true
+    },
+    "world": {
+      "classCounts": {
+        "ProximityPrompt": 2,
+        "Part": 260,
+        "UIStroke": 8,
+        "SpawnLocation": 1,
+        "BillboardGui": 8,
+        "Folder": 1,
+        "PointLight": 18,
+        "TextLabel": 8,
+        "Model": 48,
+        "UICorner": 8,
+        "Frame": 8,
+        "Camera": 1,
+        "Terrain": 1
+      },
+      "scripts": 0,
+      "partsBelowY": {
+        "threshold": -50,
+        "count": 0
+      },
+      "workspaceDescendants": 372,
+      "unanchoredParts": 0,
+      "parts": 262
+    },
+    "spawns": [
+      {
+        "canCollide": true,
+        "path": "Workspace.Map.SpawnPad",
+        "name": "SpawnPad",
+        "className": "SpawnLocation",
+        "anchored": true,
+        "ref": "0_452222",
+        "position": [
+          0,
+          0.5,
+          0
+        ],
+        "size": [
+          18,
+          1,
+          18
+        ]
+      }
+    ],
+    "groundSupport": [
+      {
+        "path": "Workspace.Map.SpawnPad",
+        "unsupportedPoints": [],
+        "samples": [
+          {
+            "surface": "Workspace.Map.WorldGround",
+            "point": [
+              1,
+              1
+            ],
+            "origin": [
+              -8.1,
+              0.05,
+              -8.1
+            ],
+            "material": "Enum.Material.Ground",
+            "supported": true,
+            "gap": 0.05
+          },
+          {
+            "surface": "Workspace.Map.WorldGround",
+            "point": [
+              1,
+              2
+            ],
+            "origin": [
+              -8.1,
+              0.05,
+              0
+            ],
+            "material": "Enum.Material.Ground",
+            "supported": true,
+            "gap": 0.05
+          },
+          {
+            "surface": "Workspace.Map.WorldGround",
+            "point": [
+              1,
+              3
+            ],
+            "origin": [
+              -8.1,
+              0.05,
+              8.1
+            ],
+            "material": "Enum.Material.Ground",
+            "supported": true,
+            "gap": 0.05
+          },
+          {
+            "surface": "Workspace.Map.WorldGround",
+            "point": [
+              2,
+              1
+            ],
+            "origin": [
+              0,
+              0.05,
+              -8.1
+            ],
+            "material": "Enum.Material.Ground",
+            "supported": true,
+            "gap": 0.05
+          },
+          {
+            "surface": "Workspace.Map.WorldGround",
+            "point": [
+              2,
+              2
+            ],
+            "origin": [
+              0,
+              0.05,
+              0
+            ],
+            "material": "Enum.Material.Ground",
+            "supported": true,
+            "gap": 0.05
+          },
+          {
+            "surface": "Workspace.Map.WorldGround",
+            "point": [
+              2,
+              3
+            ],
+            "origin": [
+              0,
+              0.05,
+              8.1
+            ],
+            "material": "Enum.Material.Ground",
+            "supported": true,
+            "gap": 0.05
+          },
+          {
+            "surface": "Workspace.Map.WorldGround",
+            "point": [
+              3,
+              1
+            ],
+            "origin": [
+              8.1,
+              0.05,
+              -8.1
+            ],
+            "material": "Enum.Material.Ground",
+            "supported": true,
+            "gap": 0.05
+          },
+          {
+            "surface": "Workspace.Map.WorldGround",
+            "point": [
+              3,
+              2
+            ],
+            "origin": [
+              8.1,
+              0.05,
+              0
+            ],
+            "material": "Enum.Material.Ground",
+            "supported": true,
+            "gap": 0.05
+          },
+          {
+            "surface": "Workspace.Map.WorldGround",
+            "point": [
+              3,
+              3
+            ],
+            "origin": [
+              8.1,
+              0.05,
+              8.1
+            ],
+            "material": "Enum.Material.Ground",
+            "supported": true,
+            "gap": 0.05
+          }
+        ],
+        "supported": true,
+        "grid": [
+          3,
+          3
+        ],
+        "maxGap": 1.5,
+        "sampledPoints": 9,
+        "supportCoverage": 1,
+        "boundingBox": {
+          "center": [
+            0,
+            0.5,
+            0
+          ],
+          "size": [
+            18,
+            1,
+            18
+          ]
+        }
+      }
+    ],
+    "runtime": {
+      "players": [],
+      "isEdit": true,
+      "playerCount": 0,
+      "isRunning": true,
+      "placeId": 0,
+      "runtime": {
+        "worstFrameMs": 18.05,
+        "instances": 2129,
+        "workspaceInstances": 372,
+        "sampleSeconds": 0.6,
+        "memoryMb": 1579.4,
+        "fps": 60.21
+      },
+      "unavailable": [],
+      "logs": {
+        "warnings": 0,
+        "errors": 0
+      },
+      "context": "run",
+      "placeName": "MinersRidgeTycoon-qa-v7.rbxlx"
+    },
+    "regions": {
+      "discovery": "namePattern",
+      "count": 4,
+      "results": [
+        {
+          "ref": "0_452403",
+          "path": "Workspace.Map.PlotA",
+          "name": "PlotA",
+          "className": "Model"
+        },
+        {
+          "ref": "0_452440",
+          "path": "Workspace.Map.PlotB",
+          "name": "PlotB",
+          "className": "Model"
+        },
+        {
+          "ref": "0_452477",
+          "path": "Workspace.Map.PlotC",
+          "name": "PlotC",
+          "className": "Model"
+        },
+        {
+          "ref": "0_452514",
+          "path": "Workspace.Map.PlotD",
+          "name": "PlotD",
+          "className": "Model"
+        }
+      ]
+    },
+    "regionOverlaps": {
+      "regions": 4,
+      "skippedNestedPairs": 0,
+      "boxes": [
+        {
+          "min": [
+            -44,
+            -0.46,
+            -100
+          ],
+          "path": "Workspace.Map.PlotA",
+          "max": [
+            -6,
+            8.8,
+            -63.5
+          ],
+          "ref": "0_452403",
+          "size": [
+            38,
+            9.26,
+            36.5
+          ]
+        },
+        {
+          "min": [
+            6,
+            -0.46,
+            -100
+          ],
+          "path": "Workspace.Map.PlotB",
+          "max": [
+            44,
+            8.8,
+            -63.5
+          ],
+          "ref": "0_452440",
+          "size": [
+            38,
+            9.26,
+            36.5
+          ]
+        },
+        {
+          "min": [
+            -44,
+            -0.46,
+            -142
+          ],
+          "path": "Workspace.Map.PlotC",
+          "max": [
+            -6,
+            8.8,
+            -105.5
+          ],
+          "ref": "0_452477",
+          "size": [
+            38,
+            9.26,
+            36.5
+          ]
+        },
+        {
+          "min": [
+            6,
+            -0.46,
+            -142
+          ],
+          "path": "Workspace.Map.PlotD",
+          "max": [
+            44,
+            8.8,
+            -105.5
+          ],
+          "ref": "0_452514",
+          "size": [
+            38,
+            9.26,
+            36.5
+          ]
+        }
+      ],
+      "overlapping": 0,
+      "clean": true,
+      "collisions": [],
+      "tolerance": 0
+    },
+    "logs": {
+      "totalEntries": 4,
+      "available": true,
+      "returned": 4,
+      "counts": {
+        "warning": 0,
+        "info": 4,
+        "error": 0
+      },
+      "entries": [
+        {
+          "severity": "info",
+          "timestamp": 1786394967.325,
+          "message": "[RQE Bridge] starting"
+        },
+        {
+          "severity": "info",
+          "timestamp": 1786394967.431,
+          "message": "[RQE Bridge] connected to http://127.0.0.1:8790 as sess_1d6eeec664a4 (edit)"
+        },
+        {
+          "severity": "info",
+          "timestamp": 1786394974.502,
+          "message": "[RQE Bridge] context changed edit -> run; re-registering"
+        },
+        {
+          "severity": "info",
+          "timestamp": 1786394974.519,
+          "message": "[RQE Bridge] connected to http://127.0.0.1:8790 as sess_7e566707d604 (run)"
+        }
+      ]
+    }
+  },
+  "findings": [],
+  "evidence": [
+    {
+      "id": "studio.bridge.connected",
+      "probe": "studio_bridge_connected",
+      "category": "observability",
+      "status": "PASS",
+      "severity": "info",
+      "message": "Live Studio answered through the bridge (edit context)",
+      "details": {
+        "place": {
+          "placeName": "MinersRidgeTycoon-qa-v7.rbxlx",
+          "placeId": 0,
+          "gameId": 0,
+          "studioVersion": "0.733.0.7330989"
+        },
+        "context": "edit",
+        "protocol": "rqe.bridge/1"
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "run.clean_baseline",
+      "probe": "clean_baseline",
+      "category": "observability",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "run started from a clean baseline of 2 descendants; game scripts generated 370",
+      "details": {
+        "baselineDirty": false,
+        "started": true,
+        "generatedDescendants": 370,
+        "workspaceDescendants": 372,
+        "alreadyRunning": false,
+        "settleSeconds": 6,
+        "baselineDescendants": 2,
+        "context": "run",
+        "isRunning": true
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "world.instance_budget",
+      "probe": "instance_budget",
+      "category": "performance",
+      "status": "PASS",
+      "severity": "major",
+      "message": "Workspace holds 372 instances (budget 25000)",
+      "details": {
+        "measured": 372,
+        "budget": 25000,
+        "classCounts": {
+          "ProximityPrompt": 2,
+          "Part": 260,
+          "UIStroke": 8,
+          "SpawnLocation": 1,
+          "BillboardGui": 8,
+          "Folder": 1,
+          "PointLight": 18,
+          "TextLabel": 8,
+          "Model": 48,
+          "UICorner": 8,
+          "Frame": 8,
+          "Camera": 1,
+          "Terrain": 1
+        }
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "world.parts_below_floor",
+      "probe": "parts_below_floor",
+      "category": "geometry",
+      "status": "PASS",
+      "severity": "major",
+      "message": "0 part(s) below y=-50",
+      "details": {
+        "threshold": -50,
+        "count": 0
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "world.unanchored_parts",
+      "probe": "unanchored_parts",
+      "category": "geometry",
+      "status": "PASS",
+      "severity": "minor",
+      "message": "0 unanchored part(s) (budget 200)",
+      "details": {
+        "measured": 0,
+        "budget": 200
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "world.spawn_exists",
+      "probe": "spawn_exists",
+      "category": "gameplay",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "1 SpawnLocation(s) found in Workspace",
+      "details": {
+        "spawns": [
+          {
+            "canCollide": true,
+            "path": "Workspace.Map.SpawnPad",
+            "name": "SpawnPad",
+            "className": "SpawnLocation",
+            "anchored": true,
+            "ref": "0_452222",
+            "position": [
+              0,
+              0.5,
+              0
+            ],
+            "size": [
+              18,
+              1,
+              18
+            ]
+          }
+        ]
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "world.ground_support::Workspace.Map.SpawnPad",
+      "probe": "ground_support",
+      "category": "geometry",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "Workspace.Map.SpawnPad rests on a surface (9 raycasts, coverage 1)",
+      "details": {
+        "path": "Workspace.Map.SpawnPad",
+        "unsupportedPoints": [],
+        "samples": [
+          {
+            "surface": "Workspace.Map.WorldGround",
+            "point": [
+              1,
+              1
+            ],
+            "origin": [
+              -8.1,
+              0.05,
+              -8.1
+            ],
+            "material": "Enum.Material.Ground",
+            "supported": true,
+            "gap": 0.05
+          },
+          {
+            "surface": "Workspace.Map.WorldGround",
+            "point": [
+              1,
+              2
+            ],
+            "origin": [
+              -8.1,
+              0.05,
+              0
+            ],
+            "material": "Enum.Material.Ground",
+            "supported": true,
+            "gap": 0.05
+          },
+          {
+            "surface": "Workspace.Map.WorldGround",
+            "point": [
+              1,
+              3
+            ],
+            "origin": [
+              -8.1,
+              0.05,
+              8.1
+            ],
+            "material": "Enum.Material.Ground",
+            "supported": true,
+            "gap": 0.05
+          },
+          {
+            "surface": "Workspace.Map.WorldGround",
+            "point": [
+              2,
+              1
+            ],
+            "origin": [
+              0,
+              0.05,
+              -8.1
+            ],
+            "material": "Enum.Material.Ground",
+            "supported": true,
+            "gap": 0.05
+          },
+          {
+            "surface": "Workspace.Map.WorldGround",
+            "point": [
+              2,
+              2
+            ],
+            "origin": [
+              0,
+              0.05,
+              0
+            ],
+            "material": "Enum.Material.Ground",
+            "supported": true,
+            "gap": 0.05
+          },
+          {
+            "surface": "Workspace.Map.WorldGround",
+            "point": [
+              2,
+              3
+            ],
+            "origin": [
+              0,
+              0.05,
+              8.1
+            ],
+            "material": "Enum.Material.Ground",
+            "supported": true,
+            "gap": 0.05
+          },
+          {
+            "surface": "Workspace.Map.WorldGround",
+            "point": [
+              3,
+              1
+            ],
+            "origin": [
+              8.1,
+              0.05,
+              -8.1
+            ],
+            "material": "Enum.Material.Ground",
+            "supported": true,
+            "gap": 0.05
+          },
+          {
+            "surface": "Workspace.Map.WorldGround",
+            "point": [
+              3,
+              2
+            ],
+            "origin": [
+              8.1,
+              0.05,
+              0
+            ],
+            "material": "Enum.Material.Ground",
+            "supported": true,
+            "gap": 0.05
+          },
+          {
+            "surface": "Workspace.Map.WorldGround",
+            "point": [
+              3,
+              3
+            ],
+            "origin": [
+              8.1,
+              0.05,
+              8.1
+            ],
+            "material": "Enum.Material.Ground",
+            "supported": true,
+            "gap": 0.05
+          }
+        ],
+        "supported": true,
+        "grid": [
+          3,
+          3
+        ],
+        "maxGap": 1.5,
+        "sampledPoints": 9,
+        "supportCoverage": 1,
+        "boundingBox": {
+          "center": [
+            0,
+            0.5,
+            0
+          ],
+          "size": [
+            18,
+            1,
+            18
+          ]
+        }
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "runtime.frame_rate",
+      "probe": "frame_rate",
+      "category": "performance",
+      "status": "PASS",
+      "severity": "major",
+      "message": "sampled 60.21 FPS over 0.6s in run context (budget 30.0)",
+      "details": {
+        "fps": 60.21,
+        "worstFrameMs": 18.05,
+        "budget": 30.0,
+        "context": "run",
+        "isRunning": true
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "runtime.memory",
+      "probe": "memory_budget",
+      "category": "performance",
+      "status": "PASS",
+      "severity": "major",
+      "message": "1579.4 MB in use (budget 4000.0 MB)",
+      "details": {
+        "memoryMb": 1579.4,
+        "budgetMb": 4000.0
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "world.region_overlap",
+      "probe": "spatial_overlap",
+      "category": "geometry",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "4 exclusive regions, none intersecting",
+      "details": {
+        "regions": 4,
+        "skippedNestedPairs": 0,
+        "boxes": [
+          {
+            "min": [
+              -44,
+              -0.46,
+              -100
+            ],
+            "path": "Workspace.Map.PlotA",
+            "max": [
+              -6,
+              8.8,
+              -63.5
+            ],
+            "ref": "0_452403",
+            "size": [
+              38,
+              9.26,
+              36.5
+            ]
+          },
+          {
+            "min": [
+              6,
+              -0.46,
+              -100
+            ],
+            "path": "Workspace.Map.PlotB",
+            "max": [
+              44,
+              8.8,
+              -63.5
+            ],
+            "ref": "0_452440",
+            "size": [
+              38,
+              9.26,
+              36.5
+            ]
+          },
+          {
+            "min": [
+              -44,
+              -0.46,
+              -142
+            ],
+            "path": "Workspace.Map.PlotC",
+            "max": [
+              -6,
+              8.8,
+              -105.5
+            ],
+            "ref": "0_452477",
+            "size": [
+              38,
+              9.26,
+              36.5
+            ]
+          },
+          {
+            "min": [
+              6,
+              -0.46,
+              -142
+            ],
+            "path": "Workspace.Map.PlotD",
+            "max": [
+              44,
+              8.8,
+              -105.5
+            ],
+            "ref": "0_452514",
+            "size": [
+              38,
+              9.26,
+              36.5
+            ]
+          }
+        ],
+        "overlapping": 0,
+        "clean": true,
+        "collisions": [],
+        "tolerance": 0
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "runtime.console_errors",
+      "probe": "runtime_error",
+      "category": "runtime",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "0 error line(s) in the Studio output",
+      "details": {
+        "counts": {
+          "warning": 0,
+          "info": 4,
+          "error": 0
+        },
+        "entries": []
+      },
+      "source": "studio-bridge"
+    }
+  ],
+  "commandErrors": [],
+  "reproducibility": {
+    "engineVersion": "0.2.0",
+    "protocolVersion": "rqe.bridge/1",
+    "studioVersion": "0.733.0.7330989",
+    "placeId": 0,
+    "placeName": "MinersRidgeTycoon-qa-v7.rbxlx",
+    "commit": null,
+    "host": "OGrandeOxta",
+    "python": "3.12.10",
+    "observeConfig": {
+      "regionTag": "QARegion",
+      "regionNamePattern": "^Plot",
+      "regionRoot": "game.Workspace",
+      "groundSupportSamples": 9,
+      "groundSupportMaxGap": 1.5,
+      "budgets": {
+        "minFps": 30.0,
+        "maxWorkspaceInstances": 25000,
+        "maxMemoryMb": 4000.0,
+        "maxUnanchoredParts": 200
+      }
+    }
+  }
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "productId": "neonrun",
+  "pitch": "Neon cyber runner: corra por uma estacao espacial, desvie de robos, colete nucleos.",
+  "topology": "grid-plots",
+  "progression": "tiered-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/neonrun/tokens/neonrun-circuit.json",
+  "coreLoop": [
+    "collect",
+    "process",
+    "upgrade",
+    "sell",
+    "unlock"
+  ]
+}

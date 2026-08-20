@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "id": "anime-card-farm",
+  "genre": "collection",
+  "theme": "farm",
+  "pitch": "Colecao de cartas de anime numa fazenda: esteiras entregam cartas, abra pacotes, monte o album por raridade, melhore as esteiras e venda duplicatas.",
+  "coreLoop": [
+    "collect",
+    "unlock",
+    "upgrade"
+  ],
+  "world": {
+    "topology": "hub_and_zones",
+    "zones": [
+      {
+        "id": "farm",
+        "theme": "farm",
+        "difficulty": 1,
+        "unlockedAtTier": 0
+      }
+    ]
+  },
+  "progression": {
+    "kind": "unlock_graph",
+    "tiers": 8,
+    "firstTierSeconds": 45.0,
+    "sessionMinutes": 15.0
+  },
+  "economy": {
+    "currencies": [
+      {
+        "id": "cash",
+        "displayName": "Cash",
+        "earnedBy": [
+          "collect"
+        ],
+        "spentOn": [
+          "unlock",
+          "upgrade"
+        ],
+        "premium": false
+      }
+    ]
+  },
+  "systems": [
+    "inventory",
+    "progression",
+    "save",
+    "economy",
+    "analytics"
+  ],
+  "monetization": [],
+  "tokenSet": "games/anime-card-farm/tokens/anime-card-farm-grove.json",
+  "concurrentPlayers": 1,
+  "privateSpace": false
+}

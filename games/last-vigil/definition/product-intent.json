@@ -1,0 +1,99 @@
+{
+  "$schema": "../schemas/product-intent.v1.schema.json",
+  "schemaVersion": 1,
+  "intentId": "last-vigil.intent",
+  "revision": 1,
+  "productId": "last-vigil",
+  "title": "Last Vigil",
+  "productClass": {
+    "genre": "tower_defense",
+    "templateFamily": "tower_defense"
+  },
+  "pillars": [
+    {
+      "id": "verb-build",
+      "description": "The product loop explicitly includes build."
+    },
+    {
+      "id": "verb-defend",
+      "description": "The product loop explicitly includes defend."
+    },
+    {
+      "id": "verb-upgrade",
+      "description": "The product loop explicitly includes upgrade."
+    }
+  ],
+  "audience": {
+    "description": "Provisional platform baseline for desktop and phone, pending human audience approval; up to 1 concurrent player(s).",
+    "targetDevices": [
+      "desktop",
+      "phone"
+    ]
+  },
+  "coreLoop": [
+    "build",
+    "defend",
+    "upgrade"
+  ],
+  "semantics": {
+    "worldRoles": [
+      {
+        "id": "primary-landmark",
+        "description": "The primary navigational landmark selected by the single_arena world."
+      }
+    ],
+    "uiSurfaces": [
+      {
+        "id": "initial-interface",
+        "description": "The player-facing interface visible in the initial session."
+      }
+    ],
+    "gameplayVerbs": [
+      {
+        "id": "build",
+        "description": "Player-observable behavior for the build loop verb."
+      },
+      {
+        "id": "defend",
+        "description": "Player-observable behavior for the defend loop verb."
+      },
+      {
+        "id": "upgrade",
+        "description": "Player-observable behavior for the upgrade loop verb."
+      }
+    ]
+  },
+  "authorship": {
+    "authorityKind": "pending-human-approval",
+    "authorityId": null,
+    "approvedAt": null,
+    "candidateDerived": false
+  },
+  "calibrationPolicy": {
+    "requireIndependentReferences": true,
+    "forbidCandidateDerivedThresholds": true,
+    "requireCompleteThresholdCoverage": true
+  },
+  "bindings": {
+    "contract": {
+      "path": "contracts/game-contract.json",
+      "artifactId": "last-vigil.release",
+      "sha256": "dd18298fa272278f9906c37c1b09a432734255b64b2806068b6c8609c525ad74"
+    },
+    "visualQualitySpec": {
+      "path": "contracts/visual/visual-quality.json",
+      "artifactId": "last-vigil.visual",
+      "sha256": "f87564fc256fccddba433fa3563dbc55ecdf4d4fc257f0712111d990bc9ebff4"
+    },
+    "referenceBenchmark": {
+      "path": "definition/reference-benchmark.json",
+      "artifactId": "last-vigil.reference-benchmark",
+      "sha256": "ca8efd4c497a35a501a39aee62511aecee62fb7b29c6dfeffe5353d8e4addacc"
+    },
+    "visualCalibration": {
+      "path": "definition/visual-calibration.json",
+      "artifactId": "last-vigil.visual-calibration",
+      "sha256": "0aabbfdfa3ecbd0c5f567e96ac975889dc68fa60dbeacdb457a88504fd4fc663"
+    }
+  }
+}

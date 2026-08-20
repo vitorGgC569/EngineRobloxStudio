@@ -1,0 +1,48 @@
+{
+  "name": "kb-escape",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "WorldKit": {
+        "$path": "../../roblox/lib/WorldKit"
+      },
+      "GameKit": {
+        "$path": "../../roblox/lib/GameKit"
+      },
+      "Shared": {
+        "$path": "src/shared"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Gameplay": {
+        "$path": "src/gameplay"
+      },
+      "Telemetry": {
+        "$path": "src/telemetry"
+      },
+      "World": {
+        "$path": "src/world"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Interface": {
+          "$path": "src/interface"
+        }
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "Gravity": 196.2
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting"
+    }
+  }
+}

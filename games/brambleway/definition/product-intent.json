@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "productId": "brambleway",
+  "pitch": "Jardim idle: plante mudas, colha enquanto ausente, melhore ferramentas e desbloqueie estufas.",
+  "topology": "grid-plots",
+  "progression": "tiered-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/brambleway/tokens/brambleway-grove.json",
+  "coreLoop": [
+    "collect",
+    "process",
+    "upgrade",
+    "sell",
+    "unlock"
+  ]
+}

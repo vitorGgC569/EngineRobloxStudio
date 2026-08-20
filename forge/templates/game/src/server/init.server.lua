@@ -1,0 +1,110 @@
+--!strict
+--[[
+	{{NAME}} — server bootstrap.
+
+	This file wires the engine and nothing else. Every line below is
+	infrastructure; none of it decides what your game is.
+
+	Add gameplay in `src/server/systems/`. The rule that keeps this project
+	from turning into the thing Forge exists to replace: no system in here may
+	be a template of a genre. Write the game you mean.
+]]
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local ServerScriptService = game:GetService("ServerScriptService")
+local Players = game:GetService("Players")
+local Workspace = game:GetService("Workspace")
+
+local Forge = require(ReplicatedStorage:WaitForChild("Forge"))
+local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+
+local Rng = Forge.Core.Rng
+local Net = Forge.Net
+local Save = Forge.Save
+local Debug = Forge.Debug
+
+local startedAt = os.clock()
+
+-- 1. Determinism where it belongs: one seed, named streams downstream.
+Rng.seed(Config.seed)
+
+-- 2. Runtime containers. Anything the game creates lives in one of these, so a
+--    validator can count them and a cleanup can find them.
+for _, name in Config.containers do
+	if not Workspace:FindFirstChild(name) then
+		local folder = Instance.new("Folder")
+		folder.Name = name
+		folder.Parent = Workspace
+	end
+end
+
+-- 3. The network contract. Nothing crosses the wire that is not declared here.
+Net.define({
+	-- server -> client
+	StateSync = { dir = "s2c" },
+	Notify = { dir = "s2c" },
+
+	-- client -> server
+	-- Every c2s entry needs a rate and a shape. That is not a style rule;
+	-- it is the difference between a game and an exploit surface.
+	Ping = { dir = "c2s", rate = 2, shape = {} },
+})
+
+Net.on("Ping", function(player)
+	Net.fire(player, "Notify", { text = "pong" })
+end)
+
+-- 4. Persistence. The template is the shape of a new player's save.
+Save.configure({
+	store = Config.saveStore,
+	version = 1,
+	template = {
+		-- add your fields here; anything you add later is backfilled
+		-- automatically for existing players
+	},
+})
+Save.start()
+
+-- `observe` connects AND replays for players whose profile already loaded.
+-- A plain `onLoaded:Connect` here silently misses the Studio local player,
+-- because they join before the bootstrap finishes.
+Save.observe(function(player, profile)
+	Debug.count("profiles.loaded")
+	Net.fire(player, "StateSync", profile)
+end)
+
+-- 5. Your systems. Each one is a module with a `start()`.
+local systems = script:FindFirstChild("systems")
+if systems then
+	for _, module in systems:GetChildren() do
+		if module:IsA("ModuleScript") then
+			local ok, system = pcall(require, module)
+			if not ok then
+				Debug.error(string.format("system '%s' failed to load: %s", module.Name, tostring(system)))
+				continue
+			end
+			if type(system) == "table" and type(system.start) == "function" then
+				local started, err = pcall(system.start)
+				if not started then
+					Debug.error(string.format("system '%s' failed to start: %s", module.Name, tostring(err)))
+				end
+			end
+		end
+	end
+end
+
+-- 6. The seam. This is what lets the Quality Engine measure meaning and not
+--    just geometry. Removing it does not break the game; it blinds the
+--    validator, which is worse.
+Debug.expose()
+
+Debug.probe("session", function()
+	return {
+		uptime = os.clock() - startedAt,
+		players = #Players:GetPlayers(),
+		seed = Rng.masterSeed(),
+	}
+end)
+
+Debug.info(string.format("%s up in %.2fs", Config.name, os.clock() - startedAt))
+print(string.format("[%s] server ready in %.2fs (seed %d)", Config.name, os.clock() - startedAt, Config.seed))

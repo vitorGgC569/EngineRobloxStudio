@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "clashyard",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-clashyard",
+      "productId": "clashyard",
+      "revision": "1.0.0",
+      "seed": 79371692,
+      "genre": "tycoon",
+      "templateId": "template-tycoon-v1",
+      "sourceRoot": "games/clashyard",
+      "artifactRoot": "artifacts/products/clashyard",
+      "productIntentRef": {
+        "productId": "clashyard",
+        "artifactId": "clashyard.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/clashyard/definition/product-intent.json",
+        "sha256": "09b4b3b48374cd1f317b8ee64d55066b0f89fee633cbc2ba7cf3d63e0df65b7e"
+      },
+      "referenceBundleRef": {
+        "productId": "clashyard",
+        "artifactId": "clashyard.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/clashyard/definition/reference-bundle.json",
+        "sha256": "06e1c42250927489807505851eeb9cab0545476e9d97c49ac465b8c3c7df61c7"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a plot grid around a shared hub",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "economy, inventory, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/clashyard/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/clashyard/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/clashyard/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/clashyard/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "core-loop",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "clashyard",
+            "artifactId": "clashyard.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/clashyard/definition/release-quality.json",
+            "sha256": "58d6884a33ea5eb709cb1eaf58a995fa6818d07986c8fa9ebfadbbd6b78e2f89"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "clashyard",
+          "artifactId": "clashyard.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/clashyard/production_plan"
+        },
+        {
+          "productId": "clashyard",
+          "artifactId": "clashyard.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/clashyard/source_bundle"
+        },
+        {
+          "productId": "clashyard",
+          "artifactId": "clashyard.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/clashyard/asset_manifest"
+        },
+        {
+          "productId": "clashyard",
+          "artifactId": "clashyard.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/clashyard/build_place"
+        },
+        {
+          "productId": "clashyard",
+          "artifactId": "clashyard.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/clashyard/integration_manifest"
+        },
+        {
+          "productId": "clashyard",
+          "artifactId": "clashyard.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/clashyard/measurement_run"
+        },
+        {
+          "productId": "clashyard",
+          "artifactId": "clashyard.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/clashyard/scenario_results"
+        },
+        {
+          "productId": "clashyard",
+          "artifactId": "clashyard.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/clashyard/capture_bundle"
+        },
+        {
+          "productId": "clashyard",
+          "artifactId": "clashyard.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/clashyard/quality_review"
+        },
+        {
+          "productId": "clashyard",
+          "artifactId": "clashyard.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/clashyard/repair_plan"
+        },
+        {
+          "productId": "clashyard",
+          "artifactId": "clashyard.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/clashyard/regression_run"
+        },
+        {
+          "productId": "clashyard",
+          "artifactId": "clashyard.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/clashyard/release_candidate"
+        }
+      ]
+    }
+  ]
+}

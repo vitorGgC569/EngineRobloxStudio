@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "productId": "neondrift",
+  "pitch": "Corrida arcade neon em pistas suspensas, com boosts, desbloqueio de veiculos e voltas cronometradas.",
+  "topology": "linear-levels",
+  "progression": "tiered-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "tokens/brickfarm.json",
+  "coreLoop": [
+    "race",
+    "unlock",
+    "upgrade"
+  ]
+}

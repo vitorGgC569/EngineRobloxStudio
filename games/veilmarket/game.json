@@ -1,0 +1,56 @@
+{
+  "schemaVersion": 1,
+  "id": "veilmarket",
+  "genre": "tycoon",
+  "theme": "city market",
+  "pitch": "Mercado de uma cidade portuaria: compre barato, revenda caro, negocie com mercadores e abra sua loja.",
+  "coreLoop": [
+    "collect",
+    "process",
+    "upgrade",
+    "sell",
+    "unlock",
+    "buy"
+  ],
+  "world": {
+    "topology": "grid_plots",
+    "zones": []
+  },
+  "progression": {
+    "kind": "tiered",
+    "tiers": 8,
+    "firstTierSeconds": 45.0,
+    "sessionMinutes": 15.0
+  },
+  "economy": {
+    "currencies": [
+      {
+        "id": "cash",
+        "displayName": "Cash",
+        "earnedBy": [
+          "collect",
+          "process",
+          "sell"
+        ],
+        "spentOn": [
+          "upgrade",
+          "unlock",
+          "buy"
+        ],
+        "premium": false
+      }
+    ]
+  },
+  "systems": [
+    "economy",
+    "progression",
+    "save",
+    "inventory",
+    "analytics",
+    "shop"
+  ],
+  "monetization": [],
+  "tokenSet": "games/veilmarket/tokens/veilmarket-grove.json",
+  "concurrentPlayers": 1,
+  "privateSpace": false
+}

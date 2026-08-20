@@ -1,0 +1,2210 @@
+{
+  "engine": {
+    "name": "Roblox Quality Engine",
+    "version": "0.1.0"
+  },
+  "project": "C:\\Users\\vitor\\OneDrive\\Desktop\\RobloxGamesMCP",
+  "generatedAt": "2026-08-12T03:28:29.945223+00:00",
+  "summary": {
+    "executed": 38,
+    "PASS": 35,
+    "WARN": 2,
+    "FAIL": 1,
+    "critical": 1,
+    "major": 0,
+    "minor": 0
+  },
+  "scores": {
+    "structural": 25.0,
+    "security": 100.0,
+    "visual": 86.7,
+    "geometry": 100.0,
+    "gameplay": 100.0,
+    "navigation": 100.0,
+    "ui": 100.0,
+    "runtime": 100.0,
+    "performance": 100.0,
+    "persistence": 100.0,
+    "multiplayer": 100.0
+  },
+  "releaseAllowed": false,
+  "releaseReasons": [
+    "1 critical failure(s)"
+  ],
+  "evidence": [
+    {
+      "id": "structure.required_paths",
+      "probe": "structural_integrity",
+      "category": "structural",
+      "status": "PASS",
+      "severity": "info",
+      "message": "Arquivos estruturais obrigatórios estão presentes",
+      "details": {
+        "expected": [
+          "AGENTS.md",
+          "CONTINUOUS_IMPROVEMENT.md",
+          "CARD_ART_IMPORT.md",
+          "quality/quality-focus.json",
+          "quality/probe-registry.v1.json",
+          "assets/asset-manifest.json",
+          "contracts/mining-tycoon.robloxqa.json",
+          "schemas/game-contract.schema.json",
+          "schemas/probe-registry.v1.schema.json",
+          "schemas/agent-action.schema.json",
+          "schemas/agent-observation.schema.json",
+          "schemas/agent-session.schema.json",
+          "contracts/scenarios/purchase-first-pack.json",
+          "roblox/mvp/default.project.json",
+          "roblox/mvp/game-state.json",
+          "roblox/mvp/src/ReplicatedStorage/Shared/GameConfig.lua",
+          "roblox/mvp/src/ReplicatedStorage/Shared/CardCatalog.lua",
+          "roblox/mvp/src/ReplicatedStorage/Shared/FloorCatalog.lua",
+          "roblox/mvp/src/ServerScriptService/ServerMain.server.lua",
+          "roblox/mvp/src/ServerScriptService/Services/PlotService.lua",
+          "roblox/mvp/src/ServerScriptService/Services/PersistenceService.lua",
+          "roblox/mvp/src/ServerScriptService/Services/StoreService.lua",
+          "roblox/mvp/src/ServerScriptService/Services/MapService.lua",
+          "roblox/mvp/src/ServerScriptService/Services/ProgressionService.lua",
+          "roblox/runtime/QualityProbeRuntime.server.lua",
+          "roblox/runtime/Probes/GeometryProbe.lua",
+          "roblox/runtime/Probes/ScenarioProbe.lua",
+          "rqe/studio.py",
+          "tools/render_map_audit.py",
+          "tools/studio_runtime_capture.py",
+          "roblox/mvp/src/StarterPlayer/StarterPlayerScripts/FarmHud.client.lua",
+          "roblox/mvp/src/ReplicatedStorage/Shared/FarmCatalog.lua",
+          "roblox/mvp/src/ReplicatedStorage/Shared/LuckCatalog.lua",
+          "roblox/mvp/src/ServerScriptService/Services/FarmService.lua",
+          "roblox/mvp/src/ServerScriptService/Services/ConveyorService.lua",
+          "roblox/lib/WorldKit/init.lua",
+          "roblox/lib/WorldKit/Build.lua",
+          "roblox/lib/WorldKit/Conveyor.lua",
+          "roblox/lib/WorldKit/Grid.lua",
+          "roblox/lib/WorldKit/Palette.lua",
+          "roblox/lib/WorldKit/Sky.lua",
+          "roblox/lib/WorldKit/Semantics.lua",
+          "roblox/mvp/src/ReplicatedStorage/Shared/Format.lua"
+        ],
+        "missing": []
+      },
+      "source": "filesystem"
+    },
+    {
+      "id": "security.asset_scripts",
+      "probe": "asset_security",
+      "category": "security",
+      "status": "PASS",
+      "severity": "info",
+      "message": "Nenhum padrão de script suspeito foi encontrado",
+      "details": {
+        "scriptsScanned": 28,
+        "findings": []
+      },
+      "source": "static-luau-scan"
+    },
+    {
+      "id": "security.asset_manifest",
+      "probe": "asset_manifest",
+      "category": "security",
+      "status": "PASS",
+      "severity": "info",
+      "message": "Manifesto de assets alocado, aprovado e validado",
+      "details": {
+        "manifestPath": "assets/asset-manifest.json",
+        "assetCount": 14,
+        "policy": {
+          "externalToolboxAssets": "blocked_until_review",
+          "requireScriptScan": true,
+          "requireAllocation": true,
+          "generatedRasterRuntime": "require-roblox-upload-before-live-use",
+          "maxWorkspaceInstances": 25000
+        },
+        "issues": []
+      },
+      "source": "asset-manifest-validator"
+    },
+    {
+      "id": "visual.asset_quality",
+      "probe": "visual_asset_quality",
+      "category": "visual",
+      "status": "PASS",
+      "severity": "info",
+      "message": "Artes raster geradas têm resolução e proporção válidas",
+      "details": {
+        "inspected": [
+          {
+            "key": "copper_lynx_prospector_v1",
+            "path": "assets/generated/cards/copper-lynx-prospector-v1.png",
+            "width": 1254,
+            "height": 1254,
+            "ratio": 1.0,
+            "mode": "RGB",
+            "bytes": 2167982
+          },
+          {
+            "key": "mossback_badger_engineer_v1",
+            "path": "assets/generated/cards/mossback-badger-engineer-v1.png",
+            "width": 1254,
+            "height": 1254,
+            "ratio": 1.0,
+            "mode": "RGB",
+            "bytes": 2263534
+          },
+          {
+            "key": "storm_raven_surveyor_v1",
+            "path": "assets/generated/cards/storm-raven-surveyor-v1.png",
+            "width": 1254,
+            "height": 1254,
+            "ratio": 1.0,
+            "mode": "RGB",
+            "bytes": 1954183
+          },
+          {
+            "key": "card_gallery_panel_v1",
+            "path": "assets/generated/ui/card-gallery-panel-v1.png",
+            "width": 1536,
+            "height": 1024,
+            "ratio": 1.5,
+            "mode": "RGB",
+            "bytes": 2535205
+          }
+        ],
+        "assetCount": 4,
+        "issues": []
+      },
+      "source": "visual-asset-validator"
+    },
+    {
+      "id": "visual.snapshot_bundle",
+      "probe": "visual_snapshot_bundle",
+      "category": "visual",
+      "status": "PASS",
+      "severity": "info",
+      "message": "Pacote de prints visuais presente e decodificável",
+      "details": {
+        "manifestPath": "reports/visual-snapshots/manifest.json",
+        "captureType": "deterministic-source-preview",
+        "liveStudioCapture": false,
+        "inspected": [
+          {
+            "file": "00-map-overview.png",
+            "width": 1600,
+            "height": 900,
+            "bytes": 47757
+          },
+          {
+            "file": "01-spawn-plaza.png",
+            "width": 1600,
+            "height": 900,
+            "bytes": 41021
+          },
+          {
+            "file": "02-ridge-exchange.png",
+            "width": 1600,
+            "height": 900,
+            "bytes": 35317
+          },
+          {
+            "file": "03-old-lantern-mine.png",
+            "width": 1600,
+            "height": 900,
+            "bytes": 33137
+          },
+          {
+            "file": "04-ridge-lift.png",
+            "width": 1600,
+            "height": 900,
+            "bytes": 31309
+          },
+          {
+            "file": "05-plots-grid.png",
+            "width": 1600,
+            "height": 900,
+            "bytes": 36767
+          },
+          {
+            "file": "06-plot-a-detail.png",
+            "width": 1600,
+            "height": 900,
+            "bytes": 30993
+          },
+          {
+            "file": "07-floor-progression.png",
+            "width": 1600,
+            "height": 900,
+            "bytes": 77688
+          },
+          {
+            "file": "08-card-gallery.png",
+            "width": 1600,
+            "height": 900,
+            "bytes": 916339
+          },
+          {
+            "file": "09-mobile-ui.png",
+            "width": 1600,
+            "height": 900,
+            "bytes": 49243
+          }
+        ],
+        "snapshotCount": 10,
+        "issues": []
+      },
+      "source": "visual-snapshot-validator"
+    },
+    {
+      "id": "studio.runtime_capture",
+      "probe": "studio_runtime_capture",
+      "category": "visual",
+      "status": "WARN",
+      "severity": "major",
+      "message": "Capturas runtime do Studio ainda não estão disponíveis",
+      "details": {
+        "status": "WARN",
+        "studioDetected": false,
+        "processRunning": false,
+        "executablePath": null,
+        "captureAdapter": "not-connected",
+        "liveStudioCapture": false,
+        "runtime": {
+          "manifestPath": "reports/studio-runtime/manifest.json",
+          "liveStudioCapture": true,
+          "captureType": "studio-window-runtime",
+          "snapshots": [
+            {
+              "file": "studio-open.png",
+              "width": 1296,
+              "height": 930,
+              "bytes": 250224
+            },
+            {
+              "file": "studio-project-loaded.png",
+              "width": 1296,
+              "height": 930,
+              "bytes": 250224
+            },
+            {
+              "file": "spawn-runtime.png",
+              "width": 1296,
+              "height": 930,
+              "bytes": 655305
+            },
+            {
+              "file": "route-runtime.png",
+              "width": 1296,
+              "height": 930,
+              "bytes": 680645
+            }
+          ],
+          "issues": [
+            "runtime snapshot ausente: shop-runtime.png",
+            "runtime snapshot ausente: mine-runtime.png",
+            "runtime snapshot ausente: plot-runtime.png",
+            "runtime snapshot ausente: floor-runtime.png",
+            "runtime snapshot ausente: mobile-store-runtime.png"
+          ]
+        },
+        "issues": [
+          "Roblox Studio não foi detectado no ambiente atual",
+          "captura runtime bloqueada; somente evidência headless/source-preview está disponível"
+        ]
+      },
+      "source": "studio-detector"
+    },
+    {
+      "id": "contract.schema",
+      "probe": "contract_schema",
+      "category": "structural",
+      "status": "PASS",
+      "severity": "info",
+      "message": "Game Contract válido",
+      "details": {
+        "issues": []
+      },
+      "source": "contract-validator"
+    },
+    {
+      "id": "contract.probe_coverage",
+      "probe": "contract_coverage",
+      "category": "structural",
+      "status": "FAIL",
+      "severity": "critical",
+      "message": "Há requisitos sem probe executável",
+      "details": {
+        "requiredProbes": [
+          "asset_security",
+          "buried_objects",
+          "button_interaction",
+          "camera_obstruction",
+          "card_gallery",
+          "collision_overlap",
+          "contract_schema",
+          "door_clearance",
+          "duplicate_connections",
+          "fixture_excluded",
+          "floating_objects",
+          "floor_progression",
+          "instance_growth",
+          "interaction_distance",
+          "memory_growth",
+          "multiplayer_isolation",
+          "objective_reachable",
+          "path_exists",
+          "performance_budget",
+          "persistence",
+          "product_truth_alignment",
+          "remote_security",
+          "runtime_error",
+          "spawn_clearance",
+          "spawn_support",
+          "stairs_validity",
+          "structural_integrity",
+          "studio_runtime_capture",
+          "ui_overflow",
+          "ui_visibility",
+          "visual_asset_quality",
+          "visual_quality",
+          "visual_snapshot_bundle",
+          "visual_spec_schema"
+        ],
+        "uncovered": [
+          "contract_schema",
+          "fixture_excluded",
+          "product_truth_alignment",
+          "structural_integrity",
+          "visual_spec_schema"
+        ]
+      },
+      "source": "probe-registry"
+    },
+    {
+      "id": "probe.ground_support",
+      "probe": "ground_support",
+      "category": "geometry",
+      "status": "PASS",
+      "severity": "major",
+      "message": "A área alvo possui suporte dentro do gap permitido",
+      "details": {
+        "sampledPoints": 9,
+        "supportCoverage": 1.0,
+        "unsupportedPoints": [],
+        "maxGap": 1.5
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.spawn_clearance",
+      "probe": "spawn_clearance",
+      "category": "gameplay",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "Spawn sem obstrução",
+      "details": {
+        "clearance": true
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.spawn_support",
+      "probe": "spawn_support",
+      "category": "geometry",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "Spawn apoiado em superfície válida",
+      "details": {
+        "supportPart": "SpawnPad"
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.path_exists",
+      "probe": "path_exists",
+      "category": "navigation",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "Caminho Spawn → PlayerPlot encontrado",
+      "details": {
+        "path": [
+          "Spawn",
+          "MainPlaza",
+          "BasicPackStore",
+          "PlayerPlot"
+        ]
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.objective_reachable",
+      "probe": "objective_reachable",
+      "category": "navigation",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "Objetivo básico alcançável",
+      "details": {
+        "objectives": [
+          "BasicPackStore",
+          "PlayerPlot",
+          "MineEntrance"
+        ]
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.collision_overlap",
+      "probe": "collision_overlap",
+      "category": "geometry",
+      "status": "PASS",
+      "severity": "major",
+      "message": "Nenhuma colisão estrutural detectada",
+      "details": {
+        "overlaps": []
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.floating_objects",
+      "probe": "floating_objects",
+      "category": "geometry",
+      "status": "PASS",
+      "severity": "major",
+      "message": "Nenhum objeto flutuando",
+      "details": {
+        "objects": []
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.buried_objects",
+      "probe": "buried_objects",
+      "category": "geometry",
+      "status": "PASS",
+      "severity": "minor",
+      "message": "Nenhum objeto enterrado",
+      "details": {
+        "objects": []
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.door_clearance",
+      "probe": "door_clearance",
+      "category": "gameplay",
+      "status": "PASS",
+      "severity": "major",
+      "message": "Portas têm passagem suficiente",
+      "details": {
+        "doors": [
+          {
+            "name": "MineGate",
+            "clearance": 4.0,
+            "required": 3.0
+          }
+        ]
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.stairs_validity",
+      "probe": "stairs_validity",
+      "category": "gameplay",
+      "status": "PASS",
+      "severity": "major",
+      "message": "Escadas utilizáveis",
+      "details": {
+        "stairs": [
+          {
+            "name": "PlotSteps",
+            "valid": true,
+            "riser": 0.8,
+            "tread": 2.5
+          }
+        ]
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.interaction_distance",
+      "probe": "interaction_distance",
+      "category": "gameplay",
+      "status": "PASS",
+      "severity": "major",
+      "message": "Interações dentro do alcance",
+      "details": {
+        "interactions": [
+          {
+            "name": "PurchasePrompt",
+            "reachable": true,
+            "distance": 7.5,
+            "maxDistance": 12
+          },
+          {
+            "name": "PurchaseFloorPrompt",
+            "reachable": true,
+            "distance": 8.0,
+            "maxDistance": 12
+          }
+        ]
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.floor_progression",
+      "probe": "floor_progression",
+      "category": "gameplay",
+      "status": "PASS",
+      "severity": "major",
+      "message": "Compra do próximo andar disponível no elevador",
+      "details": {
+        "prompt": "PurchaseFloorPrompt",
+        "responsive": true
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.camera_obstruction",
+      "probe": "camera_obstruction",
+      "category": "visual",
+      "status": "PASS",
+      "severity": "minor",
+      "message": "Câmeras de teste sem obstrução",
+      "details": {
+        "obstructions": []
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.ui_visibility",
+      "probe": "ui_visibility",
+      "category": "ui",
+      "status": "PASS",
+      "severity": "major",
+      "message": "Elementos de UI visíveis",
+      "details": {
+        "elements": [
+          {
+            "name": "CurrencyLabel",
+            "visible": true
+          },
+          {
+            "name": "InventoryButton",
+            "visible": true
+          },
+          {
+            "name": "PurchasePrompt",
+            "visible": true
+          },
+          {
+            "name": "CardGalleryButton",
+            "visible": true
+          },
+          {
+            "name": "CardCollectionPanel",
+            "visible": true
+          },
+          {
+            "name": "UpgradeFloorButton",
+            "visible": true
+          }
+        ]
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.ui_overflow",
+      "probe": "ui_overflow",
+      "category": "ui",
+      "status": "PASS",
+      "severity": "major",
+      "message": "UI mobile dentro do viewport",
+      "details": {
+        "devices": {
+          "phone": {
+            "viewport": [
+              390,
+              844
+            ]
+          },
+          "tablet": {
+            "viewport": [
+              1024,
+              768
+            ]
+          },
+          "elements": [
+            {
+              "name": "CurrencyLabel",
+              "withinViewport": true
+            },
+            {
+              "name": "InventoryButton",
+              "withinViewport": true
+            },
+            {
+              "name": "PurchasePrompt",
+              "withinViewport": true
+            },
+            {
+              "name": "CardGalleryButton",
+              "withinViewport": true
+            },
+            {
+              "name": "UpgradeFloorButton",
+              "withinViewport": true
+            }
+          ]
+        }
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.card_gallery",
+      "probe": "card_gallery",
+      "category": "ui",
+      "status": "PASS",
+      "severity": "major",
+      "message": "Galeria de cartas visível e responsiva",
+      "details": {
+        "responsive": true,
+        "elements": [
+          {
+            "name": "CurrencyLabel",
+            "visible": true
+          },
+          {
+            "name": "InventoryButton",
+            "visible": true
+          },
+          {
+            "name": "PurchasePrompt",
+            "visible": true
+          },
+          {
+            "name": "CardGalleryButton",
+            "visible": true
+          },
+          {
+            "name": "CardCollectionPanel",
+            "visible": true
+          },
+          {
+            "name": "UpgradeFloorButton",
+            "visible": true
+          }
+        ]
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.button_interaction",
+      "probe": "button_interaction",
+      "category": "ui",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "Botão de compra responde ao input",
+      "details": {
+        "input": "activate PurchasePrompt",
+        "response": true
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.remote_security",
+      "probe": "remote_security",
+      "category": "security",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "Payload inválido rejeitado, rate limit e distância server-side ativos",
+      "details": {
+        "invalidPayloadRejected": true,
+        "rateLimits": true,
+        "serverPurchaseDistanceGuard": true
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.runtime_error",
+      "probe": "runtime_error",
+      "category": "runtime",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "Fluxo sem erros de console",
+      "details": {
+        "consoleErrors": 0
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.memory_growth",
+      "probe": "memory_growth",
+      "category": "performance",
+      "status": "PASS",
+      "severity": "major",
+      "message": "Crescimento de memória dentro do orçamento",
+      "details": {
+        "memoryGrowthMb": 1.8,
+        "budgetMb": 5
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.instance_growth",
+      "probe": "instance_growth",
+      "category": "performance",
+      "status": "PASS",
+      "severity": "major",
+      "message": "Nenhum vazamento de instâncias",
+      "details": {
+        "instanceGrowth": 0
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.duplicate_connections",
+      "probe": "duplicate_connections",
+      "category": "performance",
+      "status": "PASS",
+      "severity": "major",
+      "message": "Nenhuma conexão duplicada",
+      "details": {
+        "duplicateConnections": 0
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.persistence",
+      "probe": "persistence",
+      "category": "persistence",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "Estado preservado após reconnect",
+      "details": {
+        "beforeReconnect": {
+          "currency": 900,
+          "inventory": [
+            "basic_mining_pack"
+          ]
+        },
+        "afterReconnect": {
+          "currency": 900,
+          "inventory": [
+            "basic_mining_pack"
+          ]
+        }
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.multiplayer_isolation",
+      "probe": "multiplayer_isolation",
+      "category": "multiplayer",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "Estado e plots isolados entre jogadores",
+      "details": {
+        "multiplayerIsolation": true
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.performance_budget",
+      "probe": "performance_budget",
+      "category": "performance",
+      "status": "PASS",
+      "severity": "major",
+      "message": "Performance dentro do orçamento",
+      "details": {
+        "frameMs": 12.4,
+        "workspaceInstances": 184,
+        "targetFrameMs": 16.67,
+        "maxWorkspaceInstances": 25000
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.asset_security",
+      "probe": "asset_security",
+      "category": "security",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "Assets e scripts passaram pelo sandbox scanner",
+      "details": {
+        "suspiciousScripts": [],
+        "assetManifestIssues": [],
+        "assetPartCount": 46
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.visual_quality",
+      "probe": "visual_quality",
+      "category": "visual",
+      "status": "PASS",
+      "severity": "minor",
+      "message": "Snapshots visuais e artes acima do limiar",
+      "details": {
+        "visualScore": 0.92,
+        "snapshots": [
+          "spawn",
+          "shop",
+          "mine",
+          "plot",
+          "mobile-store"
+        ],
+        "visualAssetIssues": []
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.visual_snapshot_bundle",
+      "probe": "visual_snapshot_bundle",
+      "category": "visual",
+      "status": "PASS",
+      "severity": "major",
+      "message": "Pacote de prints visuais validado",
+      "details": {
+        "captureType": "deterministic-source-preview",
+        "liveStudioCapture": false,
+        "snapshotCount": 10,
+        "issues": []
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "probe.studio_runtime_capture",
+      "probe": "studio_runtime_capture",
+      "category": "visual",
+      "status": "WARN",
+      "severity": "major",
+      "message": "Capturas runtime do Studio pendentes; headless não é evidência live",
+      "details": {
+        "status": "WARN",
+        "studioDetected": false,
+        "processRunning": false,
+        "executablePath": null,
+        "captureAdapter": "not-connected",
+        "liveStudioCapture": false,
+        "runtime": {
+          "manifestPath": "reports/studio-runtime/manifest.json",
+          "liveStudioCapture": true,
+          "captureType": "studio-window-runtime",
+          "snapshots": [
+            {
+              "file": "studio-open.png",
+              "width": 1296,
+              "height": 930,
+              "bytes": 250224
+            },
+            {
+              "file": "studio-project-loaded.png",
+              "width": 1296,
+              "height": 930,
+              "bytes": 250224
+            },
+            {
+              "file": "spawn-runtime.png",
+              "width": 1296,
+              "height": 930,
+              "bytes": 655305
+            },
+            {
+              "file": "route-runtime.png",
+              "width": 1296,
+              "height": 930,
+              "bytes": 680645
+            }
+          ],
+          "issues": [
+            "runtime snapshot ausente: shop-runtime.png",
+            "runtime snapshot ausente: mine-runtime.png",
+            "runtime snapshot ausente: plot-runtime.png",
+            "runtime snapshot ausente: floor-runtime.png",
+            "runtime snapshot ausente: mobile-store-runtime.png"
+          ]
+        },
+        "issues": [
+          "Roblox Studio não foi detectado no ambiente atual",
+          "captura runtime bloqueada; somente evidência headless/source-preview está disponível"
+        ]
+      },
+      "source": "headless-runtime"
+    },
+    {
+      "id": "agent.scenario.purchase_first_pack",
+      "probe": "agent_blackbox_scenario",
+      "category": "gameplay",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "Agente completou o fluxo humano de compra",
+      "details": {
+        "scenario": "purchase-first-pack-human",
+        "stepsExecuted": 7,
+        "actionRecords": [
+          {
+            "sequence": 1,
+            "timestamp": "2026-08-12T03:28:29.945223+00:00",
+            "before": {
+              "mode": "blackbox",
+              "screenshot": "headless://frame/000003.png",
+              "visibleUi": [
+                {
+                  "text": "$1000",
+                  "visible": true
+                },
+                {
+                  "text": "Inventory",
+                  "visible": true
+                }
+              ],
+              "nearby": [],
+              "events": [
+                {
+                  "event": "spawn",
+                  "success": null
+                }
+              ]
+            },
+            "action": {
+              "type": "walk_to",
+              "target": "BasicPackStore",
+              "timeout": 8,
+              "controller": "human"
+            },
+            "after": {
+              "mode": "blackbox",
+              "screenshot": "headless://frame/000004.png",
+              "visibleUi": [
+                {
+                  "text": "$1000",
+                  "visible": true
+                },
+                {
+                  "text": "Inventory",
+                  "visible": true
+                },
+                {
+                  "text": "[E] Buy mining pack - $100",
+                  "visible": true
+                }
+              ],
+              "nearby": [
+                {
+                  "type": "ProximityPrompt",
+                  "name": "PurchasePrompt",
+                  "distance": 4.8,
+                  "actionText": "Buy mining pack"
+                }
+              ],
+              "events": [
+                {
+                  "event": "spawn",
+                  "success": null
+                }
+              ]
+            },
+            "result": "PASS",
+            "reason": null,
+            "details": {
+              "success": true,
+              "controller": "human",
+              "target": "BasicPackStore",
+              "elapsed": 3.27,
+              "distance": 4.84,
+              "route": [
+                "Spawn",
+                "MainPlaza",
+                "BasicPackStore",
+                "PlayerPlot"
+              ],
+              "actions": [
+                {
+                  "type": "keyboard_sequence",
+                  "keys": [
+                    "W",
+                    "W",
+                    "D",
+                    "W"
+                  ]
+                }
+              ]
+            }
+          },
+          {
+            "sequence": 2,
+            "timestamp": "2026-08-12T03:28:29.945223+00:00",
+            "before": {
+              "mode": "blackbox",
+              "screenshot": "headless://frame/000006.png",
+              "visibleUi": [
+                {
+                  "text": "$1000",
+                  "visible": true
+                },
+                {
+                  "text": "Inventory",
+                  "visible": true
+                },
+                {
+                  "text": "[E] Buy mining pack - $100",
+                  "visible": true
+                }
+              ],
+              "nearby": [
+                {
+                  "type": "ProximityPrompt",
+                  "name": "PurchasePrompt",
+                  "distance": 4.8,
+                  "actionText": "Buy mining pack"
+                }
+              ],
+              "events": [
+                {
+                  "event": "spawn",
+                  "success": null
+                }
+              ]
+            },
+            "action": {
+              "type": "interact",
+              "target": "PurchasePrompt"
+            },
+            "after": {
+              "mode": "blackbox",
+              "screenshot": "headless://frame/000007.png",
+              "visibleUi": [
+                {
+                  "text": "$900",
+                  "visible": true
+                },
+                {
+                  "text": "Inventory",
+                  "visible": true
+                },
+                {
+                  "text": "[E] Buy mining pack - $100",
+                  "visible": true
+                }
+              ],
+              "nearby": [
+                {
+                  "type": "ProximityPrompt",
+                  "name": "PurchasePrompt",
+                  "distance": 4.8,
+                  "actionText": "Buy mining pack"
+                }
+              ],
+              "events": [
+                {
+                  "event": "spawn",
+                  "success": null
+                },
+                {
+                  "event": "purchase",
+                  "success": null
+                }
+              ]
+            },
+            "result": "PASS",
+            "reason": null,
+            "details": {
+              "success": true,
+              "target": "PurchasePrompt",
+              "event": "package_purchased",
+              "currencyDelta": -100,
+              "inventoryDelta": 1
+            }
+          },
+          {
+            "sequence": 3,
+            "timestamp": "2026-08-12T03:28:29.945223+00:00",
+            "before": {
+              "mode": "blackbox",
+              "screenshot": "headless://frame/000009.png",
+              "visibleUi": [
+                {
+                  "text": "$900",
+                  "visible": true
+                },
+                {
+                  "text": "Inventory",
+                  "visible": true
+                },
+                {
+                  "text": "[E] Buy mining pack - $100",
+                  "visible": true
+                }
+              ],
+              "nearby": [
+                {
+                  "type": "ProximityPrompt",
+                  "name": "PurchasePrompt",
+                  "distance": 4.8,
+                  "actionText": "Buy mining pack"
+                }
+              ],
+              "events": [
+                {
+                  "event": "spawn",
+                  "success": null
+                },
+                {
+                  "event": "purchase",
+                  "success": null
+                }
+              ]
+            },
+            "action": {
+              "type": "interact",
+              "target": "PurchasePrompt"
+            },
+            "after": {
+              "mode": "blackbox",
+              "screenshot": "headless://frame/000010.png",
+              "visibleUi": [
+                {
+                  "text": "$900",
+                  "visible": true
+                },
+                {
+                  "text": "Inventory",
+                  "visible": true
+                },
+                {
+                  "text": "[E] Buy mining pack - $100",
+                  "visible": true
+                }
+              ],
+              "nearby": [
+                {
+                  "type": "ProximityPrompt",
+                  "name": "PurchasePrompt",
+                  "distance": 4.8,
+                  "actionText": "Buy mining pack"
+                }
+              ],
+              "events": [
+                {
+                  "event": "spawn",
+                  "success": null
+                },
+                {
+                  "event": "purchase",
+                  "success": null
+                }
+              ]
+            },
+            "result": "FAIL",
+            "reason": "already_purchased_or_insufficient_funds",
+            "details": {
+              "success": false,
+              "reason": "already_purchased_or_insufficient_funds",
+              "target": "PurchasePrompt",
+              "idempotent": true
+            }
+          }
+        ]
+      },
+      "source": "game-agent-bridge"
+    }
+  ],
+  "runtimeTrace": {
+    "scenario": "purchase_basic_pack",
+    "navigationSuccess": true,
+    "firstPurchase": true,
+    "secondPurchase": false,
+    "currencyDelta": -100,
+    "inventoryDelta": 1,
+    "beforeReconnect": {
+      "currency": 900,
+      "inventory": [
+        "basic_mining_pack"
+      ]
+    },
+    "afterReconnect": {
+      "currency": 900,
+      "inventory": [
+        "basic_mining_pack"
+      ]
+    },
+    "persistencePass": true,
+    "multiplayerIsolation": true,
+    "invalidPayloadRejected": true,
+    "rejectedPayloads": 1,
+    "duplicateConnections": 0,
+    "instanceGrowth": 0,
+    "consoleErrors": 0,
+    "events": [
+      {
+        "event": "spawn",
+        "userId": 101,
+        "plot": "PlotA"
+      },
+      {
+        "event": "navigate",
+        "userId": 101,
+        "target": "BasicPackStore",
+        "success": true
+      },
+      {
+        "event": "purchase",
+        "userId": 101,
+        "item": "basic_mining_pack",
+        "price": 100
+      },
+      {
+        "event": "disconnect",
+        "userId": 101
+      },
+      {
+        "event": "reconnect",
+        "userId": 101
+      },
+      {
+        "event": "spawn",
+        "userId": 202,
+        "plot": "PlotB"
+      }
+    ]
+  },
+  "staticScan": {
+    "scriptsScanned": 28,
+    "scripts": [
+      "roblox/mvp/src/ReplicatedStorage/Shared/AssetCatalog.lua",
+      "roblox/mvp/src/ReplicatedStorage/Shared/CardArt.lua",
+      "roblox/mvp/src/ReplicatedStorage/Shared/CardCatalog.lua",
+      "roblox/mvp/src/ReplicatedStorage/Shared/FarmCatalog.lua",
+      "roblox/mvp/src/ReplicatedStorage/Shared/FloorCatalog.lua",
+      "roblox/mvp/src/ReplicatedStorage/Shared/Format.lua",
+      "roblox/mvp/src/ReplicatedStorage/Shared/GameConfig.lua",
+      "roblox/mvp/src/ReplicatedStorage/Shared/LuckCatalog.lua",
+      "roblox/mvp/src/ReplicatedStorage/Shared/PotionCatalog.lua",
+      "roblox/mvp/src/ReplicatedStorage/Shared/RebirthCatalog.lua",
+      "roblox/mvp/src/ReplicatedStorage/Shared/RewardCatalog.lua",
+      "roblox/mvp/src/ServerScriptService/ServerMain.server.lua",
+      "roblox/mvp/src/ServerScriptService/Services/BoostService.lua",
+      "roblox/mvp/src/ServerScriptService/Services/ConveyorService.lua",
+      "roblox/mvp/src/ServerScriptService/Services/FarmService.lua",
+      "roblox/mvp/src/ServerScriptService/Services/HeldCardService.lua",
+      "roblox/mvp/src/ServerScriptService/Services/MapService.lua",
+      "roblox/mvp/src/ServerScriptService/Services/PersistenceService.lua",
+      "roblox/mvp/src/ServerScriptService/Services/PlotService.lua",
+      "roblox/mvp/src/ServerScriptService/Services/ProgressionService.lua",
+      "roblox/mvp/src/ServerScriptService/Services/StoreService.lua",
+      "roblox/mvp/src/StarterPlayer/StarterPlayerScripts/FarmHud.client.lua",
+      "roblox/mvp/src/StarterPlayer/StarterPlayerScripts/Movement.client.lua",
+      "roblox/mvp/src/StarterPlayer/StarterPlayerScripts/Screens.client.lua",
+      "roblox/runtime/AgentBridge.server.lua",
+      "roblox/runtime/Probes/GeometryProbe.lua",
+      "roblox/runtime/Probes/ScenarioProbe.lua",
+      "roblox/runtime/QualityProbeRuntime.server.lua"
+    ],
+    "suspiciousScripts": [],
+    "assetManifestIssues": [],
+    "assetManifest": {
+      "manifestPath": "assets/asset-manifest.json",
+      "assetCount": 14,
+      "policy": {
+        "externalToolboxAssets": "blocked_until_review",
+        "requireScriptScan": true,
+        "requireAllocation": true,
+        "generatedRasterRuntime": "require-roblox-upload-before-live-use",
+        "maxWorkspaceInstances": 25000
+      }
+    },
+    "visualAssetIssues": [],
+    "visualAssets": {
+      "inspected": [
+        {
+          "key": "copper_lynx_prospector_v1",
+          "path": "assets/generated/cards/copper-lynx-prospector-v1.png",
+          "width": 1254,
+          "height": 1254,
+          "ratio": 1.0,
+          "mode": "RGB",
+          "bytes": 2167982
+        },
+        {
+          "key": "mossback_badger_engineer_v1",
+          "path": "assets/generated/cards/mossback-badger-engineer-v1.png",
+          "width": 1254,
+          "height": 1254,
+          "ratio": 1.0,
+          "mode": "RGB",
+          "bytes": 2263534
+        },
+        {
+          "key": "storm_raven_surveyor_v1",
+          "path": "assets/generated/cards/storm-raven-surveyor-v1.png",
+          "width": 1254,
+          "height": 1254,
+          "ratio": 1.0,
+          "mode": "RGB",
+          "bytes": 1954183
+        },
+        {
+          "key": "card_gallery_panel_v1",
+          "path": "assets/generated/ui/card-gallery-panel-v1.png",
+          "width": 1536,
+          "height": 1024,
+          "ratio": 1.5,
+          "mode": "RGB",
+          "bytes": 2535205
+        }
+      ],
+      "assetCount": 4
+    },
+    "visualSnapshotIssues": [],
+    "visualSnapshots": {
+      "manifestPath": "reports/visual-snapshots/manifest.json",
+      "captureType": "deterministic-source-preview",
+      "liveStudioCapture": false,
+      "inspected": [
+        {
+          "file": "00-map-overview.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 47757
+        },
+        {
+          "file": "01-spawn-plaza.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 41021
+        },
+        {
+          "file": "02-ridge-exchange.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 35317
+        },
+        {
+          "file": "03-old-lantern-mine.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 33137
+        },
+        {
+          "file": "04-ridge-lift.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 31309
+        },
+        {
+          "file": "05-plots-grid.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 36767
+        },
+        {
+          "file": "06-plot-a-detail.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 30993
+        },
+        {
+          "file": "07-floor-progression.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 77688
+        },
+        {
+          "file": "08-card-gallery.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 916339
+        },
+        {
+          "file": "09-mobile-ui.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 49243
+        }
+      ],
+      "snapshotCount": 10
+    },
+    "studioRuntime": {
+      "status": "WARN",
+      "studioDetected": false,
+      "processRunning": false,
+      "executablePath": null,
+      "captureAdapter": "not-connected",
+      "liveStudioCapture": false,
+      "runtime": {
+        "manifestPath": "reports/studio-runtime/manifest.json",
+        "liveStudioCapture": true,
+        "captureType": "studio-window-runtime",
+        "snapshots": [
+          {
+            "file": "studio-open.png",
+            "width": 1296,
+            "height": 930,
+            "bytes": 250224
+          },
+          {
+            "file": "studio-project-loaded.png",
+            "width": 1296,
+            "height": 930,
+            "bytes": 250224
+          },
+          {
+            "file": "spawn-runtime.png",
+            "width": 1296,
+            "height": 930,
+            "bytes": 655305
+          },
+          {
+            "file": "route-runtime.png",
+            "width": 1296,
+            "height": 930,
+            "bytes": 680645
+          }
+        ],
+        "issues": [
+          "runtime snapshot ausente: shop-runtime.png",
+          "runtime snapshot ausente: mine-runtime.png",
+          "runtime snapshot ausente: plot-runtime.png",
+          "runtime snapshot ausente: floor-runtime.png",
+          "runtime snapshot ausente: mobile-store-runtime.png"
+        ]
+      },
+      "issues": [
+        "Roblox Studio não foi detectado no ambiente atual",
+        "captura runtime bloqueada; somente evidência headless/source-preview está disponível"
+      ]
+    },
+    "missingPaths": [],
+    "serverPurchaseDistanceGuard": true
+  },
+  "agentSession": {
+    "scenario": "purchase-first-pack-human",
+    "mode": "blackbox",
+    "status": "PASS",
+    "stepsExecuted": 7,
+    "steps": [
+      {
+        "step": {
+          "observe": "blackbox"
+        },
+        "result": {
+          "success": true,
+          "observation": {
+            "mode": "blackbox",
+            "screenshot": "headless://frame/000002.png",
+            "visibleUi": [
+              {
+                "text": "$1000",
+                "visible": true
+              },
+              {
+                "text": "Inventory",
+                "visible": true
+              }
+            ],
+            "nearby": [],
+            "events": [
+              {
+                "event": "spawn",
+                "success": null
+              }
+            ]
+          }
+        },
+        "passed": true
+      },
+      {
+        "step": {
+          "walk_to": "BasicPackStore",
+          "timeout": 8
+        },
+        "result": {
+          "success": true,
+          "result": {
+            "success": true,
+            "controller": "human",
+            "target": "BasicPackStore",
+            "elapsed": 3.27,
+            "distance": 4.84,
+            "route": [
+              "Spawn",
+              "MainPlaza",
+              "BasicPackStore",
+              "PlayerPlot"
+            ],
+            "actions": [
+              {
+                "type": "keyboard_sequence",
+                "keys": [
+                  "W",
+                  "W",
+                  "D",
+                  "W"
+                ]
+              }
+            ]
+          },
+          "evidence": {
+            "sequence": 1,
+            "timestamp": "2026-08-12T03:28:29.945223+00:00",
+            "before": {
+              "mode": "blackbox",
+              "screenshot": "headless://frame/000003.png",
+              "visibleUi": [
+                {
+                  "text": "$1000",
+                  "visible": true
+                },
+                {
+                  "text": "Inventory",
+                  "visible": true
+                }
+              ],
+              "nearby": [],
+              "events": [
+                {
+                  "event": "spawn",
+                  "success": null
+                }
+              ]
+            },
+            "action": {
+              "type": "walk_to",
+              "target": "BasicPackStore",
+              "timeout": 8,
+              "controller": "human"
+            },
+            "after": {
+              "mode": "blackbox",
+              "screenshot": "headless://frame/000004.png",
+              "visibleUi": [
+                {
+                  "text": "$1000",
+                  "visible": true
+                },
+                {
+                  "text": "Inventory",
+                  "visible": true
+                },
+                {
+                  "text": "[E] Buy mining pack - $100",
+                  "visible": true
+                }
+              ],
+              "nearby": [
+                {
+                  "type": "ProximityPrompt",
+                  "name": "PurchasePrompt",
+                  "distance": 4.8,
+                  "actionText": "Buy mining pack"
+                }
+              ],
+              "events": [
+                {
+                  "event": "spawn",
+                  "success": null
+                }
+              ]
+            },
+            "result": "PASS",
+            "reason": null,
+            "details": {
+              "success": true,
+              "controller": "human",
+              "target": "BasicPackStore",
+              "elapsed": 3.27,
+              "distance": 4.84,
+              "route": [
+                "Spawn",
+                "MainPlaza",
+                "BasicPackStore",
+                "PlayerPlot"
+              ],
+              "actions": [
+                {
+                  "type": "keyboard_sequence",
+                  "keys": [
+                    "W",
+                    "W",
+                    "D",
+                    "W"
+                  ]
+                }
+              ]
+            }
+          }
+        },
+        "passed": true
+      },
+      {
+        "step": {
+          "assert": {
+            "type": "visible_text",
+            "value": "Buy mining pack"
+          }
+        },
+        "result": {
+          "success": true,
+          "status": "PASS",
+          "details": {
+            "assertion": {
+              "type": "visible_text",
+              "value": "Buy mining pack"
+            },
+            "expected": "Buy mining pack",
+            "actual": [
+              {
+                "text": "$1000",
+                "visible": true
+              },
+              {
+                "text": "Inventory",
+                "visible": true
+              },
+              {
+                "text": "[E] Buy mining pack - $100",
+                "visible": true
+              }
+            ]
+          }
+        },
+        "passed": true
+      },
+      {
+        "step": {
+          "interact": "PurchasePrompt"
+        },
+        "result": {
+          "success": true,
+          "result": {
+            "success": true,
+            "target": "PurchasePrompt",
+            "event": "package_purchased",
+            "currencyDelta": -100,
+            "inventoryDelta": 1
+          },
+          "evidence": {
+            "sequence": 2,
+            "timestamp": "2026-08-12T03:28:29.945223+00:00",
+            "before": {
+              "mode": "blackbox",
+              "screenshot": "headless://frame/000006.png",
+              "visibleUi": [
+                {
+                  "text": "$1000",
+                  "visible": true
+                },
+                {
+                  "text": "Inventory",
+                  "visible": true
+                },
+                {
+                  "text": "[E] Buy mining pack - $100",
+                  "visible": true
+                }
+              ],
+              "nearby": [
+                {
+                  "type": "ProximityPrompt",
+                  "name": "PurchasePrompt",
+                  "distance": 4.8,
+                  "actionText": "Buy mining pack"
+                }
+              ],
+              "events": [
+                {
+                  "event": "spawn",
+                  "success": null
+                }
+              ]
+            },
+            "action": {
+              "type": "interact",
+              "target": "PurchasePrompt"
+            },
+            "after": {
+              "mode": "blackbox",
+              "screenshot": "headless://frame/000007.png",
+              "visibleUi": [
+                {
+                  "text": "$900",
+                  "visible": true
+                },
+                {
+                  "text": "Inventory",
+                  "visible": true
+                },
+                {
+                  "text": "[E] Buy mining pack - $100",
+                  "visible": true
+                }
+              ],
+              "nearby": [
+                {
+                  "type": "ProximityPrompt",
+                  "name": "PurchasePrompt",
+                  "distance": 4.8,
+                  "actionText": "Buy mining pack"
+                }
+              ],
+              "events": [
+                {
+                  "event": "spawn",
+                  "success": null
+                },
+                {
+                  "event": "purchase",
+                  "success": null
+                }
+              ]
+            },
+            "result": "PASS",
+            "reason": null,
+            "details": {
+              "success": true,
+              "target": "PurchasePrompt",
+              "event": "package_purchased",
+              "currencyDelta": -100,
+              "inventoryDelta": 1
+            }
+          }
+        },
+        "passed": true
+      },
+      {
+        "step": {
+          "assert": {
+            "type": "visible_text",
+            "value": "$900"
+          }
+        },
+        "result": {
+          "success": true,
+          "status": "PASS",
+          "details": {
+            "assertion": {
+              "type": "visible_text",
+              "value": "$900"
+            },
+            "expected": "$900",
+            "actual": [
+              {
+                "text": "$900",
+                "visible": true
+              },
+              {
+                "text": "Inventory",
+                "visible": true
+              },
+              {
+                "text": "[E] Buy mining pack - $100",
+                "visible": true
+              }
+            ]
+          }
+        },
+        "passed": true
+      },
+      {
+        "step": {
+          "interact": "PurchasePrompt",
+          "expectSuccess": false
+        },
+        "result": {
+          "success": false,
+          "result": {
+            "success": false,
+            "reason": "already_purchased_or_insufficient_funds",
+            "target": "PurchasePrompt",
+            "idempotent": true
+          },
+          "evidence": {
+            "sequence": 3,
+            "timestamp": "2026-08-12T03:28:29.945223+00:00",
+            "before": {
+              "mode": "blackbox",
+              "screenshot": "headless://frame/000009.png",
+              "visibleUi": [
+                {
+                  "text": "$900",
+                  "visible": true
+                },
+                {
+                  "text": "Inventory",
+                  "visible": true
+                },
+                {
+                  "text": "[E] Buy mining pack - $100",
+                  "visible": true
+                }
+              ],
+              "nearby": [
+                {
+                  "type": "ProximityPrompt",
+                  "name": "PurchasePrompt",
+                  "distance": 4.8,
+                  "actionText": "Buy mining pack"
+                }
+              ],
+              "events": [
+                {
+                  "event": "spawn",
+                  "success": null
+                },
+                {
+                  "event": "purchase",
+                  "success": null
+                }
+              ]
+            },
+            "action": {
+              "type": "interact",
+              "target": "PurchasePrompt"
+            },
+            "after": {
+              "mode": "blackbox",
+              "screenshot": "headless://frame/000010.png",
+              "visibleUi": [
+                {
+                  "text": "$900",
+                  "visible": true
+                },
+                {
+                  "text": "Inventory",
+                  "visible": true
+                },
+                {
+                  "text": "[E] Buy mining pack - $100",
+                  "visible": true
+                }
+              ],
+              "nearby": [
+                {
+                  "type": "ProximityPrompt",
+                  "name": "PurchasePrompt",
+                  "distance": 4.8,
+                  "actionText": "Buy mining pack"
+                }
+              ],
+              "events": [
+                {
+                  "event": "spawn",
+                  "success": null
+                },
+                {
+                  "event": "purchase",
+                  "success": null
+                }
+              ]
+            },
+            "result": "FAIL",
+            "reason": "already_purchased_or_insufficient_funds",
+            "details": {
+              "success": false,
+              "reason": "already_purchased_or_insufficient_funds",
+              "target": "PurchasePrompt",
+              "idempotent": true
+            }
+          }
+        },
+        "passed": true
+      },
+      {
+        "step": {
+          "assert": {
+            "type": "visible_text",
+            "value": "$900"
+          }
+        },
+        "result": {
+          "success": true,
+          "status": "PASS",
+          "details": {
+            "assertion": {
+              "type": "visible_text",
+              "value": "$900"
+            },
+            "expected": "$900",
+            "actual": [
+              {
+                "text": "$900",
+                "visible": true
+              },
+              {
+                "text": "Inventory",
+                "visible": true
+              },
+              {
+                "text": "[E] Buy mining pack - $100",
+                "visible": true
+              }
+            ]
+          }
+        },
+        "passed": true
+      }
+    ],
+    "actionRecords": [
+      {
+        "sequence": 1,
+        "timestamp": "2026-08-12T03:28:29.945223+00:00",
+        "before": {
+          "mode": "blackbox",
+          "screenshot": "headless://frame/000003.png",
+          "visibleUi": [
+            {
+              "text": "$1000",
+              "visible": true
+            },
+            {
+              "text": "Inventory",
+              "visible": true
+            }
+          ],
+          "nearby": [],
+          "events": [
+            {
+              "event": "spawn",
+              "success": null
+            }
+          ]
+        },
+        "action": {
+          "type": "walk_to",
+          "target": "BasicPackStore",
+          "timeout": 8,
+          "controller": "human"
+        },
+        "after": {
+          "mode": "blackbox",
+          "screenshot": "headless://frame/000004.png",
+          "visibleUi": [
+            {
+              "text": "$1000",
+              "visible": true
+            },
+            {
+              "text": "Inventory",
+              "visible": true
+            },
+            {
+              "text": "[E] Buy mining pack - $100",
+              "visible": true
+            }
+          ],
+          "nearby": [
+            {
+              "type": "ProximityPrompt",
+              "name": "PurchasePrompt",
+              "distance": 4.8,
+              "actionText": "Buy mining pack"
+            }
+          ],
+          "events": [
+            {
+              "event": "spawn",
+              "success": null
+            }
+          ]
+        },
+        "result": "PASS",
+        "reason": null,
+        "details": {
+          "success": true,
+          "controller": "human",
+          "target": "BasicPackStore",
+          "elapsed": 3.27,
+          "distance": 4.84,
+          "route": [
+            "Spawn",
+            "MainPlaza",
+            "BasicPackStore",
+            "PlayerPlot"
+          ],
+          "actions": [
+            {
+              "type": "keyboard_sequence",
+              "keys": [
+                "W",
+                "W",
+                "D",
+                "W"
+              ]
+            }
+          ]
+        }
+      },
+      {
+        "sequence": 2,
+        "timestamp": "2026-08-12T03:28:29.945223+00:00",
+        "before": {
+          "mode": "blackbox",
+          "screenshot": "headless://frame/000006.png",
+          "visibleUi": [
+            {
+              "text": "$1000",
+              "visible": true
+            },
+            {
+              "text": "Inventory",
+              "visible": true
+            },
+            {
+              "text": "[E] Buy mining pack - $100",
+              "visible": true
+            }
+          ],
+          "nearby": [
+            {
+              "type": "ProximityPrompt",
+              "name": "PurchasePrompt",
+              "distance": 4.8,
+              "actionText": "Buy mining pack"
+            }
+          ],
+          "events": [
+            {
+              "event": "spawn",
+              "success": null
+            }
+          ]
+        },
+        "action": {
+          "type": "interact",
+          "target": "PurchasePrompt"
+        },
+        "after": {
+          "mode": "blackbox",
+          "screenshot": "headless://frame/000007.png",
+          "visibleUi": [
+            {
+              "text": "$900",
+              "visible": true
+            },
+            {
+              "text": "Inventory",
+              "visible": true
+            },
+            {
+              "text": "[E] Buy mining pack - $100",
+              "visible": true
+            }
+          ],
+          "nearby": [
+            {
+              "type": "ProximityPrompt",
+              "name": "PurchasePrompt",
+              "distance": 4.8,
+              "actionText": "Buy mining pack"
+            }
+          ],
+          "events": [
+            {
+              "event": "spawn",
+              "success": null
+            },
+            {
+              "event": "purchase",
+              "success": null
+            }
+          ]
+        },
+        "result": "PASS",
+        "reason": null,
+        "details": {
+          "success": true,
+          "target": "PurchasePrompt",
+          "event": "package_purchased",
+          "currencyDelta": -100,
+          "inventoryDelta": 1
+        }
+      },
+      {
+        "sequence": 3,
+        "timestamp": "2026-08-12T03:28:29.945223+00:00",
+        "before": {
+          "mode": "blackbox",
+          "screenshot": "headless://frame/000009.png",
+          "visibleUi": [
+            {
+              "text": "$900",
+              "visible": true
+            },
+            {
+              "text": "Inventory",
+              "visible": true
+            },
+            {
+              "text": "[E] Buy mining pack - $100",
+              "visible": true
+            }
+          ],
+          "nearby": [
+            {
+              "type": "ProximityPrompt",
+              "name": "PurchasePrompt",
+              "distance": 4.8,
+              "actionText": "Buy mining pack"
+            }
+          ],
+          "events": [
+            {
+              "event": "spawn",
+              "success": null
+            },
+            {
+              "event": "purchase",
+              "success": null
+            }
+          ]
+        },
+        "action": {
+          "type": "interact",
+          "target": "PurchasePrompt"
+        },
+        "after": {
+          "mode": "blackbox",
+          "screenshot": "headless://frame/000010.png",
+          "visibleUi": [
+            {
+              "text": "$900",
+              "visible": true
+            },
+            {
+              "text": "Inventory",
+              "visible": true
+            },
+            {
+              "text": "[E] Buy mining pack - $100",
+              "visible": true
+            }
+          ],
+          "nearby": [
+            {
+              "type": "ProximityPrompt",
+              "name": "PurchasePrompt",
+              "distance": 4.8,
+              "actionText": "Buy mining pack"
+            }
+          ],
+          "events": [
+            {
+              "event": "spawn",
+              "success": null
+            },
+            {
+              "event": "purchase",
+              "success": null
+            }
+          ]
+        },
+        "result": "FAIL",
+        "reason": "already_purchased_or_insufficient_funds",
+        "details": {
+          "success": false,
+          "reason": "already_purchased_or_insufficient_funds",
+          "target": "PurchasePrompt",
+          "idempotent": true
+        }
+      }
+    ],
+    "memoryEntries": 14
+  }
+}

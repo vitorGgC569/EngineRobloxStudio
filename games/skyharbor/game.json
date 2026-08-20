@@ -1,0 +1,50 @@
+{
+  "schemaVersion": 1,
+  "id": "skyharbor",
+  "genre": "racing",
+  "theme": "mine",
+  "pitch": "Aeroporto flutuante: construa pistas, receba dirigiveis, atenda passageiros e expanda o terminal nas nuvens.",
+  "coreLoop": [
+    "race",
+    "unlock",
+    "upgrade"
+  ],
+  "world": {
+    "topology": "linear_levels",
+    "zones": []
+  },
+  "progression": {
+    "kind": "tiered",
+    "tiers": 8,
+    "firstTierSeconds": 90.0,
+    "sessionMinutes": 10.0
+  },
+  "economy": {
+    "currencies": [
+      {
+        "id": "cash",
+        "displayName": "Cash",
+        "earnedBy": [
+          "race"
+        ],
+        "spentOn": [
+          "unlock",
+          "upgrade"
+        ],
+        "premium": false
+      }
+    ]
+  },
+  "systems": [
+    "progression",
+    "save",
+    "economy",
+    "analytics"
+  ],
+  "monetization": [
+    "passes"
+  ],
+  "tokenSet": "games/skyharbor/tokens/skyharbor-siege.json",
+  "concurrentPlayers": 1,
+  "privateSpace": false
+}

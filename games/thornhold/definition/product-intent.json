@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "productId": "thornhold",
+  "pitch": "Defesa de castelo com heroi jogavel: comande torres e lute pessoalmente contra as hordas.",
+  "topology": "single-arena",
+  "progression": "wave-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/thornhold/tokens/thornhold-siege.json",
+  "coreLoop": [
+    "build",
+    "defend",
+    "upgrade"
+  ]
+}

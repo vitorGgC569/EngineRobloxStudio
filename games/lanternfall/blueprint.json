@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "lanternfall",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-lanternfall",
+      "productId": "lanternfall",
+      "revision": "1.0.0",
+      "seed": 36172986,
+      "genre": "tycoon",
+      "templateId": "template-tycoon-v1",
+      "sourceRoot": "games/lanternfall",
+      "artifactRoot": "artifacts/products/lanternfall",
+      "productIntentRef": {
+        "productId": "lanternfall",
+        "artifactId": "lanternfall.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/lanternfall/definition/product-intent.json",
+        "sha256": "5fa5ad6ec7587d9b1e5e26ad90e98cecf2b831fe2d626ff3dacec19eea1ae3da"
+      },
+      "referenceBundleRef": {
+        "productId": "lanternfall",
+        "artifactId": "lanternfall.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/lanternfall/definition/reference-bundle.json",
+        "sha256": "5bb95595c51b903192cf80b3c0f1099463c3eecd5c90fbe9953185f9acd5d48f"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a plot grid around a shared hub",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "economy, inventory, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/lanternfall/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/lanternfall/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/lanternfall/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/lanternfall/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "core-loop",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "lanternfall",
+            "artifactId": "lanternfall.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/lanternfall/definition/release-quality.json",
+            "sha256": "c8ac5961b8d2da437655595c50ea66acb23a4eb173ddcd58f5c0c25f8a92ea31"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "lanternfall",
+          "artifactId": "lanternfall.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/lanternfall/production_plan"
+        },
+        {
+          "productId": "lanternfall",
+          "artifactId": "lanternfall.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/lanternfall/source_bundle"
+        },
+        {
+          "productId": "lanternfall",
+          "artifactId": "lanternfall.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/lanternfall/asset_manifest"
+        },
+        {
+          "productId": "lanternfall",
+          "artifactId": "lanternfall.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/lanternfall/build_place"
+        },
+        {
+          "productId": "lanternfall",
+          "artifactId": "lanternfall.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/lanternfall/integration_manifest"
+        },
+        {
+          "productId": "lanternfall",
+          "artifactId": "lanternfall.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/lanternfall/measurement_run"
+        },
+        {
+          "productId": "lanternfall",
+          "artifactId": "lanternfall.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/lanternfall/scenario_results"
+        },
+        {
+          "productId": "lanternfall",
+          "artifactId": "lanternfall.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/lanternfall/capture_bundle"
+        },
+        {
+          "productId": "lanternfall",
+          "artifactId": "lanternfall.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/lanternfall/quality_review"
+        },
+        {
+          "productId": "lanternfall",
+          "artifactId": "lanternfall.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/lanternfall/repair_plan"
+        },
+        {
+          "productId": "lanternfall",
+          "artifactId": "lanternfall.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/lanternfall/regression_run"
+        },
+        {
+          "productId": "lanternfall",
+          "artifactId": "lanternfall.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/lanternfall/release_candidate"
+        }
+      ]
+    }
+  ]
+}

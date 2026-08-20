@@ -1,0 +1,311 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "ocean-lab",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-ocean-lab",
+      "productId": "ocean-lab",
+      "revision": "1.0.0",
+      "seed": 14158935,
+      "genre": "tycoon",
+      "templateId": "template-tycoon-v1",
+      "sourceRoot": "games/ocean-lab",
+      "artifactRoot": "artifacts/products/ocean-lab",
+      "productIntentRef": {
+        "productId": "ocean-lab",
+        "artifactId": "ocean-lab.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/ocean-lab/definition/product-intent.json",
+        "sha256": "a46a46dca40dc5dc21abf666e55ba05584ed056d4d292b64f21c269a288fa068"
+      },
+      "referenceBundleRef": {
+        "productId": "ocean-lab",
+        "artifactId": "ocean-lab.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/ocean-lab/definition/reference-bundle.json",
+        "sha256": "c60b3e0610ddefd2a00df5091205bc251aec947b04d2bf995015eb125bdfb1bd"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a hub with portals, and one traversable zone per declared zone",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "economy, inventory, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/ocean-lab/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/ocean-lab/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/ocean-lab/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/ocean-lab/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "traversal",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "core-loop",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "zone-reef-kit",
+          "type": "MODEL",
+          "strategy": "CREATE",
+          "requiredForRelease": true,
+          "consumers": [
+            "world"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "zone-abyss-kit",
+          "type": "MODEL",
+          "strategy": "CREATE",
+          "requiredForRelease": true,
+          "consumers": [
+            "world"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "ocean-lab",
+            "artifactId": "ocean-lab.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/ocean-lab/definition/release-quality.json",
+            "sha256": "472f221415f0fbc716b76cf968256ec2ce6259940944c16b0d351efeda12f056"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "ocean-lab",
+          "artifactId": "ocean-lab.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/ocean-lab/production_plan"
+        },
+        {
+          "productId": "ocean-lab",
+          "artifactId": "ocean-lab.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/ocean-lab/source_bundle"
+        },
+        {
+          "productId": "ocean-lab",
+          "artifactId": "ocean-lab.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/ocean-lab/asset_manifest"
+        },
+        {
+          "productId": "ocean-lab",
+          "artifactId": "ocean-lab.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/ocean-lab/build_place"
+        },
+        {
+          "productId": "ocean-lab",
+          "artifactId": "ocean-lab.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/ocean-lab/integration_manifest"
+        },
+        {
+          "productId": "ocean-lab",
+          "artifactId": "ocean-lab.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/ocean-lab/measurement_run"
+        },
+        {
+          "productId": "ocean-lab",
+          "artifactId": "ocean-lab.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/ocean-lab/scenario_results"
+        },
+        {
+          "productId": "ocean-lab",
+          "artifactId": "ocean-lab.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/ocean-lab/capture_bundle"
+        },
+        {
+          "productId": "ocean-lab",
+          "artifactId": "ocean-lab.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/ocean-lab/quality_review"
+        },
+        {
+          "productId": "ocean-lab",
+          "artifactId": "ocean-lab.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/ocean-lab/repair_plan"
+        },
+        {
+          "productId": "ocean-lab",
+          "artifactId": "ocean-lab.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/ocean-lab/regression_run"
+        },
+        {
+          "productId": "ocean-lab",
+          "artifactId": "ocean-lab.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/ocean-lab/release_candidate"
+        }
+      ]
+    }
+  ]
+}

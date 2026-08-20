@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "ironwake",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-ironwake",
+      "productId": "ironwake",
+      "revision": "1.0.0",
+      "seed": 56827893,
+      "genre": "tycoon",
+      "templateId": "template-tycoon-v1",
+      "sourceRoot": "games/ironwake",
+      "artifactRoot": "artifacts/products/ironwake",
+      "productIntentRef": {
+        "productId": "ironwake",
+        "artifactId": "ironwake.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/ironwake/definition/product-intent.json",
+        "sha256": "7b1f82d5c137cb56657275c9a8db9fabbdf7aebd88b2e70e1ef96cf245e0afc3"
+      },
+      "referenceBundleRef": {
+        "productId": "ironwake",
+        "artifactId": "ironwake.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/ironwake/definition/reference-bundle.json",
+        "sha256": "342057d95bb4a1487ecf09bee4987660d8d5f243376d1ced36dc885f5a08440c"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a plot grid around a shared hub",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "economy, inventory, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/ironwake/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/ironwake/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/ironwake/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/ironwake/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "core-loop",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "ironwake",
+            "artifactId": "ironwake.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/ironwake/definition/release-quality.json",
+            "sha256": "65f7654617ad3bde77b87b7563c972b2a321d3c4248fca521e123a2b322492d5"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "ironwake",
+          "artifactId": "ironwake.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/ironwake/production_plan"
+        },
+        {
+          "productId": "ironwake",
+          "artifactId": "ironwake.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/ironwake/source_bundle"
+        },
+        {
+          "productId": "ironwake",
+          "artifactId": "ironwake.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/ironwake/asset_manifest"
+        },
+        {
+          "productId": "ironwake",
+          "artifactId": "ironwake.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/ironwake/build_place"
+        },
+        {
+          "productId": "ironwake",
+          "artifactId": "ironwake.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/ironwake/integration_manifest"
+        },
+        {
+          "productId": "ironwake",
+          "artifactId": "ironwake.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/ironwake/measurement_run"
+        },
+        {
+          "productId": "ironwake",
+          "artifactId": "ironwake.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/ironwake/scenario_results"
+        },
+        {
+          "productId": "ironwake",
+          "artifactId": "ironwake.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/ironwake/capture_bundle"
+        },
+        {
+          "productId": "ironwake",
+          "artifactId": "ironwake.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/ironwake/quality_review"
+        },
+        {
+          "productId": "ironwake",
+          "artifactId": "ironwake.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/ironwake/repair_plan"
+        },
+        {
+          "productId": "ironwake",
+          "artifactId": "ironwake.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/ironwake/regression_run"
+        },
+        {
+          "productId": "ironwake",
+          "artifactId": "ironwake.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/ironwake/release_candidate"
+        }
+      ]
+    }
+  ]
+}

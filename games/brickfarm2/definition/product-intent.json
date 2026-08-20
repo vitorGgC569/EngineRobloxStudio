@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "productId": "brickfarm2",
+  "pitch": "Farm tycoon: plante, colha, venda e melhore seus lotes.",
+  "topology": "grid-plots",
+  "progression": "tiered-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/brickfarm2/tokens/brickfarm2-grove.json",
+  "coreLoop": [
+    "collect",
+    "process",
+    "upgrade",
+    "sell",
+    "unlock"
+  ]
+}

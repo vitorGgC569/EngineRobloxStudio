@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "productId": "tidepool",
+  "pitch": "Simulator de coleta de criaturas em recifes e cavernas submarinas, com loja, ranking e sessoes de 12 minutos.",
+  "topology": "hub-and-zones",
+  "progression": "tiered-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "tokens/brickfarm.json",
+  "coreLoop": [
+    "collect",
+    "sell",
+    "upgrade",
+    "unlock",
+    "buy"
+  ]
+}

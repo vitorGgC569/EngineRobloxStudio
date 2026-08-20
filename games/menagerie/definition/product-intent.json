@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "productId": "menagerie",
+  "pitch": "Colecione criaturas raras num santuario: incube ovos, cuide dos bichos, complete o album, troque duplicatas.",
+  "topology": "hub-and-zones",
+  "progression": "unlock_graph-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/menagerie/tokens/menagerie-siege.json",
+  "coreLoop": [
+    "collect",
+    "unlock",
+    "upgrade"
+  ]
+}

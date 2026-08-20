@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "id": "siegehold",
+  "genre": "tower_defense",
+  "theme": "tower defense medieval",
+  "pitch": "Tower defense medieval: ondas de inimigos, torres com upgrades, cristal a defender, partidas de 8 minutos.",
+  "coreLoop": [
+    "build",
+    "defend",
+    "upgrade"
+  ],
+  "world": {
+    "topology": "single_arena",
+    "zones": []
+  },
+  "progression": {
+    "kind": "wave",
+    "tiers": 12,
+    "firstTierSeconds": 45.0,
+    "sessionMinutes": 8.0
+  },
+  "economy": {
+    "currencies": [
+      {
+        "id": "cash",
+        "displayName": "Cash",
+        "earnedBy": [
+          "defend"
+        ],
+        "spentOn": [
+          "build",
+          "upgrade"
+        ],
+        "premium": false
+      }
+    ]
+  },
+  "systems": [
+    "economy",
+    "progression",
+    "save",
+    "tower",
+    "analytics"
+  ],
+  "monetization": [],
+  "tokenSet": "tokens/brickfarm.json",
+  "concurrentPlayers": 1,
+  "privateSpace": false
+}

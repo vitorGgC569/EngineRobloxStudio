@@ -1,0 +1,60 @@
+{
+  "runId": "run-00006",
+  "startedAt": "2026-08-10T20:31:21.643187+00:00",
+  "completedAt": "2026-08-10T20:31:36.672326+00:00",
+  "validationLevel": "NOT_VALIDATED",
+  "studioContext": "unknown",
+  "contextsObserved": [],
+  "place": {},
+  "status": "FAIL",
+  "counts": {
+    "PASS": 0,
+    "WARN": 0,
+    "FAIL": 1
+  },
+  "measurements": {},
+  "findings": [],
+  "evidence": [
+    {
+      "id": "studio.bridge.connected",
+      "probe": "studio_bridge_connected",
+      "category": "observability",
+      "status": "FAIL",
+      "severity": "critical",
+      "message": "Studio Bridge did not answer studio.info; nothing could be measured",
+      "details": {
+        "hub": "http://127.0.0.1:8790",
+        "errors": [
+          {
+            "method": "studio.info",
+            "params": {},
+            "error": {
+              "code": "E_TIMEOUT",
+              "message": "plugin did not answer studio.info within 15.0s",
+              "details": {
+                "commandId": "cmd_6a0c63379ff43abf",
+                "session": "sess_855e076fffdc"
+              }
+            }
+          }
+        ]
+      },
+      "source": "studio-bridge"
+    }
+  ],
+  "commandErrors": [
+    {
+      "method": "studio.info",
+      "params": {},
+      "error": {
+        "code": "E_TIMEOUT",
+        "message": "plugin did not answer studio.info within 15.0s",
+        "details": {
+          "commandId": "cmd_6a0c63379ff43abf",
+          "session": "sess_855e076fffdc"
+        }
+      }
+    }
+  ],
+  "reproducibility": {}
+}

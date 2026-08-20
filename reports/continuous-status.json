@@ -1,0 +1,177 @@
+{
+  "status": "BLOCKED",
+  "cycleStartedAt": "2026-08-12T03:28:29.907223+00:00",
+  "cycleFinishedAt": "2026-08-12T03:28:29.948223+00:00",
+  "releaseAllowed": false,
+  "summary": {
+    "executed": 38,
+    "PASS": 35,
+    "WARN": 2,
+    "FAIL": 1,
+    "critical": 1,
+    "major": 0,
+    "minor": 0
+  },
+  "scores": {
+    "structural": 25.0,
+    "security": 100.0,
+    "visual": 86.7,
+    "geometry": 100.0,
+    "gameplay": 100.0,
+    "navigation": 100.0,
+    "ui": 100.0,
+    "runtime": 100.0,
+    "performance": 100.0,
+    "persistence": 100.0,
+    "multiplayer": 100.0
+  },
+  "failures": [
+    {
+      "id": "contract.probe_coverage",
+      "probe": "contract_coverage",
+      "severity": "critical",
+      "message": "Há requisitos sem probe executável"
+    }
+  ],
+  "releaseReasons": [
+    "1 critical failure(s)"
+  ],
+  "qualityFocus": {
+    "status": "IMPROVE",
+    "domains": {
+      "structural": {
+        "actualScore": 25.0,
+        "targetScore": 100.0,
+        "onTarget": false,
+        "focus": "required files and project topology"
+      },
+      "visual": {
+        "actualScore": 92.0,
+        "targetScore": 95.0,
+        "onTarget": false,
+        "focus": "composition, lighting, readable landmarks and visual snapshots"
+      },
+      "ui": {
+        "actualScore": 100.0,
+        "targetScore": 95.0,
+        "onTarget": true,
+        "focus": "hierarchy, legibility, responsive layout and interaction feedback"
+      },
+      "geometry": {
+        "actualScore": 100.0,
+        "targetScore": 100.0,
+        "onTarget": true,
+        "focus": "support, overlaps, floating and buried objects"
+      },
+      "navigation": {
+        "actualScore": 100.0,
+        "targetScore": 100.0,
+        "onTarget": true,
+        "focus": "walkable routes from spawn to every objective"
+      },
+      "gameplay": {
+        "actualScore": 100.0,
+        "targetScore": 95.0,
+        "onTarget": true,
+        "focus": "usable interactions and server-authoritative progression"
+      },
+      "persistence": {
+        "actualScore": 100.0,
+        "targetScore": 100.0,
+        "onTarget": true,
+        "focus": "reconnect-safe player progress"
+      },
+      "multiplayer": {
+        "actualScore": 100.0,
+        "targetScore": 90.0,
+        "onTarget": true,
+        "focus": "plot and inventory isolation"
+      },
+      "performance": {
+        "actualScore": 100.0,
+        "targetScore": 95.0,
+        "onTarget": true,
+        "focus": "frame time, memory and instance budgets"
+      },
+      "security": {
+        "actualScore": 100.0,
+        "targetScore": 100.0,
+        "onTarget": true,
+        "focus": "asset provenance, script scan and remote validation"
+      },
+      "runtime": {
+        "actualScore": 100.0,
+        "targetScore": 100.0,
+        "onTarget": true,
+        "focus": "zero console errors and stable sessions"
+      }
+    },
+    "visualReview": {
+      "rawScore": 92.0,
+      "minimumRawScore": 95.0,
+      "snapshots": [
+        "spawn",
+        "shop",
+        "mine",
+        "plot",
+        "mobile-store"
+      ],
+      "missingSnapshots": [],
+      "onTarget": false
+    },
+    "artReadiness": {
+      "pendingRuntimeUpload": [
+        "copper_lynx_prospector_v1",
+        "mossback_badger_engineer_v1",
+        "storm_raven_surveyor_v1",
+        "card_gallery_panel_v1"
+      ],
+      "ready": false
+    },
+    "gaps": [
+      {
+        "domain": "structural",
+        "gap": 75.0,
+        "actualScore": 25.0,
+        "targetScore": 100.0,
+        "onTarget": false,
+        "focus": "required files and project topology"
+      },
+      {
+        "domain": "visual",
+        "gap": 3.0,
+        "actualScore": 92.0,
+        "targetScore": 95.0,
+        "onTarget": false,
+        "focus": "composition, lighting, readable landmarks and visual snapshots"
+      },
+      {
+        "domain": "visual_review",
+        "gap": 3.0,
+        "missingSnapshots": []
+      },
+      {
+        "domain": "art_asset_readiness",
+        "gap": 4,
+        "pendingRuntimeUpload": [
+          "copper_lynx_prospector_v1",
+          "mossback_badger_engineer_v1",
+          "storm_raven_surveyor_v1",
+          "card_gallery_panel_v1"
+        ]
+      }
+    ]
+  },
+  "improvementActions": [
+    "Raise structural by 75.0 points",
+    "Raise visual by 3.0 points",
+    "Raise visual_review by 3.0 points",
+    "Raise art_asset_readiness by 4.0 points"
+  ],
+  "reports": {
+    "evidenceJson": "C:\\Users\\vitor\\OneDrive\\Desktop\\RobloxGamesMCP\\reports\\latest.json",
+    "markdown": "C:\\Users\\vitor\\OneDrive\\Desktop\\RobloxGamesMCP\\reports\\latest.md",
+    "fixPlan": "C:\\Users\\vitor\\OneDrive\\Desktop\\RobloxGamesMCP\\reports\\fix-plan.md"
+  },
+  "nextAction": "apply the fix plan and quality backlog before the next cycle"
+}

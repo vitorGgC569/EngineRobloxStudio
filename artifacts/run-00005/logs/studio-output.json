@@ -1,0 +1,57 @@
+{
+  "totalEntries": 9,
+  "available": true,
+  "returned": 9,
+  "counts": {
+    "warning": 0,
+    "info": 9,
+    "error": 0
+  },
+  "entries": [
+    {
+      "severity": "info",
+      "timestamp": 1786393680.411,
+      "message": "[RQE Bridge] starting"
+    },
+    {
+      "severity": "info",
+      "timestamp": 1786393680.5,
+      "message": "[RQE Bridge] connected to http://127.0.0.1:8790 as sess_769c3313abfa (edit)"
+    },
+    {
+      "severity": "info",
+      "timestamp": 1786393724.829,
+      "message": "[RQE Bridge] context changed edit -> run; re-registering"
+    },
+    {
+      "severity": "info",
+      "timestamp": 1786393724.846,
+      "message": "[RQE Bridge] connected to http://127.0.0.1:8790 as sess_d7ee6dc3aaec (run)"
+    },
+    {
+      "severity": "info",
+      "timestamp": 1786393725.879,
+      "message": "[RQE Bridge] context changed run -> edit; re-registering"
+    },
+    {
+      "severity": "info",
+      "timestamp": 1786393725.895,
+      "message": "[RQE Bridge] connected to http://127.0.0.1:8790 as sess_e825b9bd1c99 (edit)"
+    },
+    {
+      "severity": "info",
+      "timestamp": 1786393853.601,
+      "message": "[RQE Bridge] poll failed (HttpError: ConnectFail); reconnecting"
+    },
+    {
+      "severity": "info",
+      "timestamp": 1786393857.656,
+      "message": "[RQE Bridge] hub unreachable (HttpError: ConnectFail); retrying in 4s"
+    },
+    {
+      "severity": "info",
+      "timestamp": 1786393861.675,
+      "message": "[RQE Bridge] connected to http://127.0.0.1:8790 as sess_855e076fffdc (edit)"
+    }
+  ]
+}

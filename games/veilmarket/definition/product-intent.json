@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "productId": "veilmarket",
+  "pitch": "Mercado de uma cidade portuaria: compre barato, revenda caro, negocie com mercadores e abra sua loja.",
+  "topology": "grid-plots",
+  "progression": "tiered-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/veilmarket/tokens/veilmarket-grove.json",
+  "coreLoop": [
+    "collect",
+    "process",
+    "upgrade",
+    "sell",
+    "unlock",
+    "buy"
+  ]
+}

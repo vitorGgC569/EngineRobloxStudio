@@ -1,0 +1,170 @@
+local Players = game:GetService("Players")
+
+local player = Players.LocalPlayer
+local gui = Instance.new("ScreenGui")
+gui.Name = "MinerHud"
+gui.DisplayOrder = 20
+gui.IgnoreGuiInset = false
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local palette = {
+	ink = Color3.fromRGB(18, 27, 38),
+	panel = Color3.fromRGB(29, 42, 54),
+	panelSoft = Color3.fromRGB(39, 54, 65),
+	teal = Color3.fromRGB(55, 196, 181),
+	gold = Color3.fromRGB(242, 193, 83),
+	copper = Color3.fromRGB(211, 121, 58),
+	white = Color3.fromRGB(242, 243, 236),
+	muted = Color3.fromRGB(174, 188, 192),
+	success = Color3.fromRGB(105, 224, 156),
+}
+
+local function stylePanel(instance, color, radius, strokeColor)
+	instance.BackgroundColor3 = color
+	instance.BackgroundTransparency = 0.04
+
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, radius or 12)
+	corner.Parent = instance
+
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = strokeColor or palette.teal
+	stroke.Thickness = 1.5
+	stroke.Transparency = 0.25
+	stroke.Parent = instance
+end
+
+local function makeLabel(parent, name, text, size, position, color, font, textSize)
+	local label = Instance.new("TextLabel")
+	label.Name = name
+	label.BackgroundTransparency = 1
+	label.Size = size
+	label.Position = position
+	label.Text = text
+	label.TextColor3 = color or palette.white
+	label.Font = font or Enum.Font.Gotham
+	label.TextSize = textSize or 16
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.TextYAlignment = Enum.TextYAlignment.Center
+	label.Parent = parent
+	return label
+end
+
+local function makeButton(parent, name, text, size, position, color, strokeColor)
+	local button = Instance.new("TextButton")
+	button.Name = name
+	button.AutoButtonColor = true
+	button.Size = size
+	button.Position = position
+	button.Text = text
+	button.TextColor3 = palette.white
+	button.Font = Enum.Font.GothamBold
+	button.TextSize = 15
+	stylePanel(button, color, 10, strokeColor)
+	button.Parent = parent
+	return button
+end
+
+local root = Instance.new("Frame")
+root.Name = "HudRoot"
+root.BackgroundTransparency = 1
+root.Size = UDim2.fromScale(1, 1)
+root.Parent = gui
+
+local scale = Instance.new("UIScale")
+scale.Name = "ResponsiveScale"
+scale.Parent = root
+
+local function refreshScale()
+	local camera = workspace.CurrentCamera
+	if not camera then
+		return
+	end
+	scale.Scale = math.clamp(camera.ViewportSize.X / 1280, 0.82, 1.08)
+end
+
+refreshScale()
+workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(refreshScale)
+if workspace.CurrentCamera then
+	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(refreshScale)
+end
+
+local brand = Instance.new("Frame")
+brand.Name = "Brand"
+brand.Size = UDim2.fromOffset(300, 72)
+brand.Position = UDim2.fromOffset(22, 18)
+stylePanel(brand, palette.ink, 14, palette.copper)
+brand.Parent = root
+makeLabel(brand, "Kicker", "MINER'S RIDGE", UDim2.fromOffset(260, 22), UDim2.fromOffset(18, 8), palette.gold, Enum.Font.GothamBold, 15)
+makeLabel(brand, "Title", "FIELD OPERATIONS", UDim2.fromOffset(260, 28), UDim2.fromOffset(18, 29), palette.white, Enum.Font.GothamBlack, 22)
+
+local currencyCard = Instance.new("Frame")
+currencyCard.Name = "CurrencyCard"
+currencyCard.Size = UDim2.fromOffset(220, 66)
+currencyCard.Position = UDim2.new(1, -242, 0, 18)
+stylePanel(currencyCard, palette.panel, 14, palette.gold)
+currencyCard.Parent = root
+makeLabel(currencyCard, "CurrencyCaption", "AVAILABLE FUNDS", UDim2.fromOffset(180, 18), UDim2.fromOffset(18, 8), palette.muted, Enum.Font.GothamBold, 12)
+local currencyLabel = makeLabel(currencyCard, "CurrencyLabel", "$0", UDim2.fromOffset(180, 30), UDim2.fromOffset(18, 25), palette.gold, Enum.Font.GothamBlack, 24)
+
+local inventoryButton = makeButton(root, "InventoryButton", "BACKPACK  0", UDim2.fromOffset(170, 48), UDim2.new(1, -192, 0, 94), palette.panelSoft, palette.teal)
+
+local objective = Instance.new("Frame")
+objective.Name = "ObjectivePanel"
+objective.Size = UDim2.fromOffset(330, 142)
+objective.Position = UDim2.new(0, 22, 1, -166)
+stylePanel(objective, palette.panel, 14, palette.teal)
+objective.Parent = root
+makeLabel(objective, "ObjectiveKicker", "CURRENT OBJECTIVE", UDim2.fromOffset(290, 18), UDim2.fromOffset(18, 12), palette.teal, Enum.Font.GothamBold, 12)
+makeLabel(objective, "ObjectiveTitle", "Establish your first claim", UDim2.fromOffset(290, 26), UDim2.fromOffset(18, 32), palette.white, Enum.Font.GothamBlack, 19)
+makeLabel(objective, "ObjectiveSteps", "01  Visit Ridge Exchange\n02  Buy your first mining pack\n03  Grow your plot", UDim2.fromOffset(290, 68), UDim2.fromOffset(18, 64), palette.muted, Enum.Font.Gotham, 14)
+
+local status = Instance.new("Frame")
+status.Name = "StatusBar"
+status.Size = UDim2.fromOffset(340, 42)
+status.Position = UDim2.new(0.5, -170, 1, -58)
+stylePanel(status, palette.ink, 12, palette.gold)
+status.Parent = root
+local statusLabel = makeLabel(status, "StatusLabel", "The ridge is waiting for a new operator.", UDim2.fromOffset(310, 34), UDim2.fromOffset(15, 4), palette.white, Enum.Font.GothamMedium, 13)
+statusLabel.TextXAlignment = Enum.TextXAlignment.Center
+
+local inventoryPanel = Instance.new("Frame")
+inventoryPanel.Name = "InventoryPanel"
+inventoryPanel.Visible = false
+inventoryPanel.Size = UDim2.fromOffset(300, 260)
+inventoryPanel.Position = UDim2.new(1, -322, 0, 150)
+stylePanel(inventoryPanel, palette.panel, 14, palette.teal)
+inventoryPanel.Parent = root
+makeLabel(inventoryPanel, "InventoryTitle", "BACKPACK", UDim2.fromOffset(240, 26), UDim2.fromOffset(18, 14), palette.white, Enum.Font.GothamBlack, 20)
+makeLabel(inventoryPanel, "InventoryHint", "Resources acquired on this run", UDim2.fromOffset(260, 20), UDim2.fromOffset(18, 43), palette.muted, Enum.Font.Gotham, 12)
+local inventoryList = makeLabel(inventoryPanel, "InventoryList", "No packs acquired yet.", UDim2.fromOffset(260, 150), UDim2.fromOffset(18, 82), palette.muted, Enum.Font.Gotham, 15)
+inventoryList.TextYAlignment = Enum.TextYAlignment.Top
+local closeInventory = makeButton(inventoryPanel, "CloseInventory", "CLOSE", UDim2.fromOffset(100, 34), UDim2.new(1, -118, 1, -48), palette.panelSoft, palette.copper)
+
+local function refreshCurrency()
+	local amount = player:GetAttribute("Currency") or 0
+	currencyLabel.Text = "$" .. tostring(amount)
+end
+
+local function refreshPlayerState()
+	local plotName = player:GetAttribute("PlotName") or "unassigned"
+	if plotName == "" then
+		statusLabel.Text = "Finding an available claim..."
+	else
+		statusLabel.Text = "Claim secured: " .. plotName .. "  |  Start building."
+	end
+end
+
+local function toggleInventory()
+	inventoryPanel.Visible = not inventoryPanel.Visible
+end
+
+inventoryButton.MouseButton1Click:Connect(toggleInventory)
+closeInventory.MouseButton1Click:Connect(toggleInventory)
+player:GetAttributeChangedSignal("Currency"):Connect(refreshCurrency)
+player:GetAttributeChangedSignal("PlotName"):Connect(refreshPlayerState)
+refreshCurrency()
+refreshPlayerState()
+
+return nil

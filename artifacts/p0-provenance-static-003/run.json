@@ -1,0 +1,65 @@
+{
+  "schemaVersion": 2,
+  "runId": "p0-provenance-static-003",
+  "createdAt": "2026-08-11T17:08:30.853858+00:00",
+  "completedAt": "2026-08-11T17:08:31.380489+00:00",
+  "artifacts": [
+    {
+      "path": "build-manifest.json",
+      "sha256": "f16b50c2396de5eb57ca44243c7957ec220ccc38c6487ea13be12ae48f92cf9e",
+      "bytes": 2640
+    },
+    {
+      "path": "build/inputs-after.json",
+      "sha256": "8f562ea0cde3f308b8a3a75161e4724d2123b5e7cc82aea5f7e60fb584c4a5df",
+      "bytes": 1840
+    },
+    {
+      "path": "build/inputs-before.json",
+      "sha256": "8f562ea0cde3f308b8a3a75161e4724d2123b5e7cc82aea5f7e60fb584c4a5df",
+      "bytes": 1840
+    },
+    {
+      "path": "build/p0-provenance-static-003.rbxlx",
+      "sha256": "942505c3a23913aa89f8db768cad868479ec11964437daba939bbd0627e8b911",
+      "bytes": 223797
+    },
+    {
+      "path": "build/rojo.json",
+      "sha256": "8e4c2ef40d959680f5ca3fe174a9d0c062235dc9f952c9cd5a86b221b8e12566",
+      "bytes": 428
+    },
+    {
+      "path": "evidence/evidence.json",
+      "sha256": "3ef71a16f4614c2998940db28463829b0b4451d347b916ef4a6767a67466c11e",
+      "bytes": 12519
+    },
+    {
+      "path": "evidence/static-scan.json",
+      "sha256": "1d04d2147b8815e5766f6aa3492bf5decbab8cdd67827d6af7da0f36f404cc13",
+      "bytes": 5991
+    },
+    {
+      "path": "gate.json",
+      "sha256": "6082601069a13dacd31fddca8c7c6e7232caed37f96e1cea95077bad2138867d",
+      "bytes": 28221
+    },
+    {
+      "path": "logs/command-errors.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "bytes": 3
+    },
+    {
+      "path": "measurement-plan.json",
+      "sha256": "23e5182916d97b45b8dbcae69d2f04adfcb2bd04ffe729122c7e55fb97a9482e",
+      "bytes": 36983
+    }
+  ],
+  "status": "BLOCKED",
+  "releaseAllowed": false,
+  "buildId": "aea92a705b7290d2369ed07c83af5a5af190bc19a24cb71935a0f517d99932b5",
+  "gate": "gate.json",
+  "provenance": "build-manifest.json",
+  "measurementPlan": "measurement-plan.json",
+  "manifestSha256": "580e6362d7a6589de1eb5ffc3794e2d27d224cf63a214b5d413748c68bf4f7d5"
+}

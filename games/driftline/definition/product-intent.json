@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "productId": "driftline",
+  "pitch": "Corrida de rua com upgrades: ganhe dinheiro em provas, melhore o carro e desbloqueie novos circuitos.",
+  "topology": "linear-levels",
+  "progression": "tiered-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/driftline/tokens/driftline-siege.json",
+  "coreLoop": [
+    "race",
+    "unlock",
+    "upgrade"
+  ]
+}

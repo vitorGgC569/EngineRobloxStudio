@@ -1,0 +1,18 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Game Agent Observation",
+  "type": "object",
+  "required": ["mode", "screenshot", "visibleUi", "nearby", "events"],
+  "properties": {
+    "mode": {"enum": ["blackbox", "graybox", "whitebox"]},
+    "screenshot": {"type": "string"},
+    "player": {"type": ["object", "null"]},
+    "camera": {"type": "object"},
+    "visibleUi": {"type": "array"},
+    "nearby": {"type": "array"},
+    "events": {"type": "array"},
+    "consoleErrors": {"type": "array"},
+    "diagnostics": {"type": "object"}
+  }
+}
+

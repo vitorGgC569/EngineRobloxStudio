@@ -1,0 +1,62 @@
+{
+  "schemaVersion": 1,
+  "id": "quietmile",
+  "genre": "collection",
+  "theme": "caminhada vila abandonada",
+  "pitch": "Caminhada por uma vila abandonada: encontre cartas, reconstrua a historia, abra o portao final.",
+  "coreLoop": [
+    "collect",
+    "unlock",
+    "upgrade"
+  ],
+  "world": {
+    "topology": "hub_and_zones",
+    "zones": [
+      {
+        "id": "start",
+        "theme": "caminhada vila abandonada",
+        "difficulty": 1,
+        "unlockedAtTier": 0
+      },
+      {
+        "id": "deep",
+        "theme": "caminhada vila abandonada",
+        "difficulty": 3,
+        "unlockedAtTier": 4
+      }
+    ]
+  },
+  "progression": {
+    "kind": "unlock_graph",
+    "tiers": 8,
+    "firstTierSeconds": 45.0,
+    "sessionMinutes": 15.0
+  },
+  "economy": {
+    "currencies": [
+      {
+        "id": "cash",
+        "displayName": "Cash",
+        "earnedBy": [
+          "collect"
+        ],
+        "spentOn": [
+          "unlock",
+          "upgrade"
+        ],
+        "premium": false
+      }
+    ]
+  },
+  "systems": [
+    "inventory",
+    "progression",
+    "save",
+    "economy",
+    "analytics"
+  ],
+  "monetization": [],
+  "tokenSet": "games/quietmile/tokens/quietmile-siege.json",
+  "concurrentPlayers": 1,
+  "privateSpace": false
+}

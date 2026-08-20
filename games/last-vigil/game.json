@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "id": "last-vigil",
+  "genre": "tower_defense",
+  "theme": "faceless pilgrims",
+  "pitch": "Tower defense de terror 3D The Last Vigil nas ruinas de uma abadia durante a noite. Recolha brasas do relicario, acenda e melhore lanternas de protecao, defenda o sino contra ondas de peregrinos sem rosto e sobreviva ate o amanhecer em uma sessao de 10 minutos.",
+  "coreLoop": [
+    "build",
+    "defend",
+    "upgrade"
+  ],
+  "world": {
+    "topology": "single_arena",
+    "zones": []
+  },
+  "progression": {
+    "kind": "wave",
+    "tiers": 12,
+    "firstTierSeconds": 45.0,
+    "sessionMinutes": 10.0
+  },
+  "economy": {
+    "currencies": [
+      {
+        "id": "embers",
+        "displayName": "Embers",
+        "earnedBy": [
+          "defend"
+        ],
+        "spentOn": [
+          "build",
+          "upgrade"
+        ],
+        "premium": false
+      }
+    ]
+  },
+  "systems": [
+    "economy",
+    "progression",
+    "save",
+    "tower",
+    "analytics"
+  ],
+  "monetization": [],
+  "tokenSet": "games/last-vigil/tokens/last-vigil-vigil.json",
+  "concurrentPlayers": 1,
+  "privateSpace": false
+}

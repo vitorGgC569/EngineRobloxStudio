@@ -1,0 +1,102 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local player = Players.LocalPlayer
+local CardCatalog = require(ReplicatedStorage.Shared.CardCatalog)
+local sparkTexture = "rbxasset://textures/particles/sparkles_main.dds"
+
+local function sequence(color, alpha)
+	return ColorSequence.new({
+		ColorSequenceKeypoint.new(0, color),
+		ColorSequenceKeypoint.new(1, color:Lerp(Color3.fromRGB(242, 243, 236), 0.35)),
+	}), alpha
+end
+
+local function clearEffects(character)
+	for _, child in ipairs(character:GetChildren()) do
+		if child.Name == "ActiveCardEffect" then
+			child:Destroy()
+		end
+	end
+end
+
+local function styleFor(card)
+	local rarity = CardCatalog.Rarities[card.rarity] or CardCatalog.Rarities.Common
+	local styles = {
+		lantern = {rate = 3, speed = NumberRange.new(0.6, 1.2), lifetime = NumberRange.new(0.8, 1.3), size = 0.18},
+		moss_sparks = {rate = 5, speed = NumberRange.new(0.8, 1.8), lifetime = NumberRange.new(0.7, 1.1), size = 0.2},
+		ore_sparks = {rate = 7, speed = NumberRange.new(1.0, 2.0), lifetime = NumberRange.new(0.6, 1.0), size = 0.22},
+		copper_burst = {rate = 9, speed = NumberRange.new(1.2, 2.8), lifetime = NumberRange.new(0.55, 0.9), size = 0.25},
+		storm_ring = {rate = 12, speed = NumberRange.new(1.4, 3.2), lifetime = NumberRange.new(0.45, 0.8), size = 0.27},
+		crown_flare = {rate = 16, speed = NumberRange.new(1.8, 3.8), lifetime = NumberRange.new(0.4, 0.75), size = 0.3},
+	}
+	local style = styles[card.effectStyle] or styles.lantern
+	style.color = rarity.color
+	return style
+end
+
+local function applyEffects(character)
+	clearEffects(character)
+	local card = CardCatalog.get(player:GetAttribute("ActiveCard") or "")
+	if not card then
+		return
+	end
+	local root = character:FindFirstChild("HumanoidRootPart")
+	if not root then
+		return
+	end
+	local style = styleFor(card)
+	local attachment = Instance.new("Attachment")
+	attachment.Name = "ActiveCardEffect"
+	attachment.Position = Vector3.new(0, 0.8, 0)
+	attachment.Parent = root
+
+	local emitter = Instance.new("ParticleEmitter")
+	emitter.Name = "ActiveCardEffect"
+	emitter.Texture = sparkTexture
+	emitter.Rate = style.rate
+	emitter.Lifetime = style.lifetime
+	emitter.Speed = style.speed
+	emitter.SpreadAngle = Vector2.new(180, 180)
+	emitter.Rotation = NumberRange.new(0, 360)
+	emitter.RotSpeed = NumberRange.new(-90, 90)
+	emitter.LightEmission = 0.8
+	emitter.Size = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, style.size),
+		NumberSequenceKeypoint.new(0.7, style.size * 0.75),
+		NumberSequenceKeypoint.new(1, 0),
+	})
+	local color, alpha = sequence(style.color, 0.08)
+	emitter.Color = color
+	emitter.Transparency = NumberSequence.new({
+		NumberSequenceKeypoint.new(0, alpha),
+		NumberSequenceKeypoint.new(0.72, 0.2),
+		NumberSequenceKeypoint.new(1, 1),
+	})
+	emitter.Parent = attachment
+
+	local glow = Instance.new("PointLight")
+	glow.Name = "ActiveCardEffect"
+	glow.Color = style.color
+	local highRarity = card.rarity == "Legendary" or card.rarity == "Mythic"
+	glow.Brightness = highRarity and 1.6 or 0.7
+	glow.Range = highRarity and 10 or 6
+	glow.Parent = attachment
+end
+
+local function bindCharacter(character)
+	character:WaitForChild("HumanoidRootPart", 5)
+	applyEffects(character)
+end
+
+player.CharacterAdded:Connect(bindCharacter)
+player:GetAttributeChangedSignal("ActiveCard"):Connect(function()
+	if player.Character then
+		applyEffects(player.Character)
+	end
+end)
+if player.Character then
+	bindCharacter(player.Character)
+end
+
+return nil

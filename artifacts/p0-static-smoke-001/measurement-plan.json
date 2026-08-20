@@ -1,0 +1,354 @@
+{
+  "schemaVersion": 1,
+  "contractPath": "contracts/mining-tycoon.robloxqa.json",
+  "requirements": [
+    {
+      "id": "player_can_spawn",
+      "probe": "spawn_clearance",
+      "category": "gameplay",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "spawn_is_supported",
+      "probe": "spawn_support",
+      "category": "geometry",
+      "severity": "critical",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "player_can_reach_plot",
+      "probe": "path_exists",
+      "category": "navigation",
+      "severity": "critical",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "objectives_are_reachable",
+      "probe": "objective_reachable",
+      "category": "navigation",
+      "severity": "critical",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "package_can_be_purchased",
+      "probe": "button_interaction",
+      "category": "gameplay",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "purchased_package_persists",
+      "probe": "persistence",
+      "category": "persistence",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "purchase_is_idempotent",
+      "probe": "button_interaction",
+      "category": "gameplay",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "no_floating_buildings",
+      "probe": "floating_objects",
+      "category": "geometry",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "no_buried_objects",
+      "probe": "buried_objects",
+      "category": "geometry",
+      "severity": "minor",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "no_collision_overlap",
+      "probe": "collision_overlap",
+      "category": "geometry",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "doors_are_passable",
+      "probe": "door_clearance",
+      "category": "gameplay",
+      "severity": "major",
+      "minimumValidationLevel": "E2E_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "stairs_are_usable",
+      "probe": "stairs_validity",
+      "category": "gameplay",
+      "severity": "major",
+      "minimumValidationLevel": "E2E_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "store_prompt_is_reachable",
+      "probe": "interaction_distance",
+      "category": "gameplay",
+      "severity": "major",
+      "minimumValidationLevel": "E2E_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "floor_progression_is_buyable",
+      "probe": "floor_progression",
+      "category": "gameplay",
+      "severity": "major",
+      "minimumValidationLevel": "E2E_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "card_gallery_is_visible",
+      "probe": "card_gallery",
+      "category": "ui",
+      "severity": "major",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "camera_is_not_blocked",
+      "probe": "camera_obstruction",
+      "category": "visual",
+      "severity": "minor",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "ui_is_visible",
+      "probe": "ui_visibility",
+      "category": "ui",
+      "severity": "major",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "mobile_ui_valid",
+      "probe": "ui_overflow",
+      "category": "ui",
+      "severity": "major",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "remote_rejects_invalid_payloads",
+      "probe": "remote_security",
+      "category": "security",
+      "severity": "critical",
+      "minimumValidationLevel": "STATICALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "runtime_has_no_errors",
+      "probe": "runtime_error",
+      "category": "runtime",
+      "severity": "critical",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "memory_does_not_grow_suspiciously",
+      "probe": "memory_growth",
+      "category": "performance",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "instances_are_cleaned_up",
+      "probe": "instance_growth",
+      "category": "performance",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "connections_are_not_duplicated",
+      "probe": "duplicate_connections",
+      "category": "performance",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "players_are_isolated",
+      "probe": "multiplayer_isolation",
+      "category": "multiplayer",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "performance_budget_is_met",
+      "probe": "performance_budget",
+      "category": "performance",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "assets_are_safe",
+      "probe": "asset_security",
+      "category": "security",
+      "severity": "critical",
+      "minimumValidationLevel": "STATICALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_snapshots_are_healthy",
+      "probe": "visual_quality",
+      "category": "visual",
+      "severity": "minor",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "generated_visual_assets_are_valid",
+      "probe": "visual_asset_quality",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_snapshot_bundle_is_valid",
+      "probe": "visual_snapshot_bundle",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "studio_runtime_captures_are_available",
+      "probe": "studio_runtime_capture",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    }
+  ],
+  "requiredCategories": [
+    "structural",
+    "visual",
+    "ui",
+    "geometry",
+    "navigation",
+    "gameplay",
+    "persistence",
+    "multiplayer",
+    "performance",
+    "security",
+    "runtime"
+  ],
+  "targetScores": {
+    "structural": 100.0,
+    "visual": 95.0,
+    "ui": 95.0,
+    "geometry": 100.0,
+    "navigation": 100.0,
+    "gameplay": 95.0,
+    "persistence": 100.0,
+    "multiplayer": 90.0,
+    "performance": 95.0,
+    "security": 100.0,
+    "runtime": 100.0
+  },
+  "minimumCategoryCoverage": {
+    "structural": 1.0,
+    "visual": 1.0,
+    "ui": 1.0,
+    "geometry": 1.0,
+    "navigation": 1.0,
+    "gameplay": 1.0,
+    "persistence": 1.0,
+    "multiplayer": 1.0,
+    "performance": 1.0,
+    "security": 1.0,
+    "runtime": 1.0
+  },
+  "forbiddenSources": [
+    "headless-runtime"
+  ],
+  "minimumVisualScore": 95.0,
+  "requireTrustworthyCaptures": true,
+  "metadata": {
+    "qualityFocus": "quality/quality-focus.json",
+    "contractName": "Miner's Ridge Tycoon"
+  }
+}

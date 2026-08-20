@@ -1,0 +1,276 @@
+{
+  "runId": "run-00001",
+  "startedAt": "2026-08-10T20:10:35.652939+00:00",
+  "completedAt": "2026-08-10T20:10:36.561806+00:00",
+  "validationLevel": "RUNTIME_VALIDATED",
+  "studioContext": "edit",
+  "place": {
+    "placeName": "MinersRidgeTycoon-qa-v7.rbxlx",
+    "placeId": 0,
+    "gameId": 0,
+    "studioVersion": "0.733.0.7330989"
+  },
+  "status": "FAIL",
+  "counts": {
+    "PASS": 7,
+    "WARN": 1,
+    "FAIL": 1
+  },
+  "measurements": {
+    "studio": {
+      "studioVersion": "0.733.0.7330989",
+      "isRunning": false,
+      "placeId": 0,
+      "workspaceDescendants": 2,
+      "gameId": 0,
+      "jobId": "",
+      "serviceChildCounts": {
+        "Players": 0,
+        "StarterPlayer": 2,
+        "Lighting": 0,
+        "SoundService": 0,
+        "Workspace": 2,
+        "StarterGui": 0,
+        "Teams": 0,
+        "ServerScriptService": 3,
+        "ReplicatedStorage": 1
+      },
+      "context": "edit",
+      "placeName": "MinersRidgeTycoon-qa-v7.rbxlx"
+    },
+    "world": {
+      "classCounts": {
+        "Terrain": 1,
+        "Camera": 1
+      },
+      "scripts": 0,
+      "partsBelowY": {
+        "threshold": -50,
+        "count": 0
+      },
+      "workspaceDescendants": 2,
+      "unanchoredParts": 0,
+      "parts": 1
+    },
+    "spawns": [],
+    "runtime": {
+      "players": [],
+      "isEdit": true,
+      "playerCount": 0,
+      "isRunning": false,
+      "placeId": 0,
+      "runtime": {
+        "worstFrameMs": 18.09,
+        "instances": 1743,
+        "workspaceInstances": 2,
+        "sampleSeconds": 0.6,
+        "memoryMb": 1563.8,
+        "fps": 59.85
+      },
+      "unavailable": [],
+      "logs": {
+        "warnings": 0,
+        "errors": 0
+      },
+      "context": "edit",
+      "placeName": "MinersRidgeTycoon-qa-v7.rbxlx"
+    },
+    "regions": {
+      "discovery": "namePattern",
+      "count": 0,
+      "results": []
+    },
+    "logs": {
+      "totalEntries": 2,
+      "available": true,
+      "returned": 2,
+      "counts": {
+        "warning": 0,
+        "info": 2,
+        "error": 0
+      },
+      "entries": [
+        {
+          "severity": "info",
+          "timestamp": 1786392578.094,
+          "message": "[RQE Bridge] starting"
+        },
+        {
+          "severity": "info",
+          "timestamp": 1786392578.158,
+          "message": "[RQE Bridge] connected to http://127.0.0.1:8790 as sess_33caf7634069 (edit)"
+        }
+      ]
+    }
+  },
+  "findings": [
+    {
+      "severity": "critical",
+      "category": "world_geometry",
+      "location": "game.Workspace",
+      "finding": "the place has no SpawnLocation; players cannot enter",
+      "suggestedAction": "add a SpawnLocation on solid ground in the starting area",
+      "evidence": {}
+    }
+  ],
+  "evidence": [
+    {
+      "id": "studio.bridge.connected",
+      "probe": "studio_bridge_connected",
+      "category": "observability",
+      "status": "PASS",
+      "severity": "info",
+      "message": "Live Studio answered through the bridge (edit context)",
+      "details": {
+        "place": {
+          "placeName": "MinersRidgeTycoon-qa-v7.rbxlx",
+          "placeId": 0,
+          "gameId": 0,
+          "studioVersion": "0.733.0.7330989"
+        },
+        "context": "edit",
+        "protocol": "rqe.bridge/1"
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "world.instance_budget",
+      "probe": "instance_budget",
+      "category": "performance",
+      "status": "PASS",
+      "severity": "major",
+      "message": "Workspace holds 2 instances (budget 25000)",
+      "details": {
+        "measured": 2,
+        "budget": 25000,
+        "classCounts": {
+          "Terrain": 1,
+          "Camera": 1
+        }
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "world.parts_below_floor",
+      "probe": "parts_below_floor",
+      "category": "geometry",
+      "status": "PASS",
+      "severity": "major",
+      "message": "0 part(s) below y=-50",
+      "details": {
+        "threshold": -50,
+        "count": 0
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "world.unanchored_parts",
+      "probe": "unanchored_parts",
+      "category": "geometry",
+      "status": "PASS",
+      "severity": "minor",
+      "message": "0 unanchored part(s) (budget 200)",
+      "details": {
+        "measured": 0,
+        "budget": 200
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "world.spawn_exists",
+      "probe": "spawn_exists",
+      "category": "gameplay",
+      "status": "FAIL",
+      "severity": "critical",
+      "message": "0 SpawnLocation(s) found in Workspace",
+      "details": {
+        "spawns": []
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "runtime.frame_rate",
+      "probe": "frame_rate",
+      "category": "performance",
+      "status": "PASS",
+      "severity": "major",
+      "message": "sampled 59.85 FPS over 0.6s in edit context (budget 30.0)",
+      "details": {
+        "fps": 59.85,
+        "worstFrameMs": 18.09,
+        "budget": 30.0,
+        "context": "edit",
+        "isRunning": false
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "runtime.memory",
+      "probe": "memory_budget",
+      "category": "performance",
+      "status": "PASS",
+      "severity": "major",
+      "message": "1563.8 MB in use (budget 4000.0 MB)",
+      "details": {
+        "memoryMb": 1563.8,
+        "budgetMb": 4000.0
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "world.region_overlap",
+      "probe": "spatial_overlap",
+      "category": "geometry",
+      "status": "WARN",
+      "severity": "minor",
+      "message": "only 0 exclusive region(s) discovered; overlap check needs at least two",
+      "details": {
+        "discovery": "namePattern",
+        "regionTag": "QARegion",
+        "regionNamePattern": "^Plot"
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "runtime.console_errors",
+      "probe": "runtime_error",
+      "category": "runtime",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "0 error line(s) in the Studio output",
+      "details": {
+        "counts": {
+          "warning": 0,
+          "info": 2,
+          "error": 0
+        },
+        "entries": []
+      },
+      "source": "studio-bridge"
+    }
+  ],
+  "commandErrors": [],
+  "reproducibility": {
+    "engineVersion": "0.2.0",
+    "protocolVersion": "rqe.bridge/1",
+    "studioVersion": "0.733.0.7330989",
+    "placeId": 0,
+    "placeName": "MinersRidgeTycoon-qa-v7.rbxlx",
+    "commit": null,
+    "host": "OGrandeOxta",
+    "python": "3.12.10",
+    "observeConfig": {
+      "regionTag": "QARegion",
+      "regionNamePattern": "^Plot",
+      "regionRoot": "game.Workspace",
+      "groundSupportSamples": 9,
+      "groundSupportMaxGap": 1.5,
+      "budgets": {
+        "minFps": 30.0,
+        "maxWorkspaceInstances": 25000,
+        "maxMemoryMb": 4000.0,
+        "maxUnanchoredParts": 200
+      }
+    }
+  }
+}

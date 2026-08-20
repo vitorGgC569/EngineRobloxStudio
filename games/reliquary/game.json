@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "id": "reliquary",
+  "genre": "tycoon",
+  "theme": "cave",
+  "pitch": "Museu de artefatos: escave sitios, restaure pecas, monte exposicoes e receba visitantes.",
+  "coreLoop": [
+    "collect",
+    "process",
+    "upgrade",
+    "sell",
+    "unlock"
+  ],
+  "world": {
+    "topology": "grid_plots",
+    "zones": []
+  },
+  "progression": {
+    "kind": "tiered",
+    "tiers": 8,
+    "firstTierSeconds": 45.0,
+    "sessionMinutes": 15.0
+  },
+  "economy": {
+    "currencies": [
+      {
+        "id": "cash",
+        "displayName": "Cash",
+        "earnedBy": [
+          "collect",
+          "process",
+          "sell"
+        ],
+        "spentOn": [
+          "upgrade",
+          "unlock"
+        ],
+        "premium": false
+      }
+    ]
+  },
+  "systems": [
+    "economy",
+    "progression",
+    "save",
+    "inventory",
+    "analytics"
+  ],
+  "monetization": [],
+  "tokenSet": "games/reliquary/tokens/reliquary-grove.json",
+  "concurrentPlayers": 1,
+  "privateSpace": false
+}

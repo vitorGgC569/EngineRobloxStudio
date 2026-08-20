@@ -1,0 +1,269 @@
+{
+  "scenario": "first-purchase-e2e",
+  "status": "FAIL",
+  "validationLevel": "E2E_VALIDATED",
+  "startedAt": "2026-08-11T02:36:48Z",
+  "steps": {
+    "total": 7,
+    "passed": 6,
+    "failed": 1
+  },
+  "results": [
+    {
+      "index": 1,
+      "step": "attach",
+      "spec": {
+        "fatal": true
+      },
+      "status": "PASS",
+      "reason": null,
+      "elapsedMs": 15.0,
+      "detail": {
+        "playersInGame": 1,
+        "actor": "player_5812220258",
+        "isRealPlayer": true,
+        "walkSpeed": 16,
+        "health": 100,
+        "velocity": [
+          0,
+          0,
+          0
+        ],
+        "userId": 5812220258,
+        "grounded": true,
+        "state": "Enum.HumanoidStateType.Running",
+        "player": "Agoravai18",
+        "name": "Agoravai18",
+        "position": [
+          -0.15,
+          5.242,
+          -39.03
+        ],
+        "floorMaterial": "Enum.Material.Slate",
+        "ref": "0_490521",
+        "maxHealth": 100,
+        "playerAttributes": {
+          "FloorIncomeMultiplier": 1,
+          "ObjectiveReveal": false,
+          "ActiveCard": "field_lantern",
+          "CardEffectStyle": "lantern",
+          "CardCount": 2,
+          "BuildCostMultiplier": 1,
+          "CardCollection": "field_lantern,tunnel_mole",
+          "PlotName": "PlotA",
+          "FloorMultiplier": 1,
+          "Currency": 900,
+          "OreYieldMultiplier": 1,
+          "CardRarity": "Common",
+          "FloorLevel": 1,
+          "CardEffect": "Reveals nearby ore nodes.",
+          "CardPower": 4,
+          "FloorName": "Groundworks"
+        }
+      }
+    },
+    {
+      "index": 2,
+      "step": "assert",
+      "spec": {
+        "PlotName": "!= nil",
+        "Currency": ">= 100",
+        "comment": "the game must have assigned a plot and starting funds before anything else is meaningful"
+      },
+      "status": "PASS",
+      "reason": null,
+      "elapsedMs": 94.0,
+      "detail": {
+        "attributes": {
+          "PlotName": "PlotA",
+          "Currency": 900
+        },
+        "failures": []
+      }
+    },
+    {
+      "index": 3,
+      "step": "navigate_to",
+      "spec": {
+        "target": "game.Workspace.Map.BasicPackStore.Counter",
+        "tolerance": 5,
+        "timeout": 60
+      },
+      "status": "PASS",
+      "reason": null,
+      "elapsedMs": 453.0,
+      "detail": {
+        "actor": "player_5812220258",
+        "to": [
+          -0.15,
+          5.242,
+          -39.03
+        ],
+        "state": {
+          "playersInGame": 1,
+          "actor": "player_5812220258",
+          "isRealPlayer": true,
+          "walkSpeed": 16,
+          "health": 100,
+          "velocity": [
+            0,
+            0,
+            0
+          ],
+          "userId": 5812220258,
+          "grounded": true,
+          "state": "Enum.HumanoidStateType.Running",
+          "player": "Agoravai18",
+          "name": "Agoravai18",
+          "position": [
+            -0.15,
+            5.242,
+            -39.03
+          ],
+          "floorMaterial": "Enum.Material.Slate",
+          "ref": "0_490521",
+          "maxHealth": 100,
+          "playerAttributes": {
+            "FloorIncomeMultiplier": 1,
+            "ObjectiveReveal": false,
+            "ActiveCard": "field_lantern",
+            "CardEffectStyle": "lantern",
+            "CardCount": 2,
+            "BuildCostMultiplier": 1,
+            "CardCollection": "field_lantern,tunnel_mole",
+            "PlotName": "PlotA",
+            "FloorMultiplier": 1,
+            "Currency": 900,
+            "OreYieldMultiplier": 1,
+            "CardRarity": "Common",
+            "FloorLevel": 1,
+            "CardEffect": "Reveals nearby ore nodes.",
+            "CardPower": 4,
+            "FloorName": "Groundworks"
+          }
+        },
+        "pathStatus": "Enum.PathStatus.Success",
+        "timedOut": false,
+        "waypointsReached": 2,
+        "remainingDistance": 0.785,
+        "approach": "+Z+2.5",
+        "success": true,
+        "from": [
+          -0.15,
+          5.242,
+          -39.03
+        ],
+        "target": [
+          0,
+          4.29,
+          -39.8
+        ],
+        "travelled": 0,
+        "waypointCount": 2,
+        "attempts": [
+          {
+            "status": "Enum.PathStatus.NoPath",
+            "approach": "centre"
+          },
+          {
+            "status": "Enum.PathStatus.Success",
+            "approach": "+Z+2.5"
+          }
+        ]
+      }
+    },
+    {
+      "index": 4,
+      "step": "expect_prompt_in_range",
+      "spec": {
+        "prompt": "PurchasePrompt",
+        "radius": 60,
+        "comment": "standing close enough is part of the test: a prompt a player cannot reach is a failure"
+      },
+      "status": "PASS",
+      "reason": null,
+      "elapsedMs": 47.0,
+      "detail": {
+        "matches": [
+          {
+            "enabled": true,
+            "path": "Workspace.Map.BasicPackStore.Counter.PurchasePrompt",
+            "inRange": true,
+            "actionText": "Buy mining pack",
+            "maxActivationDistance": 12,
+            "ref": "0_452575",
+            "distance": 5.41,
+            "objectText": "Basic Pack - $100"
+          }
+        ]
+      }
+    },
+    {
+      "index": 5,
+      "step": "interact",
+      "spec": {
+        "prompt": "game.Workspace.Map.BasicPackStore.Counter.PurchasePrompt"
+      },
+      "status": "PASS",
+      "reason": null,
+      "elapsedMs": 844.0,
+      "detail": {
+        "actionText": "Buy mining pack",
+        "distance": 5.41,
+        "maxActivationDistance": 12,
+        "triggeredFor": "Agoravai18",
+        "player": "Agoravai18",
+        "success": true,
+        "triggered": true,
+        "prompt": "Workspace.Map.BasicPackStore.Counter.PurchasePrompt",
+        "elapsedMsClient": 765.929999994114,
+        "holdSeconds": 0.25
+      }
+    },
+    {
+      "index": 6,
+      "step": "wait",
+      "spec": {
+        "seconds": 2
+      },
+      "status": "PASS",
+      "reason": null,
+      "elapsedMs": 2000.0,
+      "detail": {
+        "seconds": 2.0
+      }
+    },
+    {
+      "index": 7,
+      "step": "assert",
+      "spec": {
+        "delta": {
+          "Currency": "== -100",
+          "CardCount": "== 1"
+        },
+        "comment": "the purchase must cost currency and grant exactly one card"
+      },
+      "status": "FAIL",
+      "reason": "delta.Currency: expected == -100, actual 0.0; delta.CardCount: expected == 1, actual 0.0",
+      "elapsedMs": 62.0,
+      "detail": {
+        "attributes": {
+          "delta.Currency": {
+            "before": 900,
+            "after": 900,
+            "delta": 0.0
+          },
+          "delta.CardCount": {
+            "before": 2,
+            "after": 2,
+            "delta": 0.0
+          }
+        },
+        "failures": [
+          "delta.Currency: expected == -100, actual 0.0",
+          "delta.CardCount: expected == 1, actual 0.0"
+        ]
+      }
+    }
+  ]
+}

@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "neonrun",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-neonrun",
+      "productId": "neonrun",
+      "revision": "1.0.0",
+      "seed": 78820438,
+      "genre": "tycoon",
+      "templateId": "template-tycoon-v1",
+      "sourceRoot": "games/neonrun",
+      "artifactRoot": "artifacts/products/neonrun",
+      "productIntentRef": {
+        "productId": "neonrun",
+        "artifactId": "neonrun.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/neonrun/definition/product-intent.json",
+        "sha256": "5015f27201c4e6d94f4d5cfc14733bf6ef276d2fb3c94ee469388655f7b9a93e"
+      },
+      "referenceBundleRef": {
+        "productId": "neonrun",
+        "artifactId": "neonrun.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/neonrun/definition/reference-bundle.json",
+        "sha256": "050fe6a9d4d46220bf4a4ba99dc7729eda615327af920e1d888a3dac8b74365b"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a plot grid around a shared hub",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "economy, inventory, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/neonrun/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/neonrun/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/neonrun/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/neonrun/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "core-loop",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "neonrun",
+            "artifactId": "neonrun.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/neonrun/definition/release-quality.json",
+            "sha256": "aa968ff0b2026eab7f39cce2a664c92a6c07bbf46a5dcb7913a17c49f4a9a167"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "neonrun",
+          "artifactId": "neonrun.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/neonrun/production_plan"
+        },
+        {
+          "productId": "neonrun",
+          "artifactId": "neonrun.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/neonrun/source_bundle"
+        },
+        {
+          "productId": "neonrun",
+          "artifactId": "neonrun.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/neonrun/asset_manifest"
+        },
+        {
+          "productId": "neonrun",
+          "artifactId": "neonrun.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/neonrun/build_place"
+        },
+        {
+          "productId": "neonrun",
+          "artifactId": "neonrun.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/neonrun/integration_manifest"
+        },
+        {
+          "productId": "neonrun",
+          "artifactId": "neonrun.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/neonrun/measurement_run"
+        },
+        {
+          "productId": "neonrun",
+          "artifactId": "neonrun.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/neonrun/scenario_results"
+        },
+        {
+          "productId": "neonrun",
+          "artifactId": "neonrun.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/neonrun/capture_bundle"
+        },
+        {
+          "productId": "neonrun",
+          "artifactId": "neonrun.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/neonrun/quality_review"
+        },
+        {
+          "productId": "neonrun",
+          "artifactId": "neonrun.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/neonrun/repair_plan"
+        },
+        {
+          "productId": "neonrun",
+          "artifactId": "neonrun.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/neonrun/regression_run"
+        },
+        {
+          "productId": "neonrun",
+          "artifactId": "neonrun.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/neonrun/release_candidate"
+        }
+      ]
+    }
+  ]
+}

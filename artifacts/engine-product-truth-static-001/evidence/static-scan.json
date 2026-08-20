@@ -1,0 +1,200 @@
+{
+  "scriptsScanned": 28,
+  "scripts": [
+    "roblox/mvp/src/ReplicatedStorage/Shared/AssetCatalog.lua",
+    "roblox/mvp/src/ReplicatedStorage/Shared/CardArt.lua",
+    "roblox/mvp/src/ReplicatedStorage/Shared/CardCatalog.lua",
+    "roblox/mvp/src/ReplicatedStorage/Shared/FarmCatalog.lua",
+    "roblox/mvp/src/ReplicatedStorage/Shared/FloorCatalog.lua",
+    "roblox/mvp/src/ReplicatedStorage/Shared/Format.lua",
+    "roblox/mvp/src/ReplicatedStorage/Shared/GameConfig.lua",
+    "roblox/mvp/src/ReplicatedStorage/Shared/LuckCatalog.lua",
+    "roblox/mvp/src/ReplicatedStorage/Shared/PotionCatalog.lua",
+    "roblox/mvp/src/ReplicatedStorage/Shared/RebirthCatalog.lua",
+    "roblox/mvp/src/ReplicatedStorage/Shared/RewardCatalog.lua",
+    "roblox/mvp/src/ServerScriptService/ServerMain.server.lua",
+    "roblox/mvp/src/ServerScriptService/Services/BoostService.lua",
+    "roblox/mvp/src/ServerScriptService/Services/ConveyorService.lua",
+    "roblox/mvp/src/ServerScriptService/Services/FarmService.lua",
+    "roblox/mvp/src/ServerScriptService/Services/HeldCardService.lua",
+    "roblox/mvp/src/ServerScriptService/Services/MapService.lua",
+    "roblox/mvp/src/ServerScriptService/Services/PersistenceService.lua",
+    "roblox/mvp/src/ServerScriptService/Services/PlotService.lua",
+    "roblox/mvp/src/ServerScriptService/Services/ProgressionService.lua",
+    "roblox/mvp/src/ServerScriptService/Services/StoreService.lua",
+    "roblox/mvp/src/StarterPlayer/StarterPlayerScripts/FarmHud.client.lua",
+    "roblox/mvp/src/StarterPlayer/StarterPlayerScripts/Movement.client.lua",
+    "roblox/mvp/src/StarterPlayer/StarterPlayerScripts/Screens.client.lua",
+    "roblox/runtime/AgentBridge.server.lua",
+    "roblox/runtime/Probes/GeometryProbe.lua",
+    "roblox/runtime/Probes/ScenarioProbe.lua",
+    "roblox/runtime/QualityProbeRuntime.server.lua"
+  ],
+  "suspiciousScripts": [],
+  "assetManifestIssues": [],
+  "assetManifest": {
+    "manifestPath": "assets/asset-manifest.json",
+    "assetCount": 14,
+    "policy": {
+      "externalToolboxAssets": "blocked_until_review",
+      "requireScriptScan": true,
+      "requireAllocation": true,
+      "generatedRasterRuntime": "require-roblox-upload-before-live-use",
+      "maxWorkspaceInstances": 25000
+    }
+  },
+  "visualAssetIssues": [],
+  "visualAssets": {
+    "inspected": [
+      {
+        "key": "copper_lynx_prospector_v1",
+        "path": "assets/generated/cards/copper-lynx-prospector-v1.png",
+        "width": 1254,
+        "height": 1254,
+        "ratio": 1.0,
+        "mode": "RGB",
+        "bytes": 2167982
+      },
+      {
+        "key": "mossback_badger_engineer_v1",
+        "path": "assets/generated/cards/mossback-badger-engineer-v1.png",
+        "width": 1254,
+        "height": 1254,
+        "ratio": 1.0,
+        "mode": "RGB",
+        "bytes": 2263534
+      },
+      {
+        "key": "storm_raven_surveyor_v1",
+        "path": "assets/generated/cards/storm-raven-surveyor-v1.png",
+        "width": 1254,
+        "height": 1254,
+        "ratio": 1.0,
+        "mode": "RGB",
+        "bytes": 1954183
+      },
+      {
+        "key": "card_gallery_panel_v1",
+        "path": "assets/generated/ui/card-gallery-panel-v1.png",
+        "width": 1536,
+        "height": 1024,
+        "ratio": 1.5,
+        "mode": "RGB",
+        "bytes": 2535205
+      }
+    ],
+    "assetCount": 4
+  },
+  "visualSnapshotIssues": [],
+  "visualSnapshots": {
+    "manifestPath": "reports/visual-snapshots/manifest.json",
+    "captureType": "deterministic-source-preview",
+    "liveStudioCapture": false,
+    "inspected": [
+      {
+        "file": "00-map-overview.png",
+        "width": 1600,
+        "height": 900,
+        "bytes": 47757
+      },
+      {
+        "file": "01-spawn-plaza.png",
+        "width": 1600,
+        "height": 900,
+        "bytes": 41021
+      },
+      {
+        "file": "02-ridge-exchange.png",
+        "width": 1600,
+        "height": 900,
+        "bytes": 35317
+      },
+      {
+        "file": "03-old-lantern-mine.png",
+        "width": 1600,
+        "height": 900,
+        "bytes": 33137
+      },
+      {
+        "file": "04-ridge-lift.png",
+        "width": 1600,
+        "height": 900,
+        "bytes": 31309
+      },
+      {
+        "file": "05-plots-grid.png",
+        "width": 1600,
+        "height": 900,
+        "bytes": 36767
+      },
+      {
+        "file": "06-plot-a-detail.png",
+        "width": 1600,
+        "height": 900,
+        "bytes": 30993
+      },
+      {
+        "file": "07-floor-progression.png",
+        "width": 1600,
+        "height": 900,
+        "bytes": 77688
+      },
+      {
+        "file": "08-card-gallery.png",
+        "width": 1600,
+        "height": 900,
+        "bytes": 916339
+      },
+      {
+        "file": "09-mobile-ui.png",
+        "width": 1600,
+        "height": 900,
+        "bytes": 49243
+      }
+    ],
+    "snapshotCount": 10
+  },
+  "studioRuntime": {
+    "status": "PASS",
+    "studioDetected": true,
+    "processRunning": false,
+    "executablePath": "C:\\Users\\vitor\\AppData\\Local\\Roblox\\Versions\\version-b2d03e4efaa04174\\RobloxStudioBeta.exe",
+    "captureAdapter": "runtime-manifest",
+    "liveStudioCapture": true,
+    "runtime": {
+      "manifestPath": "reports/studio-runtime/manifest.json",
+      "liveStudioCapture": true,
+      "captureType": "studio-window-runtime",
+      "snapshots": [
+        {
+          "file": "studio-open.png",
+          "width": 1296,
+          "height": 930,
+          "bytes": 250224
+        },
+        {
+          "file": "studio-project-loaded.png",
+          "width": 1296,
+          "height": 930,
+          "bytes": 250224
+        },
+        {
+          "file": "spawn-runtime.png",
+          "width": 1296,
+          "height": 930,
+          "bytes": 655305
+        },
+        {
+          "file": "route-runtime.png",
+          "width": 1296,
+          "height": 930,
+          "bytes": 680645
+        }
+      ],
+      "issues": []
+    },
+    "issues": []
+  },
+  "missingPaths": [],
+  "serverPurchaseDistanceGuard": true
+}

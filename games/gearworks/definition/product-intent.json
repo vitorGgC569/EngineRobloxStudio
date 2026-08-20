@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "productId": "gearworks",
+  "pitch": "Simulador de fabrica: monte esteiras, processe materiais, otimize a producao, desbloqueie maquinas melhores.",
+  "topology": "grid-plots",
+  "progression": "tiered-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/gearworks/tokens/gearworks-grove.json",
+  "coreLoop": [
+    "collect",
+    "process",
+    "upgrade",
+    "sell",
+    "unlock"
+  ]
+}

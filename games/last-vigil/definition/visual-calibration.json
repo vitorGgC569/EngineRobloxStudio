@@ -1,0 +1,20 @@
+{
+  "$schema": "../schemas/visual-calibration-receipt.v1.schema.json",
+  "schemaVersion": 1,
+  "calibrationId": "last-vigil.visual-calibration",
+  "revision": 1,
+  "productId": "last-vigil",
+  "status": "BLOCKED",
+  "benchmark": {
+    "benchmarkId": "last-vigil.reference-benchmark",
+    "sha256": "ca8efd4c497a35a501a39aee62511aecee62fb7b29c6dfeffe5353d8e4addacc"
+  },
+  "methodology": {
+    "calibratedAt": null,
+    "calibratedBy": null,
+    "freezeBeforeCandidateEvaluation": true,
+    "candidateInputsUsed": false,
+    "method": "PENDING_INDEPENDENT_REFERENCE_MEASUREMENT"
+  },
+  "thresholds": []
+}

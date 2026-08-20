@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "stormcaller",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-stormcaller",
+      "productId": "stormcaller",
+      "revision": "1.0.0",
+      "seed": 96888443,
+      "genre": "tycoon",
+      "templateId": "template-tycoon-v1",
+      "sourceRoot": "games/stormcaller",
+      "artifactRoot": "artifacts/products/stormcaller",
+      "productIntentRef": {
+        "productId": "stormcaller",
+        "artifactId": "stormcaller.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/stormcaller/definition/product-intent.json",
+        "sha256": "4b29e181f21faa79d971b06861bf6408e474a71463da026c826dc4b6fae0605b"
+      },
+      "referenceBundleRef": {
+        "productId": "stormcaller",
+        "artifactId": "stormcaller.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/stormcaller/definition/reference-bundle.json",
+        "sha256": "0c4f436cfebfbdf06782305707001ec77d474c2d7ba827ebaab6967cf6f9ff47"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a plot grid around a shared hub",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "economy, inventory, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/stormcaller/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/stormcaller/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/stormcaller/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/stormcaller/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "core-loop",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "stormcaller",
+            "artifactId": "stormcaller.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/stormcaller/definition/release-quality.json",
+            "sha256": "dc3096c0fb9356b9cdaa0c02859453e61e177adae9db616caae5d3baeb66e057"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "stormcaller",
+          "artifactId": "stormcaller.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/stormcaller/production_plan"
+        },
+        {
+          "productId": "stormcaller",
+          "artifactId": "stormcaller.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/stormcaller/source_bundle"
+        },
+        {
+          "productId": "stormcaller",
+          "artifactId": "stormcaller.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/stormcaller/asset_manifest"
+        },
+        {
+          "productId": "stormcaller",
+          "artifactId": "stormcaller.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/stormcaller/build_place"
+        },
+        {
+          "productId": "stormcaller",
+          "artifactId": "stormcaller.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/stormcaller/integration_manifest"
+        },
+        {
+          "productId": "stormcaller",
+          "artifactId": "stormcaller.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/stormcaller/measurement_run"
+        },
+        {
+          "productId": "stormcaller",
+          "artifactId": "stormcaller.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/stormcaller/scenario_results"
+        },
+        {
+          "productId": "stormcaller",
+          "artifactId": "stormcaller.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/stormcaller/capture_bundle"
+        },
+        {
+          "productId": "stormcaller",
+          "artifactId": "stormcaller.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/stormcaller/quality_review"
+        },
+        {
+          "productId": "stormcaller",
+          "artifactId": "stormcaller.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/stormcaller/repair_plan"
+        },
+        {
+          "productId": "stormcaller",
+          "artifactId": "stormcaller.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/stormcaller/regression_run"
+        },
+        {
+          "productId": "stormcaller",
+          "artifactId": "stormcaller.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/stormcaller/release_candidate"
+        }
+      ]
+    }
+  ]
+}

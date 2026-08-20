@@ -1,0 +1,1529 @@
+{
+  "$schema": "../schemas/production-capability-catalog.v1.schema.json",
+  "schemaVersion": 1,
+  "catalogId": "rqe.roblox-production-capabilities.v1",
+  "commandManifest": {
+    "path": "schemas/bridge-commands.v1.json",
+    "schemaVersion": 1,
+    "protocol": "rqe.bridge/1",
+    "sha256": "4810e295caa1ec619ec15c686d592e4a607910a27ff70df0c5fb69b9306c5811"
+  },
+  "phases": [
+    {
+      "id": "project",
+      "title": "Project definition",
+      "description": "Load declarative product inputs and plan agent-owned production work."
+    },
+    {
+      "id": "studio",
+      "title": "Studio control",
+      "description": "Own Roblox Studio process, session, place and bridge lifecycle."
+    },
+    {
+      "id": "build",
+      "title": "Build",
+      "description": "Compile a hash-bound place from source through a reproducible build adapter."
+    },
+    {
+      "id": "edit",
+      "title": "Edit mode",
+      "description": "Inspect and intentionally mutate the edit-time DataModel."
+    },
+    {
+      "id": "runtime",
+      "title": "Runtime",
+      "description": "Start, observe and stop a real running DataModel."
+    },
+    {
+      "id": "player",
+      "title": "Player actor",
+      "description": "Exercise navigation and interaction through synthetic and player-equivalent actors."
+    },
+    {
+      "id": "client",
+      "title": "Client",
+      "description": "Observe client-only UI and logs and invoke supported client interaction seams."
+    },
+    {
+      "id": "capture",
+      "title": "Capture",
+      "description": "Control viewpoints and collect identity-bound visual evidence."
+    },
+    {
+      "id": "assets",
+      "title": "Assets",
+      "description": "Discover, create, validate and integrate production assets with provenance."
+    },
+    {
+      "id": "publish",
+      "title": "Publication",
+      "description": "Publish approved assets and deploy an exact experience build through authenticated Roblox services."
+    },
+    {
+      "id": "multiplayer",
+      "title": "Multiplayer",
+      "description": "Validate simultaneous clients, servers, isolation and replication."
+    },
+    {
+      "id": "persistence",
+      "title": "Persistence",
+      "description": "Validate save, rejoin, migration, retry and failure semantics against real services."
+    },
+    {
+      "id": "monetization",
+      "title": "Monetization",
+      "description": "Provision products and validate secure purchase and receipt flows."
+    },
+    {
+      "id": "release",
+      "title": "Release",
+      "description": "Assemble immutable evidence and decide a single fail-closed release candidate."
+    }
+  ],
+  "capabilities": [
+    {
+      "id": "project.definition.load",
+      "phase": "project",
+      "title": "Declarative project loading",
+      "description": "Loads project, contract and visual policy through repository-owned validators.",
+      "status": "AVAILABLE",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [],
+      "adapters": [
+        {
+          "symbol": "rqe.project:Project",
+          "role": "project input loader",
+          "required": true
+        },
+        {
+          "symbol": "rqe.contract:validate_contract",
+          "role": "release contract validator",
+          "required": true
+        },
+        {
+          "symbol": "rqe.visual_spec:load_visual_spec",
+          "role": "visual policy compiler",
+          "required": true
+        }
+      ],
+      "risks": [
+        "Individually valid inputs can still describe different product identities unless an alignment proof is required."
+      ],
+      "gaps": [],
+      "limitations": []
+    },
+    {
+      "id": "project.fixture.headless-runtime",
+      "phase": "project",
+      "title": "Headless fixture adapter",
+      "description": "Inventories the legacy fixture-backed adapter so it cannot be confused with a production measurement surface.",
+      "status": "UNSUPPORTED",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [],
+      "adapters": [
+        {
+          "symbol": "rqe.bridge.adapters:HeadlessGameAdapter",
+          "role": "diagnostic fixture simulator",
+          "required": false
+        }
+      ],
+      "risks": [
+        "Fixture values can describe intended behavior while the real Workspace is empty or broken."
+      ],
+      "gaps": [
+        "A fixture adapter cannot satisfy any production measurement or release requirement."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "project.identity.bind",
+      "phase": "project",
+      "title": "Build and runtime product identity binding",
+      "description": "Stamps product intent and artifact hashes into the candidate and measures them back from the exact Studio DataModel before product-truth evaluation.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "product.identity",
+          "required": true
+        }
+      ],
+      "adapters": [
+        {
+          "symbol": "rqe.product_stamp:load_product_identity_stamp",
+          "role": "build-time identity stamp compiler",
+          "required": true
+        },
+        {
+          "symbol": "rqe.product_truth:assess_product_truth",
+          "role": "cross-product and calibration trust boundary",
+          "required": true
+        }
+      ],
+      "risks": [
+        "A caller-supplied expected product must never be echoed as runtime evidence; Studio reads only the build stamp."
+      ],
+      "gaps": [
+        "Install/restart the plugin and execute a complete stamped release attempt against a live exact-build Studio session."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "project.agent.orchestration",
+      "phase": "project",
+      "title": "Agent production orchestration",
+      "description": "Provides state-machine, DAG, ownership and impact-selection primitives for agent work.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [],
+      "adapters": [
+        {
+          "symbol": "rqe.orchestrator.models:CampaignStateMachine",
+          "role": "production state transitions",
+          "required": true
+        },
+        {
+          "symbol": "rqe.orchestrator.dag:TaskGraph",
+          "role": "dependency scheduling",
+          "required": true
+        },
+        {
+          "symbol": "rqe.orchestrator.ownership:OwnershipRegistry",
+          "role": "subsystem write ownership",
+          "required": true
+        },
+        {
+          "symbol": "rqe.orchestrator.impact:ImpactSelector",
+          "role": "minimal regression selection",
+          "required": true
+        }
+      ],
+      "risks": [
+        "Primitive correctness does not imply that an external agent runner respects locks or transitions."
+      ],
+      "gaps": [
+        "A production runner must bind agent dispatch, retries, budgets and artifacts to the state machine."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "studio.lifecycle.manage",
+      "phase": "studio",
+      "title": "Studio and bridge lifecycle",
+      "description": "Starts, restarts, handshakes with and identifies a Studio session and place.",
+      "status": "PARTIAL",
+      "validationLevel": "RUNTIME_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "bridge.ping",
+          "required": true
+        },
+        {
+          "method": "bridge.capabilities",
+          "required": true
+        },
+        {
+          "method": "studio.info",
+          "required": true
+        }
+      ],
+      "adapters": [
+        {
+          "symbol": "rqe.hub.lifecycle:restart_for_bridge",
+          "role": "managed Studio restart",
+          "required": true
+        },
+        {
+          "symbol": "rqe.hub.server:BridgeHub",
+          "role": "session and command hub",
+          "required": true
+        },
+        {
+          "symbol": "rqe.hub.client:StudioBridge",
+          "role": "typed control-plane client",
+          "required": true
+        }
+      ],
+      "risks": [
+        "A killed Studio can leave an apparently live long-poll session until it is explicitly retired."
+      ],
+      "gaps": [
+        "Safe concurrent ownership of multiple Studio processes by PID, HWND, place, build and agent is not end-to-end validated."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "studio.mcp.gateway",
+      "phase": "studio",
+      "title": "Generic Studio MCP gateway adapter",
+      "description": "Inventories the transport-injected Studio game adapter and its generic MCP-style operations.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [],
+      "adapters": [
+        {
+          "symbol": "rqe.bridge.adapters:StudioGameAdapter",
+          "role": "generic Studio MCP transport adapter",
+          "required": true
+        }
+      ],
+      "risks": [
+        "Unversioned gateway method names can drift independently from the typed Studio Bridge command surface."
+      ],
+      "gaps": [
+        "Every MCP operation needs a versioned schema, explicit session/build/player selectors and a verified mapping to the typed bridge."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "build.rojo.package",
+      "phase": "build",
+      "title": "Hash-bound Rojo place build",
+      "description": "Builds a place and records input and output provenance for an immutable candidate.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [],
+      "adapters": [
+        {
+          "symbol": "rqe.release:_build_place",
+          "role": "Rojo subprocess build",
+          "required": true
+        },
+        {
+          "symbol": "rqe.provenance:collect_build_provenance",
+          "role": "build identity hashing",
+          "required": true
+        }
+      ],
+      "risks": [
+        "An external Rojo binary or project change during compilation can make a candidate inconclusive."
+      ],
+      "gaps": [
+        "A reusable build adapter with tool-version pinning, caching and isolated concurrent workers is missing."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "edit.datamodel.inspect",
+      "phase": "edit",
+      "title": "Edit-time DataModel inspection",
+      "description": "Reads hierarchy, properties and indexed objects from the actual edit-time DataModel.",
+      "status": "AVAILABLE",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "dm.tree",
+          "required": true
+        },
+        {
+          "method": "dm.properties",
+          "required": true
+        },
+        {
+          "method": "dm.find",
+          "required": true
+        },
+        {
+          "method": "dm.inspect",
+          "required": true
+        },
+        {
+          "method": "watch.start",
+          "required": true
+        },
+        {
+          "method": "watch.read",
+          "required": true
+        },
+        {
+          "method": "watch.stop",
+          "required": true
+        },
+        {
+          "method": "test.run",
+          "required": true
+        }
+      ],
+      "adapters": [
+        {
+          "symbol": "rqe.hub.client:StudioBridge",
+          "role": "typed edit-mode reads",
+          "required": true
+        }
+      ],
+      "risks": [
+        "GetFullName paths are not unique when siblings share names."
+      ],
+      "gaps": [],
+      "limitations": [
+        "A watch is bounded at 500 changes, so a value that ticks every frame loses its earliest history."
+      ]
+    },
+    {
+      "id": "edit.datamodel.mutate",
+      "phase": "edit",
+      "title": "Edit-time mutation and client bridge installation",
+      "description": "Executes edit-only Luau and installs or removes the typed client bridge.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "bridge.exec",
+          "required": true
+        },
+        {
+          "method": "bridge.install_client",
+          "required": true
+        },
+        {
+          "method": "bridge.remove_client",
+          "required": true
+        }
+      ],
+      "adapters": [
+        {
+          "symbol": "rqe.hub.client:StudioBridge",
+          "role": "leased edit-mode mutation",
+          "required": true
+        }
+      ],
+      "risks": [
+        "Arbitrary edit execution can bypass reusable APIs and contaminate source-of-truth state."
+      ],
+      "gaps": [
+        "Mutation fencing and idempotency are not enforced inside the plugin executor for every operation."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "runtime.lifecycle.measure",
+      "phase": "runtime",
+      "title": "Runtime lifecycle and output measurement",
+      "description": "Starts and stops Run mode and samples state and server output from one pinned session.",
+      "status": "AVAILABLE",
+      "validationLevel": "RUNTIME_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "run.start",
+          "required": true
+        },
+        {
+          "method": "run.state",
+          "required": true
+        },
+        {
+          "method": "run.stop",
+          "required": true
+        },
+        {
+          "method": "log.tail",
+          "required": true
+        }
+      ],
+      "adapters": [
+        {
+          "symbol": "rqe.observe:measure_place",
+          "role": "runtime observation coordinator",
+          "required": true
+        }
+      ],
+      "risks": [
+        "Run mode does not revert generated instances and a second pass can measure a duplicated world."
+      ],
+      "gaps": [],
+      "limitations": []
+    },
+    {
+      "id": "runtime.world.measure",
+      "phase": "runtime",
+      "title": "World geometry and navigation measurement",
+      "description": "Measures bounds, support, overlap, pathfinding, raycasts and world summaries in Studio.",
+      "status": "AVAILABLE",
+      "validationLevel": "RUNTIME_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "world.bounds",
+          "required": true
+        },
+        {
+          "method": "world.ground_support",
+          "required": true
+        },
+        {
+          "method": "world.overlaps",
+          "required": true
+        },
+        {
+          "method": "world.path",
+          "required": true
+        },
+        {
+          "method": "world.raycast",
+          "required": true
+        },
+        {
+          "method": "world.summary",
+          "required": true
+        }
+      ],
+      "adapters": [
+        {
+          "symbol": "rqe.observe:measure_place",
+          "role": "world measurement coordinator",
+          "required": true
+        }
+      ],
+      "risks": [
+        "A failed navmesh control probe makes a NoPath result inconclusive rather than a level defect."
+      ],
+      "gaps": [],
+      "limitations": []
+    },
+    {
+      "id": "runtime.visual-quality.snapshot",
+      "phase": "runtime",
+      "title": "Policy-free visual quality snapshot",
+      "description": "Measures classification coverage, oriented bounds, area-weighted surfaces and landmark visibility from playable region samples in Studio.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "quality.snapshot",
+          "required": true
+        }
+      ],
+      "adapters": [
+        {
+          "symbol": "rqe.quality_snapshot:measure_quality_snapshot",
+          "role": "pinned runtime snapshot coordinator",
+          "required": true
+        },
+        {
+          "symbol": "rqe.quality:evaluate_quality_snapshot",
+          "role": "deterministic policy evaluator",
+          "required": true
+        }
+      ],
+      "risks": [
+        "Self-declared classification can hide untagged geometry unless eligibility is derived independently from the Workspace; ray budgets must fail as truncated rather than silently reducing coverage."
+      ],
+      "gaps": [
+        "Install and restart the plugin, then measure a pinned exact-build runtime session to promote this capability beyond static validation."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "player.actor.synthetic",
+      "phase": "player",
+      "title": "Synthetic runtime actor",
+      "description": "Spawns and controls deterministic rigs for navigation, touch and prompt discovery.",
+      "status": "AVAILABLE",
+      "validationLevel": "RUNTIME_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "actor.spawn",
+          "required": true
+        },
+        {
+          "method": "actor.despawn",
+          "required": true
+        },
+        {
+          "method": "actor.list",
+          "required": true
+        },
+        {
+          "method": "actor.state",
+          "required": true
+        },
+        {
+          "method": "actor.walk_to",
+          "required": true
+        },
+        {
+          "method": "actor.navigate_to",
+          "required": true
+        },
+        {
+          "method": "actor.jump",
+          "required": true
+        },
+        {
+          "method": "actor.touch",
+          "required": true
+        },
+        {
+          "method": "actor.prompts",
+          "required": true
+        }
+      ],
+      "adapters": [
+        {
+          "symbol": "rqe.scenario:ScenarioRunner",
+          "role": "typed scenario execution",
+          "required": true
+        }
+      ],
+      "risks": [
+        "A synthetic rig is not a Player and cannot prove client-only or Player-authorized behavior."
+      ],
+      "gaps": [],
+      "limitations": []
+    },
+    {
+      "id": "player.actor.real",
+      "phase": "player",
+      "title": "Real-player attachment and interaction",
+      "description": "Attaches the actor to a Play Solo player and drives prompt interaction through the client.",
+      "status": "PARTIAL",
+      "validationLevel": "E2E_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "run.players",
+          "required": true
+        },
+        {
+          "method": "actor.attach",
+          "required": true
+        },
+        {
+          "method": "actor.interact",
+          "required": true
+        }
+      ],
+      "adapters": [
+        {
+          "symbol": "rqe.hub.lifecycle:start_play_solo",
+          "role": "real-player Play Solo launch",
+          "required": true
+        },
+        {
+          "symbol": "rqe.scenario:ScenarioRunner",
+          "role": "player scenario execution",
+          "required": true
+        }
+      ],
+      "risks": [
+        "A foreground F5 can land in the wrong application unless HWND focus is proven immediately before input."
+      ],
+      "gaps": [
+        "Unattended, multi-player-equivalent client allocation is not available."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "client.observe",
+      "phase": "client",
+      "title": "Client UI, state, image and log observation",
+      "description": "Reads the selected player's client-only UI, state, image loading and output.",
+      "status": "AVAILABLE",
+      "validationLevel": "RUNTIME_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "client.info",
+          "required": true
+        },
+        {
+          "method": "client.gui_tree",
+          "required": true
+        },
+        {
+          "method": "client.gui_locate",
+          "required": true
+        },
+        {
+          "method": "client.player_state",
+          "required": true
+        },
+        {
+          "method": "client.logs",
+          "required": true
+        },
+        {
+          "method": "client.probe_images",
+          "required": true
+        }
+      ],
+      "adapters": [
+        {
+          "symbol": "rqe.hub.client:StudioBridge",
+          "role": "player-targeted client reads",
+          "required": true
+        }
+      ],
+      "risks": [
+        "Server logs cannot reveal a LocalScript failure and image assignment does not prove that moderated content rendered."
+      ],
+      "gaps": [],
+      "limitations": []
+    },
+    {
+      "id": "client.actions.supported",
+      "phase": "client",
+      "title": "Supported client action seams",
+      "description": "Triggers prompts and invokes explicit remotes or bindables exposed for testable client behavior.",
+      "status": "PARTIAL",
+      "validationLevel": "E2E_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "client.prompt_trigger",
+          "required": true
+        },
+        {
+          "method": "client.invoke_bindable",
+          "required": true
+        },
+        {
+          "method": "client.fire_remote",
+          "required": true
+        },
+        {
+          "method": "client.ensure_channel",
+          "required": true
+        }
+      ],
+      "adapters": [
+        {
+          "symbol": "rqe.hub.client:StudioBridge",
+          "role": "player-targeted client mutations",
+          "required": true
+        }
+      ],
+      "risks": [
+        "Direct remote invocation can become a white-box shortcut if used before a black-box human-mode failure."
+      ],
+      "gaps": [
+        "There is no generic player-equivalent pointer or touch UI input adapter."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "client.gui.click",
+      "phase": "client",
+      "title": "Synthetic GUI clicking",
+      "description": "Represents the known engine boundary for direct synthetic GUI clicks.",
+      "status": "UNSUPPORTED",
+      "validationLevel": "NOT_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "client.gui_click",
+          "required": false
+        }
+      ],
+      "adapters": [],
+      "risks": [
+        "Pretending a click happened would produce false E2E evidence."
+      ],
+      "gaps": [
+        "Games must expose the same server-authoritative action seam used by the button; direct clicking is unavailable."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "capture.camera.control",
+      "phase": "capture",
+      "title": "Deterministic camera control",
+      "description": "Sets, focuses and reads camera pose through the pinned Studio session. The camera.* commands run in the plugin, which lives in the edit DataModel; during Play the viewport renders a different camera, so client.camera_set relays to the running client. Without it a capture during play comes back from wherever the player camera happened to be, and reports applied.",
+      "status": "AVAILABLE",
+      "validationLevel": "RUNTIME_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "camera.set",
+          "required": true
+        },
+        {
+          "method": "camera.focus",
+          "required": true
+        },
+        {
+          "method": "camera.get",
+          "required": true
+        },
+        {
+          "method": "client.camera_set",
+          "required": true
+        },
+        {
+          "method": "client.camera_release",
+          "required": true
+        }
+      ],
+      "adapters": [
+        {
+          "symbol": "rqe.hub.client:StudioBridge",
+          "role": "typed camera commands",
+          "required": true
+        }
+      ],
+      "risks": [
+        "A camera command can target a different session if reads are not pinned."
+      ],
+      "gaps": [],
+      "limitations": []
+    },
+    {
+      "id": "capture.viewport.evidence",
+      "phase": "capture",
+      "title": "Identity-bound viewport capture",
+      "description": "Captures deterministic viewpoints with PID, HWND, session, place, build, spec and foreground checks.",
+      "status": "PARTIAL",
+      "validationLevel": "VISUALLY_VALIDATED",
+      "bridgeCommands": [],
+      "adapters": [
+        {
+          "symbol": "rqe.capture:capture_set",
+          "role": "capture manifest producer",
+          "required": true
+        },
+        {
+          "symbol": "rqe.capture:Win32CaptureBackend",
+          "role": "exact Studio window capture",
+          "required": true
+        }
+      ],
+      "risks": [
+        "Desktop-region capture records any overlapping foreground window unless identity and focus are checked around every frame."
+      ],
+      "gaps": [
+        "Device emulation, deterministic resolution matrix and release-run capture integration are incomplete."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "capture.visual.review",
+      "phase": "capture",
+      "title": "Hash-bound provider visual review",
+      "description": "Reviews trustworthy captured viewpoints through a strict provider-neutral rubric contract and derives scores outside the model.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [],
+      "adapters": [
+        {
+          "symbol": "rqe.visual_review:review_captures",
+          "role": "provider-neutral lineage, rubric and citation validator",
+          "required": true
+        },
+        {
+          "symbol": "rqe.openai_vision:OpenAIResponsesVisionProvider",
+          "role": "optional OpenAI Responses image and Structured Outputs adapter",
+          "required": true
+        },
+        {
+          "symbol": "rqe.visual_cli:run_visual_command",
+          "role": "explicit immutable visual review CLI",
+          "required": true
+        }
+      ],
+      "risks": [
+        "A vision model can misjudge severity or visible detail; model findings remain advisory until deterministic evidence corroborates them."
+      ],
+      "gaps": [
+        "Run a credentialed, representative and calibrated capture review before raising this capability above STATICALLY_VALIDATED/PARTIAL."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "assets.discovery.preview",
+      "phase": "assets",
+      "title": "Asset discovery and previews",
+      "description": "Searches local or Roblox catalogs and returns metadata, provenance and preview records.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [],
+      "adapters": [
+        {
+          "symbol": "rqe.assets.catalog:AssetCatalog",
+          "role": "provider-neutral asset catalog",
+          "required": true
+        },
+        {
+          "symbol": "rqe.assets.providers.roblox:RobloxOpenCloudProvider",
+          "role": "Roblox search and thumbnail adapter",
+          "required": true
+        }
+      ],
+      "risks": [
+        "Remote metadata can omit licensing facts or change after selection."
+      ],
+      "gaps": [
+        "A live, cached, ranked search run with complete licensing receipts is still required."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "assets.create.validate",
+      "phase": "assets",
+      "title": "Local asset creation and validation",
+      "description": "Creates content-addressed drafts and validates mesh, audio, animation and icon payloads.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [],
+      "adapters": [
+        {
+          "symbol": "rqe.assets.drafts:create_local_draft",
+          "role": "content-addressed draft creation",
+          "required": true
+        },
+        {
+          "symbol": "rqe.assets.validation:LocalAssetValidator",
+          "role": "kind-specific local validation",
+          "required": true
+        }
+      ],
+      "risks": [
+        "Syntactically valid files can still be aesthetically poor, unrigged or too expensive at runtime."
+      ],
+      "gaps": [
+        "Professional generation and optimization adapters for every required asset kind are not connected."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "assets.integrate",
+      "phase": "assets",
+      "title": "Published asset integration",
+      "description": "Builds deterministic bindings from approved asset identities to declarative game targets.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [],
+      "adapters": [
+        {
+          "symbol": "rqe.assets.integration:build_integration_bundle",
+          "role": "approved asset binding compiler",
+          "required": true
+        },
+        {
+          "symbol": "rqe.assets.manifest:AssetManifestValidator",
+          "role": "asset provenance and state validation",
+          "required": true
+        }
+      ],
+      "risks": [
+        "An approved asset ID can be bound to the wrong semantic target without runtime visual and audio proof."
+      ],
+      "gaps": [
+        "Automatic source integration followed by Studio load and regression validation is missing."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "publish.roblox.assets",
+      "phase": "publish",
+      "title": "Idempotent Roblox asset publication",
+      "description": "Stages immutable payloads, issues at-most-one upload per package and polls moderation state.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [],
+      "adapters": [
+        {
+          "symbol": "rqe.assets.publication:PublicationCoordinator",
+          "role": "idempotent publication coordinator",
+          "required": true
+        },
+        {
+          "symbol": "rqe.assets.publication:PublicationLedger",
+          "role": "content-addressed publication receipts",
+          "required": true
+        },
+        {
+          "symbol": "rqe.assets.providers.roblox:RobloxOpenCloudProvider",
+          "role": "Roblox upload and moderation adapter",
+          "required": true
+        }
+      ],
+      "risks": [
+        "Credentials, creator permissions and moderation are external state and must never be inferred from a staged package."
+      ],
+      "gaps": [
+        "A credentialed live upload, moderation and integration cycle has not been validated."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "publish.experience.deploy",
+      "phase": "publish",
+      "title": "Experience deployment",
+      "description": "Publishes the exact approved place build, records its Roblox version identity and supports controlled rollout or rollback.",
+      "status": "GAP",
+      "validationLevel": "NOT_VALIDATED",
+      "bridgeCommands": [],
+      "adapters": [],
+      "risks": [
+        "A local release candidate is not proof that the same bytes reached the intended Roblox universe and place."
+      ],
+      "gaps": [
+        "Open Cloud place publication, universe/place targeting, rollout verification and rollback receipts are missing."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "multiplayer.live.scenarios",
+      "phase": "multiplayer",
+      "title": "Live multiplayer scenarios",
+      "description": "Validates concurrent clients, replication, ownership, isolation and server transitions.",
+      "status": "GAP",
+      "validationLevel": "NOT_VALIDATED",
+      "bridgeCommands": [],
+      "adapters": [],
+      "risks": [
+        "Single-player success cannot reveal cross-player state leaks, replication races or server authority defects."
+      ],
+      "gaps": [
+        "Multi-client and multi-server allocation, synchronization, assertions and teardown are missing."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "persistence.live.lifecycle",
+      "phase": "persistence",
+      "title": "Live persistence lifecycle",
+      "description": "Validates save, failure, retry, migration and rejoin against authoritative persistence services.",
+      "status": "GAP",
+      "validationLevel": "NOT_VALIDATED",
+      "bridgeCommands": [],
+      "adapters": [],
+      "risks": [
+        "Fixture-backed state can mask lost writes, duplicate grants, migration failures and rejoin defects."
+      ],
+      "gaps": [
+        "DataStore test environments, fault injection, rejoin orchestration and immutable save receipts are missing."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "monetization.secure.purchase",
+      "phase": "monetization",
+      "title": "Secure monetization lifecycle",
+      "description": "Provisions products and validates purchase prompts, receipts, idempotency and grants.",
+      "status": "GAP",
+      "validationLevel": "NOT_VALIDATED",
+      "bridgeCommands": [],
+      "adapters": [],
+      "risks": [
+        "A client-visible price or simulated grant is not proof of a valid Roblox receipt."
+      ],
+      "gaps": [
+        "Product provisioning, sandbox purchase, receipt replay and grant reconciliation adapters are missing."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "release.immutable.candidate",
+      "phase": "release",
+      "title": "Immutable fail-closed release candidate",
+      "description": "Builds one candidate, binds evidence to its run and build, and finalizes an immutable decision artifact.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [],
+      "adapters": [
+        {
+          "symbol": "rqe.release:execute_release",
+          "role": "single release entrypoint",
+          "required": true
+        },
+        {
+          "symbol": "rqe.run_artifacts:RunArtifacts",
+          "role": "immutable run artifact store",
+          "required": true
+        }
+      ],
+      "risks": [
+        "A structurally sound gate remains incomplete when required producers are absent or not integrated."
+      ],
+      "gaps": [
+        "Product alignment needs live validation; capture, visual review, asset approval, persistence, multiplayer and monetization must all be integrated before industrial release."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "assets.author.publish",
+      "phase": "assets",
+      "title": "Author an image in-engine and publish it as a real asset",
+      "description": "Generates a token-derived raster, writes it into an EditableImage inside Studio and publishes it through AssetService:CreateAssetAsync, returning a persistent asset id with content provenance.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "assets.capabilities",
+          "required": true
+        },
+        {
+          "method": "assets.create_image",
+          "required": true
+        }
+      ],
+      "adapters": [
+        {
+          "symbol": "rqe.assets.image_authoring:rarity_card",
+          "role": "deterministic token-derived raster generation",
+          "required": true
+        },
+        {
+          "symbol": "rqe.assets.preflight:evaluate",
+          "role": "human-gate preflight over live Studio capabilities",
+          "required": true
+        }
+      ],
+      "risks": [
+        "Publishing is irreversible from this side: the asset exists on Roblox and enters moderation.",
+        "Moderation latency is unbounded, so a published id is not an approved id."
+      ],
+      "gaps": [
+        "No live publish has been executed: the account gates and an Open Cloud key are still required, so the loop is STATICALLY_VALIDATED rather than RUNTIME_VALIDATED."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "edit.datamodel.primitives",
+      "phase": "edit",
+      "title": "Typed DataModel mutation primitives",
+      "description": "Create, update, delete, clone and inspect instances through declared, schema-validated commands, so building a world never requires arbitrary Luau execution.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "instance.create",
+          "required": true
+        },
+        {
+          "method": "instance.update",
+          "required": true
+        },
+        {
+          "method": "instance.delete",
+          "required": true
+        },
+        {
+          "method": "instance.clone",
+          "required": true
+        },
+        {
+          "method": "instance.children",
+          "required": true
+        },
+        {
+          "method": "instance.descendants",
+          "required": true
+        },
+        {
+          "method": "instance.tags",
+          "required": true
+        },
+        {
+          "method": "instance.attributes",
+          "required": true
+        }
+      ],
+      "adapters": [],
+      "risks": [
+        "Mutations are at-most-once: a timeout leaves the caller unable to distinguish applied from not applied without re-reading."
+      ],
+      "gaps": [
+        "No live Studio run has exercised these commands; they remain STATICALLY_VALIDATED until measured against a real DataModel."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "runtime.telemetry.measure",
+      "phase": "runtime",
+      "title": "Runtime telemetry: frame timing, memory, physics, network, logs",
+      "description": "Samples frame and physics timing over a real window and reports distributions rather than instantaneous counters, plus memory by category, replication traffic, and the log split by severity.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "runtime.metrics",
+          "required": true
+        },
+        {
+          "method": "runtime.memory",
+          "required": true
+        },
+        {
+          "method": "runtime.physics",
+          "required": true
+        },
+        {
+          "method": "runtime.network",
+          "required": true
+        },
+        {
+          "method": "runtime.errors",
+          "required": true
+        },
+        {
+          "method": "runtime.warnings",
+          "required": true
+        },
+        {
+          "method": "runtime.events",
+          "required": true
+        }
+      ],
+      "adapters": [],
+      "risks": [
+        "Sampling holds a command thread open for the requested window."
+      ],
+      "gaps": [
+        "No live sampling run has been measured against a running place."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "runtime.world.primitives",
+      "phase": "runtime",
+      "title": "Region queries, spawn points, navmesh probe and terrain voxels",
+      "description": "Bounded spatial queries, arrival-point inventory, a navmesh control probe that separates an unreachable destination from broken pathfinding, and voxel terrain read/write.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "world.region",
+          "required": true
+        },
+        {
+          "method": "world.spawn_points",
+          "required": true
+        },
+        {
+          "method": "world.navigation",
+          "required": true
+        },
+        {
+          "method": "world.terrain",
+          "required": true
+        }
+      ],
+      "adapters": [],
+      "risks": [
+        "world.terrain writes are destructive and snap to the 4-stud voxel grid."
+      ],
+      "gaps": [
+        "Not yet exercised against a live place."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "player.drive.complete",
+      "phase": "player",
+      "title": "Teleport, equip, activate and inventory",
+      "description": "Completes the family that lets an agent play the product rather than only walk through it.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "actor.teleport",
+          "required": true
+        },
+        {
+          "method": "actor.equip",
+          "required": true
+        },
+        {
+          "method": "actor.activate",
+          "required": true
+        },
+        {
+          "method": "actor.inventory",
+          "required": true
+        }
+      ],
+      "adapters": [],
+      "risks": [
+        "actor.activate fires the game's own handler; twice is two uses, so it is at-most-once.",
+        "Teleporting deliberately skips the navigability proof that walking provides."
+      ],
+      "gaps": [
+        "Not yet exercised against a live place."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "assets.geometry.author",
+      "phase": "assets",
+      "title": "Headless mesh authoring through Blender",
+      "description": "Executes a validated modelling program in headless Blender and returns an asset package: mesh, five preview renders, topology analysis and a Roblox-rules verdict.",
+      "status": "PARTIAL",
+      "validationLevel": "RUNTIME_VALIDATED",
+      "bridgeCommands": [],
+      "adapters": [
+        {
+          "symbol": "rqe.geometry.worker:GeometryWorker",
+          "role": "headless Blender process driver",
+          "required": true
+        },
+        {
+          "symbol": "rqe.geometry.program:compile_program",
+          "role": "modelling program vocabulary and validation",
+          "required": true
+        },
+        {
+          "symbol": "rqe.geometry.validation:validate_analysis",
+          "role": "Roblox mesh rules",
+          "required": true
+        },
+        {
+          "symbol": "rqe.geometry.pipeline:GeometryPipeline",
+          "role": "brief to verdict loop",
+          "required": true
+        }
+      ],
+      "risks": [
+        "Blender is an external dependency; a missing install is a named blocker, not a silent no-op."
+      ],
+      "gaps": [
+        "Nothing published: the produced mesh has not been uploaded, so integration remains unproven."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "client.ui.measure",
+      "phase": "client",
+      "title": "UI text, scrolling, viewport and structured snapshot",
+      "description": "Reads and writes text, scrolls a canvas, reports the viewport a requirement is being judged on, and returns every visible element with a measured rectangle.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "client.gui_text",
+          "required": true
+        },
+        {
+          "method": "client.gui_scroll",
+          "required": true
+        },
+        {
+          "method": "client.viewport",
+          "required": true
+        },
+        {
+          "method": "client.gui_snapshot",
+          "required": true
+        }
+      ],
+      "adapters": [],
+      "risks": [
+        "gui_text writes the Text property directly and can leave a form in a state no player could reach."
+      ],
+      "gaps": [
+        "Not yet exercised against a live client session."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "capture.camera.deterministic",
+      "phase": "capture",
+      "title": "Orbit, follow and named viewpoints",
+      "description": "Places the camera from a resolved framing, orbits a subject at a fixed distance and pitch, and hands control back. Together these make a shot retakeable, which is the only thing that makes a screenshot evidence.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "camera.orbit",
+          "required": true
+        },
+        {
+          "method": "camera.follow",
+          "required": true
+        },
+        {
+          "method": "camera.viewpoint",
+          "required": true
+        }
+      ],
+      "adapters": [
+        {
+          "symbol": "rqe.visual_compare:compare_images",
+          "role": "pixel comparison between two captures of the same viewpoint",
+          "required": true
+        }
+      ],
+      "risks": [
+        "Moving the camera changes what every later capture in the same session sees.",
+        "A camera left Scriptable after a capture stays frozen for the player."
+      ],
+      "gaps": [
+        "No live capture-and-compare cycle has been measured against a running place."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "runtime.session.shape",
+      "phase": "runtime",
+      "title": "Server and client halves of a session, named rather than inferred",
+      "description": "Reports whether a running session is a bare server or holds a player, and what exists client-side. `RunService:Run()` produces a server with no character, no PlayerGui and no client, which is the right context for measuring world generation and the wrong one for anything a player does.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "run.server",
+          "required": true
+        },
+        {
+          "method": "run.client",
+          "required": true
+        }
+      ],
+      "adapters": [],
+      "risks": [],
+      "gaps": [
+        "Not yet exercised against a live session."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "assets.media.author",
+      "phase": "assets",
+      "title": "Procedural audio and animation authoring",
+      "description": "Synthesises functional sound cues deterministically from a seed, and authors R15 KeyframeSequences as .rbxmx. Removes moderation from the critical path for the assets a game needs most and cares about least.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [],
+      "adapters": [
+        {
+          "symbol": "rqe.assets.audio_authoring:tone",
+          "role": "deterministic audio synthesis",
+          "required": true
+        },
+        {
+          "symbol": "rqe.assets.animation_authoring:idle_breath",
+          "role": "R15 KeyframeSequence authoring",
+          "required": true
+        }
+      ],
+      "risks": [
+        "An externally authored .rbxmx is a candidate for upload, not a certainty: Roblox processes animations on import from Studio."
+      ],
+      "gaps": [
+        "No generated audio or animation has been uploaded, so the format assumption is unverified against the live API."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "quality.rules.invoke",
+      "phase": "runtime",
+      "title": "Visual, navigation and performance rules, callable",
+      "description": "Fetches a live quality snapshot and applies the deterministic rules on the engine side, plus navmesh and performance checks measured directly.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [],
+      "adapters": [
+        {
+          "symbol": "rqe.quality:evaluate_quality_snapshot",
+          "role": "deterministic visual rules over a Studio snapshot",
+          "required": true
+        }
+      ],
+      "risks": [],
+      "gaps": [
+        "Requires a live Studio session; nothing here has been run against one."
+      ],
+      "limitations": []
+    },
+    {
+      "id": "edit.code.author",
+      "phase": "edit",
+      "title": "Writing and reloading code inside the open place",
+      "description": "Writes scripts into the DataModel, reloads a module without a Studio restart, reads sources back, and installs code that runs when the game starts.",
+      "status": "AVAILABLE",
+      "validationLevel": "RUNTIME_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "code.write",
+          "required": true
+        },
+        {
+          "method": "code.read",
+          "required": true
+        },
+        {
+          "method": "code.reload",
+          "required": true
+        },
+        {
+          "method": "code.list",
+          "required": true
+        },
+        {
+          "method": "code.at_start",
+          "required": true
+        },
+        {
+          "method": "code.compile",
+          "required": true
+        }
+      ],
+      "adapters": [
+        {
+          "symbol": "rqe.mcp.engine_tools:register_programming_tools",
+          "role": "the write, reload and run loop",
+          "required": true
+        }
+      ],
+      "risks": [
+        "Reloading gives a module a new identity; anything already holding the old table keeps it, so a live session is not fully updated.",
+        "Source written into the place is lost on a Rojo rebuild unless it is also saved to the repository."
+      ],
+      "limitations": [
+        "No source map from a runtime stack frame back to the repository file, so a traceback names the DataModel path rather than the file an agent wrote."
+      ],
+      "gaps": []
+    },
+    {
+      "id": "edit.transform.place",
+      "phase": "edit",
+      "title": "Placing by relation rather than by coordinate",
+      "description": "Move, rotate, scale, align against a face, snap to a grid, settle onto what is underneath, and read back what the placement now overlaps.",
+      "status": "AVAILABLE",
+      "validationLevel": "RUNTIME_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "transform.bounds",
+          "required": true
+        },
+        {
+          "method": "transform.move",
+          "required": true
+        },
+        {
+          "method": "transform.orient",
+          "required": true
+        },
+        {
+          "method": "transform.align",
+          "required": true
+        },
+        {
+          "method": "transform.snap",
+          "required": true
+        },
+        {
+          "method": "transform.settle",
+          "required": true
+        },
+        {
+          "method": "transform.nearest",
+          "required": true
+        },
+        {
+          "method": "transform.overlaps",
+          "required": true
+        }
+      ],
+      "adapters": [
+        {
+          "symbol": "rqe.mcp.engine_tools:register_programming_tools",
+          "role": "relational placement with read-back",
+          "required": true
+        }
+      ],
+      "risks": [
+        "Alignment uses axis-aligned bounding boxes, so a rotated part aligns by its box rather than by its face."
+      ],
+      "limitations": [
+        "No alignment to a named face of a rotated model, and no multi-part layout: one placement at a time."
+      ],
+      "gaps": []
+    }
+  ]
+}

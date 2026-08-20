@@ -1,0 +1,291 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "siegehold",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-siegehold",
+      "productId": "siegehold",
+      "revision": "1.0.0",
+      "seed": 75662121,
+      "genre": "tower_defense",
+      "templateId": "template-tower-defense-v1",
+      "sourceRoot": "games/siegehold",
+      "artifactRoot": "artifacts/products/siegehold",
+      "productIntentRef": {
+        "productId": "siegehold",
+        "artifactId": "siegehold.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/siegehold/definition/product-intent.json",
+        "sha256": "1737b3a6d6fc99b2a7959b8b091831a48ef370cf55cb0eb9d4a0d3ceeffbf868"
+      },
+      "referenceBundleRef": {
+        "productId": "siegehold",
+        "artifactId": "siegehold.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/siegehold/definition/reference-bundle.json",
+        "sha256": "3e6488a5ca8cfb7a5fdf2790b99269be8f708822cd42372953c07a1d0470e2d3"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "one bounded arena with spawn and cover",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "economy, progression, save, tower",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/siegehold/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/siegehold/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/siegehold/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/siegehold/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "core-loop",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "combat",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "siegehold",
+            "artifactId": "siegehold.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/siegehold/definition/release-quality.json",
+            "sha256": "a2508d3d39f5475f0923a1a5bafba905a1d9cc235c54c7cf3427402d0fa4e93f"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "siegehold",
+          "artifactId": "siegehold.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/siegehold/production_plan"
+        },
+        {
+          "productId": "siegehold",
+          "artifactId": "siegehold.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/siegehold/source_bundle"
+        },
+        {
+          "productId": "siegehold",
+          "artifactId": "siegehold.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/siegehold/asset_manifest"
+        },
+        {
+          "productId": "siegehold",
+          "artifactId": "siegehold.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/siegehold/build_place"
+        },
+        {
+          "productId": "siegehold",
+          "artifactId": "siegehold.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/siegehold/integration_manifest"
+        },
+        {
+          "productId": "siegehold",
+          "artifactId": "siegehold.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/siegehold/measurement_run"
+        },
+        {
+          "productId": "siegehold",
+          "artifactId": "siegehold.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/siegehold/scenario_results"
+        },
+        {
+          "productId": "siegehold",
+          "artifactId": "siegehold.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/siegehold/capture_bundle"
+        },
+        {
+          "productId": "siegehold",
+          "artifactId": "siegehold.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/siegehold/quality_review"
+        },
+        {
+          "productId": "siegehold",
+          "artifactId": "siegehold.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/siegehold/repair_plan"
+        },
+        {
+          "productId": "siegehold",
+          "artifactId": "siegehold.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/siegehold/regression_run"
+        },
+        {
+          "productId": "siegehold",
+          "artifactId": "siegehold.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/siegehold/release_candidate"
+        }
+      ]
+    }
+  ]
+}

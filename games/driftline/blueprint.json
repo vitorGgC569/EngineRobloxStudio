@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "driftline",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-driftline",
+      "productId": "driftline",
+      "revision": "1.0.0",
+      "seed": 80480443,
+      "genre": "racing",
+      "templateId": "template-racing-v1",
+      "sourceRoot": "games/driftline",
+      "artifactRoot": "artifacts/products/driftline",
+      "productIntentRef": {
+        "productId": "driftline",
+        "artifactId": "driftline.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/driftline/definition/product-intent.json",
+        "sha256": "d10642f1fc80c1e61577bd2f65ec5e6d5ffe76c1d80fc524f04a90a74de312f2"
+      },
+      "referenceBundleRef": {
+        "productId": "driftline",
+        "artifactId": "driftline.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/driftline/definition/reference-bundle.json",
+        "sha256": "aa2948915e254a67d8c2d4dfdd82fc7b45c8db8fef1ad88d378d8bd3c97a648f"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a sequence of gated level volumes",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "economy, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/driftline/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/driftline/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/driftline/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/driftline/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "race",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "driftline",
+            "artifactId": "driftline.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/driftline/definition/release-quality.json",
+            "sha256": "c3f173a86d04d8355a9b648357819b9766ad6e8ccf6872a9196334d916134c5b"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "driftline",
+          "artifactId": "driftline.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/driftline/production_plan"
+        },
+        {
+          "productId": "driftline",
+          "artifactId": "driftline.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/driftline/source_bundle"
+        },
+        {
+          "productId": "driftline",
+          "artifactId": "driftline.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/driftline/asset_manifest"
+        },
+        {
+          "productId": "driftline",
+          "artifactId": "driftline.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/driftline/build_place"
+        },
+        {
+          "productId": "driftline",
+          "artifactId": "driftline.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/driftline/integration_manifest"
+        },
+        {
+          "productId": "driftline",
+          "artifactId": "driftline.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/driftline/measurement_run"
+        },
+        {
+          "productId": "driftline",
+          "artifactId": "driftline.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/driftline/scenario_results"
+        },
+        {
+          "productId": "driftline",
+          "artifactId": "driftline.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/driftline/capture_bundle"
+        },
+        {
+          "productId": "driftline",
+          "artifactId": "driftline.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/driftline/quality_review"
+        },
+        {
+          "productId": "driftline",
+          "artifactId": "driftline.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/driftline/repair_plan"
+        },
+        {
+          "productId": "driftline",
+          "artifactId": "driftline.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/driftline/regression_run"
+        },
+        {
+          "productId": "driftline",
+          "artifactId": "driftline.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/driftline/release_candidate"
+        }
+      ]
+    }
+  ]
+}

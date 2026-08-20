@@ -1,0 +1,18 @@
+{
+  "schemaVersion": 1,
+  "productId": "hollowreach",
+  "pitch": "Exploracao de cavernas: mapeie tuneis, encontre camaras escondidas, venda minerais, melhore o equipamento.",
+  "topology": "grid-plots",
+  "progression": "tiered-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/hollowreach/tokens/hollowreach-grove.json",
+  "coreLoop": [
+    "collect",
+    "process",
+    "upgrade",
+    "sell",
+    "unlock",
+    "explore"
+  ]
+}

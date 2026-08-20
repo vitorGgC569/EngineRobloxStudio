@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "id": "tidewatch",
+  "genre": "survival",
+  "theme": "island",
+  "pitch": "Sobrevivencia numa ilha: colete recursos, construa abrigo, gerencie fome e sede, sobreviva as tempestades noturnas.",
+  "coreLoop": [
+    "explore",
+    "collect",
+    "craft",
+    "survive"
+  ],
+  "world": {
+    "topology": "open_world",
+    "zones": [
+      {
+        "id": "island",
+        "theme": "island",
+        "difficulty": 1,
+        "unlockedAtTier": 0
+      }
+    ]
+  },
+  "progression": {
+    "kind": "checkpoint",
+    "tiers": 8,
+    "firstTierSeconds": 45.0,
+    "sessionMinutes": 25.0
+  },
+  "economy": {
+    "currencies": []
+  },
+  "systems": [
+    "inventory",
+    "crafting",
+    "save",
+    "progression",
+    "analytics"
+  ],
+  "monetization": [],
+  "tokenSet": "games/tidewatch/tokens/tidewatch-siege.json",
+  "concurrentPlayers": 1,
+  "privateSpace": false
+}

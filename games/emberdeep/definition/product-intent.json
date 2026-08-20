@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "productId": "emberdeep",
+  "pitch": "Dungeon crawler em ruinas vulcanicas: explore salas, derrote guardioes, colete relicas, melhore armas na forja.",
+  "topology": "linear-levels",
+  "progression": "checkpoint-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/emberdeep/tokens/emberdeep-ember.json",
+  "coreLoop": [
+    "explore",
+    "fight",
+    "collect",
+    "unlock"
+  ]
+}

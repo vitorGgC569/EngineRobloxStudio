@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "productId": "lantern-siege",
+  "pitch": "Hold a shared core against waves arriving down converging lanes.",
+  "topology": "radial-lanes-around-core",
+  "progression": "escalating-wave-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 0,
+  "tokenSet": "tokens/brickfarm.json",
+  "coreLoop": [
+    "survive the wave timer",
+    "spend scrap between waves",
+    "reinforce the lane under most pressure",
+    "hold the core"
+  ]
+}

@@ -1,0 +1,321 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "tidepool",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-tidepool",
+      "productId": "tidepool",
+      "revision": "1.0.0",
+      "seed": 83873886,
+      "genre": "simulator",
+      "templateId": "template-simulator-v1",
+      "sourceRoot": "games/tidepool",
+      "artifactRoot": "artifacts/products/tidepool",
+      "productIntentRef": {
+        "productId": "tidepool",
+        "artifactId": "tidepool.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/tidepool/definition/product-intent.json",
+        "sha256": "a253afe8e28e46ec5d511fd79cbdcea56624a7734dbc4c0d27cd5697180651ed"
+      },
+      "referenceBundleRef": {
+        "productId": "tidepool",
+        "artifactId": "tidepool.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/tidepool/definition/reference-bundle.json",
+        "sha256": "98bf3691cc84e85c9c16197d1449ac03cfde025755bbc079ecf9f30891b43159"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a hub with portals, and one traversable zone per declared zone",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "leaderboard, shop",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "economy, inventory, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/tidepool/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/tidepool/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/tidepool/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/tidepool/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "core-loop",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "purchase",
+          "class": "MONETIZATION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "zone-reef-kit",
+          "type": "MODEL",
+          "strategy": "CREATE",
+          "requiredForRelease": true,
+          "consumers": [
+            "world"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "zone-cave-kit",
+          "type": "MODEL",
+          "strategy": "CREATE",
+          "requiredForRelease": true,
+          "consumers": [
+            "world"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "storefront-art",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": false,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "tidepool",
+            "artifactId": "tidepool.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/tidepool/definition/release-quality.json",
+            "sha256": "f5bc6f73e1e45b78a012e1c1fdb18c62425b7e3ea64589c51d9f36dfd5187e5e"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "tidepool",
+          "artifactId": "tidepool.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/tidepool/production_plan"
+        },
+        {
+          "productId": "tidepool",
+          "artifactId": "tidepool.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/tidepool/source_bundle"
+        },
+        {
+          "productId": "tidepool",
+          "artifactId": "tidepool.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/tidepool/asset_manifest"
+        },
+        {
+          "productId": "tidepool",
+          "artifactId": "tidepool.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/tidepool/build_place"
+        },
+        {
+          "productId": "tidepool",
+          "artifactId": "tidepool.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/tidepool/integration_manifest"
+        },
+        {
+          "productId": "tidepool",
+          "artifactId": "tidepool.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/tidepool/measurement_run"
+        },
+        {
+          "productId": "tidepool",
+          "artifactId": "tidepool.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/tidepool/scenario_results"
+        },
+        {
+          "productId": "tidepool",
+          "artifactId": "tidepool.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/tidepool/capture_bundle"
+        },
+        {
+          "productId": "tidepool",
+          "artifactId": "tidepool.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/tidepool/quality_review"
+        },
+        {
+          "productId": "tidepool",
+          "artifactId": "tidepool.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/tidepool/repair_plan"
+        },
+        {
+          "productId": "tidepool",
+          "artifactId": "tidepool.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/tidepool/regression_run"
+        },
+        {
+          "productId": "tidepool",
+          "artifactId": "tidepool.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/tidepool/release_candidate"
+        }
+      ]
+    }
+  ]
+}

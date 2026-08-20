@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "productId": "lanternfall",
+  "pitch": "Plataforma de precisao numa floresta noturna: acenda lanternas, atravesse plataformas moveis, alcance o topo.",
+  "topology": "grid-plots",
+  "progression": "tiered-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/lanternfall/tokens/lanternfall-grove.json",
+  "coreLoop": [
+    "collect",
+    "process",
+    "upgrade",
+    "sell",
+    "unlock"
+  ]
+}

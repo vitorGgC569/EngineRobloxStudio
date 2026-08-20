@@ -1,0 +1,52 @@
+{
+  "schemaVersion": 1,
+  "ok": true,
+  "targets": {
+    "tiers": 8,
+    "firstTierSeconds": 45,
+    "totalMinutes": 90,
+    "incomeMultiplier": 1.15,
+    "baseIncomePerSecond": 1.0
+  },
+  "tierCosts": [
+    45.0,
+    136.1,
+    320.54,
+    693.94,
+    1449.9,
+    2980.34,
+    6078.74,
+    12351.48
+  ],
+  "costRatio": 2.0245,
+  "stepRatio": 1.7604,
+  "predictedSeconds": [
+    45.0,
+    79.22,
+    139.46,
+    245.52,
+    432.22,
+    760.9,
+    1339.52,
+    2358.16
+  ],
+  "verified": {
+    "totalSeconds": 5400.0,
+    "totalMinutes": 90.0,
+    "worstRatio": 1.7604,
+    "stepSeconds": [
+      45.0,
+      79.22,
+      139.46,
+      245.52,
+      432.22,
+      760.9,
+      1339.52,
+      2358.16
+    ],
+    "driftFromTarget": 0.0,
+    "source": "roblox/lib/GameKit/Progression.lua, through the headless harness"
+  },
+  "problems": [],
+  "note": "the costs are solved from the targets; the times are then measured by running the shipped Progression module, not by trusting the solver"
+}

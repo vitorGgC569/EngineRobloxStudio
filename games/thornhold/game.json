@@ -1,0 +1,49 @@
+{
+  "schemaVersion": 1,
+  "id": "thornhold",
+  "genre": "tower_defense",
+  "theme": "defesa castelo heroi",
+  "pitch": "Defesa de castelo com heroi jogavel: comande torres e lute pessoalmente contra as hordas.",
+  "coreLoop": [
+    "build",
+    "defend",
+    "upgrade"
+  ],
+  "world": {
+    "topology": "single_arena",
+    "zones": []
+  },
+  "progression": {
+    "kind": "wave",
+    "tiers": 12,
+    "firstTierSeconds": 45.0,
+    "sessionMinutes": 12.0
+  },
+  "economy": {
+    "currencies": [
+      {
+        "id": "cash",
+        "displayName": "Cash",
+        "earnedBy": [
+          "defend"
+        ],
+        "spentOn": [
+          "build",
+          "upgrade"
+        ],
+        "premium": false
+      }
+    ]
+  },
+  "systems": [
+    "economy",
+    "progression",
+    "save",
+    "tower",
+    "analytics"
+  ],
+  "monetization": [],
+  "tokenSet": "games/thornhold/tokens/thornhold-siege.json",
+  "concurrentPlayers": 1,
+  "privateSpace": false
+}

@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "productId": "anime-card-farm",
+  "pitch": "A collector tycoon: pull cards from a belt, slot them into a plot, and grow income.",
+  "topology": "grid-plots-around-hub",
+  "progression": "linear-tier-ladder",
+  "privateSpace": true,
+  "concurrentPlayers": 8,
+  "tokenSet": "tokens/brickfarm.json",
+  "coreLoop": [
+    "spawn a pack at the dispenser",
+    "inspect the card on the belt",
+    "take it and slot it into the plot",
+    "wait for activation, collect boxes",
+    "sell for cash and buy the next floor"
+  ]
+}

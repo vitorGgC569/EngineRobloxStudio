@@ -1,0 +1,44 @@
+{
+  "schemaVersion": 1,
+  "id": "nightfall",
+  "genre": "survival",
+  "theme": "forest",
+  "pitch": "Horror de sobrevivencia noturno em floresta com lanternas e criaturas.",
+  "coreLoop": [
+    "explore",
+    "collect",
+    "craft",
+    "survive"
+  ],
+  "world": {
+    "topology": "open_world",
+    "zones": [
+      {
+        "id": "forest",
+        "theme": "forest",
+        "difficulty": 1,
+        "unlockedAtTier": 0
+      }
+    ]
+  },
+  "progression": {
+    "kind": "checkpoint",
+    "tiers": 8,
+    "firstTierSeconds": 45.0,
+    "sessionMinutes": 25.0
+  },
+  "economy": {
+    "currencies": []
+  },
+  "systems": [
+    "inventory",
+    "crafting",
+    "save",
+    "progression",
+    "analytics"
+  ],
+  "monetization": [],
+  "tokenSet": "tokens/brickfarm.json",
+  "concurrentPlayers": 1,
+  "privateSpace": false
+}

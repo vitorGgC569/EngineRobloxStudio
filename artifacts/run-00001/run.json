@@ -1,0 +1,35 @@
+{
+  "runId": "run-00001",
+  "startedAt": "2026-08-10T20:10:35.652939+00:00",
+  "validationLevel": "RUNTIME_VALIDATED",
+  "status": "FAIL",
+  "counts": {
+    "PASS": 7,
+    "WARN": 1,
+    "FAIL": 1
+  },
+  "findings": 1,
+  "reproducibility": {
+    "engineVersion": "0.2.0",
+    "protocolVersion": "rqe.bridge/1",
+    "studioVersion": "0.733.0.7330989",
+    "placeId": 0,
+    "placeName": "MinersRidgeTycoon-qa-v7.rbxlx",
+    "commit": null,
+    "host": "OGrandeOxta",
+    "python": "3.12.10",
+    "observeConfig": {
+      "regionTag": "QARegion",
+      "regionNamePattern": "^Plot",
+      "regionRoot": "game.Workspace",
+      "groundSupportSamples": 9,
+      "groundSupportMaxGap": 1.5,
+      "budgets": {
+        "minFps": 30.0,
+        "maxWorkspaceInstances": 25000,
+        "maxMemoryMb": 4000.0,
+        "maxUnanchoredParts": 200
+      }
+    }
+  }
+}

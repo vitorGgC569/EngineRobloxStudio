@@ -1,0 +1,53 @@
+{
+  "schemaVersion": 1,
+  "id": "cinderpost",
+  "genre": "tycoon",
+  "theme": "posto avancado terra",
+  "pitch": "Posto avancado em terra devastada: defenda de raides noturnas, cultive de dia, recrute sobreviventes.",
+  "coreLoop": [
+    "collect",
+    "process",
+    "upgrade",
+    "sell",
+    "unlock"
+  ],
+  "world": {
+    "topology": "grid_plots",
+    "zones": []
+  },
+  "progression": {
+    "kind": "tiered",
+    "tiers": 8,
+    "firstTierSeconds": 45.0,
+    "sessionMinutes": 15.0
+  },
+  "economy": {
+    "currencies": [
+      {
+        "id": "cash",
+        "displayName": "Cash",
+        "earnedBy": [
+          "collect",
+          "process",
+          "sell"
+        ],
+        "spentOn": [
+          "upgrade",
+          "unlock"
+        ],
+        "premium": false
+      }
+    ]
+  },
+  "systems": [
+    "economy",
+    "progression",
+    "save",
+    "inventory",
+    "analytics"
+  ],
+  "monetization": [],
+  "tokenSet": "games/cinderpost/tokens/cinderpost-grove.json",
+  "concurrentPlayers": 1,
+  "privateSpace": false
+}

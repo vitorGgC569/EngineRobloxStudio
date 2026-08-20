@@ -1,0 +1,13 @@
+{
+  "schemaVersion": 1,
+  "profileId": "release-quality",
+  "appliesTo": [
+    "GAMEPLAY",
+    "VISUAL",
+    "ASSETS",
+    "RELEASE"
+  ],
+  "tokenSet": "tokens/brickfarm.json",
+  "minimumVisualScore": 95,
+  "notes": "Thresholds are projected from the token set rather than authored here; a profile that carried its own numbers would grade the build it came from."
+}

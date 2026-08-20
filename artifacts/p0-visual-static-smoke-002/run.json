@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 2,
+  "runId": "p0-visual-static-smoke-002",
+  "createdAt": "2026-08-11T17:06:14.002859+00:00",
+  "completedAt": "2026-08-11T17:06:14.818807+00:00",
+  "artifacts": [
+    {
+      "path": "build-manifest.json",
+      "sha256": "b170656fa68d1e73c2f2b718bb5ec9ab29779d421ceef866920a800d75d28573",
+      "bytes": 2423
+    },
+    {
+      "path": "build/p0-visual-static-smoke-002.rbxlx",
+      "sha256": "942505c3a23913aa89f8db768cad868479ec11964437daba939bbd0627e8b911",
+      "bytes": 223797
+    },
+    {
+      "path": "build/rojo.json",
+      "sha256": "549b80a94e73d8196e152fb076bf3dc54b81361ff89686d084c2f993cd13fd7f",
+      "bytes": 434
+    },
+    {
+      "path": "evidence/evidence.json",
+      "sha256": "32f36771aca65ace59c82ce895b035364f8fb0a548f0a5a41cf5de21db81fe85",
+      "bytes": 12539
+    },
+    {
+      "path": "evidence/static-scan.json",
+      "sha256": "1d04d2147b8815e5766f6aa3492bf5decbab8cdd67827d6af7da0f36f404cc13",
+      "bytes": 5991
+    },
+    {
+      "path": "gate.json",
+      "sha256": "f74b63bb205157a55e5508ecffe7e0b24ec5af26f2d04e1bee0e7238d4e74368",
+      "bytes": 28223
+    },
+    {
+      "path": "logs/command-errors.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "bytes": 3
+    },
+    {
+      "path": "measurement-plan.json",
+      "sha256": "23e5182916d97b45b8dbcae69d2f04adfcb2bd04ffe729122c7e55fb97a9482e",
+      "bytes": 36983
+    }
+  ],
+  "status": "BLOCKED",
+  "releaseAllowed": false,
+  "buildId": "8675af43a853c086aece2de8d283b22ef8a6387a9254522d960165d983756bfd",
+  "gate": "gate.json",
+  "provenance": "build-manifest.json",
+  "measurementPlan": "measurement-plan.json",
+  "manifestSha256": "0a9ec3d8bff200b5de190845bc8a5e1b50e7a5acfed3c751c3e5a43577ecde32"
+}

@@ -1,0 +1,54 @@
+{
+  "schemaVersion": 1,
+  "id": "hollowreach",
+  "genre": "tycoon",
+  "theme": "cave mine",
+  "pitch": "Exploracao de cavernas: mapeie tuneis, encontre camaras escondidas, venda minerais, melhore o equipamento.",
+  "coreLoop": [
+    "collect",
+    "process",
+    "upgrade",
+    "sell",
+    "unlock",
+    "explore"
+  ],
+  "world": {
+    "topology": "grid_plots",
+    "zones": []
+  },
+  "progression": {
+    "kind": "tiered",
+    "tiers": 8,
+    "firstTierSeconds": 45.0,
+    "sessionMinutes": 15.0
+  },
+  "economy": {
+    "currencies": [
+      {
+        "id": "cash",
+        "displayName": "Cash",
+        "earnedBy": [
+          "collect",
+          "process",
+          "sell"
+        ],
+        "spentOn": [
+          "upgrade",
+          "unlock"
+        ],
+        "premium": false
+      }
+    ]
+  },
+  "systems": [
+    "economy",
+    "progression",
+    "save",
+    "inventory",
+    "analytics"
+  ],
+  "monetization": [],
+  "tokenSet": "games/hollowreach/tokens/hollowreach-grove.json",
+  "concurrentPlayers": 1,
+  "privateSpace": false
+}

@@ -1,0 +1,298 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rqe.local/schemas/visual-quality-spec.v1.schema.json",
+  "title": "RQE Visual Quality Specification v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion", "specId", "revision", "units", "classification",
+    "palette", "objectTypes", "regionProfiles", "regionSets", "landmarks",
+    "viewpoints", "evaluationStates"
+  ],
+  "properties": {
+    "$schema": {"type": "string"},
+    "schemaVersion": {"const": 1},
+    "specId": {"type": "string", "pattern": "^[a-z][a-z0-9._-]+$"},
+    "productId": {"$ref": "#/$defs/qualifiedId"},
+    "productTruth": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["intentId", "calibrationId", "semanticBindings"],
+      "properties": {
+        "intentId": {"$ref": "#/$defs/qualifiedId"},
+        "calibrationId": {"$ref": "#/$defs/qualifiedId"},
+        "semanticBindings": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["worldRoles", "uiSurfaces"],
+          "properties": {
+            "worldRoles": {"$ref": "#/$defs/visualSemanticBindings"},
+            "uiSurfaces": {"$ref": "#/$defs/visualSemanticBindings"}
+          }
+        }
+      }
+    },
+    "revision": {"type": "integer", "minimum": 1},
+    "units": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["distance", "density", "colorDifference"],
+      "properties": {
+        "distance": {"const": "stud"},
+        "density": {"const": "visualRootsPer1000SquareStuds"},
+        "colorDifference": {"const": "CIEDE2000"}
+      }
+    },
+    "classification": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "candidateTag", "rootTag", "typeAttribute", "variantAttribute", "assetKeyAttribute",
+        "regionTag", "regionProfileAttribute", "landmarkTag",
+        "landmarkAnchorTag", "excludeTag", "minimumClassifiedFraction"
+      ],
+      "properties": {
+        "candidateTag": {"$ref": "#/$defs/name"},
+        "rootTag": {"$ref": "#/$defs/name"},
+        "typeAttribute": {"$ref": "#/$defs/name"},
+        "variantAttribute": {"$ref": "#/$defs/name"},
+        "assetKeyAttribute": {"$ref": "#/$defs/name"},
+        "regionTag": {"$ref": "#/$defs/name"},
+        "regionProfileAttribute": {"$ref": "#/$defs/name"},
+        "landmarkTag": {"$ref": "#/$defs/name"},
+        "landmarkAnchorTag": {"$ref": "#/$defs/name"},
+        "excludeTag": {"$ref": "#/$defs/name"},
+        "minimumClassifiedFraction": {"$ref": "#/$defs/fraction"}
+      }
+    },
+    "palette": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["swatches", "maximumDeltaE", "maximumOffPaletteFraction"],
+      "properties": {
+        "swatches": {
+          "type": "array", "minItems": 3,
+          "items": {
+            "type": "object", "additionalProperties": false,
+            "required": ["id", "rgb", "roles"],
+            "properties": {
+              "id": {"$ref": "#/$defs/id"},
+              "rgb": {"$ref": "#/$defs/rgb"},
+              "roles": {"type": "array", "minItems": 1, "uniqueItems": true, "items": {"$ref": "#/$defs/id"}}
+            }
+          }
+        },
+        "maximumDeltaE": {"type": "number", "exclusiveMinimum": 0},
+        "maximumOffPaletteFraction": {"$ref": "#/$defs/fraction"}
+      }
+    },
+    "objectTypes": {
+      "type": "object", "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/objectType"}
+    },
+    "regionProfiles": {
+      "type": "object", "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/regionProfile"}
+    },
+    "regionSets": {
+      "type": "object", "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/regionSet"}
+    },
+    "landmarks": {
+      "type": "object", "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/landmark"}
+    },
+    "viewpoints": {
+      "type": "object", "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/viewpoint"}
+    },
+    "evaluationStates": {
+      "type": "object", "minProperties": 1,
+      "additionalProperties": {"$ref": "#/$defs/evaluationState"}
+    }
+  },
+  "$defs": {
+    "name": {"type": "string", "minLength": 1, "maxLength": 100},
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9_-]*$"},
+    "qualifiedId": {"type": "string", "pattern": "^[a-z][a-z0-9._-]+$"},
+    "visualSemanticBindings": {
+      "type": "object",
+      "minProperties": 1,
+      "additionalProperties": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["landmarkIds", "regionSetIds", "viewpointIds"],
+        "properties": {
+          "landmarkIds": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+          "regionSetIds": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}},
+          "viewpointIds": {"type": "array", "uniqueItems": true, "items": {"$ref": "#/$defs/id"}}
+        }
+      }
+    },
+    "fraction": {"type": "number", "minimum": 0, "maximum": 1},
+    "positive": {"type": "number", "exclusiveMinimum": 0},
+    "rgb": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": {"type": "integer", "minimum": 0, "maximum": 255}
+    },
+    "vector3": {
+      "type": "array", "minItems": 3, "maxItems": 3,
+      "items": {"type": "number", "minimum": 0}
+    },
+    "selector": {
+      "type": "object", "additionalProperties": false, "minProperties": 1,
+      "properties": {
+        "tag": {"$ref": "#/$defs/name"},
+        "attributeEquals": {
+          "type": "object", "minProperties": 1,
+          "additionalProperties": {"type": ["string", "number", "boolean"]}
+        },
+        "namePattern": {"type": "string", "minLength": 1}
+      }
+    },
+    "scale": {
+      "type": "object", "additionalProperties": false,
+      "required": ["boundsMethod", "minimumSize", "maximumSize", "maximumRelativeMad"],
+      "properties": {
+        "boundsMethod": {"const": "oriented-box"},
+        "minimumSize": {"$ref": "#/$defs/vector3"},
+        "maximumSize": {"$ref": "#/$defs/vector3"},
+        "maximumRelativeMad": {"$ref": "#/$defs/fraction"},
+        "groupByAttribute": {"$ref": "#/$defs/name"}
+      }
+    },
+    "objectType": {
+      "type": "object", "additionalProperties": false,
+      "required": ["selector", "minimumInstances", "scale"],
+      "properties": {
+        "selector": {"$ref": "#/$defs/selector"},
+        "minimumInstances": {"type": "integer", "minimum": 1},
+        "maximumInstances": {"type": "integer", "minimum": 1},
+        "scale": {"$ref": "#/$defs/scale"}
+      }
+    },
+    "density": {
+      "type": "object", "additionalProperties": false,
+      "required": ["minimumRootsPer1000SquareStuds", "maximumRootsPer1000SquareStuds", "minimumFootprintCoverage"],
+      "properties": {
+        "minimumRootsPer1000SquareStuds": {"type": "number", "minimum": 0},
+        "maximumRootsPer1000SquareStuds": {"$ref": "#/$defs/positive"},
+        "minimumFootprintCoverage": {"$ref": "#/$defs/fraction"}
+      }
+    },
+    "heightVariation": {
+      "type": "object", "additionalProperties": false,
+      "required": ["minimumP90MinusP10", "maximumP90MinusP10"],
+      "properties": {
+        "minimumP90MinusP10": {"type": "number", "minimum": 0},
+        "maximumP90MinusP10": {"$ref": "#/$defs/positive"}
+      }
+    },
+    "materialVariety": {
+      "type": "object", "additionalProperties": false,
+      "required": ["minimumDistinctMaterials", "maximumDominantFraction"],
+      "properties": {
+        "minimumDistinctMaterials": {"type": "integer", "minimum": 1},
+        "maximumDominantFraction": {"$ref": "#/$defs/fraction"}
+      }
+    },
+    "repetition": {
+      "type": "object", "additionalProperties": false,
+      "required": ["maximumIdenticalVariantRun", "minimumVariantEntropy"],
+      "properties": {
+        "maximumIdenticalVariantRun": {"type": "integer", "minimum": 1},
+        "minimumVariantEntropy": {"type": "number", "minimum": 0}
+      }
+    },
+    "regionProfile": {
+      "type": "object", "additionalProperties": false,
+      "required": ["density", "heightVariation", "materialVariety", "repetition"],
+      "properties": {
+        "density": {"$ref": "#/$defs/density"},
+        "heightVariation": {"$ref": "#/$defs/heightVariation"},
+        "materialVariety": {"$ref": "#/$defs/materialVariety"},
+        "repetition": {"$ref": "#/$defs/repetition"}
+      }
+    },
+    "regionSet": {
+      "type": "object", "additionalProperties": false,
+      "required": ["selector", "profile", "minimumRegions", "maximumRegions", "minimumProfileCoverage"],
+      "properties": {
+        "selector": {"$ref": "#/$defs/selector"},
+        "profile": {"$ref": "#/$defs/id"},
+        "minimumRegions": {"type": "integer", "minimum": 1},
+        "maximumRegions": {"type": "integer", "minimum": 1},
+        "minimumProfileCoverage": {"$ref": "#/$defs/fraction"}
+      }
+    },
+    "landmark": {
+      "type": "object", "additionalProperties": false,
+      "required": [
+        "selector", "anchorSelector", "maximumDistance", "sampleSpacing",
+        "eyeHeight", "raysPerAnchor", "minimumVisibleAnchorFraction",
+        "maximumBlindSpotDegrees", "minimumRegionsVisibleFrom"
+      ],
+      "properties": {
+        "selector": {"$ref": "#/$defs/selector"},
+        "anchorSelector": {"$ref": "#/$defs/selector"},
+        "maximumDistance": {"$ref": "#/$defs/positive"},
+        "sampleSpacing": {"$ref": "#/$defs/positive"},
+        "eyeHeight": {"$ref": "#/$defs/positive"},
+        "raysPerAnchor": {"type": "integer", "minimum": 1, "maximum": 64},
+        "minimumVisibleAnchorFraction": {"$ref": "#/$defs/fraction"},
+        "maximumBlindSpotDegrees": {"type": "number", "minimum": 0, "maximum": 360},
+        "minimumRegionsVisibleFrom": {"type": "integer", "minimum": 1}
+      }
+    },
+    "resolution": {
+      "type": "array", "minItems": 2, "maxItems": 2,
+      "items": {"type": "integer", "minimum": 1}
+    },
+    "camera": {
+      "type": "object", "additionalProperties": false,
+      "required": ["mode", "distance", "height", "fieldOfView"],
+      "properties": {
+        "mode": {"enum": ["look-at-landmark", "player-follow"]},
+        "distance": {"$ref": "#/$defs/positive"},
+        "height": {"type": "number", "minimum": 0},
+        "fieldOfView": {"type": "number", "minimum": 20, "maximum": 100},
+        "yawDegrees": {"type": "number", "minimum": -180, "maximum": 180}
+      }
+    },
+    "rubric": {
+      "type": "object", "additionalProperties": false,
+      "required": ["composition", "hierarchy", "legibility", "materiality", "polish"],
+      "properties": {
+        "composition": {"$ref": "#/$defs/fraction"},
+        "hierarchy": {"$ref": "#/$defs/fraction"},
+        "legibility": {"$ref": "#/$defs/fraction"},
+        "materiality": {"$ref": "#/$defs/fraction"},
+        "polish": {"$ref": "#/$defs/fraction"}
+      }
+    },
+    "viewpoint": {
+      "type": "object", "additionalProperties": false,
+      "required": ["device", "resolution", "landmark", "state", "camera", "rubric"],
+      "properties": {
+        "device": {"enum": ["desktop", "phone", "tablet", "console"]},
+        "resolution": {"$ref": "#/$defs/resolution"},
+        "landmark": {"$ref": "#/$defs/id"},
+        "state": {"$ref": "#/$defs/id"},
+        "camera": {"$ref": "#/$defs/camera"},
+        "rubric": {"$ref": "#/$defs/rubric"}
+      }
+    },
+    "evaluationState": {
+      "type": "object", "additionalProperties": false,
+      "required": ["scenario", "requiredViewpoints", "minimumRuleCoverage"],
+      "properties": {
+        "scenario": {"type": "string", "minLength": 1},
+        "requiredViewpoints": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": {"$ref": "#/$defs/id"}
+        },
+        "minimumRuleCoverage": {"$ref": "#/$defs/fraction"}
+      }
+    }
+  }
+}

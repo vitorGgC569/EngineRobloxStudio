@@ -1,0 +1,447 @@
+{
+  "runId": "run-00010",
+  "startedAt": "2026-08-10T20:46:03.419519+00:00",
+  "completedAt": "2026-08-10T20:46:40.604717+00:00",
+  "validationLevel": "RUNTIME_VALIDATED",
+  "studioContext": "run",
+  "contextsObserved": [
+    "edit",
+    "run"
+  ],
+  "place": {
+    "placeName": "MinersRidgeTycoon-qa-v7.rbxlx",
+    "placeId": 0,
+    "gameId": 0,
+    "studioVersion": "0.733.0.7330989"
+  },
+  "status": "PASS",
+  "counts": {
+    "PASS": 6,
+    "WARN": 0,
+    "FAIL": 0
+  },
+  "measurements": {
+    "studio": {
+      "studioVersion": "0.733.0.7330989",
+      "isRunning": false,
+      "placeId": 0,
+      "workspaceDescendants": 2,
+      "gameId": 0,
+      "jobId": "",
+      "serviceChildCounts": {
+        "Players": 0,
+        "StarterPlayer": 2,
+        "Lighting": 0,
+        "SoundService": 0,
+        "Workspace": 2,
+        "StarterGui": 0,
+        "Teams": 0,
+        "ServerScriptService": 3,
+        "ReplicatedStorage": 1
+      },
+      "context": "edit",
+      "placeName": "MinersRidgeTycoon-qa-v7.rbxlx"
+    },
+    "runStart": {
+      "baselineDirty": false,
+      "started": true,
+      "generatedDescendants": 370,
+      "workspaceDescendants": 372,
+      "alreadyRunning": false,
+      "settleSeconds": 6,
+      "baselineDescendants": 2,
+      "context": "run",
+      "isRunning": true
+    },
+    "runtime": {
+      "players": [],
+      "isEdit": true,
+      "playerCount": 0,
+      "isRunning": true,
+      "placeId": 0,
+      "runtime": {
+        "worstFrameMs": 19.01,
+        "instances": 2129,
+        "workspaceInstances": 372,
+        "sampleSeconds": 0.6,
+        "memoryMb": 1595.5,
+        "fps": 59.97
+      },
+      "unavailable": [],
+      "logs": {
+        "warnings": 0,
+        "errors": 0
+      },
+      "context": "run",
+      "placeName": "MinersRidgeTycoon-qa-v7.rbxlx"
+    },
+    "regions": {
+      "discovery": "namePattern",
+      "count": 4,
+      "results": [
+        {
+          "ref": "0_452461",
+          "path": "Workspace.Map.PlotA",
+          "name": "PlotA",
+          "className": "Model"
+        },
+        {
+          "ref": "0_452498",
+          "path": "Workspace.Map.PlotB",
+          "name": "PlotB",
+          "className": "Model"
+        },
+        {
+          "ref": "0_452535",
+          "path": "Workspace.Map.PlotC",
+          "name": "PlotC",
+          "className": "Model"
+        },
+        {
+          "ref": "0_452572",
+          "path": "Workspace.Map.PlotD",
+          "name": "PlotD",
+          "className": "Model"
+        }
+      ]
+    },
+    "regionOverlaps": {
+      "regions": 4,
+      "skippedNestedPairs": 0,
+      "boxes": [
+        {
+          "min": [
+            -44,
+            -0.46,
+            -100
+          ],
+          "path": "Workspace.Map.PlotA",
+          "max": [
+            -6,
+            8.8,
+            -63.5
+          ],
+          "ref": "0_452461",
+          "size": [
+            38,
+            9.26,
+            36.5
+          ]
+        },
+        {
+          "min": [
+            6,
+            -0.46,
+            -100
+          ],
+          "path": "Workspace.Map.PlotB",
+          "max": [
+            44,
+            8.8,
+            -63.5
+          ],
+          "ref": "0_452498",
+          "size": [
+            38,
+            9.26,
+            36.5
+          ]
+        },
+        {
+          "min": [
+            -44,
+            -0.46,
+            -142
+          ],
+          "path": "Workspace.Map.PlotC",
+          "max": [
+            -6,
+            8.8,
+            -105.5
+          ],
+          "ref": "0_452535",
+          "size": [
+            38,
+            9.26,
+            36.5
+          ]
+        },
+        {
+          "min": [
+            6,
+            -0.46,
+            -142
+          ],
+          "path": "Workspace.Map.PlotD",
+          "max": [
+            44,
+            8.8,
+            -105.5
+          ],
+          "ref": "0_452572",
+          "size": [
+            38,
+            9.26,
+            36.5
+          ]
+        }
+      ],
+      "overlapping": 0,
+      "clean": true,
+      "collisions": [],
+      "tolerance": 0
+    },
+    "logs": {
+      "totalEntries": 4,
+      "available": true,
+      "returned": 4,
+      "counts": {
+        "warning": 0,
+        "info": 4,
+        "error": 0
+      },
+      "entries": [
+        {
+          "severity": "info",
+          "timestamp": 1786394762.466,
+          "message": "[RQE Bridge] starting"
+        },
+        {
+          "severity": "info",
+          "timestamp": 1786394762.653,
+          "message": "[RQE Bridge] connected to http://127.0.0.1:8790 as sess_c9285fe1c15a (edit)"
+        },
+        {
+          "severity": "info",
+          "timestamp": 1786394769.603,
+          "message": "[RQE Bridge] context changed edit -> run; re-registering"
+        },
+        {
+          "severity": "info",
+          "timestamp": 1786394769.622,
+          "message": "[RQE Bridge] connected to http://127.0.0.1:8790 as sess_87a608ef8592 (run)"
+        }
+      ]
+    }
+  },
+  "findings": [],
+  "evidence": [
+    {
+      "id": "studio.bridge.connected",
+      "probe": "studio_bridge_connected",
+      "category": "observability",
+      "status": "PASS",
+      "severity": "info",
+      "message": "Live Studio answered through the bridge (edit context)",
+      "details": {
+        "place": {
+          "placeName": "MinersRidgeTycoon-qa-v7.rbxlx",
+          "placeId": 0,
+          "gameId": 0,
+          "studioVersion": "0.733.0.7330989"
+        },
+        "context": "edit",
+        "protocol": "rqe.bridge/1"
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "run.clean_baseline",
+      "probe": "clean_baseline",
+      "category": "observability",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "run started from a clean baseline of 2 descendants; game scripts generated 370",
+      "details": {
+        "baselineDirty": false,
+        "started": true,
+        "generatedDescendants": 370,
+        "workspaceDescendants": 372,
+        "alreadyRunning": false,
+        "settleSeconds": 6,
+        "baselineDescendants": 2,
+        "context": "run",
+        "isRunning": true
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "runtime.frame_rate",
+      "probe": "frame_rate",
+      "category": "performance",
+      "status": "PASS",
+      "severity": "major",
+      "message": "sampled 59.97 FPS over 0.6s in run context (budget 30.0)",
+      "details": {
+        "fps": 59.97,
+        "worstFrameMs": 19.01,
+        "budget": 30.0,
+        "context": "run",
+        "isRunning": true
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "runtime.memory",
+      "probe": "memory_budget",
+      "category": "performance",
+      "status": "PASS",
+      "severity": "major",
+      "message": "1595.5 MB in use (budget 4000.0 MB)",
+      "details": {
+        "memoryMb": 1595.5,
+        "budgetMb": 4000.0
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "world.region_overlap",
+      "probe": "spatial_overlap",
+      "category": "geometry",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "4 exclusive regions, none intersecting",
+      "details": {
+        "regions": 4,
+        "skippedNestedPairs": 0,
+        "boxes": [
+          {
+            "min": [
+              -44,
+              -0.46,
+              -100
+            ],
+            "path": "Workspace.Map.PlotA",
+            "max": [
+              -6,
+              8.8,
+              -63.5
+            ],
+            "ref": "0_452461",
+            "size": [
+              38,
+              9.26,
+              36.5
+            ]
+          },
+          {
+            "min": [
+              6,
+              -0.46,
+              -100
+            ],
+            "path": "Workspace.Map.PlotB",
+            "max": [
+              44,
+              8.8,
+              -63.5
+            ],
+            "ref": "0_452498",
+            "size": [
+              38,
+              9.26,
+              36.5
+            ]
+          },
+          {
+            "min": [
+              -44,
+              -0.46,
+              -142
+            ],
+            "path": "Workspace.Map.PlotC",
+            "max": [
+              -6,
+              8.8,
+              -105.5
+            ],
+            "ref": "0_452535",
+            "size": [
+              38,
+              9.26,
+              36.5
+            ]
+          },
+          {
+            "min": [
+              6,
+              -0.46,
+              -142
+            ],
+            "path": "Workspace.Map.PlotD",
+            "max": [
+              44,
+              8.8,
+              -105.5
+            ],
+            "ref": "0_452572",
+            "size": [
+              38,
+              9.26,
+              36.5
+            ]
+          }
+        ],
+        "overlapping": 0,
+        "clean": true,
+        "collisions": [],
+        "tolerance": 0
+      },
+      "source": "studio-bridge"
+    },
+    {
+      "id": "runtime.console_errors",
+      "probe": "runtime_error",
+      "category": "runtime",
+      "status": "PASS",
+      "severity": "critical",
+      "message": "0 error line(s) in the Studio output",
+      "details": {
+        "counts": {
+          "warning": 0,
+          "info": 4,
+          "error": 0
+        },
+        "entries": []
+      },
+      "source": "studio-bridge"
+    }
+  ],
+  "commandErrors": [
+    {
+      "method": "world.summary",
+      "params": {},
+      "error": {
+        "code": "E_TIMEOUT",
+        "message": "plugin did not answer world.summary within 30.0s",
+        "details": {
+          "commandId": "cmd_78bc44cbd82f7e09",
+          "session": "sess_b44f3e2aabe3"
+        }
+      }
+    }
+  ],
+  "reproducibility": {
+    "engineVersion": "0.2.0",
+    "protocolVersion": "rqe.bridge/1",
+    "studioVersion": "0.733.0.7330989",
+    "placeId": 0,
+    "placeName": "MinersRidgeTycoon-qa-v7.rbxlx",
+    "commit": null,
+    "host": "OGrandeOxta",
+    "python": "3.12.10",
+    "observeConfig": {
+      "regionTag": "QARegion",
+      "regionNamePattern": "^Plot",
+      "regionRoot": "game.Workspace",
+      "groundSupportSamples": 9,
+      "groundSupportMaxGap": 1.5,
+      "budgets": {
+        "minFps": 30.0,
+        "maxWorkspaceInstances": 25000,
+        "maxMemoryMb": 4000.0,
+        "maxUnanchoredParts": 200
+      }
+    }
+  }
+}

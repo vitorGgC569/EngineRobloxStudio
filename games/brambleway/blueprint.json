@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "brambleway",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-brambleway",
+      "productId": "brambleway",
+      "revision": "1.0.0",
+      "seed": 42195237,
+      "genre": "tycoon",
+      "templateId": "template-tycoon-v1",
+      "sourceRoot": "games/brambleway",
+      "artifactRoot": "artifacts/products/brambleway",
+      "productIntentRef": {
+        "productId": "brambleway",
+        "artifactId": "brambleway.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/brambleway/definition/product-intent.json",
+        "sha256": "eb1cd4e581f90fa9fc34b1b1a460da378764ed6ce664e9ce0b0205797ebd1c6f"
+      },
+      "referenceBundleRef": {
+        "productId": "brambleway",
+        "artifactId": "brambleway.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/brambleway/definition/reference-bundle.json",
+        "sha256": "e33da93b890f9bbae9f608a255a0f03100af6be128fcb43015309a7b3ea6da93"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a plot grid around a shared hub",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "economy, inventory, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/brambleway/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/brambleway/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/brambleway/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/brambleway/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "core-loop",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "brambleway",
+            "artifactId": "brambleway.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/brambleway/definition/release-quality.json",
+            "sha256": "707b92d6184fb78f49aa05c8582f48fef999a3a721f46c59e7714e31d39316cf"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "brambleway",
+          "artifactId": "brambleway.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/brambleway/production_plan"
+        },
+        {
+          "productId": "brambleway",
+          "artifactId": "brambleway.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/brambleway/source_bundle"
+        },
+        {
+          "productId": "brambleway",
+          "artifactId": "brambleway.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/brambleway/asset_manifest"
+        },
+        {
+          "productId": "brambleway",
+          "artifactId": "brambleway.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/brambleway/build_place"
+        },
+        {
+          "productId": "brambleway",
+          "artifactId": "brambleway.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/brambleway/integration_manifest"
+        },
+        {
+          "productId": "brambleway",
+          "artifactId": "brambleway.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/brambleway/measurement_run"
+        },
+        {
+          "productId": "brambleway",
+          "artifactId": "brambleway.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/brambleway/scenario_results"
+        },
+        {
+          "productId": "brambleway",
+          "artifactId": "brambleway.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/brambleway/capture_bundle"
+        },
+        {
+          "productId": "brambleway",
+          "artifactId": "brambleway.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/brambleway/quality_review"
+        },
+        {
+          "productId": "brambleway",
+          "artifactId": "brambleway.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/brambleway/repair_plan"
+        },
+        {
+          "productId": "brambleway",
+          "artifactId": "brambleway.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/brambleway/regression_run"
+        },
+        {
+          "productId": "brambleway",
+          "artifactId": "brambleway.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/brambleway/release_candidate"
+        }
+      ]
+    }
+  ]
+}

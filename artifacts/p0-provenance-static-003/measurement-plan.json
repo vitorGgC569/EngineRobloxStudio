@@ -1,0 +1,1228 @@
+{
+  "schemaVersion": 1,
+  "contractPath": "contracts/mining-tycoon.robloxqa.json",
+  "requirements": [
+    {
+      "id": "player_can_spawn",
+      "probe": "spawn_clearance",
+      "category": "gameplay",
+      "severity": "critical",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "spawn_is_supported",
+      "probe": "spawn_support",
+      "category": "geometry",
+      "severity": "critical",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "player_can_reach_plot",
+      "probe": "path_exists",
+      "category": "navigation",
+      "severity": "critical",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "objectives_are_reachable",
+      "probe": "objective_reachable",
+      "category": "navigation",
+      "severity": "critical",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "package_can_be_purchased",
+      "probe": "button_interaction",
+      "category": "gameplay",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "purchased_package_persists",
+      "probe": "persistence",
+      "category": "persistence",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "purchase_is_idempotent",
+      "probe": "button_interaction",
+      "category": "gameplay",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "no_floating_buildings",
+      "probe": "floating_objects",
+      "category": "geometry",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "no_buried_objects",
+      "probe": "buried_objects",
+      "category": "geometry",
+      "severity": "minor",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "no_collision_overlap",
+      "probe": "collision_overlap",
+      "category": "geometry",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "doors_are_passable",
+      "probe": "door_clearance",
+      "category": "gameplay",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "stairs_are_usable",
+      "probe": "stairs_validity",
+      "category": "gameplay",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "store_prompt_is_reachable",
+      "probe": "interaction_distance",
+      "category": "gameplay",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "floor_progression_is_buyable",
+      "probe": "floor_progression",
+      "category": "gameplay",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "card_gallery_is_visible",
+      "probe": "card_gallery",
+      "category": "ui",
+      "severity": "major",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "camera_is_not_blocked",
+      "probe": "camera_obstruction",
+      "category": "visual",
+      "severity": "minor",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "ui_is_visible",
+      "probe": "ui_visibility",
+      "category": "ui",
+      "severity": "major",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "mobile_ui_valid",
+      "probe": "ui_overflow",
+      "category": "ui",
+      "severity": "major",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "remote_rejects_invalid_payloads",
+      "probe": "remote_security",
+      "category": "security",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "runtime_has_no_errors",
+      "probe": "runtime_error",
+      "category": "runtime",
+      "severity": "critical",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "memory_does_not_grow_suspiciously",
+      "probe": "memory_growth",
+      "category": "performance",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "instances_are_cleaned_up",
+      "probe": "instance_growth",
+      "category": "performance",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "connections_are_not_duplicated",
+      "probe": "duplicate_connections",
+      "category": "performance",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "players_are_isolated",
+      "probe": "multiplayer_isolation",
+      "category": "multiplayer",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "performance_budget_is_met",
+      "probe": "performance_budget",
+      "category": "performance",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "assets_are_safe",
+      "probe": "asset_security",
+      "category": "security",
+      "severity": "critical",
+      "minimumValidationLevel": "STATICALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "release-static-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_snapshots_are_healthy",
+      "probe": "visual_quality",
+      "category": "visual",
+      "severity": "minor",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "generated_visual_assets_are_valid",
+      "probe": "visual_asset_quality",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "STATICALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "visual-asset-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_snapshot_bundle_is_valid",
+      "probe": "visual_snapshot_bundle",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "studio_runtime_captures_are_available",
+      "probe": "studio_runtime_capture",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_classification_coverage",
+      "probe": "visual.classification.coverage",
+      "category": "visual",
+      "severity": "critical",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_palette_conformance",
+      "probe": "visual.palette.conformance",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_object_building_cardinality",
+      "probe": "visual.object.building.cardinality",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_object_building_scale",
+      "probe": "visual.object.building.scale",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_object_interactive_cardinality",
+      "probe": "visual.object.interactive.cardinality",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_object_interactive_scale",
+      "probe": "visual.object.interactive.scale",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_object_vegetation_cardinality",
+      "probe": "visual.object.vegetation.cardinality",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_object_vegetation_scale",
+      "probe": "visual.object.vegetation.scale",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_region_hub-regions_cardinality",
+      "probe": "visual.region.hub-regions.cardinality",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_region_hub-regions_density",
+      "probe": "visual.region.hub-regions.density",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_region_hub-regions_height_variation",
+      "probe": "visual.region.hub-regions.height-variation",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_region_hub-regions_material_variety",
+      "probe": "visual.region.hub-regions.material-variety",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_region_hub-regions_repetition",
+      "probe": "visual.region.hub-regions.repetition",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_region_mine-regions_cardinality",
+      "probe": "visual.region.mine-regions.cardinality",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_region_mine-regions_density",
+      "probe": "visual.region.mine-regions.density",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_region_mine-regions_height_variation",
+      "probe": "visual.region.mine-regions.height-variation",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_region_mine-regions_material_variety",
+      "probe": "visual.region.mine-regions.material-variety",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_region_mine-regions_repetition",
+      "probe": "visual.region.mine-regions.repetition",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_region_plot-regions_cardinality",
+      "probe": "visual.region.plot-regions.cardinality",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_region_plot-regions_density",
+      "probe": "visual.region.plot-regions.density",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_region_plot-regions_height_variation",
+      "probe": "visual.region.plot-regions.height-variation",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_region_plot-regions_material_variety",
+      "probe": "visual.region.plot-regions.material-variety",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_region_plot-regions_repetition",
+      "probe": "visual.region.plot-regions.repetition",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_landmark_mine_visibility",
+      "probe": "visual.landmark.mine.visibility",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_landmark_plot_visibility",
+      "probe": "visual.landmark.plot.visibility",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_landmark_shop_visibility",
+      "probe": "visual.landmark.shop.visibility",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_landmark_spawn_visibility",
+      "probe": "visual.landmark.spawn.visibility",
+      "category": "visual",
+      "severity": "major",
+      "minimumValidationLevel": "RUNTIME_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-quality-validator"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_viewpoint_mine_capture",
+      "probe": "visual.viewpoint.mine.capture",
+      "category": "visual",
+      "severity": "critical",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-capture"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_viewpoint_mine_review",
+      "probe": "visual.viewpoint.mine.review",
+      "category": "visual",
+      "severity": "critical",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "visual-review"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_viewpoint_mobile-store_capture",
+      "probe": "visual.viewpoint.mobile-store.capture",
+      "category": "visual",
+      "severity": "critical",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-capture"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_viewpoint_mobile-store_review",
+      "probe": "visual.viewpoint.mobile-store.review",
+      "category": "visual",
+      "severity": "critical",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "visual-review"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_viewpoint_plot_capture",
+      "probe": "visual.viewpoint.plot.capture",
+      "category": "visual",
+      "severity": "critical",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-capture"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_viewpoint_plot_review",
+      "probe": "visual.viewpoint.plot.review",
+      "category": "visual",
+      "severity": "critical",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "visual-review"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_viewpoint_shop_capture",
+      "probe": "visual.viewpoint.shop.capture",
+      "category": "visual",
+      "severity": "critical",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-capture"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_viewpoint_shop_review",
+      "probe": "visual.viewpoint.shop.review",
+      "category": "visual",
+      "severity": "critical",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "visual-review"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_viewpoint_spawn_capture",
+      "probe": "visual.viewpoint.spawn.capture",
+      "category": "visual",
+      "severity": "critical",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-capture"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_viewpoint_spawn_review",
+      "probe": "visual.viewpoint.spawn.review",
+      "category": "visual",
+      "severity": "critical",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "visual-review"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_viewpoint_tablet-plot_capture",
+      "probe": "visual.viewpoint.tablet-plot.capture",
+      "category": "visual",
+      "severity": "critical",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "studio-capture"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_viewpoint_tablet-plot_review",
+      "probe": "visual.viewpoint.tablet-plot.review",
+      "category": "visual",
+      "severity": "critical",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "visual-review"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_state_developed_coverage",
+      "probe": "visual.state.developed.coverage",
+      "category": "visual",
+      "severity": "critical",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "visual-review"
+      ],
+      "maximumAgeSeconds": 3600.0
+    },
+    {
+      "id": "visual_state_initial_coverage",
+      "probe": "visual.state.initial.coverage",
+      "category": "visual",
+      "severity": "critical",
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "minimumCoverage": 1.0,
+      "allowedSources": [
+        "visual-review"
+      ],
+      "maximumAgeSeconds": 3600.0
+    }
+  ],
+  "requiredCategories": [
+    "structural",
+    "security",
+    "visual",
+    "geometry",
+    "gameplay",
+    "navigation",
+    "ui",
+    "runtime",
+    "performance",
+    "persistence",
+    "multiplayer"
+  ],
+  "targetScores": {
+    "structural": 100.0,
+    "visual": 95.0,
+    "ui": 95.0,
+    "geometry": 100.0,
+    "navigation": 100.0,
+    "gameplay": 95.0,
+    "persistence": 100.0,
+    "multiplayer": 90.0,
+    "performance": 95.0,
+    "security": 100.0,
+    "runtime": 100.0
+  },
+  "minimumCategoryCoverage": {
+    "structural": 1.0,
+    "visual": 1.0,
+    "ui": 1.0,
+    "geometry": 1.0,
+    "navigation": 1.0,
+    "gameplay": 1.0,
+    "persistence": 1.0,
+    "multiplayer": 1.0,
+    "performance": 1.0,
+    "security": 1.0,
+    "runtime": 1.0
+  },
+  "forbiddenSources": [
+    "headless-runtime"
+  ],
+  "minimumVisualScore": 95.0,
+  "requireTrustworthyCaptures": true,
+  "metadata": {
+    "qualityFocus": "quality/quality-focus.json",
+    "contractName": "Miner's Ridge Tycoon",
+    "visualSpec": {
+      "path": "contracts/visual/miners-ridge.visual-quality.v1.json",
+      "schemaPath": "schemas/visual-quality-spec.v1.schema.json",
+      "specId": "miners-ridge.visual-quality",
+      "revision": 1,
+      "ruleCount": 41,
+      "rules": [
+        {
+          "id": "visual_classification_coverage",
+          "probe": "visual.classification.coverage",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "visual_palette_conformance",
+          "probe": "visual.palette.conformance",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_object_building_cardinality",
+          "probe": "visual.object.building.cardinality",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_object_building_scale",
+          "probe": "visual.object.building.scale",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_object_interactive_cardinality",
+          "probe": "visual.object.interactive.cardinality",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_object_interactive_scale",
+          "probe": "visual.object.interactive.scale",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_object_vegetation_cardinality",
+          "probe": "visual.object.vegetation.cardinality",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_object_vegetation_scale",
+          "probe": "visual.object.vegetation.scale",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_region_hub-regions_cardinality",
+          "probe": "visual.region.hub-regions.cardinality",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_region_hub-regions_density",
+          "probe": "visual.region.hub-regions.density",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_region_hub-regions_height_variation",
+          "probe": "visual.region.hub-regions.height-variation",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_region_hub-regions_material_variety",
+          "probe": "visual.region.hub-regions.material-variety",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_region_hub-regions_repetition",
+          "probe": "visual.region.hub-regions.repetition",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_region_mine-regions_cardinality",
+          "probe": "visual.region.mine-regions.cardinality",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_region_mine-regions_density",
+          "probe": "visual.region.mine-regions.density",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_region_mine-regions_height_variation",
+          "probe": "visual.region.mine-regions.height-variation",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_region_mine-regions_material_variety",
+          "probe": "visual.region.mine-regions.material-variety",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_region_mine-regions_repetition",
+          "probe": "visual.region.mine-regions.repetition",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_region_plot-regions_cardinality",
+          "probe": "visual.region.plot-regions.cardinality",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_region_plot-regions_density",
+          "probe": "visual.region.plot-regions.density",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_region_plot-regions_height_variation",
+          "probe": "visual.region.plot-regions.height-variation",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_region_plot-regions_material_variety",
+          "probe": "visual.region.plot-regions.material-variety",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_region_plot-regions_repetition",
+          "probe": "visual.region.plot-regions.repetition",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_landmark_mine_visibility",
+          "probe": "visual.landmark.mine.visibility",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_landmark_plot_visibility",
+          "probe": "visual.landmark.plot.visibility",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_landmark_shop_visibility",
+          "probe": "visual.landmark.shop.visibility",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_landmark_spawn_visibility",
+          "probe": "visual.landmark.spawn.visibility",
+          "minimumValidationLevel": "RUNTIME_VALIDATED",
+          "allowedSources": [
+            "studio-quality-validator"
+          ],
+          "severity": "major"
+        },
+        {
+          "id": "visual_viewpoint_mine_capture",
+          "probe": "visual.viewpoint.mine.capture",
+          "minimumValidationLevel": "VISUALLY_VALIDATED",
+          "allowedSources": [
+            "studio-capture"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "visual_viewpoint_mine_review",
+          "probe": "visual.viewpoint.mine.review",
+          "minimumValidationLevel": "VISUALLY_VALIDATED",
+          "allowedSources": [
+            "visual-review"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "visual_viewpoint_mobile-store_capture",
+          "probe": "visual.viewpoint.mobile-store.capture",
+          "minimumValidationLevel": "VISUALLY_VALIDATED",
+          "allowedSources": [
+            "studio-capture"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "visual_viewpoint_mobile-store_review",
+          "probe": "visual.viewpoint.mobile-store.review",
+          "minimumValidationLevel": "VISUALLY_VALIDATED",
+          "allowedSources": [
+            "visual-review"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "visual_viewpoint_plot_capture",
+          "probe": "visual.viewpoint.plot.capture",
+          "minimumValidationLevel": "VISUALLY_VALIDATED",
+          "allowedSources": [
+            "studio-capture"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "visual_viewpoint_plot_review",
+          "probe": "visual.viewpoint.plot.review",
+          "minimumValidationLevel": "VISUALLY_VALIDATED",
+          "allowedSources": [
+            "visual-review"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "visual_viewpoint_shop_capture",
+          "probe": "visual.viewpoint.shop.capture",
+          "minimumValidationLevel": "VISUALLY_VALIDATED",
+          "allowedSources": [
+            "studio-capture"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "visual_viewpoint_shop_review",
+          "probe": "visual.viewpoint.shop.review",
+          "minimumValidationLevel": "VISUALLY_VALIDATED",
+          "allowedSources": [
+            "visual-review"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "visual_viewpoint_spawn_capture",
+          "probe": "visual.viewpoint.spawn.capture",
+          "minimumValidationLevel": "VISUALLY_VALIDATED",
+          "allowedSources": [
+            "studio-capture"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "visual_viewpoint_spawn_review",
+          "probe": "visual.viewpoint.spawn.review",
+          "minimumValidationLevel": "VISUALLY_VALIDATED",
+          "allowedSources": [
+            "visual-review"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "visual_viewpoint_tablet-plot_capture",
+          "probe": "visual.viewpoint.tablet-plot.capture",
+          "minimumValidationLevel": "VISUALLY_VALIDATED",
+          "allowedSources": [
+            "studio-capture"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "visual_viewpoint_tablet-plot_review",
+          "probe": "visual.viewpoint.tablet-plot.review",
+          "minimumValidationLevel": "VISUALLY_VALIDATED",
+          "allowedSources": [
+            "visual-review"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "visual_state_developed_coverage",
+          "probe": "visual.state.developed.coverage",
+          "minimumValidationLevel": "VISUALLY_VALIDATED",
+          "allowedSources": [
+            "visual-review"
+          ],
+          "severity": "critical"
+        },
+        {
+          "id": "visual_state_initial_coverage",
+          "probe": "visual.state.initial.coverage",
+          "minimumValidationLevel": "VISUALLY_VALIDATED",
+          "allowedSources": [
+            "visual-review"
+          ],
+          "severity": "critical"
+        }
+      ]
+    }
+  }
+}

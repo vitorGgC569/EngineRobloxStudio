@@ -1,0 +1,38 @@
+{
+  "name": "MinersRidgeTycoon",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Shared": {
+        "$path": "src/ReplicatedStorage/Shared"
+      },
+      "Tokens": {
+        "$path": "../../tokens"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "$path": "src/ServerScriptService",
+      "QualityRuntime": {
+        "$path": "../runtime"
+      },
+      "WorldKit": {
+        "$path": "../lib/WorldKit"
+      },
+      "GameKit": {
+        "$path": "../lib/GameKit"
+      },
+      "Templates": {
+        "$path": "../lib/Templates"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "$path": "src/StarterPlayer/StarterPlayerScripts"
+      }
+    }
+  }
+}

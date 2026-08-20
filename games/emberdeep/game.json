@@ -1,0 +1,36 @@
+{
+  "schemaVersion": 1,
+  "id": "emberdeep",
+  "genre": "roguelite",
+  "theme": "ruins",
+  "pitch": "Dungeon crawler em ruinas vulcanicas: explore salas, derrote guardioes, colete relicas, melhore armas na forja.",
+  "coreLoop": [
+    "explore",
+    "fight",
+    "collect",
+    "unlock"
+  ],
+  "world": {
+    "topology": "linear_levels",
+    "zones": []
+  },
+  "progression": {
+    "kind": "checkpoint",
+    "tiers": 8,
+    "firstTierSeconds": 45.0,
+    "sessionMinutes": 20.0
+  },
+  "economy": {
+    "currencies": []
+  },
+  "systems": [
+    "progression",
+    "save",
+    "inventory",
+    "analytics"
+  ],
+  "monetization": [],
+  "tokenSet": "games/emberdeep/tokens/emberdeep-ember.json",
+  "concurrentPlayers": 1,
+  "privateSpace": false
+}

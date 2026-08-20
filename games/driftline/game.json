@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "driftline",
+  "genre": "racing",
+  "theme": "corrida upgrades ganhe",
+  "pitch": "Corrida de rua com upgrades: ganhe dinheiro em provas, melhore o carro e desbloqueie novos circuitos.",
+  "coreLoop": [
+    "race",
+    "unlock",
+    "upgrade"
+  ],
+  "world": {
+    "topology": "linear_levels",
+    "zones": []
+  },
+  "progression": {
+    "kind": "tiered",
+    "tiers": 8,
+    "firstTierSeconds": 90.0,
+    "sessionMinutes": 10.0
+  },
+  "economy": {
+    "currencies": [
+      {
+        "id": "cash",
+        "displayName": "Cash",
+        "earnedBy": [
+          "race"
+        ],
+        "spentOn": [
+          "unlock",
+          "upgrade"
+        ],
+        "premium": false
+      }
+    ]
+  },
+  "systems": [
+    "progression",
+    "save",
+    "economy",
+    "analytics"
+  ],
+  "monetization": [],
+  "tokenSet": "games/driftline/tokens/driftline-siege.json",
+  "concurrentPlayers": 1,
+  "privateSpace": false
+}

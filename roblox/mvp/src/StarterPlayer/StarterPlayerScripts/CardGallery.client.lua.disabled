@@ -1,0 +1,256 @@
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local player = Players.LocalPlayer
+local CardCatalog = require(ReplicatedStorage.Shared.CardCatalog)
+local remotes = ReplicatedStorage:WaitForChild("Remotes")
+local equipCard = remotes:WaitForChild("EquipCard")
+
+local palette = {
+	ink = Color3.fromRGB(18, 27, 38),
+	panel = Color3.fromRGB(29, 42, 54),
+	panelSoft = Color3.fromRGB(39, 54, 65),
+	white = Color3.fromRGB(242, 243, 236),
+	muted = Color3.fromRGB(174, 188, 192),
+	teal = Color3.fromRGB(55, 196, 181),
+	copper = Color3.fromRGB(211, 121, 58),
+	gold = Color3.fromRGB(242, 193, 83),
+}
+
+local function stylePanel(instance, color, radius, strokeColor)
+	instance.BackgroundColor3 = color
+	instance.BackgroundTransparency = 0.04
+	local corner = Instance.new("UICorner")
+	corner.CornerRadius = UDim.new(0, radius or 12)
+	corner.Parent = instance
+	local stroke = Instance.new("UIStroke")
+	stroke.Color = strokeColor or palette.teal
+	stroke.Thickness = 1.5
+	stroke.Transparency = 0.18
+	stroke.Parent = instance
+end
+
+local function makeLabel(parent, name, text, size, position, color, font, textSize)
+	local label = Instance.new("TextLabel")
+	label.Name = name
+	label.BackgroundTransparency = 1
+	label.Size = size
+	label.Position = position
+	label.Text = text
+	label.TextColor3 = color or palette.white
+	label.Font = font or Enum.Font.Gotham
+	label.TextSize = textSize or 14
+	label.TextXAlignment = Enum.TextXAlignment.Left
+	label.TextYAlignment = Enum.TextYAlignment.Center
+	label.Parent = parent
+	return label
+end
+
+local gui = Instance.new("ScreenGui")
+gui.Name = "CardGallery"
+gui.DisplayOrder = 30
+gui.IgnoreGuiInset = false
+gui.ResetOnSpawn = false
+gui.Parent = player:WaitForChild("PlayerGui")
+
+local root = Instance.new("Frame")
+root.Name = "GalleryRoot"
+root.BackgroundTransparency = 1
+root.Size = UDim2.fromScale(1, 1)
+root.Parent = gui
+
+local cardsButton = Instance.new("TextButton")
+cardsButton.Name = "CardsButton"
+cardsButton.Size = UDim2.fromOffset(170, 48)
+cardsButton.Position = UDim2.new(1, -192, 0, 150)
+cardsButton.Text = "CARDS  0"
+cardsButton.TextColor3 = palette.white
+cardsButton.Font = Enum.Font.GothamBold
+cardsButton.TextSize = 15
+cardsButton.AutoButtonColor = true
+stylePanel(cardsButton, palette.panelSoft, 10, palette.copper)
+cardsButton.Parent = root
+
+local panel = Instance.new("Frame")
+panel.Name = "CardCollectionPanel"
+panel.AnchorPoint = Vector2.new(0.5, 0.5)
+panel.Position = UDim2.fromScale(0.5, 0.51)
+panel.Size = UDim2.new(1, -34, 0, 470)
+panel.Visible = false
+stylePanel(panel, palette.ink, 16, palette.copper)
+panel.Parent = root
+
+local panelConstraint = Instance.new("UISizeConstraint")
+panelConstraint.MinSize = Vector2.new(300, 360)
+panelConstraint.MaxSize = Vector2.new(780, 520)
+panelConstraint.Parent = panel
+
+local background = Instance.new("ImageLabel")
+background.Name = "BackgroundArt"
+background.BackgroundTransparency = 1
+background.Size = UDim2.fromScale(1, 1)
+background.Image = ""
+background.ImageTransparency = 1
+background.ScaleType = Enum.ScaleType.Crop
+background.ZIndex = 0
+background.Parent = panel
+
+local title = makeLabel(panel, "Title", "FIELD DECK", UDim2.new(1, -170, 0, 30), UDim2.fromOffset(24, 16), palette.white, Enum.Font.GothamBlack, 24)
+title.ZIndex = 2
+local subtitle = makeLabel(panel, "Subtitle", "Collect specialists. Equip one to shape your next run.", UDim2.new(1, -210, 0, 20), UDim2.fromOffset(24, 48), palette.muted, Enum.Font.Gotham, 13)
+subtitle.ZIndex = 2
+local close = Instance.new("TextButton")
+close.Name = "Close"
+close.Size = UDim2.fromOffset(110, 34)
+close.Position = UDim2.new(1, -136, 0, 18)
+close.Text = "CLOSE"
+close.TextColor3 = palette.white
+close.Font = Enum.Font.GothamBold
+close.TextSize = 13
+close.AutoButtonColor = true
+stylePanel(close, palette.panelSoft, 9, palette.teal)
+close.ZIndex = 2
+close.Parent = panel
+
+local status = makeLabel(panel, "Status", "Select a card to equip it.", UDim2.new(1, -48, 0, 20), UDim2.fromOffset(24, 76), palette.teal, Enum.Font.GothamBold, 12)
+status.ZIndex = 2
+
+local scroll = Instance.new("ScrollingFrame")
+scroll.Name = "CardGridScroll"
+scroll.BackgroundTransparency = 1
+scroll.BorderSizePixel = 0
+scroll.Position = UDim2.fromOffset(18, 106)
+scroll.Size = UDim2.new(1, -36, 1, -122)
+scroll.ScrollBarThickness = 7
+scroll.ScrollBarImageColor3 = palette.copper
+scroll.CanvasSize = UDim2.new(0, 0, 0, 0)
+scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+scroll.ZIndex = 2
+scroll.Parent = panel
+
+local padding = Instance.new("UIPadding")
+padding.PaddingTop = UDim.new(0, 8)
+padding.PaddingBottom = UDim.new(0, 18)
+padding.PaddingLeft = UDim.new(0, 8)
+padding.PaddingRight = UDim.new(0, 8)
+padding.Parent = scroll
+
+local grid = Instance.new("UIGridLayout")
+grid.Name = "CardGrid"
+grid.CellSize = UDim2.fromOffset(148, 222)
+grid.CellPadding = UDim2.fromOffset(18, 18)
+grid.FillDirection = Enum.FillDirection.Horizontal
+grid.FillDirectionMaxCells = 4
+grid.SortOrder = Enum.SortOrder.LayoutOrder
+grid.Parent = scroll
+
+local function ownedCards()
+	local owned = {}
+	local encoded = player:GetAttribute("CardCollection") or ""
+	for cardId in string.gmatch(encoded, "[^,]+") do
+		table.insert(owned, cardId)
+	end
+	return owned
+end
+
+local function makeCardTile(cardId, order)
+	local card = CardCatalog.get(cardId)
+	if not card then
+		return
+	end
+	local rarity = CardCatalog.Rarities[card.rarity] or CardCatalog.Rarities.Common
+	local tile = Instance.new("TextButton")
+	tile.Name = "Card_" .. card.id
+	tile.LayoutOrder = order
+	tile.Text = ""
+	tile.AutoButtonColor = true
+	tile.BackgroundColor3 = palette.panel
+	tile.TextColor3 = palette.white
+	stylePanel(tile, palette.panel, 12, rarity.color)
+	tile.Parent = scroll
+
+	local artSurface = Instance.new("Frame")
+	artSurface.Name = "ArtSurface"
+	artSurface.BackgroundColor3 = rarity.color
+	artSurface.BackgroundTransparency = 0.72
+	artSurface.BorderSizePixel = 0
+	artSurface.Size = UDim2.new(1, -12, 0, 116)
+	artSurface.Position = UDim2.fromOffset(6, 6)
+	artSurface.Parent = tile
+	local artGradient = Instance.new("UIGradient")
+	artGradient.Color = ColorSequence.new({
+		ColorSequenceKeypoint.new(0, rarity.color),
+		ColorSequenceKeypoint.new(1, palette.ink),
+	})
+	artGradient.Rotation = 35
+	artGradient.Parent = artSurface
+
+	local signal = makeLabel(artSurface, "OreSignal", "◆  ORE SIGNAL", UDim2.new(1, -18, 0, 24), UDim2.fromOffset(9, 46), palette.white, Enum.Font.GothamBlack, 12)
+	signal.TextXAlignment = Enum.TextXAlignment.Center
+	signal.ZIndex = 2
+
+	local art = Instance.new("ImageLabel")
+	art.Name = "ArtPreview"
+	art.BackgroundTransparency = 1
+	art.BorderSizePixel = 0
+	art.Size = UDim2.new(1, -12, 0, 116)
+	art.Position = UDim2.fromOffset(6, 6)
+	art.ScaleType = Enum.ScaleType.Crop
+	art.Image = card.runtimeAssetId and ("rbxassetid://" .. tostring(card.runtimeAssetId)) or ""
+	art.ImageTransparency = card.runtimeAssetId and 0.04 or 1
+	art.ZIndex = 3
+	art.Parent = tile
+
+	local artFallback = makeLabel(tile, "ArtFallback", card.runtimeAssetId and "ORIGINAL ART" or "ART IMPORT QUEUED", UDim2.new(1, -20, 0, 20), UDim2.fromOffset(10, 54), palette.muted, Enum.Font.GothamBold, 10)
+	artFallback.TextXAlignment = Enum.TextXAlignment.Center
+	artFallback.ZIndex = 3
+
+	local rarityLabel = makeLabel(tile, "Rarity", rarity.label, UDim2.new(1, -16, 0, 16), UDim2.fromOffset(8, 126), rarity.color, Enum.Font.GothamBold, 10)
+	rarityLabel.ZIndex = 3
+	local name = makeLabel(tile, "Name", card.name, UDim2.new(1, -16, 0, 24), UDim2.fromOffset(8, 143), palette.white, Enum.Font.GothamBlack, 15)
+	name.TextTruncate = Enum.TextTruncate.AtEnd
+	name.ZIndex = 3
+	local effect = makeLabel(tile, "Effect", card.effect, UDim2.new(1, -16, 0, 38), UDim2.fromOffset(8, 168), palette.muted, Enum.Font.Gotham, 11)
+	effect.TextWrapped = true
+	effect.TextYAlignment = Enum.TextYAlignment.Top
+	effect.ZIndex = 3
+	local power = makeLabel(tile, "Power", "POWER  " .. tostring(card.power), UDim2.new(1, -16, 0, 16), UDim2.fromOffset(8, 201), palette.gold, Enum.Font.GothamBold, 10)
+	power.ZIndex = 3
+
+	tile.MouseButton1Click:Connect(function()
+		equipCard:FireServer(card.id)
+		status.Text = "Equipping " .. card.name .. "..."
+	end)
+end
+
+local function render()
+	for _, child in ipairs(scroll:GetChildren()) do
+		if not child:IsA("UIGridLayout") and not child:IsA("UIPadding") then
+			child:Destroy()
+		end
+	end
+	local owned = ownedCards()
+	cardsButton.Text = "CARDS  " .. tostring(#owned)
+	title.Text = "FIELD DECK  /  " .. tostring(#owned) .. " CARDS"
+	for index, cardId in ipairs(owned) do
+		makeCardTile(cardId, index)
+	end
+end
+
+local function toggle()
+	panel.Visible = not panel.Visible
+	if panel.Visible then
+		render()
+	end
+end
+
+cardsButton.MouseButton1Click:Connect(toggle)
+close.MouseButton1Click:Connect(toggle)
+player:GetAttributeChangedSignal("CardCollection"):Connect(render)
+player:GetAttributeChangedSignal("ActiveCard"):Connect(function()
+	local activeCard = CardCatalog.get(player:GetAttribute("ActiveCard") or "")
+	status.Text = activeCard and ("Active card: " .. activeCard.name) or "Select a card to equip it."
+	end)
+render()
+
+return nil

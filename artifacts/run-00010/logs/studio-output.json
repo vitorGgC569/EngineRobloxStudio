@@ -1,0 +1,32 @@
+{
+  "totalEntries": 4,
+  "available": true,
+  "returned": 4,
+  "counts": {
+    "warning": 0,
+    "info": 4,
+    "error": 0
+  },
+  "entries": [
+    {
+      "severity": "info",
+      "timestamp": 1786394762.466,
+      "message": "[RQE Bridge] starting"
+    },
+    {
+      "severity": "info",
+      "timestamp": 1786394762.653,
+      "message": "[RQE Bridge] connected to http://127.0.0.1:8790 as sess_c9285fe1c15a (edit)"
+    },
+    {
+      "severity": "info",
+      "timestamp": 1786394769.603,
+      "message": "[RQE Bridge] context changed edit -> run; re-registering"
+    },
+    {
+      "severity": "info",
+      "timestamp": 1786394769.622,
+      "message": "[RQE Bridge] connected to http://127.0.0.1:8790 as sess_87a608ef8592 (run)"
+    }
+  ]
+}

@@ -1,0 +1,167 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>RQE — runs verificadas</title>
+  <style>
+    :root { color-scheme: dark; font-family: Inter, system-ui, sans-serif; background: #0d131b; color: #edf3fa; }
+    * { box-sizing: border-box; }
+    body { max-width: 1240px; margin: 0 auto; padding: 36px 22px 72px; }
+    .hero { display: flex; justify-content: space-between; gap: 24px; align-items: end; flex-wrap: wrap; }
+    h1 { margin: 0 0 8px; font-size: clamp(28px, 5vw, 42px); }
+    h2 { margin-top: 34px; }
+    p, .muted { color: #9eacbd; }
+    .badge { border: 1px solid #5f7896; color: #c9d7e7; border-radius: 999px; padding: 10px 16px; font-weight: 750; }
+    .badge.pass { border-color: #2fdb8b; color: #2fdb8b; }
+    .badge.fail { border-color: #ff6b7a; color: #ff8b98; }
+    .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(175px, 1fr)); gap: 14px; margin: 28px 0; }
+    .card, .panel { background: #16202c; border: 1px solid #273648; border-radius: 14px; padding: 18px; }
+    .metric { font-size: 26px; font-weight: 800; margin-top: 8px; }
+    .metric small { font-size: 12px; font-weight: 500; color: #9eacbd; }
+    .table-wrap { overflow-x: auto; border-radius: 14px; border: 1px solid #273648; }
+    table { width: 100%; min-width: 980px; border-collapse: collapse; background: #16202c; }
+    th, td { padding: 12px 14px; text-align: left; border-bottom: 1px solid #273648; vertical-align: top; }
+    th { color: #9eacbd; font-size: 13px; }
+    code { color: #a9d4ff; }
+    .pass { color: #2fdb8b; }
+    .fail { color: #ff8b98; }
+    .unknown { color: #f1c56c; }
+    .gap-list { margin: 0; padding-left: 20px; }
+    .gap-list li { margin: 8px 0; color: #e7b5bb; }
+  </style>
+</head>
+<body>
+  <section class="hero">
+    <div>
+      <h1>Roblox Quality Engine</h1>
+      <p>Projeção de leitura sobre manifests finais v2 e artefatos SHA-256 verificados.</p>
+    </div>
+    <div id="status" class="badge">Carregando índice verificado…</div>
+  </section>
+
+  <section id="metrics" class="grid" aria-label="Métricas da run selecionada"></section>
+
+  <section>
+    <h2>Qualidade dos dados</h2>
+    <div class="panel">
+      <p id="quality-summary" class="muted"></p>
+      <ul id="gaps" class="gap-list"></ul>
+    </div>
+  </section>
+
+  <section>
+    <h2>Runs verificadas</h2>
+    <div class="table-wrap">
+      <table>
+        <thead><tr><th>Run</th><th>Status reportado</th><th>Concluída</th><th>Cobertura mínima</th><th>Qualidade mínima</th><th>Duração</th><th>Custo</th><th>Regressão</th><th>Manifest</th></tr></thead>
+        <tbody id="runs"></tbody>
+      </table>
+    </div>
+  </section>
+
+  <script>
+    const unknown = '— desconhecido';
+
+    function textElement(tag, text, className) {
+      const node = document.createElement(tag);
+      node.textContent = text;
+      if (className) node.className = className;
+      return node;
+    }
+
+    function number(value, digits = 1, suffix = '') {
+      return typeof value === 'number' && Number.isFinite(value) ? `${value.toFixed(digits)}${suffix}` : unknown;
+    }
+
+    function duration(run) {
+      const reported = run.metrics?.durationMs;
+      if (typeof reported === 'number') return `${number(reported / 1000, 2, ' s')} (reportada)`;
+      const wall = run.metrics?.wallClockDurationMs;
+      return typeof wall === 'number' ? `${number(wall / 1000, 2, ' s')} (wall clock)` : unknown;
+    }
+
+    function cost(run) {
+      const value = run.metrics?.cost;
+      return value && typeof value.amount === 'number' ? `${number(value.amount, 4)} ${value.currency}` : unknown;
+    }
+
+    function addCard(container, label, value, note) {
+      const card = document.createElement('div');
+      card.className = 'card';
+      card.append(textElement('div', label, 'muted'));
+      const metric = textElement('div', value, 'metric');
+      if (note) metric.append(textElement('small', ` ${note}`));
+      card.append(metric);
+      container.append(card);
+    }
+
+    function addCell(row, value, className) {
+      row.append(textElement('td', value, className));
+    }
+
+    fetch('./data/index.json', { cache: 'no-store' }).then(response => {
+      if (!response.ok) throw new Error(`índice HTTP ${response.status}`);
+      return response.json();
+    }).then(index => {
+      if (index.schemaVersion !== 1 || index.source !== 'verified-finalized-run-manifests-v2') {
+        throw new Error('índice não declara origem em manifests v2 verificados');
+      }
+      const runs = Array.isArray(index.runs) ? index.runs : [];
+      const latestRef = index.latest;
+      const selected = latestRef && runs.find(run => run.runId === latestRef.runId && run.manifestSha256 === latestRef.manifestSha256);
+      if (latestRef && !selected) throw new Error('latest não está hash-bound a uma run verificada no índice');
+
+      const status = document.querySelector('#status');
+      if (!selected) {
+        status.textContent = 'SEM RUN V2 VERIFICADA';
+        status.className = 'badge unknown';
+      } else {
+        status.textContent = `EXIBIÇÃO • ${selected.status}`;
+        status.className = `badge ${selected.status === 'RELEASED' && selected.gateConsistent ? 'pass' : 'fail'}`;
+      }
+
+      const metrics = document.querySelector('#metrics');
+      if (selected) {
+        addCard(metrics, 'Cobertura mínima', number(selected.metrics?.coverage?.minimum * 100, 1, '%'));
+        addCard(metrics, 'Qualidade mínima', number(selected.metrics?.quality?.minimum, 1, '/100'));
+        addCard(metrics, 'Duração', duration(selected));
+        addCard(metrics, 'Custo', cost(selected));
+        addCard(metrics, 'Flakiness', index.flakiness?.status === 'MEASURED' ? number(index.flakiness.flipRate * 100, 1, '%') : unknown);
+        addCard(metrics, 'Baseline', selected.regression?.status === 'AVAILABLE' ? selected.regression.baselineRunId : unknown);
+      }
+
+      const quality = index.dataQuality || {};
+      const verifiedCount = typeof quality.verifiedRuns === 'number' ? quality.verifiedRuns : unknown;
+      const rejectedCount = typeof quality.rejectedRuns === 'number' ? quality.rejectedRuns : unknown;
+      document.querySelector('#quality-summary').textContent = `${verifiedCount} run(s) verificadas; ${rejectedCount} rejeitada(s). Ausência permanece desconhecida, nunca vira zero.`;
+      const gapList = document.querySelector('#gaps');
+      const gapsReported = Array.isArray(quality.gaps);
+      const gaps = gapsReported ? quality.gaps : [];
+      if (!gapsReported) gapList.append(textElement('li', 'global • DATA_QUALITY_UNKNOWN: o índice não reportou a lista de gaps.'));
+      else if (!gaps.length) gapList.append(textElement('li', 'Nenhum gap de integridade reportado.'));
+      gaps.slice(0, 80).forEach(gap => gapList.append(textElement('li', `${gap.runId || 'global'} • ${gap.code}: ${gap.message}`)));
+
+      const body = document.querySelector('#runs');
+      runs.forEach(run => {
+        const row = document.createElement('tr');
+        addCell(row, run.runId);
+        addCell(row, `${run.status}${run.gateConsistent ? '' : ' • gate inconsistente'}`, run.status === 'RELEASED' && run.gateConsistent ? 'pass' : 'fail');
+        addCell(row, run.completedAt || unknown);
+        addCell(row, typeof run.metrics?.coverage?.minimum === 'number' ? number(run.metrics.coverage.minimum * 100, 1, '%') : unknown);
+        addCell(row, number(run.metrics?.quality?.minimum, 1, '/100'));
+        addCell(row, duration(run));
+        addCell(row, cost(run));
+        addCell(row, run.regression?.status === 'AVAILABLE' ? `vs ${run.regression.baselineRunId}` : unknown);
+        addCell(row, run.manifestSha256 ? run.manifestSha256.slice(0, 12) : unknown);
+        body.append(row);
+      });
+    }).catch(error => {
+      const status = document.querySelector('#status');
+      status.textContent = 'ÍNDICE INDISPONÍVEL';
+      status.className = 'badge fail';
+      document.querySelector('#quality-summary').textContent = `${error.message}. Gere apps/dashboard/data/index.json a partir de build_dashboard_index(); reports/latest não é aceito.`;
+    });
+  </script>
+</body>
+</html>

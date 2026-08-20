@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "productId": "cinderpost",
+  "pitch": "Posto avancado em terra devastada: defenda de raides noturnas, cultive de dia, recrute sobreviventes.",
+  "topology": "grid-plots",
+  "progression": "tiered-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/cinderpost/tokens/cinderpost-grove.json",
+  "coreLoop": [
+    "collect",
+    "process",
+    "upgrade",
+    "sell",
+    "unlock"
+  ]
+}

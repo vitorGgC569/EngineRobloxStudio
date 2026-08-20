@@ -1,0 +1,423 @@
+{
+  "releaseAllowed": false,
+  "runId": "p0-static-smoke-001",
+  "buildHash": "e0a33f1ba146502868e59af476926452e148ed9411eb57e328864384a3829ae6",
+  "scores": {
+    "structural": 100.0,
+    "visual": 0.0,
+    "ui": 0.0,
+    "geometry": 0.0,
+    "navigation": 0.0,
+    "gameplay": 0.0,
+    "persistence": 0.0,
+    "multiplayer": 0.0,
+    "performance": 0.0,
+    "security": 50.0,
+    "runtime": 0.0
+  },
+  "coverage": {
+    "structural": 1.0,
+    "visual": 0.0,
+    "ui": 0.0,
+    "geometry": 0.0,
+    "navigation": 0.0,
+    "gameplay": 0.0,
+    "persistence": 0.0,
+    "multiplayer": 0.0,
+    "performance": 0.0,
+    "security": 0.5,
+    "runtime": 0.0
+  },
+  "visualScore": null,
+  "blockers": [
+    "visual: coverage 0.000 below 1.000",
+    "visual: score 0.0 below 95.0",
+    "ui: coverage 0.000 below 1.000",
+    "ui: score 0.0 below 95.0",
+    "geometry: coverage 0.000 below 1.000",
+    "geometry: score 0.0 below 100.0",
+    "navigation: coverage 0.000 below 1.000",
+    "navigation: score 0.0 below 100.0",
+    "gameplay: coverage 0.000 below 1.000",
+    "gameplay: score 0.0 below 95.0",
+    "persistence: coverage 0.000 below 1.000",
+    "persistence: score 0.0 below 100.0",
+    "multiplayer: coverage 0.000 below 1.000",
+    "multiplayer: score 0.0 below 90.0",
+    "performance: coverage 0.000 below 1.000",
+    "performance: score 0.0 below 95.0",
+    "security: coverage 0.500 below 1.000",
+    "security: score 50.0 below 100.0",
+    "runtime: coverage 0.000 below 1.000",
+    "runtime: score 0.0 below 100.0",
+    "player_can_spawn: missing (required probe produced no evidence)",
+    "spawn_is_supported: missing (required probe produced no evidence)",
+    "player_can_reach_plot: missing (required probe produced no evidence)",
+    "objectives_are_reachable: missing (required probe produced no evidence)",
+    "package_can_be_purchased: missing (required probe produced no evidence)",
+    "purchased_package_persists: missing (required probe produced no evidence)",
+    "purchase_is_idempotent: missing (required probe produced no evidence)",
+    "no_floating_buildings: missing (required probe produced no evidence)",
+    "no_buried_objects: missing (required probe produced no evidence)",
+    "no_collision_overlap: missing (required probe produced no evidence)",
+    "doors_are_passable: missing (required probe produced no evidence)",
+    "stairs_are_usable: missing (required probe produced no evidence)",
+    "store_prompt_is_reachable: missing (required probe produced no evidence)",
+    "floor_progression_is_buyable: missing (required probe produced no evidence)",
+    "card_gallery_is_visible: missing (required probe produced no evidence)",
+    "camera_is_not_blocked: missing (required probe produced no evidence)",
+    "ui_is_visible: missing (required probe produced no evidence)",
+    "mobile_ui_valid: missing (required probe produced no evidence)",
+    "remote_rejects_invalid_payloads: missing (required probe produced no evidence)",
+    "runtime_has_no_errors: missing (required probe produced no evidence)",
+    "memory_does_not_grow_suspiciously: missing (required probe produced no evidence)",
+    "instances_are_cleaned_up: missing (required probe produced no evidence)",
+    "connections_are_not_duplicated: missing (required probe produced no evidence)",
+    "players_are_isolated: missing (required probe produced no evidence)",
+    "performance_budget_is_met: missing (required probe produced no evidence)",
+    "visual_snapshots_are_healthy: missing (required probe produced no evidence)",
+    "generated_visual_assets_are_valid: invalid (visual.asset_quality: validation level STATICALLY_VALIDATED is below VISUALLY_VALIDATED)",
+    "visual_snapshot_bundle_is_valid: invalid (visual.snapshot_bundle: validation level STATICALLY_VALIDATED is below VISUALLY_VALIDATED)",
+    "studio_runtime_captures_are_available: invalid (studio.runtime_capture: validation level STATICALLY_VALIDATED is below VISUALLY_VALIDATED)",
+    "visual review score is missing",
+    "capture manifest is missing"
+  ],
+  "requirements": [
+    {
+      "requirementId": "player_can_spawn",
+      "probe": "spawn_clearance",
+      "category": "gameplay",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "spawn_is_supported",
+      "probe": "spawn_support",
+      "category": "geometry",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "player_can_reach_plot",
+      "probe": "path_exists",
+      "category": "navigation",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "objectives_are_reachable",
+      "probe": "objective_reachable",
+      "category": "navigation",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "package_can_be_purchased",
+      "probe": "button_interaction",
+      "category": "gameplay",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "purchased_package_persists",
+      "probe": "persistence",
+      "category": "persistence",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "purchase_is_idempotent",
+      "probe": "button_interaction",
+      "category": "gameplay",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "no_floating_buildings",
+      "probe": "floating_objects",
+      "category": "geometry",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "no_buried_objects",
+      "probe": "buried_objects",
+      "category": "geometry",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "no_collision_overlap",
+      "probe": "collision_overlap",
+      "category": "geometry",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "doors_are_passable",
+      "probe": "door_clearance",
+      "category": "gameplay",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "stairs_are_usable",
+      "probe": "stairs_validity",
+      "category": "gameplay",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "store_prompt_is_reachable",
+      "probe": "interaction_distance",
+      "category": "gameplay",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "floor_progression_is_buyable",
+      "probe": "floor_progression",
+      "category": "gameplay",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "card_gallery_is_visible",
+      "probe": "card_gallery",
+      "category": "ui",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "camera_is_not_blocked",
+      "probe": "camera_obstruction",
+      "category": "visual",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "ui_is_visible",
+      "probe": "ui_visibility",
+      "category": "ui",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "mobile_ui_valid",
+      "probe": "ui_overflow",
+      "category": "ui",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "remote_rejects_invalid_payloads",
+      "probe": "remote_security",
+      "category": "security",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "runtime_has_no_errors",
+      "probe": "runtime_error",
+      "category": "runtime",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "memory_does_not_grow_suspiciously",
+      "probe": "memory_growth",
+      "category": "performance",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "instances_are_cleaned_up",
+      "probe": "instance_growth",
+      "category": "performance",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "connections_are_not_duplicated",
+      "probe": "duplicate_connections",
+      "category": "performance",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "players_are_isolated",
+      "probe": "multiplayer_isolation",
+      "category": "multiplayer",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "performance_budget_is_met",
+      "probe": "performance_budget",
+      "category": "performance",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "assets_are_safe",
+      "probe": "asset_security",
+      "category": "security",
+      "status": "PASS",
+      "score": 100.0,
+      "reasons": [],
+      "evidenceIds": [
+        "security.asset_scripts"
+      ]
+    },
+    {
+      "requirementId": "visual_snapshots_are_healthy",
+      "probe": "visual_quality",
+      "category": "visual",
+      "status": "MISSING",
+      "score": 0.0,
+      "reasons": [
+        "required probe produced no evidence"
+      ],
+      "evidenceIds": []
+    },
+    {
+      "requirementId": "generated_visual_assets_are_valid",
+      "probe": "visual_asset_quality",
+      "category": "visual",
+      "status": "INVALID",
+      "score": 0.0,
+      "reasons": [
+        "visual.asset_quality: validation level STATICALLY_VALIDATED is below VISUALLY_VALIDATED"
+      ],
+      "evidenceIds": [
+        "visual.asset_quality"
+      ]
+    },
+    {
+      "requirementId": "visual_snapshot_bundle_is_valid",
+      "probe": "visual_snapshot_bundle",
+      "category": "visual",
+      "status": "INVALID",
+      "score": 0.0,
+      "reasons": [
+        "visual.snapshot_bundle: validation level STATICALLY_VALIDATED is below VISUALLY_VALIDATED"
+      ],
+      "evidenceIds": [
+        "visual.snapshot_bundle"
+      ]
+    },
+    {
+      "requirementId": "studio_runtime_captures_are_available",
+      "probe": "studio_runtime_capture",
+      "category": "visual",
+      "status": "INVALID",
+      "score": 0.0,
+      "reasons": [
+        "studio.runtime_capture: validation level STATICALLY_VALIDATED is below VISUALLY_VALIDATED"
+      ],
+      "evidenceIds": [
+        "studio.runtime_capture"
+      ]
+    }
+  ]
+}

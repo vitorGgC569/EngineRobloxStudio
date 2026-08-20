@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "productId": "tidewatch",
+  "pitch": "Sobrevivencia numa ilha: colete recursos, construa abrigo, gerencie fome e sede, sobreviva as tempestades noturnas.",
+  "topology": "open-world",
+  "progression": "checkpoint-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/tidewatch/tokens/tidewatch-siege.json",
+  "coreLoop": [
+    "explore",
+    "collect",
+    "craft",
+    "survive"
+  ]
+}

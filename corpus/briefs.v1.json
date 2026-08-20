@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "id": "rqe-regression-corpus",
+  "revision": 1,
+  "purpose": "Twenty briefs across genres, so a change to the factory is measured against the range it claims to serve rather than against the one game it was tuned on. Siegehold is the laboratory; a corpus is what stops the laboratory becoming the specification.",
+  "note": "Every entry names what it is meant to stress. A corpus where all twenty briefs exercise the same code path is twenty copies of one test.",
+  "briefs": [
+    {
+      "id": "siegehold",
+      "genre": "tower-defense",
+      "brief": "Tower defense medieval: ondas de inimigos, torres com upgrades, cristal a defender.",
+      "stresses": ["waves", "placement", "upgrade-ladder", "objective-defence"],
+      "baseline": true
+    },
+    {
+      "id": "brightacre",
+      "genre": "tycoon",
+      "brief": "Farm tycoon: plante, colha, venda na feira, expanda seus lotes e contrate ajudantes.",
+      "stresses": ["plot-grid", "income-curve", "hired-helpers", "expansion"]
+    },
+    {
+      "id": "neonrun",
+      "genre": "racing",
+      "brief": "Corrida cyberpunk numa estacao espacial: desvie de robos, colete nucleos de energia, chegue ao nucleo antes do timer.",
+      "stresses": ["timed-run", "obstacle-course", "collection", "route"]
+    },
+    {
+      "id": "emberdeep",
+      "genre": "roguelite",
+      "brief": "Dungeon crawler em ruinas vulcanicas: explore salas, derrote guardioes, colete relicas, melhore armas na forja.",
+      "stresses": ["room-generation", "combat", "loot", "run-based-progression"]
+    },
+    {
+      "id": "tidewatch",
+      "genre": "survival",
+      "brief": "Sobrevivencia numa ilha: colete recursos, construa abrigo, gerencie fome e sede, sobreviva as tempestades noturnas.",
+      "stresses": ["resource-gathering", "building", "needs-decay", "day-night-threat"]
+    },
+    {
+      "id": "menagerie",
+      "genre": "collection",
+      "brief": "Colecione criaturas raras num santuario: incube ovos, cuide dos bichos, complete o album, troque duplicatas.",
+      "stresses": ["rarity-table", "album-completion", "care-loop", "trading"]
+    },
+    {
+      "id": "clashyard",
+      "genre": "arena",
+      "brief": "Arena PvP de curta duracao: escolha um campeao, lute em partidas de tres minutos, suba de rank.",
+      "stresses": ["matchmaking", "round-timer", "champion-select", "ranking"]
+    },
+    {
+      "id": "hollowreach",
+      "genre": "exploration",
+      "brief": "Exploracao de cavernas: mapeie tuneis, encontre camaras escondidas, venda minerais, melhore o equipamento.",
+      "stresses": ["large-world", "discovery-reward", "vertical-traversal", "equipment-tiers"]
+    },
+    {
+      "id": "gearworks",
+      "genre": "simulator",
+      "brief": "Simulador de fabrica: monte esteiras, processe materiais, otimize a producao, desbloqueie maquinas melhores.",
+      "stresses": ["machine-placement", "throughput", "unlock-chain", "automation"]
+    },
+    {
+      "id": "skyharbor",
+      "genre": "tycoon-hybrid",
+      "brief": "Aeroporto flutuante: construa pistas, receba dirigiveis, atenda passageiros e expanda o terminal nas nuvens.",
+      "stresses": ["service-queue", "vertical-build", "scheduled-arrivals", "expansion"]
+    },
+    {
+      "id": "thornhold",
+      "genre": "tower-defense-hybrid",
+      "brief": "Defesa de castelo com heroi jogavel: comande torres e lute pessoalmente contra as hordas.",
+      "stresses": ["waves", "player-combat", "dual-control", "objective-defence"]
+    },
+    {
+      "id": "lanternfall",
+      "genre": "puzzle-platformer",
+      "brief": "Plataforma de precisao numa floresta noturna: acenda lanternas, atravesse plataformas moveis, alcance o topo.",
+      "stresses": ["precision-jumps", "moving-platforms", "checkpoint", "light-mechanic"]
+    },
+    {
+      "id": "driftline",
+      "genre": "racing-hybrid",
+      "brief": "Corrida de rua com upgrades: ganhe dinheiro em provas, melhore o carro e desbloqueie novos circuitos.",
+      "stresses": ["vehicle-handling", "upgrade-economy", "circuit-unlock", "lap-timing"]
+    },
+    {
+      "id": "cinderpost",
+      "genre": "survival-hybrid",
+      "brief": "Posto avancado em terra devastada: defenda de raides noturnas, cultive de dia, recrute sobreviventes.",
+      "stresses": ["day-night-cycle", "base-defence", "farming", "recruitment"]
+    },
+    {
+      "id": "reliquary",
+      "genre": "collection-hybrid",
+      "brief": "Museu de artefatos: escave sitios, restaure pecas, monte exposicoes e receba visitantes.",
+      "stresses": ["excavation", "restoration-minigame", "display-layout", "visitor-flow"]
+    },
+    {
+      "id": "stormcaller",
+      "genre": "arena-hybrid",
+      "brief": "Batalhas de magos em ilhas flutuantes: combine elementos, destrua o cristal inimigo, evite cair.",
+      "stresses": ["ability-combos", "hazard-edges", "objective-destruction", "verticality"]
+    },
+    {
+      "id": "quietmile",
+      "genre": "narrative-exploration",
+      "brief": "Caminhada por uma vila abandonada: encontre cartas, reconstrua a historia, abra o portao final.",
+      "stresses": ["environmental-story", "collectible-lore", "gated-progress", "low-combat"]
+    },
+    {
+      "id": "brambleway",
+      "genre": "idle",
+      "brief": "Jardim idle: plante mudas, colha enquanto ausente, melhore ferramentas e desbloqueie estufas.",
+      "stresses": ["offline-income", "prestige", "unlock-chain", "minimal-input"]
+    },
+    {
+      "id": "ironwake",
+      "genre": "simulator-hybrid",
+      "brief": "Estaleiro espacial: monte naves peca por peca, teste em voo e venda para clientes exigentes.",
+      "stresses": ["modular-assembly", "test-flight", "client-orders", "part-catalogue"]
+    },
+    {
+      "id": "veilmarket",
+      "genre": "social-economy",
+      "brief": "Mercado de uma cidade portuaria: compre barato, revenda caro, negocie com mercadores e abra sua loja.",
+      "stresses": ["price-simulation", "npc-negotiation", "shop-ownership", "no-combat"]
+    }
+  ]
+}

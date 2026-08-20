@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "id": "ocean-lab",
+  "genre": "tycoon",
+  "theme": "underwater research lab",
+  "pitch": "A submarine lab tycoon: explore reefs, collect specimens, automate research.",
+  "coreLoop": [
+    "explore",
+    "collect",
+    "process",
+    "upgrade",
+    "unlock"
+  ],
+  "world": {
+    "topology": "hub_and_zones",
+    "zones": [
+      {
+        "id": "reef",
+        "theme": "coral reef",
+        "difficulty": 1,
+        "unlockedAtTier": 0
+      },
+      {
+        "id": "abyss",
+        "theme": "lightless trench",
+        "difficulty": 3,
+        "unlockedAtTier": 5
+      }
+    ]
+  },
+  "progression": {
+    "kind": "tiered",
+    "tiers": 8,
+    "firstTierSeconds": 45.0,
+    "sessionMinutes": 15.0
+  },
+  "economy": {
+    "currencies": [
+      {
+        "id": "credits",
+        "displayName": "Credits",
+        "earnedBy": [
+          "process"
+        ],
+        "spentOn": [
+          "upgrade"
+        ],
+        "premium": false
+      },
+      {
+        "id": "research",
+        "displayName": "Research",
+        "earnedBy": [
+          "collect"
+        ],
+        "spentOn": [
+          "unlock"
+        ],
+        "premium": false
+      }
+    ]
+  },
+  "systems": [
+    "economy",
+    "progression",
+    "save",
+    "inventory",
+    "analytics"
+  ],
+  "monetization": [],
+  "tokenSet": "tokens/brickfarm.json",
+  "concurrentPlayers": 6,
+  "privateSpace": false
+}

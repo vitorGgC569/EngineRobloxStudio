@@ -1,0 +1,16 @@
+{
+  "schemaVersion": 1,
+  "productId": "nightfall",
+  "pitch": "Horror de sobrevivencia noturno em floresta com lanternas e criaturas.",
+  "topology": "open-world",
+  "progression": "checkpoint-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "tokens/brickfarm.json",
+  "coreLoop": [
+    "explore",
+    "collect",
+    "craft",
+    "survive"
+  ]
+}

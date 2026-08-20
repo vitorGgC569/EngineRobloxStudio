@@ -1,0 +1,297 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "emberdeep",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-emberdeep",
+      "productId": "emberdeep",
+      "revision": "1.0.0",
+      "seed": 74843343,
+      "genre": "roguelite",
+      "templateId": "template-roguelite-v1",
+      "sourceRoot": "games/emberdeep",
+      "artifactRoot": "artifacts/products/emberdeep",
+      "productIntentRef": {
+        "productId": "emberdeep",
+        "artifactId": "emberdeep.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/emberdeep/definition/product-intent.json",
+        "sha256": "4efe5600f36c7deefd0e9a7c2a1ce2a6b06ac370d5c2769c56bdedff3a954967"
+      },
+      "referenceBundleRef": {
+        "productId": "emberdeep",
+        "artifactId": "emberdeep.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/emberdeep/definition/reference-bundle.json",
+        "sha256": "b4d51f474098f1e60fc6be98b7b5c5ca15cdeb58c95d2915c81a7d292824269e"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a sequence of gated level volumes",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "inventory, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/emberdeep/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/emberdeep/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/emberdeep/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/emberdeep/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "traversal",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "combat",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "core-loop",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "emberdeep",
+            "artifactId": "emberdeep.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/emberdeep/definition/release-quality.json",
+            "sha256": "fcf386e4f4faa7781bcd1e6232bfb0eeb2519e441101bd5894fc0260494c0168"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "emberdeep",
+          "artifactId": "emberdeep.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/emberdeep/production_plan"
+        },
+        {
+          "productId": "emberdeep",
+          "artifactId": "emberdeep.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/emberdeep/source_bundle"
+        },
+        {
+          "productId": "emberdeep",
+          "artifactId": "emberdeep.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/emberdeep/asset_manifest"
+        },
+        {
+          "productId": "emberdeep",
+          "artifactId": "emberdeep.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/emberdeep/build_place"
+        },
+        {
+          "productId": "emberdeep",
+          "artifactId": "emberdeep.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/emberdeep/integration_manifest"
+        },
+        {
+          "productId": "emberdeep",
+          "artifactId": "emberdeep.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/emberdeep/measurement_run"
+        },
+        {
+          "productId": "emberdeep",
+          "artifactId": "emberdeep.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/emberdeep/scenario_results"
+        },
+        {
+          "productId": "emberdeep",
+          "artifactId": "emberdeep.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/emberdeep/capture_bundle"
+        },
+        {
+          "productId": "emberdeep",
+          "artifactId": "emberdeep.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/emberdeep/quality_review"
+        },
+        {
+          "productId": "emberdeep",
+          "artifactId": "emberdeep.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/emberdeep/repair_plan"
+        },
+        {
+          "productId": "emberdeep",
+          "artifactId": "emberdeep.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/emberdeep/regression_run"
+        },
+        {
+          "productId": "emberdeep",
+          "artifactId": "emberdeep.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/emberdeep/release_candidate"
+        }
+      ]
+    }
+  ]
+}

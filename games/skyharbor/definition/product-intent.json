@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "productId": "skyharbor",
+  "pitch": "Aeroporto flutuante: construa pistas, receba dirigiveis, atenda passageiros e expanda o terminal nas nuvens.",
+  "topology": "linear-levels",
+  "progression": "tiered-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/skyharbor/tokens/skyharbor-siege.json",
+  "coreLoop": [
+    "race",
+    "unlock",
+    "upgrade"
+  ]
+}

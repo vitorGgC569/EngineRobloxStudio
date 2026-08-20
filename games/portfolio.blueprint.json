@@ -1,0 +1,526 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "rqe-portfolio",
+  "revision": "2026.08",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-anime-card-farm",
+      "productId": "anime-card-farm",
+      "revision": "1.0.0",
+      "seed": 20260811,
+      "genre": "tycoon",
+      "templateId": "template-tycoon-v1",
+      "sourceRoot": "games/anime-card-farm",
+      "artifactRoot": "artifacts/products/anime-card-farm",
+      "productIntentRef": {
+        "productId": "anime-card-farm",
+        "artifactId": "anime-card-farm.intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/anime-card-farm/definition/product-intent.json",
+        "sha256": "4fbbba62d72f0b4e1cc31fbba61a669412ce1025b3b134d8574602c4d964a04f"
+      },
+      "referenceBundleRef": {
+        "productId": "anime-card-farm",
+        "artifactId": "anime-card-farm.references",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/anime-card-farm/definition/reference-bundle.json",
+        "sha256": "f5dbcf97e38bb119c0e32888df7d86eb6636735956955506622a751501c76730"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "plot grid, hub and conveyor",
+          "dependencies": []
+        },
+        {
+          "id": "gameplay",
+          "capability": "server-authoritative card economy",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "interface",
+          "capability": "HUD and shop screens",
+          "dependencies": [
+            "gameplay"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/anime-card-farm/src/world"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/anime-card-farm/src/gameplay"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/anime-card-farm/src/interface"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "card-to-cash",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "rejoin-keeps-plot",
+          "class": "REJOIN",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "card-faces",
+          "type": "IMAGE",
+          "strategy": "CREATE",
+          "requiredForRelease": true,
+          "consumers": [
+            "gameplay",
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "anime-card-farm",
+            "artifactId": "anime-card-farm.quality",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/anime-card-farm/definition/release-quality.json",
+            "sha256": "c80254b3f5e4fb83ddf616d6391682752782709427f49d11857c20a301aa2a06"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/anime-card-farm/asset_manifest"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/anime-card-farm/build_place"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/anime-card-farm/capture_bundle"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/anime-card-farm/integration_manifest"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/anime-card-farm/measurement_run"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/anime-card-farm/production_plan"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/anime-card-farm/quality_review"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/anime-card-farm/regression_run"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/anime-card-farm/release_candidate"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/anime-card-farm/repair_plan"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/anime-card-farm/scenario_results"
+        },
+        {
+          "productId": "anime-card-farm",
+          "artifactId": "anime-card-farm.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/anime-card-farm/source_bundle"
+        }
+      ]
+    },
+    {
+      "schemaVersion": 1,
+      "projectId": "project-lantern-siege",
+      "productId": "lantern-siege",
+      "revision": "1.0.0",
+      "seed": 20260812,
+      "genre": "defense",
+      "templateId": "template-defense-v1",
+      "sourceRoot": "games/lantern-siege",
+      "artifactRoot": "artifacts/products/lantern-siege",
+      "productIntentRef": {
+        "productId": "lantern-siege",
+        "artifactId": "lantern-siege.intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/lantern-siege/definition/product-intent.json",
+        "sha256": "965654c91ef66bce4405757a31388d9e85ce1828ba8359a5c9c495a963ed888e"
+      },
+      "referenceBundleRef": {
+        "productId": "lantern-siege",
+        "artifactId": "lantern-siege.references",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/lantern-siege/definition/reference-bundle.json",
+        "sha256": "57aa81f764b9c2fe12955943eb24969baa5126bf2a6366d53d120f794961f9f1"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "radial arena and lane mouths",
+          "dependencies": []
+        },
+        {
+          "id": "gameplay",
+          "capability": "wave director and scrap economy",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "interface",
+          "capability": "wave HUD and build menu",
+          "dependencies": [
+            "gameplay"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/lantern-siege/src/world"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/lantern-siege/src/gameplay"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/lantern-siege/src/interface"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-wave",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "survive-five-waves",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "core-falls",
+          "class": "FAILURE",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "lane-beacon",
+          "type": "MESH",
+          "strategy": "CREATE",
+          "requiredForRelease": true,
+          "consumers": [
+            "world"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "lantern-siege",
+            "artifactId": "lantern-siege.quality",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/lantern-siege/definition/release-quality.json",
+            "sha256": "c80254b3f5e4fb83ddf616d6391682752782709427f49d11857c20a301aa2a06"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "lantern-siege",
+          "artifactId": "lantern-siege.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/lantern-siege/asset_manifest"
+        },
+        {
+          "productId": "lantern-siege",
+          "artifactId": "lantern-siege.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/lantern-siege/build_place"
+        },
+        {
+          "productId": "lantern-siege",
+          "artifactId": "lantern-siege.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/lantern-siege/capture_bundle"
+        },
+        {
+          "productId": "lantern-siege",
+          "artifactId": "lantern-siege.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/lantern-siege/integration_manifest"
+        },
+        {
+          "productId": "lantern-siege",
+          "artifactId": "lantern-siege.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/lantern-siege/measurement_run"
+        },
+        {
+          "productId": "lantern-siege",
+          "artifactId": "lantern-siege.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/lantern-siege/production_plan"
+        },
+        {
+          "productId": "lantern-siege",
+          "artifactId": "lantern-siege.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/lantern-siege/quality_review"
+        },
+        {
+          "productId": "lantern-siege",
+          "artifactId": "lantern-siege.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/lantern-siege/regression_run"
+        },
+        {
+          "productId": "lantern-siege",
+          "artifactId": "lantern-siege.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/lantern-siege/release_candidate"
+        },
+        {
+          "productId": "lantern-siege",
+          "artifactId": "lantern-siege.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/lantern-siege/repair_plan"
+        },
+        {
+          "productId": "lantern-siege",
+          "artifactId": "lantern-siege.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/lantern-siege/scenario_results"
+        },
+        {
+          "productId": "lantern-siege",
+          "artifactId": "lantern-siege.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/lantern-siege/source_bundle"
+        }
+      ]
+    }
+  ]
+}

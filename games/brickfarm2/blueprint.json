@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "brickfarm2",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-brickfarm2",
+      "productId": "brickfarm2",
+      "revision": "1.0.0",
+      "seed": 61346415,
+      "genre": "tycoon",
+      "templateId": "template-tycoon-v1",
+      "sourceRoot": "games/brickfarm2",
+      "artifactRoot": "artifacts/products/brickfarm2",
+      "productIntentRef": {
+        "productId": "brickfarm2",
+        "artifactId": "brickfarm2.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/brickfarm2/definition/product-intent.json",
+        "sha256": "53843b1a55f4e6de65bc4d12ead69f70b08ea6d3c1535f04ae1b6d1be8f90a87"
+      },
+      "referenceBundleRef": {
+        "productId": "brickfarm2",
+        "artifactId": "brickfarm2.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/brickfarm2/definition/reference-bundle.json",
+        "sha256": "ca2196717965fca0e6f75ef504233944487107f183411162cb4085895dbcdef0"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a plot grid around a shared hub",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "economy, inventory, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/brickfarm2/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/brickfarm2/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/brickfarm2/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/brickfarm2/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "core-loop",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "brickfarm2",
+            "artifactId": "brickfarm2.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/brickfarm2/definition/release-quality.json",
+            "sha256": "7e01005cf5c6026c9cfae9dc846a1c635f46f6d33e09f8d9497807b50df2fce4"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "brickfarm2",
+          "artifactId": "brickfarm2.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/brickfarm2/production_plan"
+        },
+        {
+          "productId": "brickfarm2",
+          "artifactId": "brickfarm2.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/brickfarm2/source_bundle"
+        },
+        {
+          "productId": "brickfarm2",
+          "artifactId": "brickfarm2.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/brickfarm2/asset_manifest"
+        },
+        {
+          "productId": "brickfarm2",
+          "artifactId": "brickfarm2.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/brickfarm2/build_place"
+        },
+        {
+          "productId": "brickfarm2",
+          "artifactId": "brickfarm2.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/brickfarm2/integration_manifest"
+        },
+        {
+          "productId": "brickfarm2",
+          "artifactId": "brickfarm2.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/brickfarm2/measurement_run"
+        },
+        {
+          "productId": "brickfarm2",
+          "artifactId": "brickfarm2.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/brickfarm2/scenario_results"
+        },
+        {
+          "productId": "brickfarm2",
+          "artifactId": "brickfarm2.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/brickfarm2/capture_bundle"
+        },
+        {
+          "productId": "brickfarm2",
+          "artifactId": "brickfarm2.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/brickfarm2/quality_review"
+        },
+        {
+          "productId": "brickfarm2",
+          "artifactId": "brickfarm2.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/brickfarm2/repair_plan"
+        },
+        {
+          "productId": "brickfarm2",
+          "artifactId": "brickfarm2.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/brickfarm2/regression_run"
+        },
+        {
+          "productId": "brickfarm2",
+          "artifactId": "brickfarm2.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/brickfarm2/release_candidate"
+        }
+      ]
+    }
+  ]
+}

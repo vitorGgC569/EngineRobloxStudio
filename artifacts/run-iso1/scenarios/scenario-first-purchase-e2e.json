@@ -1,0 +1,377 @@
+{
+  "scenario": "first-purchase-e2e",
+  "status": "PASS",
+  "validationLevel": "E2E_VALIDATED",
+  "startedAt": "2026-08-11T02:48:40Z",
+  "steps": {
+    "total": 11,
+    "passed": 11,
+    "failed": 0
+  },
+  "results": [
+    {
+      "index": 1,
+      "step": "reset",
+      "spec": {
+        "comment": "gameplay state survives a run: without a fresh player the second pass starts already owning the pack and fails for the wrong reason"
+      },
+      "status": "PASS",
+      "reason": null,
+      "elapsedMs": 9218.0,
+      "detail": {
+        "keySent": "F5",
+        "focusedWindow": "C:\\Users\\vitor\\OneDrive\\Desktop\\RobloxGamesMCP\\.tmp\\MinersRidgeTycoon-fixed.rbxlx - Roblox Studio",
+        "waited": true,
+        "seconds": 1.0,
+        "playSessions": [
+          {
+            "session": "sess_c112af035b4f",
+            "clientId": "2bf436b2-5207-4c0c-a0a8-9cd11b6238aa",
+            "pluginVersion": "1.0.0",
+            "studioVersion": "0.733.0.7330989",
+            "place": {
+              "name": "Game",
+              "id": 0
+            },
+            "context": "server",
+            "connectedAt": "2026-08-11T02:48:49.561048+00:00",
+            "lastSeenSeconds": 0.12,
+            "lastPollSeconds": 0.12,
+            "polls": 1,
+            "pollWaiting": 1,
+            "commandsDispatched": 0,
+            "commandsCompleted": 0
+          }
+        ],
+        "started": true,
+        "restart": {
+          "minimized": 1,
+          "recovery": {
+            "archived": 0,
+            "files": [],
+            "autoSaveDir": "C:\\Users\\vitor\\AppData\\Local\\Roblox\\RobloxStudio\\AutoSaves"
+          }
+        }
+      }
+    },
+    {
+      "index": 2,
+      "step": "attach",
+      "spec": {
+        "fatal": true
+      },
+      "status": "PASS",
+      "reason": null,
+      "elapsedMs": 219.0,
+      "detail": {
+        "playersInGame": 1,
+        "actor": "player_5812220258",
+        "isRealPlayer": true,
+        "walkSpeed": 16,
+        "health": 100,
+        "velocity": [
+          0,
+          0,
+          0
+        ],
+        "userId": 5812220258,
+        "grounded": false,
+        "state": "Enum.HumanoidStateType.FallingDown",
+        "player": "Agoravai18",
+        "name": "Agoravai18",
+        "position": [
+          1.017,
+          4.109,
+          -4.907
+        ],
+        "floorMaterial": "Enum.Material.Air",
+        "ref": "0_490870",
+        "maxHealth": 100,
+        "playerAttributes": {
+          "FloorIncomeMultiplier": 1,
+          "ObjectiveReveal": false,
+          "ActiveCard": "field_lantern",
+          "CardEffectStyle": "lantern",
+          "CardCount": 1,
+          "BuildCostMultiplier": 1,
+          "CardCollection": "field_lantern",
+          "PlotName": "PlotA",
+          "FloorMultiplier": 1,
+          "Currency": 1000,
+          "OreYieldMultiplier": 1,
+          "CardRarity": "Common",
+          "FloorLevel": 1,
+          "CardEffect": "Reveals nearby ore nodes.",
+          "CardPower": 4,
+          "FloorName": "Groundworks"
+        }
+      }
+    },
+    {
+      "index": 3,
+      "step": "assert",
+      "spec": {
+        "PlotName": "!= nil",
+        "Currency": ">= 100",
+        "comment": "the game must have assigned a plot and starting funds before anything else is meaningful"
+      },
+      "status": "PASS",
+      "reason": null,
+      "elapsedMs": 156.0,
+      "detail": {
+        "attributes": {
+          "PlotName": "PlotA",
+          "Currency": 1000
+        },
+        "failures": []
+      }
+    },
+    {
+      "index": 4,
+      "step": "navigate_to",
+      "spec": {
+        "target": "game.Workspace.Map.BasicPackStore.Counter",
+        "tolerance": 5,
+        "timeout": 60
+      },
+      "status": "PASS",
+      "reason": null,
+      "elapsedMs": 2610.0,
+      "detail": {
+        "actor": "player_5812220258",
+        "to": [
+          -2.349,
+          5.417,
+          -35.585
+        ],
+        "state": {
+          "playersInGame": 1,
+          "actor": "player_5812220258",
+          "isRealPlayer": true,
+          "walkSpeed": 16,
+          "health": 100,
+          "velocity": [
+            -1.743,
+            -3.054,
+            -15.906
+          ],
+          "userId": 5812220258,
+          "grounded": true,
+          "state": "Enum.HumanoidStateType.Running",
+          "player": "Agoravai18",
+          "name": "Agoravai18",
+          "position": [
+            -2.349,
+            5.417,
+            -35.585
+          ],
+          "floorMaterial": "Enum.Material.Metal",
+          "ref": "0_490870",
+          "maxHealth": 100,
+          "playerAttributes": {
+            "FloorIncomeMultiplier": 1,
+            "ObjectiveReveal": false,
+            "ActiveCard": "field_lantern",
+            "CardEffectStyle": "lantern",
+            "CardCount": 1,
+            "BuildCostMultiplier": 1,
+            "CardCollection": "field_lantern",
+            "PlotName": "PlotA",
+            "FloorMultiplier": 1,
+            "Currency": 1000,
+            "OreYieldMultiplier": 1,
+            "CardRarity": "Common",
+            "FloorLevel": 1,
+            "CardEffect": "Reveals nearby ore nodes.",
+            "CardPower": 4,
+            "FloorName": "Groundworks"
+          }
+        },
+        "pathStatus": "Enum.PathStatus.Success",
+        "timedOut": false,
+        "waypointsReached": 11,
+        "remainingDistance": 4.825,
+        "approach": "+Z+2.5",
+        "success": true,
+        "from": [
+          1.017,
+          4.109,
+          -4.907
+        ],
+        "target": [
+          0,
+          4.29,
+          -39.8
+        ],
+        "travelled": 30.89,
+        "waypointCount": 11,
+        "attempts": [
+          {
+            "status": "Enum.PathStatus.NoPath",
+            "approach": "centre"
+          },
+          {
+            "status": "Enum.PathStatus.Success",
+            "approach": "+Z+2.5"
+          }
+        ]
+      }
+    },
+    {
+      "index": 5,
+      "step": "expect_prompt_in_range",
+      "spec": {
+        "prompt": "PurchasePrompt",
+        "radius": 60,
+        "comment": "standing close enough is part of the test: a prompt a player cannot reach is a failure"
+      },
+      "status": "PASS",
+      "reason": null,
+      "elapsedMs": 31.0,
+      "detail": {
+        "matches": [
+          {
+            "enabled": true,
+            "path": "Workspace.Map.BasicPackStore.Counter.PurchasePrompt",
+            "inRange": true,
+            "actionText": "Buy mining pack",
+            "maxActivationDistance": 12,
+            "ref": "0_452571",
+            "distance": 8.74,
+            "objectText": "Basic Pack - $100"
+          }
+        ]
+      }
+    },
+    {
+      "index": 6,
+      "step": "interact",
+      "spec": {
+        "prompt": "game.Workspace.Map.BasicPackStore.Counter.PurchasePrompt"
+      },
+      "status": "PASS",
+      "reason": null,
+      "elapsedMs": 875.0,
+      "detail": {
+        "actionText": "Buy mining pack",
+        "distance": 5.78,
+        "maxActivationDistance": 12,
+        "triggeredFor": "Agoravai18",
+        "player": "Agoravai18",
+        "success": true,
+        "triggered": true,
+        "prompt": "Workspace.Map.BasicPackStore.Counter.PurchasePrompt",
+        "elapsedMsClient": 784.9382000276819,
+        "holdSeconds": 0.25
+      }
+    },
+    {
+      "index": 7,
+      "step": "wait",
+      "spec": {
+        "seconds": 2
+      },
+      "status": "PASS",
+      "reason": null,
+      "elapsedMs": 2000.0,
+      "detail": {
+        "seconds": 2.0
+      }
+    },
+    {
+      "index": 8,
+      "step": "assert",
+      "spec": {
+        "delta": {
+          "Currency": "== -100",
+          "CardCount": "== 1"
+        },
+        "comment": "the purchase must cost currency and grant exactly one card"
+      },
+      "status": "PASS",
+      "reason": null,
+      "elapsedMs": 63.0,
+      "detail": {
+        "attributes": {
+          "delta.Currency": {
+            "before": 1000,
+            "after": 900,
+            "delta": -100.0
+          },
+          "delta.CardCount": {
+            "before": 1,
+            "after": 2,
+            "delta": 1.0
+          }
+        },
+        "failures": []
+      }
+    },
+    {
+      "index": 9,
+      "step": "interact",
+      "spec": {
+        "prompt": "game.Workspace.Map.BasicPackStore.Counter.PurchasePrompt",
+        "fatal": false,
+        "comment": "activating twice must not duplicate the reward"
+      },
+      "status": "PASS",
+      "reason": null,
+      "elapsedMs": 843.0,
+      "detail": {
+        "actionText": "Buy mining pack",
+        "distance": 5.4,
+        "maxActivationDistance": 12,
+        "triggeredFor": "Agoravai18",
+        "player": "Agoravai18",
+        "success": true,
+        "triggered": true,
+        "prompt": "Workspace.Map.BasicPackStore.Counter.PurchasePrompt",
+        "elapsedMsClient": 766.7743999627419,
+        "holdSeconds": 0.25
+      }
+    },
+    {
+      "index": 10,
+      "step": "wait",
+      "spec": {
+        "seconds": 2
+      },
+      "status": "PASS",
+      "reason": null,
+      "elapsedMs": 2000.0,
+      "detail": {
+        "seconds": 2.0
+      }
+    },
+    {
+      "index": 11,
+      "step": "assert",
+      "spec": {
+        "delta": {
+          "Currency": "== -100",
+          "CardCount": "== 1"
+        },
+        "comment": "idempotency: the second activation changed nothing"
+      },
+      "status": "PASS",
+      "reason": null,
+      "elapsedMs": 63.0,
+      "detail": {
+        "attributes": {
+          "delta.Currency": {
+            "before": 1000,
+            "after": 900,
+            "delta": -100.0
+          },
+          "delta.CardCount": {
+            "before": 1,
+            "after": 2,
+            "delta": 1.0
+          }
+        },
+        "failures": []
+      }
+    }
+  ]
+}

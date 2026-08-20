@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "productId": "reliquary",
+  "pitch": "Museu de artefatos: escave sitios, restaure pecas, monte exposicoes e receba visitantes.",
+  "topology": "grid-plots",
+  "progression": "tiered-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/reliquary/tokens/reliquary-grove.json",
+  "coreLoop": [
+    "collect",
+    "process",
+    "upgrade",
+    "sell",
+    "unlock"
+  ]
+}

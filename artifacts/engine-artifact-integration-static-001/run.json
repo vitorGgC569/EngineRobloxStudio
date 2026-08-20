@@ -1,0 +1,86 @@
+{
+  "schemaVersion": 2,
+  "runId": "engine-artifact-integration-static-001",
+  "createdAt": "2026-08-11T18:33:32.655615+00:00",
+  "completedAt": "2026-08-11T18:33:33.170072+00:00",
+  "artifacts": [
+    {
+      "path": "build-manifest.json",
+      "sha256": "1c8d61b4e8491ceb1ebaab00dd5d0eaa0ce5e3aa4e2b1713917db26d27bdc222",
+      "bytes": 2744
+    },
+    {
+      "path": "build/engine-artifact-integration-static-001.rbxlx",
+      "sha256": "53c1811d88ebdbd1ef99bdbd7fa5d8f215c814761948d336415d78897d73da41",
+      "bytes": 236276
+    },
+    {
+      "path": "build/inputs-after.json",
+      "sha256": "8d536a42b9667c1e9c7fa1dec92b17b698bca59c432e788cf71ab37fb9b993a4",
+      "bytes": 1916
+    },
+    {
+      "path": "build/inputs-before.json",
+      "sha256": "8d536a42b9667c1e9c7fa1dec92b17b698bca59c432e788cf71ab37fb9b993a4",
+      "bytes": 1916
+    },
+    {
+      "path": "build/rojo.json",
+      "sha256": "cb0704d61631f37b52bc9ca7ef900320eb8b7edcbba73e888f64623e723ad376",
+      "bytes": 614
+    },
+    {
+      "path": "evidence/evidence.json",
+      "sha256": "02eb6675d01e8d8ca4843d396d6fc9251a80c17db0342b8ec10475dd9d931450",
+      "bytes": 13817
+    },
+    {
+      "path": "evidence/static-scan.json",
+      "sha256": "b8fd1fd33c5d062673800c73ceb9980e1ba5258f1f63c6ac0d1d47ea2a0dccb5",
+      "bytes": 5992
+    },
+    {
+      "path": "gate.json",
+      "sha256": "b56e19ae5b9e24af04c7a86b36d3d4d1e3c462a1c5bb91a9b86a6d2703fc3ee4",
+      "bytes": 56464
+    },
+    {
+      "path": "logs/command-errors.json",
+      "sha256": "37517e5f3dc66819f61f5a7bb8ace1921282415f10551d2defa5c3eb0985b570",
+      "bytes": 3
+    },
+    {
+      "path": "measurement-plan.json",
+      "sha256": "ba4f9f495edb9efe8a01db828de096ad5d59b272f19521a0c060b3b0e22b6655",
+      "bytes": 97516
+    },
+    {
+      "path": "producers/index.json",
+      "sha256": "93654db84a634022ebbc8ff41b4c3bab96cd17b8933a4317c31f452655a1047f",
+      "bytes": 445,
+      "producerTaskId": "release.assembler"
+    },
+    {
+      "path": "product-truth/assessment.json",
+      "sha256": "c22f0f898964eec839a2f939f87768ba37efbd4fb6f2faddf7e30d46a5a25ea3",
+      "bytes": 273,
+      "producerTaskId": "evaluate.product-truth"
+    },
+    {
+      "path": "product-truth/stamp-preflight.json",
+      "sha256": "fd19f939be5b3c88bb3d1f2d6a1162695e7606a59b9ec8dfe1dfbafd33ea4597",
+      "bytes": 82,
+      "producerTaskId": "compile.product-identity"
+    }
+  ],
+  "status": "BLOCKED",
+  "releaseAllowed": false,
+  "buildId": "72393bb5b677558fc1030b050164d0f12b7c59554353da13ac416c4b6337bd08",
+  "gate": "gate.json",
+  "provenance": "build-manifest.json",
+  "measurementPlan": "measurement-plan.json",
+  "productTruth": "product-truth/assessment.json",
+  "producerIndex": "producers/index.json",
+  "captureManifest": null,
+  "manifestSha256": "5202d55d7fb71808880761d20246acf70f654e2cb7f7c33f655c143f58ade5b7"
+}

@@ -1,0 +1,42 @@
+{
+  "totalEntries": 6,
+  "available": true,
+  "returned": 6,
+  "counts": {
+    "warning": 0,
+    "info": 6,
+    "error": 0
+  },
+  "entries": [
+    {
+      "severity": "info",
+      "timestamp": 1786393012.601,
+      "message": "[RQE Bridge] starting"
+    },
+    {
+      "severity": "info",
+      "timestamp": 1786393012.714,
+      "message": "[RQE Bridge] connected to http://127.0.0.1:8790 as sess_952e868b6b9e (edit)"
+    },
+    {
+      "severity": "info",
+      "timestamp": 1786393149.082,
+      "message": "[RQE Bridge] poll failed (HttpError: ConnectFail); reconnecting"
+    },
+    {
+      "severity": "info",
+      "timestamp": 1786393152.633,
+      "message": "[RQE Bridge] connected to http://127.0.0.1:8790 as sess_f24f9b8f7ac8 (edit)"
+    },
+    {
+      "severity": "info",
+      "timestamp": 1786393172.115,
+      "message": "[RQE Bridge] context changed edit -> run; re-registering"
+    },
+    {
+      "severity": "info",
+      "timestamp": 1786393172.134,
+      "message": "[RQE Bridge] connected to http://127.0.0.1:8790 as sess_b8c21e98c45f (run)"
+    }
+  ]
+}

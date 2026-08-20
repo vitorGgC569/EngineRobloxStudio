@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "productId": "clashyard",
+  "pitch": "Arena PvP de curta duracao: escolha um campeao, lute em partidas de tres minutos, suba de rank.",
+  "topology": "grid-plots",
+  "progression": "tiered-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/clashyard/tokens/clashyard-grove.json",
+  "coreLoop": [
+    "collect",
+    "process",
+    "upgrade",
+    "sell",
+    "unlock"
+  ]
+}

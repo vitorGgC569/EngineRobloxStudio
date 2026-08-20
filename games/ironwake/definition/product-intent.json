@@ -1,0 +1,17 @@
+{
+  "schemaVersion": 1,
+  "productId": "ironwake",
+  "pitch": "Estaleiro espacial: monte naves peca por peca, teste em voo e venda para clientes exigentes.",
+  "topology": "grid-plots",
+  "progression": "tiered-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "games/ironwake/tokens/ironwake-circuit.json",
+  "coreLoop": [
+    "collect",
+    "process",
+    "upgrade",
+    "sell",
+    "unlock"
+  ]
+}

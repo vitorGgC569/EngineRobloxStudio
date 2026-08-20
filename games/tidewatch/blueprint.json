@@ -1,0 +1,313 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "tidewatch",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-tidewatch",
+      "productId": "tidewatch",
+      "revision": "1.0.0",
+      "seed": 83785965,
+      "genre": "survival",
+      "templateId": "template-survival-v1",
+      "sourceRoot": "games/tidewatch",
+      "artifactRoot": "artifacts/products/tidewatch",
+      "productIntentRef": {
+        "productId": "tidewatch",
+        "artifactId": "tidewatch.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/tidewatch/definition/product-intent.json",
+        "sha256": "a14be81cfff8a8b6dcb8358be10289ecdec18efa6384507b5e290927d8e5db4e"
+      },
+      "referenceBundleRef": {
+        "productId": "tidewatch",
+        "artifactId": "tidewatch.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/tidewatch/definition/reference-bundle.json",
+        "sha256": "f278f9c4df839f37c1f012424115f7c6613d9cadfd84f7d72fa10e402992cfdd"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a continuous landmass with regions and landmarks",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "crafting, inventory, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/tidewatch/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/tidewatch/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/tidewatch/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/tidewatch/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "traversal",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "core-loop",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "crafting",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "survival",
+          "class": "FAILURE",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "zone-island-kit",
+          "type": "MODEL",
+          "strategy": "CREATE",
+          "requiredForRelease": true,
+          "consumers": [
+            "world"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "tidewatch",
+            "artifactId": "tidewatch.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/tidewatch/definition/release-quality.json",
+            "sha256": "7df7cb747e87c24d422dbeaba851a0000dd5963ed828218d951ad931385901cb"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "tidewatch",
+          "artifactId": "tidewatch.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/tidewatch/production_plan"
+        },
+        {
+          "productId": "tidewatch",
+          "artifactId": "tidewatch.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/tidewatch/source_bundle"
+        },
+        {
+          "productId": "tidewatch",
+          "artifactId": "tidewatch.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/tidewatch/asset_manifest"
+        },
+        {
+          "productId": "tidewatch",
+          "artifactId": "tidewatch.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/tidewatch/build_place"
+        },
+        {
+          "productId": "tidewatch",
+          "artifactId": "tidewatch.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/tidewatch/integration_manifest"
+        },
+        {
+          "productId": "tidewatch",
+          "artifactId": "tidewatch.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/tidewatch/measurement_run"
+        },
+        {
+          "productId": "tidewatch",
+          "artifactId": "tidewatch.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/tidewatch/scenario_results"
+        },
+        {
+          "productId": "tidewatch",
+          "artifactId": "tidewatch.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/tidewatch/capture_bundle"
+        },
+        {
+          "productId": "tidewatch",
+          "artifactId": "tidewatch.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/tidewatch/quality_review"
+        },
+        {
+          "productId": "tidewatch",
+          "artifactId": "tidewatch.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/tidewatch/repair_plan"
+        },
+        {
+          "productId": "tidewatch",
+          "artifactId": "tidewatch.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/tidewatch/regression_run"
+        },
+        {
+          "productId": "tidewatch",
+          "artifactId": "tidewatch.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/tidewatch/release_candidate"
+        }
+      ]
+    }
+  ]
+}

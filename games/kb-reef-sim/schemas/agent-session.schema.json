@@ -1,0 +1,14 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "title": "Game Agent Evidence Session",
+  "type": "object",
+  "required": ["bridge", "started", "operations", "memory", "actionRecords"],
+  "properties": {
+    "bridge": {"type": "object"},
+    "started": {"type": "boolean"},
+    "operations": {"type": "array", "items": {"type": "string"}},
+    "memory": {"type": "array"},
+    "actionRecords": {"type": "array"}
+  }
+}
+

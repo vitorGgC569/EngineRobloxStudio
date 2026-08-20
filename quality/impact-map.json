@@ -1,0 +1,96 @@
+{
+  "schemaVersion": 1,
+  "fullStages": ["STATIC", "BUILD", "MEASURE", "PLAY", "CAPTURE", "EVALUATE"],
+  "rules": [
+    {
+      "id": "platform-or-contract",
+      "paths": [
+        "rqe/**",
+        "tests/**",
+        "schemas/**",
+        "contracts/**",
+        "apps/studio-plugin/**",
+        "roblox/runtime/**",
+        "rqe.py",
+        "rqe.project.json",
+        "pyproject.toml",
+        "quality/quality-focus.json",
+        "quality/impact-map.json"
+      ],
+      "requirements": ["*"],
+      "checks": ["full-release-plan"],
+      "stages": ["STATIC", "BUILD", "MEASURE", "PLAY", "CAPTURE", "EVALUATE"],
+      "full": true
+    },
+    {
+      "id": "world-geometry",
+      "paths": [
+        "roblox/lib/worldkit/**",
+        "roblox/mvp/src/serverscriptservice/services/mapservice.lua",
+        "roblox/mvp/src/serverscriptservice/services/plotservice.lua"
+      ],
+      "requirements": [
+        "spawn_is_supported",
+        "player_can_reach_plot",
+        "objectives_are_reachable",
+        "no_floating_buildings",
+        "no_buried_objects",
+        "no_collision_overlap",
+        "performance_budget_is_met"
+      ],
+      "checks": ["world", "navigation", "runtime-performance", "visual-world"],
+      "stages": ["BUILD", "MEASURE", "CAPTURE", "EVALUATE"]
+    },
+    {
+      "id": "gameplay-economy-data",
+      "paths": [
+        "roblox/mvp/src/serverscriptservice/**",
+        "roblox/mvp/src/replicatedstorage/shared/**"
+      ],
+      "requirements": [
+        "player_can_spawn",
+        "package_can_be_purchased",
+        "purchased_package_persists",
+        "purchase_is_idempotent",
+        "floor_progression_is_buyable",
+        "remote_rejects_invalid_payloads",
+        "players_are_isolated",
+        "runtime_has_no_errors"
+      ],
+      "checks": ["server-static", "gameplay-scenarios", "persistence", "security"],
+      "stages": ["STATIC", "BUILD", "MEASURE", "PLAY", "EVALUATE"]
+    },
+    {
+      "id": "client-ui",
+      "paths": ["roblox/mvp/src/starterplayer/**", "roblox/mvp/src/startergui/**"],
+      "requirements": [
+        "card_gallery_is_visible",
+        "ui_is_visible",
+        "mobile_ui_valid",
+        "runtime_has_no_errors",
+        "visual_snapshots_are_healthy"
+      ],
+      "checks": ["client-logs", "ui-scenarios", "mobile-captures", "visual-ui"],
+      "stages": ["BUILD", "PLAY", "CAPTURE", "EVALUATE"]
+    },
+    {
+      "id": "assets-and-art-direction",
+      "paths": ["assets/**", "quality/visual/**"],
+      "requirements": [
+        "assets_are_safe",
+        "generated_visual_assets_are_valid",
+        "visual_snapshot_bundle_is_valid",
+        "studio_runtime_captures_are_available"
+      ],
+      "checks": ["asset-security", "asset-quality", "visual-review"],
+      "stages": ["STATIC", "BUILD", "CAPTURE", "EVALUATE"]
+    },
+    {
+      "id": "production-instructions",
+      "paths": ["agents.md", ".codex/**", "docs/platform/**", "readme.md"],
+      "requirements": [],
+      "checks": ["documentation-consistency"],
+      "stages": ["STATIC"]
+    }
+  ]
+}

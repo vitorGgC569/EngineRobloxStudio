@@ -1,0 +1,51 @@
+{
+  "name": "valehold",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Core": {
+        "$path": "../../roblox/lib/Core"
+      },
+      "Behaviours": {
+        "$path": "../../roblox/lib/Behaviours"
+      },
+      "WorldKit": {
+        "$path": "../../roblox/lib/WorldKit"
+      },
+      "GameKit": {
+        "$path": "../../roblox/lib/GameKit"
+      },
+      "Shared": {
+        "$path": "src/shared"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "World": {
+        "$path": "src/world"
+      },
+      "$properties": {
+        "LoadStringEnabled": true
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Interface": {
+          "$path": "src/interface"
+        }
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "Gravity": 196.2
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting"
+    }
+  }
+}

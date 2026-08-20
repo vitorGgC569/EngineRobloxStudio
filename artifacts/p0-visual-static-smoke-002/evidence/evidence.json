@@ -1,0 +1,390 @@
+[
+  {
+    "id": "structure.required_paths",
+    "probe": "structural_integrity",
+    "category": "structural",
+    "status": "PASS",
+    "severity": "info",
+    "message": "Arquivos estruturais obrigatórios estão presentes",
+    "details": {
+      "expected": [
+        "AGENTS.md",
+        "CONTINUOUS_IMPROVEMENT.md",
+        "CARD_ART_IMPORT.md",
+        "quality/quality-focus.json",
+        "assets/asset-manifest.json",
+        "contracts/mining-tycoon.robloxqa.json",
+        "schemas/game-contract.schema.json",
+        "schemas/agent-action.schema.json",
+        "schemas/agent-observation.schema.json",
+        "schemas/agent-session.schema.json",
+        "contracts/scenarios/purchase-first-pack.json",
+        "roblox/mvp/default.project.json",
+        "roblox/mvp/game-state.json",
+        "roblox/mvp/src/ReplicatedStorage/Shared/GameConfig.lua",
+        "roblox/mvp/src/ReplicatedStorage/Shared/CardCatalog.lua",
+        "roblox/mvp/src/ReplicatedStorage/Shared/FloorCatalog.lua",
+        "roblox/mvp/src/ServerScriptService/ServerMain.server.lua",
+        "roblox/mvp/src/ServerScriptService/Services/PlotService.lua",
+        "roblox/mvp/src/ServerScriptService/Services/PersistenceService.lua",
+        "roblox/mvp/src/ServerScriptService/Services/StoreService.lua",
+        "roblox/mvp/src/ServerScriptService/Services/MapService.lua",
+        "roblox/mvp/src/ServerScriptService/Services/ProgressionService.lua",
+        "roblox/runtime/QualityProbeRuntime.server.lua",
+        "roblox/runtime/Probes/GeometryProbe.lua",
+        "roblox/runtime/Probes/ScenarioProbe.lua",
+        "rqe/studio.py",
+        "tools/render_map_audit.py",
+        "tools/studio_runtime_capture.py",
+        "roblox/mvp/src/StarterPlayer/StarterPlayerScripts/FarmHud.client.lua",
+        "roblox/mvp/src/ReplicatedStorage/Shared/FarmCatalog.lua",
+        "roblox/mvp/src/ReplicatedStorage/Shared/LuckCatalog.lua",
+        "roblox/mvp/src/ServerScriptService/Services/FarmService.lua",
+        "roblox/mvp/src/ServerScriptService/Services/ConveyorService.lua",
+        "roblox/lib/WorldKit/init.lua",
+        "roblox/lib/WorldKit/Build.lua",
+        "roblox/lib/WorldKit/Conveyor.lua",
+        "roblox/lib/WorldKit/Grid.lua",
+        "roblox/lib/WorldKit/Palette.lua",
+        "roblox/lib/WorldKit/Sky.lua",
+        "roblox/mvp/src/ReplicatedStorage/Shared/Format.lua"
+      ],
+      "missing": []
+    },
+    "source": "filesystem",
+    "validationLevel": "STATICALLY_VALIDATED",
+    "observedAt": "2026-08-11T17:06:14.597355+00:00",
+    "runId": "p0-visual-static-smoke-002",
+    "buildHash": "8675af43a853c086aece2de8d283b22ef8a6387a9254522d960165d983756bfd",
+    "coverage": 1.0,
+    "conclusive": true,
+    "truncated": false
+  },
+  {
+    "id": "security.asset_scripts",
+    "probe": "asset_security",
+    "category": "security",
+    "status": "PASS",
+    "severity": "info",
+    "message": "Nenhum padrão de script suspeito foi encontrado",
+    "details": {
+      "scriptsScanned": 28,
+      "findings": []
+    },
+    "source": "static-luau-scan",
+    "validationLevel": "STATICALLY_VALIDATED",
+    "observedAt": "2026-08-11T17:06:14.597355+00:00",
+    "runId": "p0-visual-static-smoke-002",
+    "buildHash": "8675af43a853c086aece2de8d283b22ef8a6387a9254522d960165d983756bfd",
+    "coverage": 1.0,
+    "conclusive": true,
+    "truncated": false
+  },
+  {
+    "id": "security.asset_manifest",
+    "probe": "asset_manifest",
+    "category": "security",
+    "status": "PASS",
+    "severity": "info",
+    "message": "Manifesto de assets alocado, aprovado e validado",
+    "details": {
+      "manifestPath": "assets/asset-manifest.json",
+      "assetCount": 14,
+      "policy": {
+        "externalToolboxAssets": "blocked_until_review",
+        "requireScriptScan": true,
+        "requireAllocation": true,
+        "generatedRasterRuntime": "require-roblox-upload-before-live-use",
+        "maxWorkspaceInstances": 25000
+      },
+      "issues": []
+    },
+    "source": "asset-manifest-validator",
+    "validationLevel": "STATICALLY_VALIDATED",
+    "observedAt": "2026-08-11T17:06:14.597355+00:00",
+    "runId": "p0-visual-static-smoke-002",
+    "buildHash": "8675af43a853c086aece2de8d283b22ef8a6387a9254522d960165d983756bfd",
+    "coverage": 1.0,
+    "conclusive": true,
+    "truncated": false
+  },
+  {
+    "id": "visual.asset_quality",
+    "probe": "visual_asset_quality",
+    "category": "visual",
+    "status": "PASS",
+    "severity": "info",
+    "message": "Artes raster geradas têm resolução e proporção válidas",
+    "details": {
+      "inspected": [
+        {
+          "key": "copper_lynx_prospector_v1",
+          "path": "assets/generated/cards/copper-lynx-prospector-v1.png",
+          "width": 1254,
+          "height": 1254,
+          "ratio": 1.0,
+          "mode": "RGB",
+          "bytes": 2167982
+        },
+        {
+          "key": "mossback_badger_engineer_v1",
+          "path": "assets/generated/cards/mossback-badger-engineer-v1.png",
+          "width": 1254,
+          "height": 1254,
+          "ratio": 1.0,
+          "mode": "RGB",
+          "bytes": 2263534
+        },
+        {
+          "key": "storm_raven_surveyor_v1",
+          "path": "assets/generated/cards/storm-raven-surveyor-v1.png",
+          "width": 1254,
+          "height": 1254,
+          "ratio": 1.0,
+          "mode": "RGB",
+          "bytes": 1954183
+        },
+        {
+          "key": "card_gallery_panel_v1",
+          "path": "assets/generated/ui/card-gallery-panel-v1.png",
+          "width": 1536,
+          "height": 1024,
+          "ratio": 1.5,
+          "mode": "RGB",
+          "bytes": 2535205
+        }
+      ],
+      "assetCount": 4,
+      "issues": []
+    },
+    "source": "visual-asset-validator",
+    "validationLevel": "STATICALLY_VALIDATED",
+    "observedAt": "2026-08-11T17:06:14.597355+00:00",
+    "runId": "p0-visual-static-smoke-002",
+    "buildHash": "8675af43a853c086aece2de8d283b22ef8a6387a9254522d960165d983756bfd",
+    "coverage": 1.0,
+    "conclusive": true,
+    "truncated": false
+  },
+  {
+    "id": "visual.snapshot_bundle",
+    "probe": "visual_snapshot_bundle",
+    "category": "visual",
+    "status": "PASS",
+    "severity": "info",
+    "message": "Pacote de prints visuais presente e decodificável",
+    "details": {
+      "manifestPath": "reports/visual-snapshots/manifest.json",
+      "captureType": "deterministic-source-preview",
+      "liveStudioCapture": false,
+      "inspected": [
+        {
+          "file": "00-map-overview.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 47757
+        },
+        {
+          "file": "01-spawn-plaza.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 41021
+        },
+        {
+          "file": "02-ridge-exchange.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 35317
+        },
+        {
+          "file": "03-old-lantern-mine.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 33137
+        },
+        {
+          "file": "04-ridge-lift.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 31309
+        },
+        {
+          "file": "05-plots-grid.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 36767
+        },
+        {
+          "file": "06-plot-a-detail.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 30993
+        },
+        {
+          "file": "07-floor-progression.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 77688
+        },
+        {
+          "file": "08-card-gallery.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 916339
+        },
+        {
+          "file": "09-mobile-ui.png",
+          "width": 1600,
+          "height": 900,
+          "bytes": 49243
+        }
+      ],
+      "snapshotCount": 10,
+      "issues": []
+    },
+    "source": "visual-snapshot-validator",
+    "validationLevel": "STATICALLY_VALIDATED",
+    "observedAt": "2026-08-11T17:06:14.597355+00:00",
+    "runId": "p0-visual-static-smoke-002",
+    "buildHash": "8675af43a853c086aece2de8d283b22ef8a6387a9254522d960165d983756bfd",
+    "coverage": 1.0,
+    "conclusive": true,
+    "truncated": false
+  },
+  {
+    "id": "studio.runtime_capture",
+    "probe": "studio_runtime_capture",
+    "category": "visual",
+    "status": "PASS",
+    "severity": "major",
+    "message": "Capturas runtime do Studio presentes e identificadas",
+    "details": {
+      "status": "PASS",
+      "studioDetected": true,
+      "processRunning": true,
+      "executablePath": "C:\\Users\\vitor\\AppData\\Local\\Roblox\\Versions\\version-b2d03e4efaa04174\\RobloxStudioBeta.exe",
+      "captureAdapter": "runtime-manifest",
+      "liveStudioCapture": true,
+      "runtime": {
+        "manifestPath": "reports/studio-runtime/manifest.json",
+        "liveStudioCapture": true,
+        "captureType": "studio-window-runtime",
+        "snapshots": [
+          {
+            "file": "studio-open.png",
+            "width": 1296,
+            "height": 930,
+            "bytes": 250224
+          },
+          {
+            "file": "studio-project-loaded.png",
+            "width": 1296,
+            "height": 930,
+            "bytes": 250224
+          },
+          {
+            "file": "spawn-runtime.png",
+            "width": 1296,
+            "height": 930,
+            "bytes": 655305
+          },
+          {
+            "file": "route-runtime.png",
+            "width": 1296,
+            "height": 930,
+            "bytes": 680645
+          }
+        ],
+        "issues": []
+      },
+      "issues": []
+    },
+    "source": "studio-detector",
+    "validationLevel": "STATICALLY_VALIDATED",
+    "observedAt": "2026-08-11T17:06:14.597355+00:00",
+    "runId": "p0-visual-static-smoke-002",
+    "buildHash": "8675af43a853c086aece2de8d283b22ef8a6387a9254522d960165d983756bfd",
+    "coverage": 1.0,
+    "conclusive": true,
+    "truncated": false
+  },
+  {
+    "id": "release.contract_schema",
+    "probe": "contract_schema",
+    "category": "structural",
+    "status": "PASS",
+    "severity": "critical",
+    "message": "release contract is structurally valid",
+    "details": {
+      "issues": []
+    },
+    "source": "contract-validator",
+    "validationLevel": "STATICALLY_VALIDATED",
+    "observedAt": "2026-08-11T17:06:14.597355+00:00",
+    "runId": "p0-visual-static-smoke-002",
+    "buildHash": "8675af43a853c086aece2de8d283b22ef8a6387a9254522d960165d983756bfd",
+    "coverage": 1.0,
+    "conclusive": true,
+    "truncated": false
+  },
+  {
+    "id": "release.fixture_excluded",
+    "probe": "fixture_excluded",
+    "category": "structural",
+    "status": "PASS",
+    "severity": "critical",
+    "message": "release project was loaded without the hand-written game-state fixture",
+    "details": {
+      "fixtureLoaded": false
+    },
+    "source": "release-orchestrator",
+    "validationLevel": "STATICALLY_VALIDATED",
+    "observedAt": "2026-08-11T17:06:14.597355+00:00",
+    "runId": "p0-visual-static-smoke-002",
+    "buildHash": "8675af43a853c086aece2de8d283b22ef8a6387a9254522d960165d983756bfd",
+    "coverage": 1.0,
+    "conclusive": true,
+    "truncated": false
+  },
+  {
+    "id": "release.visual_spec_schema",
+    "probe": "visual_spec_schema",
+    "category": "structural",
+    "status": "PASS",
+    "severity": "critical",
+    "message": "visual quality specification is schema-valid and semantically complete",
+    "details": {
+      "specId": "miners-ridge.visual-quality",
+      "revision": 1,
+      "ruleCount": 41,
+      "path": "contracts/visual/miners-ridge.visual-quality.v1.json"
+    },
+    "source": "visual-spec-validator",
+    "validationLevel": "STATICALLY_VALIDATED",
+    "observedAt": "2026-08-11T17:06:14.597355+00:00",
+    "runId": "p0-visual-static-smoke-002",
+    "buildHash": "8675af43a853c086aece2de8d283b22ef8a6387a9254522d960165d983756bfd",
+    "coverage": 1.0,
+    "conclusive": true,
+    "truncated": false
+  },
+  {
+    "id": "release.asset_security",
+    "probe": "asset_security",
+    "category": "security",
+    "status": "PASS",
+    "severity": "critical",
+    "message": "source and asset manifest passed static security checks",
+    "details": {
+      "issues": []
+    },
+    "source": "release-static-validator",
+    "validationLevel": "STATICALLY_VALIDATED",
+    "observedAt": "2026-08-11T17:06:14.597355+00:00",
+    "runId": "p0-visual-static-smoke-002",
+    "buildHash": "8675af43a853c086aece2de8d283b22ef8a6387a9254522d960165d983756bfd",
+    "coverage": 1.0,
+    "conclusive": true,
+    "truncated": false
+  }
+]

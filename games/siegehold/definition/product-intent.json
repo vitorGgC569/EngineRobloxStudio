@@ -1,0 +1,15 @@
+{
+  "schemaVersion": 1,
+  "productId": "siegehold",
+  "pitch": "Tower defense medieval: ondas de inimigos, torres com upgrades, cristal a defender, partidas de 8 minutos.",
+  "topology": "single-arena",
+  "progression": "wave-ladder",
+  "privateSpace": false,
+  "concurrentPlayers": 1,
+  "tokenSet": "tokens/brickfarm.json",
+  "coreLoop": [
+    "build",
+    "defend",
+    "upgrade"
+  ]
+}

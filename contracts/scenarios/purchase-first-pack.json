@@ -1,0 +1,15 @@
+{
+  "id": "purchase-first-pack-human",
+  "description": "A new human-mode agent finds the shop, buys the starter pack and cannot duplicate it.",
+  "mode": "blackbox",
+  "steps": [
+    {"observe": "blackbox"},
+    {"walk_to": "BasicPackStore", "timeout": 8},
+    {"assert": {"type": "visible_text", "value": "Buy mining pack"}},
+    {"interact": "PurchasePrompt"},
+    {"assert": {"type": "visible_text", "value": "$900"}},
+    {"interact": "PurchasePrompt", "expectSuccess": false},
+    {"assert": {"type": "visible_text", "value": "$900"}}
+  ]
+}
+

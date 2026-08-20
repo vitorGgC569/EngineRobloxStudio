@@ -1,0 +1,285 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "brightacre",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-brightacre",
+      "productId": "brightacre",
+      "revision": "1.0.0",
+      "seed": 71400929,
+      "genre": "tycoon",
+      "templateId": "template-tycoon-v1",
+      "sourceRoot": "games/brightacre",
+      "artifactRoot": "artifacts/products/brightacre",
+      "productIntentRef": {
+        "productId": "brightacre",
+        "artifactId": "brightacre.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/brightacre/definition/product-intent.json",
+        "sha256": "9a88b9053a685c0a8fd0f4a0174e974734e8e733d8ccabc05159117fdb1ecb9e"
+      },
+      "referenceBundleRef": {
+        "productId": "brightacre",
+        "artifactId": "brightacre.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/brightacre/definition/reference-bundle.json",
+        "sha256": "46950e4c90b1961d30c15a797134fc32d16412643a18fc28c73be60f9ee5a025"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a plot grid around a shared hub",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "economy, inventory, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/brightacre/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/brightacre/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/brightacre/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/brightacre/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "core-loop",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "brightacre",
+            "artifactId": "brightacre.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/brightacre/definition/release-quality.json",
+            "sha256": "83d6423b773d6253a07f44a1ddd52afa890aaabc8f9ac23dad7e87c8bd8e78eb"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "brightacre",
+          "artifactId": "brightacre.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/brightacre/production_plan"
+        },
+        {
+          "productId": "brightacre",
+          "artifactId": "brightacre.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/brightacre/source_bundle"
+        },
+        {
+          "productId": "brightacre",
+          "artifactId": "brightacre.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/brightacre/asset_manifest"
+        },
+        {
+          "productId": "brightacre",
+          "artifactId": "brightacre.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/brightacre/build_place"
+        },
+        {
+          "productId": "brightacre",
+          "artifactId": "brightacre.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/brightacre/integration_manifest"
+        },
+        {
+          "productId": "brightacre",
+          "artifactId": "brightacre.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/brightacre/measurement_run"
+        },
+        {
+          "productId": "brightacre",
+          "artifactId": "brightacre.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/brightacre/scenario_results"
+        },
+        {
+          "productId": "brightacre",
+          "artifactId": "brightacre.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/brightacre/capture_bundle"
+        },
+        {
+          "productId": "brightacre",
+          "artifactId": "brightacre.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/brightacre/quality_review"
+        },
+        {
+          "productId": "brightacre",
+          "artifactId": "brightacre.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/brightacre/repair_plan"
+        },
+        {
+          "productId": "brightacre",
+          "artifactId": "brightacre.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/brightacre/regression_run"
+        },
+        {
+          "productId": "brightacre",
+          "artifactId": "brightacre.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/brightacre/release_candidate"
+        }
+      ]
+    }
+  ]
+}

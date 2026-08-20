@@ -168,6 +168,24 @@ else
 	print("[visual] no MaterialVariant at runtime; author them into the place")
 end
 
+--[[
+	Weather, on a slow cycle.
+
+	The arena's light is pinned at golden hour for readability — the same
+	enemy silhouette has to work at every moment of a fight. Weather changes
+	the air rather than the hour: overcast and rain shift fog, cloud and
+	brightness without moving the sun, so the read stays and the world stops
+	looking like a single photograph.
+
+	Client-side because Lighting replicates from the server, and a server
+	driving atmosphere fights every client for it. This project already lost
+	an afternoon to that race with the day cycle.
+]]
+local Weather = Forge.Weather
+Weather.installDefaults()
+Weather.set("clear", { immediate = true })
+Weather.cycle({ "clear", "overcast", "rain", "overcast" }, 150)
+
 local Sky = require(ReplicatedStorage.Forge.Visual.Sky)
 Sky.install()
 -- `pin`, not `setHour`: the place file's ClockTime replicates in afterwards

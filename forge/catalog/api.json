@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-08-20T14:18:40+00:00",
+  "generatedAt": "2026-08-20T17:28:26+00:00",
   "engine": "Forge",
-  "modules": 51,
-  "functions": 718,
+  "modules": 53,
+  "functions": 736,
   "examples": [
     "Anim",
     "Capability",
@@ -11,6 +11,8 @@
     "Combat",
     "Core",
     "Data",
+    "Destruction",
+    "Examples",
     "Feel",
     "IK",
     "LiveOps",
@@ -24,6 +26,7 @@
     "Testing",
     "UI",
     "Weapon",
+    "Weather",
     "World"
   ],
   "index": [
@@ -40,7 +43,7 @@
     {
       "name": "Anim",
       "summary": "Anim — layered procedural animation with markers",
-      "functions": 22
+      "functions": 24
     },
     {
       "name": "Assets",
@@ -91,6 +94,11 @@
       "name": "Debug",
       "summary": "Debug — how a running game explains itself",
       "functions": 19
+    },
+    {
+      "name": "Destruction",
+      "summary": "Destruction — things coming apart, on a budget",
+      "functions": 7
     },
     {
       "name": "Dialogue",
@@ -276,6 +284,11 @@
       "name": "Weapon",
       "summary": "Weapon — the layer between \"the player pressed fire\" and \"something took damage\"",
       "functions": 19
+    },
+    {
+      "name": "Weather",
+      "summary": "Weather — conditions that change while people are playing",
+      "functions": 9
     },
     {
       "name": "World",
@@ -737,7 +750,7 @@
     {
       "name": "Anim",
       "file": "forge/luau/Forge/Anim/init.lua",
-      "lines": 699,
+      "lines": 795,
       "summary": "Anim — layered procedural animation with markers. Why not AnimationTrack and rbxassetid ------------------------------------- Authored animation needs the Animation Editor and an upload, which means a human in a GUI for every timing change. That is fine for a studio and fatal for an agent: the one thing that most needs iteration becomes the one thing that cannot be iterated. Here a clip is *data*. It works on R6 and R15, it needs no asset, and — the part that actually matters — it carries its own MARKERS. The frame a sword becomes dangerous lives in the same table as the pose that swings it. Move the pose, the hit window moves with it. That is what makes combat timing tunable without touching combat logic. This does not replace authored animation. When you have a real animator, keep the clip names and the marker names and swap the pose source; every system that listened for \"hit\" still works. Track convention (degrees) -------------------------- swing   forward/back — the primary axis of a limb spread  outward, away from the body twist   rotation about the limb's own axis, or torso yaw Usage -----",
       "examples": [
         "local anim = Anim.new(character)\nanim:setLocomotion(Anim.profiles.grounded)\nanim:onMarker(function(clip, marker) ... end)",
@@ -789,7 +802,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 335
+          "line": 338
         },
         {
           "name": "Animator:setLocomotion",
@@ -798,7 +811,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 339
+          "line": 342
         },
         {
           "name": "Animator:onMarker",
@@ -807,7 +820,7 @@
           "returns": null,
           "summary": "(clipName, markerName, playback)",
           "examples": [],
-          "line": 344
+          "line": 347
         },
         {
           "name": "Animator:play",
@@ -816,7 +829,7 @@
           "returns": "any",
           "summary": "",
           "examples": [],
-          "line": 354
+          "line": 357
         },
         {
           "name": "Animator:stop",
@@ -825,7 +838,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 386
+          "line": 411
         },
         {
           "name": "Animator:stopAll",
@@ -834,7 +847,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 398
+          "line": 423
         },
         {
           "name": "Animator:isPlaying",
@@ -843,16 +856,36 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 408
+          "line": 433
+        },
+        {
+          "name": "Animator:setRootMotion",
+          "signature": "Animator:setRootMotion(enabled: boolean)",
+          "kind": "method",
+          "returns": null,
+          "summary": "Movement that comes from the animation instead of from the controller. A dodge that plays a roll while the controller applies an impulse is two systems guessing at the same distance, and they disagree: the roll ends early, or the body slides past the end of it. Root motion makes the clip the authority — the animation says how far the body travels and the controller does nothing. A clip declares it as a curve of offsets in the character's own space: Applied as a delta each frame rather than an absolute position, so it composes with whatever else is moving the character and never teleports it back to where the clip thought it started.",
+          "examples": [
+            "dodge = {\nduration = 0.45,\nrootMotion = { k(0, 0, 0, 0), k(0.3, 0, 0, -14), k(0.45, 0, 0, -16) },\ntracks = { ... },\n}"
+          ],
+          "line": 462
+        },
+        {
+          "name": "Animator:_rootMotion",
+          "signature": "Animator:_rootMotion(dt: number)",
+          "kind": "method",
+          "returns": null,
+          "summary": "",
+          "examples": [],
+          "line": 466
         },
         {
           "name": "Animator:setAdditive",
           "signature": "Animator:setAdditive(joint: string, swing: number?, spread: number?, twist: number?)",
           "kind": "method",
           "returns": null,
-          "summary": "Additive offsets ride on top of everything: recoil, look-at, hit reaction. Set them from a Spring and you get physical secondary motion for free.",
+          "summary": "",
           "examples": [],
-          "line": 415
+          "line": 500
         },
         {
           "name": "Animator:clearAdditive",
@@ -861,7 +894,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 419
+          "line": 504
         },
         {
           "name": "Animator:_fireMarker",
@@ -870,7 +903,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 423
+          "line": 508
         },
         {
           "name": "Animator:_locomotion",
@@ -879,7 +912,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 432
+          "line": 517
         },
         {
           "name": "Animator:update",
@@ -888,7 +921,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 483
+          "line": 568
         },
         {
           "name": "Animator:reset",
@@ -897,7 +930,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 593
+          "line": 680
         },
         {
           "name": "Animator:destroy",
@@ -906,7 +939,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 606
+          "line": 693
         },
         {
           "name": "Animator:describe",
@@ -915,7 +948,7 @@
           "returns": "{ [string]: any }",
           "summary": "What the validation half reads to prove a character is animating at all.",
           "examples": [],
-          "line": 616
+          "line": 703
         },
         {
           "name": "Anim.bind",
@@ -924,7 +957,7 @@
           "returns": "RBXScriptConnection",
           "summary": "Drive an animator on the right loop for its context. RenderStepped on a client so the pose is computed for the frame being drawn; Heartbeat on the server, where there is no frame to be early for. This is only safe because `Rig.stripDefaultAnimate` has removed Roblox's own animator first. While that is still present it rewrites the same joints every frame and no render priority is late enough to beat it -- that was measured, not assumed.",
           "examples": [],
-          "line": 652
+          "line": 748
         },
         {
           "name": "Anim.setTrail",
@@ -933,7 +966,7 @@
           "returns": null,
           "summary": "Weapon trails are the most common thing markers drive, so it ships here.",
           "examples": [],
-          "line": 667
+          "line": 763
         },
         {
           "name": "Anim.describe",
@@ -942,7 +975,7 @@
           "returns": "{ [string]: any }",
           "summary": "Module-level description: which clips are registered and whether each one carries markers. A clip with no markers is a pose with no timing.",
           "examples": [],
-          "line": 685
+          "line": 781
         }
       ],
       "describes": true
@@ -2268,6 +2301,84 @@
       "describes": true
     },
     {
+      "name": "Destruction",
+      "file": "forge/luau/Forge/Destruction/init.lua",
+      "lines": 315,
+      "summary": "Destruction — things coming apart, on a budget. Every game wants breakable scenery and almost none ship it, because the naive version is a trap: a crate that shatters into forty unanchored parts is forty new physics bodies, replicated to every client, and a room full of crates is a server that stops. The interesting problem is not how to break something — it is how to break a hundred things and still hold a frame. So the whole module is built around a budget: * a global cap on live debris, oldest recycled first; * shards that sleep and anchor once they stop moving, so their physics * a fade and a lifetime, because debris that persists is debris that --- What this deliberately does not do ----------------------------------- Real fracture. Voronoi shattering of arbitrary geometry is expensive to compute and worse to replicate, and at Roblox's scale nobody can tell it from a handful of well-thrown boxes tinted to match. The shards here are sampled from the source object's own parts, so a stone crate throws stone and a wooden one throws wood without anybody authoring either.",
+      "examples": [
+        "cost is one frame each rather than forever;",
+        "accumulates for the whole session.",
+        "Destruction.define(\"crate\", {\nshards = 8, spread = 14, life = 6,\nmaterial = Enum.Material.WoodPlanks,\n})",
+        "Destruction.break_(crate, { from = hitPosition })"
+      ],
+      "functions": [
+        {
+          "name": "Destruction.define",
+          "signature": "Destruction.define(name: string, recipe: Recipe)",
+          "kind": "function",
+          "returns": null,
+          "summary": "",
+          "examples": [],
+          "line": 72
+        },
+        {
+          "name": "Destruction.defineMany",
+          "signature": "Destruction.defineMany(table_: { [string]: Recipe })",
+          "kind": "function",
+          "returns": null,
+          "summary": "",
+          "examples": [],
+          "line": 76
+        },
+        {
+          "name": "Destruction.recipe",
+          "signature": "Destruction.recipe(name: string)",
+          "kind": "function",
+          "returns": "Recipe?",
+          "summary": "",
+          "examples": [],
+          "line": 82
+        },
+        {
+          "name": "Destruction.break_",
+          "signature": "Destruction.break_(subject: Instance, options: any?)",
+          "kind": "function",
+          "returns": "number",
+          "summary": "Break something apart. The shards inherit colour and material from the object's own parts, so a stone wall throws stone and a wooden crate throws wood with nothing authored per object. `from` is where the blow came from: debris that flies away from the impact reads as caused, debris that flies in every direction reads as an explosion. Returns how many shards were actually made, which is not always what was asked for — the budget has the final say.",
+          "examples": [],
+          "line": 195
+        },
+        {
+          "name": "Destruction.clear",
+          "signature": "Destruction.clear()",
+          "kind": "function",
+          "returns": null,
+          "summary": "",
+          "examples": [],
+          "line": 277
+        },
+        {
+          "name": "Destruction.liveCount",
+          "signature": "Destruction.liveCount()",
+          "kind": "function",
+          "returns": "number",
+          "summary": "",
+          "examples": [],
+          "line": 284
+        },
+        {
+          "name": "Destruction.describe",
+          "signature": "Destruction.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 288
+        }
+      ],
+      "describes": true
+    },
+    {
       "name": "Dialogue",
       "file": "forge/luau/Forge/Dialogue/init.lua",
       "lines": 271,
@@ -3210,7 +3321,7 @@
     {
       "name": "Examples",
       "file": "forge/luau/Forge/Examples/init.lua",
-      "lines": 344,
+      "lines": 383,
       "summary": "Examples — one runnable demonstration per module. A documented example rots. It is written once, the API moves, and nobody notices until an agent copies it and gets an error. This project has been bitten by that exact shape all day: a comment describing a call that was no longer true is worse than no comment, because it is believed. So these are not snippets in a docstring. Each one is a function that actually runs inside the live game, does the thing, asserts something small about the result, and cleans up after itself. `forge example --all` runs every one of them; if the API moves, the example fails, and it fails in CI rather than in an agent's hands. --- What an example is for ---------------------------------------------- Not test coverage — `Testing` does that, and these deliberately assert almost nothing. An example answers \"what does using this module look like\", which is the question an agent has when it has never seen the engine and is deciding whether a module is the right tool. That is why each one is short, uses the shortest path through its module, and reads top to bottom.",
       "examples": [
         "forge example Combat      run one\nforge example --all       run all of them"
@@ -3223,7 +3334,7 @@
           "returns": "{ string }",
           "summary": "=================================== run ====================================",
           "examples": [],
-          "line": 285
+          "line": 324
         },
         {
           "name": "Examples.run",
@@ -3232,7 +3343,7 @@
           "returns": "{ [string]: any }",
           "summary": "Run one example and report what happened. Failures are returned rather than thrown: running twenty examples and stopping at the first broken one hides the other nineteen, and the whole point is to find out which parts of the surface have drifted.",
           "examples": [],
-          "line": 301
+          "line": 340
         },
         {
           "name": "Examples.runAll",
@@ -3241,7 +3352,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 318
+          "line": 357
         },
         {
           "name": "Examples.describe",
@@ -3250,7 +3361,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 339
+          "line": 378
         }
       ],
       "describes": true
@@ -7293,6 +7404,100 @@
           "summary": "What a validator reads to prove a shooting game actually has weapons.",
           "examples": [],
           "line": 531
+        }
+      ],
+      "describes": true
+    },
+    {
+      "name": "Weather",
+      "file": "forge/luau/Forge/Weather/init.lua",
+      "lines": 316,
+      "summary": "Weather — conditions that change while people are playing. `Visual` and `Sky` decide what a world looks like at an hour. Neither has any notion of a world that is *currently* raining, or of one condition giving way to another over a minute rather than a cut. That gap is why the engine's outdoor worlds have exactly one mood each. What a condition is here: a set of target values for the sky, the atmosphere and the particle layer, plus how long it takes to get there. Nothing snaps. A storm that arrives instantly reads as a bug in the lighting; a storm that takes forty seconds reads as weather. --- Client-side, deliberately ------------------------------------------- Lighting replicates from the server, so a server that drives weather fights every client's own atmosphere and loses the race half the time — this project has already spent an afternoon on exactly that with the day cycle. The server decides *which* condition is in force and tells clients; each client renders it. That also means rain is one client's particle budget rather than the server's replication budget.",
+      "examples": [
+        "Weather.define(\"storm\", {\nrain = 1, wind = 0.8,\nfog = { density = 0.4, colour = Color3.fromRGB(120, 128, 140) },\nbrightness = 0.5, transition = 45,\n})",
+        "Weather.set(\"storm\")\nWeather.cycle({ \"clear\", \"overcast\", \"rain\" })"
+      ],
+      "functions": [
+        {
+          "name": "Weather.define",
+          "signature": "Weather.define(name: string, condition: Condition)",
+          "kind": "function",
+          "returns": null,
+          "summary": "================================== define ==================================",
+          "examples": [],
+          "line": 70
+        },
+        {
+          "name": "Weather.defineMany",
+          "signature": "Weather.defineMany(table_: { [string]: Condition })",
+          "kind": "function",
+          "returns": null,
+          "summary": "",
+          "examples": [],
+          "line": 74
+        },
+        {
+          "name": "Weather.names",
+          "signature": "Weather.names()",
+          "kind": "function",
+          "returns": "{ string }",
+          "summary": "",
+          "examples": [],
+          "line": 80
+        },
+        {
+          "name": "Weather.installDefaults",
+          "signature": "Weather.installDefaults()",
+          "kind": "function",
+          "returns": null,
+          "summary": "A starting set, so a world has weather before anybody authors any. Deliberately mild. A default that ships a thunderstorm makes every game built on this engine look like the same game, which is the failure this project exists to avoid — these are the neutral ends of a range, not a style.",
+          "examples": [],
+          "line": 97
+        },
+        {
+          "name": "Weather.set",
+          "signature": "Weather.set(name: string, options: any?)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "Put a condition in force. `immediate` skips the transition, which is for loading into a world that is already raining rather than for gameplay: a cut between conditions is the one thing that makes weather look scripted.",
+          "examples": [],
+          "line": 232
+        },
+        {
+          "name": "Weather.current",
+          "signature": "Weather.current()",
+          "kind": "function",
+          "returns": "string?",
+          "summary": "",
+          "examples": [],
+          "line": 265
+        },
+        {
+          "name": "Weather.cycle",
+          "signature": "Weather.cycle(sequence: { string }, everySeconds: number?)",
+          "kind": "function",
+          "returns": null,
+          "summary": "Move through a sequence of conditions. Weather that changes on a timer is the cheapest way to make a world feel like it exists independently of the player, and the whole cost is one coroutine that sleeps.",
+          "examples": [],
+          "line": 276
+        },
+        {
+          "name": "Weather.stop",
+          "signature": "Weather.stop()",
+          "kind": "function",
+          "returns": null,
+          "summary": "",
+          "examples": [],
+          "line": 290
+        },
+        {
+          "name": "Weather.describe",
+          "signature": "Weather.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 300
         }
       ],
       "describes": true

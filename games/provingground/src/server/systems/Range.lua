@@ -32,6 +32,7 @@ local Save = Forge.Save
 local Debug = Forge.Debug
 local Rng = Forge.Core.Rng
 local Rig = Forge.Rig
+local Destruction = Forge.Destruction
 local World = Forge.World
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
@@ -243,35 +244,26 @@ end
 --[[
 	A target coming apart.
 
-	Nine planks with a shove, deleted after three seconds. Cheap, and the
-	alternative — the model simply vanishing — makes a hit feel like a
-	networking failure rather than a result.
+	This was nine hand-made planks with a shove and a `task.delay` to clean
+	them up. It worked and it did not scale: nine targets breaking at once is
+	eighty-one unanchored parts, all simulated for three seconds whether or not
+	anyone is looking at them.
+
+	`Destruction` has a global budget, recycles the oldest debris when it is
+	full, and anchors each shard once it stops moving — so a shard costs
+	physics for about a second rather than for its whole life. The shards also
+	take their colour and material from the target's own parts, which is why
+	the bullseye throws red and the board throws wood without either being
+	specified here.
 ]]
 local function shatter(model: Model, from: Vector3)
-	local origin = model:GetPivot().Position
-	for i = 1, 9 do
-		local shard = Instance.new("Part")
-		shard.Size = Vector3.new(math.random(6, 16) / 10, math.random(6, 20) / 10, 0.4)
-		shard.CFrame = CFrame.new(origin + Vector3.new(
-			math.random(-22, 22) / 10,
-			math.random(-14, 22) / 10,
-			math.random(-6, 6) / 10
-		))
-		shard.Color = i <= 2 and Color3.fromRGB(196, 58, 48) or Color3.fromRGB(158, 126, 88)
-		shard.Material = Enum.Material.WoodPlanks
-		shard.CanCollide = false
-		shard.Parent = Workspace:FindFirstChild("Effects") or Workspace
-
-		local push = (origin - from)
-		push = push.Magnitude > 0.01 and push.Unit or Vector3.new(0, 1, 0)
-		shard.AssemblyLinearVelocity = push * math.random(12, 26)
-			+ Vector3.new(math.random(-8, 8), math.random(6, 18), math.random(-8, 8))
-		shard.AssemblyAngularVelocity = Vector3.new(math.random(-9, 9), math.random(-9, 9), math.random(-9, 9))
-
-		task.delay(3, function()
-			shard:Destroy()
-		end)
-	end
+	Destruction.break_(model, {
+		recipe = "target",
+		from = from,
+		-- The model is destroyed by `respawnTarget`, which needs to read its
+		-- attributes first.
+		destroy = false,
+	})
 end
 
 -- =================================== firing =================================
@@ -412,6 +404,22 @@ end
 
 -- ==================================== start =================================
 function Range.start()
+	--[[
+		How a practice target breaks.
+
+		Twelve shards rather than nine, because the budget now decides the real
+		number: asking for more costs nothing when there is room and degrades
+		gracefully when there is not.
+	]]
+	Destruction.define("target", {
+		shards = 12,
+		spread = 22,
+		upward = 16,
+		life = 5,
+		scale = 1.4,
+	})
+
+
 	local props = Workspace:FindFirstChild("Props") or Workspace
 
 	Net.on("DrawStart", onDrawStart)

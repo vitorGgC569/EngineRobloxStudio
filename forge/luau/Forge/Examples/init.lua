@@ -279,6 +279,45 @@ Examples.of = {
 	Testing = function(Forge)
 		return { registered = Forge.Testing.count() }
 	end,
+
+	Destruction = function(Forge, at)
+		local Destruction = Forge.Destruction
+		Destruction.define("example_crate", { shards = 6, spread = 10, life = 2 })
+
+		local crate = Instance.new("Part")
+		crate.Size = Vector3.new(4, 4, 4)
+		crate.CFrame = CFrame.new(at)
+		crate.Anchored = true
+		crate.Color = Color3.fromRGB(150, 110, 70)
+		crate.Parent = stage()
+
+		local shards = Destruction.break_(crate, {
+			recipe = "example_crate",
+			from = at + Vector3.new(0, 0, 6),
+		})
+		local report = Destruction.describe()
+		Destruction.clear()
+		return { shards = shards, budget = report.budget, live = report.live }
+	end,
+
+	Weather = function(Forge)
+		local Weather = Forge.Weather
+		Weather.installDefaults()
+		Weather.set("storm", { immediate = true })
+		local stormy = Weather.describe()
+		Weather.set("clear", { immediate = true })
+		Weather.stop()
+		return {
+			conditions = #Weather.names(),
+			stormRain = stormy.blend.rain,
+			clearedTo = Weather.describe().blend.rain,
+		}
+	end,
+
+	Examples = function(Forge)
+		-- Self-describing, so `--all` proves the runner itself is reachable.
+		return { available = #Forge.Examples.names() }
+	end,
 }
 
 -- =================================== run ====================================

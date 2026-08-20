@@ -265,6 +265,9 @@ function Anim.new(character: Model): any
 		additive = {},
 		profile = Anim.profiles.grounded,
 		locomotion = true,
+		-- On by default: a clip with no `rootMotion` curve costs nothing, and a
+		-- clip that has one almost certainly means it.
+		rootMotion = true,
 		enabled = true,
 		smoothing = 22,
 		phase = 0,
@@ -359,9 +362,27 @@ function Animator:play(clipName: string, options: any?): any
 	end
 	local opts = options or {}
 
-	-- a clip cancels every playing clip of equal or lower priority
+	--[[
+		Layers, and what cancels what.
+
+		Until now a clip cancelled every playing clip of equal or lower
+		priority, which is correct for one stream of full-body motion and wrong
+		for everything else: playing a reload cancelled the sprint, and a flinch
+		cancelled the aim. Every game works around that by not layering, which
+		is why this engine's characters do one thing at a time.
+
+		A layer is a named stream. Clips only cancel others *on their own
+		layer*, so `base` can carry locomotion while `upper` carries a reload
+		and `additive` carries a flinch, all at once. The mask still decides
+		which joints each one writes, so two layers that overlap resolve by
+		priority exactly as before.
+
+		Unnamed clips land on `base`, so every existing call keeps its old
+		behaviour.
+	]]
+	local layer = opts.layer or clip.layer or "base"
 	for name, pb in self.playing do
-		if (clips[name].priority or 1) <= (clip.priority or 1) then
+		if pb.layer == layer and (clips[name].priority or 1) <= (clip.priority or 1) then
 			pb.fading = true
 		end
 	end
@@ -369,6 +390,10 @@ function Animator:play(clipName: string, options: any?): any
 	local playback = {
 		clip = clip,
 		name = clipName,
+		layer = layer,
+		-- Weight the whole clip can be scaled by, independent of blending.
+		-- A half-weight flinch is a flinch that does not interrupt aiming.
+		gain = opts.weight or 1,
 		t = 0,
 		speed = opts.speed or 1,
 		weight = 0,
@@ -412,6 +437,66 @@ end
 
 -- Additive offsets ride on top of everything: recoil, look-at, hit reaction.
 -- Set them from a Spring and you get physical secondary motion for free.
+-- ================================ root motion ===============================
+--[[
+	Movement that comes from the animation instead of from the controller.
+
+	A dodge that plays a roll while the controller applies an impulse is two
+	systems guessing at the same distance, and they disagree: the roll ends
+	early, or the body slides past the end of it. Root motion makes the clip
+	the authority — the animation says how far the body travels and the
+	controller does nothing.
+
+	A clip declares it as a curve of offsets in the character's own space:
+
+		dodge = {
+			duration = 0.45,
+			rootMotion = { k(0, 0, 0, 0), k(0.3, 0, 0, -14), k(0.45, 0, 0, -16) },
+			tracks = { ... },
+		}
+
+	Applied as a delta each frame rather than an absolute position, so it
+	composes with whatever else is moving the character and never teleports it
+	back to where the clip thought it started.
+]]
+function Animator:setRootMotion(enabled: boolean)
+	self.rootMotion = enabled
+end
+
+function Animator:_rootMotion(dt: number)
+	if self.rootMotion == false or not self.root or not self.root.Parent then
+		return
+	end
+	local root = self.root :: BasePart
+
+	for _, pb in self.playing do
+		local curve = pb.clip.rootMotion
+		if not curve or pb.fading then
+			continue
+		end
+
+		local t = math.min(pb.t, pb.clip.duration)
+		local previous = pb.rootAt or 0
+		if t <= previous then
+			continue
+		end
+
+		-- `sampleTrack` returns a keyframe's three channels as three numbers.
+		-- For a track masquerading as root motion they are read as a
+		-- translation rather than as swing, spread and twist.
+		local nx, ny, nz = sampleTrack(curve, t, pb.ease)
+		local px, py, pz = sampleTrack(curve, previous, pb.ease)
+		pb.rootAt = t
+
+		local delta = Vector3.new(nx - px, ny - py, nz - pz)
+		if delta.Magnitude > 1e-4 then
+			-- In the character's own space: a roll goes backwards relative to
+			-- where the character faces, not relative to the world.
+			root.CFrame = root.CFrame * CFrame.new(delta * (pb.gain or 1))
+		end
+	end
+end
+
 function Animator:setAdditive(joint: string, swing: number?, spread: number?, twist: number?)
 	self.additive[joint] = { swing = swing or 0, spread = spread or 0, twist = twist or 0 }
 end
@@ -540,7 +625,7 @@ function Animator:update(dt: number)
 			pb.weight = math.min(1, pb.weight + dt / pb.blendIn)
 		end
 
-		local w = math.clamp(pb.weight, 0, 1)
+		local w = math.clamp(pb.weight, 0, 1) * (pb.gain or 1)
 		local t = math.min(pb.t, clip.duration)
 		for _, key in clip.mask do
 			local track = clip.tracks[key]
@@ -553,6 +638,8 @@ function Animator:update(dt: number)
 			end
 		end
 	end
+
+	self:_rootMotion(dt)
 
 	for key, add in self.additive do
 		local cur = target[key]
@@ -631,7 +718,16 @@ function Animator:describe(): { [string]: any }
 		-- that failure is otherwise completely silent.
 		jointKinds = self.jointKinds,
 		playing = active,
+		layers = (function()
+			local seen: { [string]: number } = {}
+			for _, pb in self.playing do
+				local layer = pb.layer or "base"
+				seen[layer] = (seen[layer] or 0) + 1
+			end
+			return seen
+		end)(),
 		locomotion = self.locomotion,
+		rootMotion = self.rootMotion,
 		phase = self.phase,
 	}
 end

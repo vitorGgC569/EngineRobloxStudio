@@ -151,6 +151,52 @@ return function(Testing)
 		t:expect(rocks > 0, "the arena scattered no rocks at all")
 	end)
 
+	-- =============================== destruction ============================
+	Testing.scenario("breaking something respects the debris budget", function(t)
+		--[[
+			The number that decides whether destruction is a feature or an
+			outage. Asking for far more shards than the budget allows must
+			degrade to fewer, not to a frame nobody has — and must never
+			produce zero, because a crate that vanishes reads as a bug.
+		]]
+		local Destruction = Forge.Destruction
+		Destruction.clear()
+
+		local budget = Destruction.config.budget
+		local made = 0
+		for index = 1, 40 do
+			local crate = Instance.new("Part")
+			crate.Size = Vector3.new(3, 3, 3)
+			crate.CFrame = CFrame.new(Testing.config.stageOrigin + Vector3.new(index * 4, 0, 0))
+			crate.Anchored = true
+			crate.Parent = Workspace
+			made += Destruction.break_(crate, { shards = 10 })
+		end
+
+		t:expect(made > 0, "forty crates produced no debris at all")
+		t:expect(Destruction.liveCount() <= budget, string.format(
+			"debris ran past its budget: %d live against a cap of %d",
+			Destruction.liveCount(), budget))
+		Destruction.clear()
+		t:expectEqual(Destruction.liveCount(), 0, "clear left debris behind")
+	end, { timeout = 30 })
+
+	-- ================================= weather ==============================
+	Testing.scenario("a weather condition takes hold and can be cleared", function(t)
+		local Weather = Forge.Weather
+		Weather.installDefaults()
+
+		Weather.set("storm", { immediate = true })
+		local stormy = Weather.describe()
+		t:expectEqual(stormy.current, "storm", "the condition did not take")
+		t:expect(stormy.blend.rain > 0.5, "a storm with no rain in it")
+
+		Weather.set("clear", { immediate = true })
+		Weather.stop()
+		t:expectNear(Weather.describe().blend.rain, 0, 0.01,
+			"clearing left rain behind")
+	end, { timeout = 20 })
+
 	-- ================================= scenes ===============================
 	Testing.scenario("a scene survives being written and read back", function(t)
 		--[[

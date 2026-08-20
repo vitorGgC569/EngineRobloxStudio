@@ -28,6 +28,7 @@ local Net = Forge.Net
 local Save = Forge.Save
 local Rig = Forge.Rig
 local Debug = Forge.Debug
+local Reference = Forge.Reference
 
 local startedAt = os.clock()
 
@@ -76,6 +77,26 @@ Net.define({
 })
 
 Content.load()
+
+--[[
+	Read the balance back against the manual, once, at startup.
+
+	`Reference` holds the proportions that hold across every action game ever
+	balanced; `Content.review` measures this game's tables against them. It
+	warns and never blocks, because a table that disagrees with the manual is
+	sometimes the design and sometimes a typo, and only a person can tell the
+	two apart. Publishing it on the debug seam is what makes the difference
+	something a machine can read.
+]]
+do
+	local notes = Content.review()
+	for _, note in notes do
+		Debug.warn(string.format("balance: %s %s — %s", note.kind, note.id, note.note))
+	end
+	Debug.probe("balance", function()
+		return { notes = notes, frame = Reference.frame }
+	end)
+end
 
 Save.configure({
 	store = Config.saveStore,

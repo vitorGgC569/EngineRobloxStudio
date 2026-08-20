@@ -187,7 +187,15 @@ local function serializeObb(cframe: CFrame, size: Vector3): { [string]: any }
 		size = Serialize.roundVector(size),
 		right = Serialize.roundVector(cframe.RightVector, 6),
 		up = Serialize.roundVector(cframe.UpVector, 6),
-		back = Serialize.roundVector(cframe.BackVector, 6),
+		-- `-LookVector`, because CFrame has no BackVector.
+		--
+		-- It reads as though it should: there is RightVector, UpVector and
+		-- LookVector, and the missing fourth name is the obvious one to write.
+		-- Roblox does not define it, so every quality.snapshot this plugin
+		-- ever answered failed with "BackVector is not a valid member of
+		-- CFrame" — which surfaced as a capture the release gate rejected,
+		-- three layers away from the typo.
+		back = Serialize.roundVector(-cframe.LookVector, 6),
 	}
 end
 

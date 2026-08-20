@@ -473,6 +473,117 @@ def cmd_upload(args: argparse.Namespace) -> int:
     return 0
 
 
+# ============================== quality and sight ===========================
+def cmd_quality(args: argparse.Namespace) -> int:
+    """Run the Quality Engine against a Forge game.
+
+    The two halves of this repository, finally pointed at each other. Forge
+    proves a game works; the RQE measures whether it is any good, and until
+    now neither knew the other existed.
+    """
+    from cli import quality
+
+    try:
+        descriptor, contract = quality.generate(args.game)
+    except quality.QualityError as exc:
+        raise SystemExit(f"forge: {exc}")
+
+    print(f"  {descriptor.relative_to(REPO_ROOT)}")
+    print(f"  {contract.relative_to(REPO_ROOT)}  "
+          f"({len(quality.FORGE_REQUIREMENTS)} requirements)")
+
+    if args.generate:
+        print()
+        print("  the bar is a decision, not a derivation. edit the contract, "
+              "then run `forge quality` without --generate.")
+        return 0
+
+    print()
+    result = quality.audit(args.game, static_only=args.static_only)
+    print(quality.render(result))
+    return 0 if result["exit"] == 0 else 1
+
+
+def cmd_look(args: argparse.Namespace) -> int:
+    """Photograph the game, so the agent can see what it built.
+
+    Every visual defect in this project was found by a person looking at a
+    screen and none of them by a test. This is the agent doing the looking.
+    """
+    from cli import look
+
+    try:
+        if args.tour:
+            shots = look.tour()
+        else:
+            if args.at:
+                point = tuple(float(value) for value in args.at.split(","))
+                if len(point) != 3:
+                    raise SystemExit("forge: --at wants x,y,z")
+                look.aim(point, args.distance, args.height)  # type: ignore[arg-type]
+            shots = [look.shoot(args.name)]
+    except look.LookError as exc:
+        raise SystemExit(f"forge: {exc}")
+
+    for shot in shots:
+        print(f"  {shot.relative_to(REPO_ROOT)}  ({shot.stat().st_size:,} bytes)")
+    return 0 if shots else 1
+
+
+def cmd_analytics(args: argparse.Namespace) -> int:
+    """Read the telemetry back out of the DataStore it was written into."""
+    from cli import analytics
+    from cli import publish as pub
+
+    try:
+        fetched = analytics.fetch(args.game, days=args.days)
+    except (analytics.AnalyticsError, pub.PublishError) as exc:
+        raise SystemExit(f"forge: {exc}")
+
+    if args.raw:
+        print(json.dumps(fetched["events"], indent=2, ensure_ascii=False))
+        return 0
+
+    summary = analytics.summarise(fetched)
+    if args.json:
+        print(json.dumps(summary, indent=2, ensure_ascii=False))
+        return 0
+    print(analytics.render(summary))
+    return 0
+
+
+def cmd_traps(args: argparse.Namespace) -> int:
+    """The traps this engine knows about, as data rather than as folklore.
+
+    Every one was paid for by a real failure in this project, and every one
+    lived in a comment — where only a reader of that exact file ever finds it.
+    Here an agent can ask before it writes instead of after it breaks.
+    """
+    catalogue = REPO_ROOT / "forge" / "catalog" / "traps.json"
+    traps = json.loads(catalogue.read_text(encoding="utf-8"))["traps"]
+
+    if args.module:
+        traps = [trap for trap in traps if args.module in trap.get("modules", [])]
+    if args.search:
+        needle = args.search.lower()
+        traps = [trap for trap in traps
+                 if needle in json.dumps(trap, ensure_ascii=False).lower()]
+
+    if args.json:
+        print(json.dumps(traps, indent=2, ensure_ascii=False))
+        return 0
+
+    for trap in traps:
+        print(f"{trap['id']}  [{trap['severity']}]  {', '.join(trap.get('modules', []))}")
+        print(f"    symptom: {trap['symptom']}")
+        print(f"    rule:    {trap['rule']}")
+        print(f"    why:     {trap['why']}")
+        print(f"    instead: {trap['instead']}")
+        print()
+    print(f"  {len(traps)} traps")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="forge", description="Forge — the authoring half")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -567,6 +678,36 @@ def main(argv: list[str] | None = None) -> int:
     p_engine = sub.add_parser("engine", help="list the engine's modules and public API")
     p_engine.add_argument("--json", action="store_true")
     p_engine.set_defaults(func=cmd_engine)
+
+    p_quality = sub.add_parser("quality", help="audit a game with the Quality Engine")
+    p_quality.add_argument("game", nargs="?", default="provingground")
+    p_quality.add_argument("--generate", action="store_true",
+                           help="write the descriptor and contract without auditing")
+    p_quality.add_argument("--static-only", action="store_true",
+                           help="source evidence only; the release stays blocked")
+    p_quality.set_defaults(func=cmd_quality)
+
+    p_look = sub.add_parser("look", help="take a picture of the game in Studio")
+    p_look.add_argument("--at", default=None, help="x,y,z to frame")
+    p_look.add_argument("--distance", type=float, default=60)
+    p_look.add_argument("--height", type=float, default=25)
+    p_look.add_argument("--name", default="look")
+    p_look.add_argument("--tour", action="store_true",
+                        help="the standard viewpoints, so two runs are comparable")
+    p_look.set_defaults(func=cmd_look)
+
+    p_an = sub.add_parser("analytics", help="read the telemetry back out of the DataStore")
+    p_an.add_argument("game", nargs="?", default="provingground")
+    p_an.add_argument("--days", type=int, default=7)
+    p_an.add_argument("--raw", action="store_true", help="the events, unaggregated")
+    p_an.add_argument("--json", action="store_true")
+    p_an.set_defaults(func=cmd_analytics)
+
+    p_traps = sub.add_parser("traps", help="what breaks, and what to do instead")
+    p_traps.add_argument("search", nargs="?", default=None)
+    p_traps.add_argument("--module", default=None, help="only traps touching this module")
+    p_traps.add_argument("--json", action="store_true")
+    p_traps.set_defaults(func=cmd_traps)
 
     args = parser.parse_args(argv)
     return args.func(args)

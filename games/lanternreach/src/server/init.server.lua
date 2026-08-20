@@ -60,6 +60,14 @@ Content.load()
 -- Telemetry before anything can fail, so a failure during startup is itself
 -- recorded. The sink is the game's choice; `printSink` is development only.
 Telemetry.printSink()
+--[[
+	A destination, then the pump.
+
+	This game called `start` and never registered a sink, so every event it
+	raised was buffered and thrown away — invisible from inside, because a
+	telemetry system with no sink reports itself as perfectly healthy.
+]]
+Telemetry.dataStoreSink()
 Telemetry.start()
 
 -- The onboarding funnel. Four steps, and the drop between any two is the

@@ -23,7 +23,16 @@ REQUIRED_SNAPSHOT_FILES = (
 
 def validate_generated_visuals(project: Project) -> tuple[list[str], dict[str, Any]]:
     manifest_path = project.root / "assets/asset-manifest.json"
-    manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    if not manifest_path.exists():
+        # A project with no generated raster assets has no manifest, and that
+        # is an ordinary shape rather than a fault. Raising here made the whole
+        # audit crash on the first Forge game pointed at it — a validator that
+        # cannot be run against a valid project is a validator nobody runs.
+        return [], {"inspected": [], "manifest": None}
+    try:
+        manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError) as exc:
+        return [f"asset-manifest.json não pôde ser lido: {exc}"], {"inspected": []}
     issues: list[str] = []
     inspected: list[dict[str, Any]] = []
     try:

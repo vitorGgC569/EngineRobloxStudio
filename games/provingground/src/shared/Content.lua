@@ -11,6 +11,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Forge = require(ReplicatedStorage:WaitForChild("Forge"))
 local Data = Forge.Data
 local Weapon = Forge.Weapon
+local Reference = Forge.Reference
 
 local Content = {}
 
@@ -147,7 +148,14 @@ function Content.load()
 		husk_brute = {
 			extends = "husk",
 			name = "Brute Husk",
-			health = 260, damage = 22, armor = 12, speed = 10,
+			-- 200 rather than 260, on the manual's advice.
+			--
+			-- Against the training blade's 18 a 260-health brute is a
+			-- fourteen-hit fight, and `Reference` puts the line at twelve:
+			-- past it a fight stops reading as a fight and starts reading as
+			-- a chore. 200 is eleven hits, which is what the reference brute
+			-- shape asks for — shorter, and no less dangerous.
+			health = 200, damage = 22, armor = 12, speed = 10,
 			reach = 10, attackEvery = 2.4, score = 35,
 			profile = "heavy",
 			rig = {
@@ -185,6 +193,47 @@ function Content.load()
 	})
 
 	loadRanged()
+end
+
+-- ================================== review ==================================
+--[[
+	Hold this game's numbers up against the manual.
+
+	`Reference` knows what a reasonable number looks like: how many hits a
+	fight should take, how much damage per second a weapon may carry before it
+	is the only weapon anybody picks. It cannot know what *this* game wants —
+	nothing can — so this reports rather than enforces.
+
+	Run at startup and published on the debug seam, because a balance note in
+	a file nobody opens is the same as no balance note. This is also the only
+	consumer `Reference` has, and by this project's rule an unexercised module
+	is not engine: if the manual is wrong, it gets found here.
+]]
+function Content.review(): { any }
+	local frame = Data.get("weapon", "training_blade")
+	if frame then
+		-- The frame comes from the game rather than the module's default, so
+		-- the verdicts are about this game and not about a hypothetical one.
+		Reference.scale(100, frame.damage)
+	end
+
+	local notes = {}
+	for _, kind in { "enemy", "weapon" } do
+		for id, entry in Data.all(kind) do
+			for _, note in Reference.check(kind, entry) do
+				table.insert(notes, { kind = kind, id = id, note = note })
+			end
+		end
+	end
+	for _, id in Content.ranged do
+		local spec = Weapon.definition(id)
+		if spec then
+			for _, note in Reference.check("weapon", spec) do
+				table.insert(notes, { kind = "ranged", id = id, note = note })
+			end
+		end
+	end
+	return notes
 end
 
 return Content

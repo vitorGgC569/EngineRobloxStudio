@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-08-20T18:43:51+00:00",
+  "generatedAt": "2026-08-20T19:29:19+00:00",
   "engine": "Forge",
-  "modules": 59,
-  "functions": 796,
+  "modules": 60,
+  "functions": 802,
   "examples": [
     "Access",
     "Anim",
@@ -28,6 +28,7 @@
     "Net",
     "Platform",
     "Progression",
+    "Reference",
     "Rig",
     "Save",
     "Scene",
@@ -237,6 +238,11 @@
       "functions": 18
     },
     {
+      "name": "Reference",
+      "summary": "Reference — what a reasonable number looks like",
+      "functions": 5
+    },
+    {
       "name": "Rig",
       "summary": "Rig — characters authored in code",
       "functions": 10
@@ -289,7 +295,7 @@
     {
       "name": "Telemetry",
       "summary": "Telemetry — what actually happened, in a live game",
-      "functions": 13
+      "functions": 14
     },
     {
       "name": "Testing",
@@ -3735,7 +3741,7 @@
     {
       "name": "Examples",
       "file": "forge/luau/Forge/Examples/init.lua",
-      "lines": 533,
+      "lines": 556,
       "summary": "Examples — one runnable demonstration per module. A documented example rots. It is written once, the API moves, and nobody notices until an agent copies it and gets an error. This project has been bitten by that exact shape all day: a comment describing a call that was no longer true is worse than no comment, because it is believed. So these are not snippets in a docstring. Each one is a function that actually runs inside the live game, does the thing, asserts something small about the result, and cleans up after itself. `forge example --all` runs every one of them; if the API moves, the example fails, and it fails in CI rather than in an agent's hands. --- What an example is for ---------------------------------------------- Not test coverage — `Testing` does that, and these deliberately assert almost nothing. An example answers \"what does using this module look like\", which is the question an agent has when it has never seen the engine and is deciding whether a module is the right tool. That is why each one is short, uses the shortest path through its module, and reads top to bottom.",
       "examples": [
         "forge example Combat      run one\nforge example --all       run all of them"
@@ -3748,7 +3754,7 @@
           "returns": "{ string }",
           "summary": "=================================== run ====================================",
           "examples": [],
-          "line": 474
+          "line": 497
         },
         {
           "name": "Examples.run",
@@ -3757,7 +3763,7 @@
           "returns": "{ [string]: any }",
           "summary": "Run one example and report what happened. Failures are returned rather than thrown: running twenty examples and stopping at the first broken one hides the other nineteen, and the whole point is to find out which parts of the surface have drifted.",
           "examples": [],
-          "line": 490
+          "line": 513
         },
         {
           "name": "Examples.runAll",
@@ -3766,7 +3772,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 507
+          "line": 530
         },
         {
           "name": "Examples.describe",
@@ -3775,7 +3781,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 528
+          "line": 551
         }
       ],
       "describes": true
@@ -5861,6 +5867,63 @@
       "describes": true
     },
     {
+      "name": "Reference",
+      "file": "forge/luau/Forge/Reference/init.lua",
+      "lines": 363,
+      "summary": "Reference — what a reasonable number looks like. Forge gives an agent a parts bin and no manual. Every enemy's health, every weapon's cadence, every keyframe angle and every loot weight has to be invented from nothing, and the results read exactly like numbers invented from nothing: a husk with 90 health next to one with 7000, a bow that fires as fast as a rifle, a walk cycle whose arms swing ninety degrees. This is the manual. Not templates — nothing here is a genre, and nothing here decides what your game is. It is the set of proportions that hold across every action game ever balanced, expressed as numbers you can start from and then move on purpose. --- Why proportions and not values --------------------------------------- Absolute numbers are meaningless without the rest of the game: 90 health is generous against a weapon that does 8 and trivial against one that does 200. So every entry here is expressed against a **reference frame** — a player with 100 health who deals 20 per hit — and `Reference.scale` moves the whole set if your game's frame differs. That is also why `check` is worth more than the tables. Being told your brute has 260 health is not useful; being told it takes 31 hits to kill and that anything past about 12 stops reading as a fight and starts reading as a chore is the thing an agent cannot derive.",
+      "examples": [
+        "local baseline = Reference.enemy(\"brute\")\nlocal weapon = Reference.weapon(\"bow\")\nReference.check(\"enemy\", myEnemyTable)   --> what looks wrong, and why"
+      ],
+      "functions": [
+        {
+          "name": "Reference.enemy",
+          "signature": "Reference.enemy(shape: string)",
+          "kind": "function",
+          "returns": "{ [string]: any }?",
+          "summary": "Turn a shape into the numbers a Content file wants. Derived rather than tabulated, so a game with a different reference frame gets consistent enemies without editing anything here.",
+          "examples": [],
+          "line": 91
+        },
+        {
+          "name": "Reference.weapon",
+          "signature": "Reference.weapon(shape: string)",
+          "kind": "function",
+          "returns": "{ [string]: any }?",
+          "summary": "",
+          "examples": [],
+          "line": 151
+        },
+        {
+          "name": "Reference.check",
+          "signature": "Reference.check(kind: string, table_: any)",
+          "kind": "function",
+          "returns": "{ string }",
+          "summary": "What looks wrong about this table, and why. The most useful thing in this module. Being handed a baseline does not stop an agent inventing 7000 health; being told \"that is 350 hits to kill, and past about twelve a fight reads as a chore\" does. Returns a list of plain-language notes. Empty means nothing stood out — not that the numbers are good, which is a judgement no table can make.",
+          "examples": [],
+          "line": 231
+        },
+        {
+          "name": "Reference.scale",
+          "signature": "Reference.scale(playerHealth: number, playerDamage: number)",
+          "kind": "function",
+          "returns": null,
+          "summary": "Move the whole reference frame. A game where the player has 1000 health and deals 200 is the same game with a zero on the end, and every table here should move with it rather than being re-derived by hand.",
+          "examples": [],
+          "line": 339
+        },
+        {
+          "name": "Reference.describe",
+          "signature": "Reference.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 344
+        }
+      ],
+      "describes": true
+    },
+    {
       "name": "Rig",
       "file": "forge/luau/Forge/Rig/init.lua",
       "lines": 852,
@@ -7114,7 +7177,7 @@
     {
       "name": "Telemetry",
       "file": "forge/luau/Forge/Telemetry/init.lua",
-      "lines": 365,
+      "lines": 437,
       "summary": "Telemetry — what actually happened, in a live game. `Debug.expose` answers questions in a Studio session. It cannot tell you that 3% of players never finish spawning, that the tutorial loses a third of people at step four, or that one error fires eleven thousand times a day from one line. This is the module that substitutes for judgement. An agent proposing a balance change is guessing; a funnel showing where players stop is evidence. Forge does not pick a destination. Open Cloud, an HTTP endpoint, a DataStore, or `print` in development — you register a sink and the buffering, batching, retry and error aggregation are handled.",
       "examples": [
         "Telemetry.sink(function(batch) ... end)     -- you choose the destination\nTelemetry.event(\"salvage.opened\", { kind = \"hull\", player = id })\nTelemetry.funnel(\"onboarding\", 3, subject)\nTelemetry.mark(subject, \"first_kill\")"
@@ -7220,13 +7283,22 @@
           "line": 264
         },
         {
+          "name": "Telemetry.dataStoreSink",
+          "signature": "Telemetry.dataStoreSink(storeName: string?)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "",
+          "examples": [],
+          "line": 334
+        },
+        {
           "name": "Telemetry.printSink",
           "signature": "Telemetry.printSink()",
           "kind": "function",
           "returns": null,
           "summary": "A sink that prints, for development. Deliberately not the default: silently printing telemetry in production is how a game ships with no analytics and nobody noticing.",
           "examples": [],
-          "line": 312
+          "line": 384
         },
         {
           "name": "Telemetry.describe",
@@ -7235,7 +7307,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 322
+          "line": 394
         }
       ],
       "describes": true

@@ -14,7 +14,6 @@
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 
 local Forge = require(ReplicatedStorage:WaitForChild("Forge"))
@@ -145,75 +144,45 @@ local function defineAbilities()
 	})
 end
 
--- ================================= analytics ================================
---[[
-	Where events actually go.
-
-	`Telemetry` has had a sink API since it was written and nothing ever
-	registered one, so every event this game raised was counted and thrown
-	away. That is the same failure as an unexercised module, just quieter:
-	the instrumentation looked present and produced nothing.
-
-	The destination is a DataStore rather than a third-party endpoint. Not for
-	lack of options — HTTP is enabled on this experience — but because sending
-	player events to an outside service is a decision about someone else's
-	data, and it is not one an engine should make on a developer's behalf. A
-	DataStore keeps the events durable, queryable and inside the account that
-	produced them; swapping in an external sink later is one function.
-
-	Batched by the engine, one write per batch, keyed by day so a month of
-	play is thirty-one keys rather than a key per event.
-]]
-local function installTelemetrySink()
-	local ok, store = pcall(function()
-		return DataStoreService:GetDataStore("ForgeAnalytics")
-	end)
-	if not ok or not store then
-		Debug.warn("no analytics store; events will be counted and dropped")
-		return
-	end
-
-	Telemetry.sink(function(batch)
-		if #batch == 0 then
-			return true
-		end
-		local day = os.date("!%Y-%m-%d")
-		local written = pcall(function()
-			--[[
-				`UpdateAsync`, not `SetAsync`.
-
-				Several servers write the same day's key at once. `SetAsync`
-				would have the last one win and silently discard every other
-				server's events — which for analytics means numbers that are
-				wrong in a way nobody can detect from the numbers.
-			]]
-			store:UpdateAsync("events/" .. day, function(existing)
-				local rows = existing or {}
-				for _, entry in batch do
-					-- A day's key has a size limit; dropping the oldest keeps
-					-- the write succeeding rather than failing wholesale.
-					if #rows >= 900 then
-						table.remove(rows, 1)
-					end
-					table.insert(rows, {
-						t = entry.at or os.time(),
-						n = entry.name,
-						p = entry.props,
-					})
-				end
-				return rows
-			end)
-		end)
-		return written
-	end)
-end
-
 -- ================================== start ===================================
 function Meta.start()
 	defineConfig()
 	defineProducts()
 	defineAbilities()
-	installTelemetrySink()
+	--[[
+		Where events go, and what makes them go there.
+
+		Two calls, and the difference between them cost this game every event
+		it ever raised. `dataStoreSink` chooses the destination; `start` is
+		what drains the buffer into it — without it there is no periodic
+		flush, no session events, no error capture and no shutdown flush, and
+		the buffer only empties once it reaches a hundred entries, which a
+		short session never does.
+
+		Found by `forge analytics`, on its first run, by asking Roblox which
+		datastores this universe has and being told `ForgeAnalytics` is not one
+		of them. The writing side was correct, tested and green, and had
+		delivered nothing. That is the whole argument for a read path.
+	]]
+	Telemetry.dataStoreSink()
+	Telemetry.start()
+
+	--[[
+		Start the pump, not just the destination.
+
+		This line was missing, and the failure was invisible from inside the
+		game: the sink was registered, every `Telemetry.event` was counted, and
+		`Telemetry.describe()` reported a healthy sink with a full buffer. What
+		it did not report was that nothing drains the buffer until either it
+		reaches a hundred entries or `Telemetry.start` installs the periodic
+		flush — and nobody had called it.
+
+		Found by `forge analytics`, on its first run, by asking Roblox which
+		datastores this universe has and being told `ForgeAnalytics` is not one
+		of them. That is the entire argument for reading telemetry back: the
+		writing side was correct, tested and green, and produced nothing.
+	]]
+	Telemetry.start()
 
 	LiveOps.start()
 	Monetization.start()

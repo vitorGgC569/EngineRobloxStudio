@@ -306,6 +306,78 @@ function Telemetry.start()
 	end)
 end
 
+-- =============================== datastore sink =============================
+--[[
+	The sink most games want, and the one `forge analytics` reads.
+
+	Lived as a private function inside one game until a second game needed it
+	and got nothing instead — its events were counted and dropped for exactly
+	as long as it had been running. That is the signature of something that
+	should have been engine from the start.
+
+	A DataStore rather than an HTTP endpoint on purpose. Sending player events
+	to an outside service is a decision about someone else's data and not one
+	an engine should quietly make; a DataStore keeps them durable, queryable
+	and inside the account that produced them. Swapping in an external sink
+	later is one call to `Telemetry.sink`.
+
+	One key per day, so a month of play is thirty-one keys rather than a key
+	per event. `forge analytics` reads this exact store and this exact key
+	shape, so the reader and the writer cannot drift apart.
+]]
+Telemetry.STORE = "ForgeAnalytics"
+Telemetry.KEY_PREFIX = "events/"
+
+--: A day's key has a size limit; this is where the oldest start going.
+Telemetry.rowsPerDay = 900
+
+function Telemetry.dataStoreSink(storeName: string?): boolean
+	if not RunService:IsServer() then
+		return false
+	end
+	local DataStoreService = game:GetService("DataStoreService")
+	local ok, store = pcall(function()
+		return DataStoreService:GetDataStore(storeName or Telemetry.STORE)
+	end)
+	if not ok or not store then
+		warn("[Telemetry] no analytics store; events will be counted and dropped")
+		return false
+	end
+
+	Telemetry.sink(function(batch)
+		if #batch == 0 then
+			return true
+		end
+		local day = os.date("!%Y-%m-%d")
+		local written = pcall(function()
+			--[[
+				`UpdateAsync`, not `SetAsync`.
+
+				Several servers write the same day's key at once. `SetAsync`
+				would have the last one win and silently discard every other
+				server's events — which for analytics means numbers that are
+				wrong in a way nobody can detect from the numbers.
+			]]
+			store:UpdateAsync(Telemetry.KEY_PREFIX .. day, function(existing)
+				local rows = existing or {}
+				for _, entry in batch do
+					if #rows >= Telemetry.rowsPerDay then
+						table.remove(rows, 1)
+					end
+					table.insert(rows, {
+						t = entry.at or os.time(),
+						n = entry.name,
+						p = entry.props,
+					})
+				end
+				return rows
+			end)
+		end)
+		return written
+	end)
+	return true
+end
+
 -- A sink that prints, for development. Deliberately not the default: silently
 -- printing telemetry in production is how a game ships with no analytics and
 -- nobody noticing.

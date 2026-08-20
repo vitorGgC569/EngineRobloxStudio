@@ -16,9 +16,21 @@ local Rng = Forge.Core.Rng
 local Debug = Forge.Debug
 local Catalog = Forge.Catalog
 local Material = Forge.Material
+local Mark = Forge.Mark
 local Nav = Forge.Nav
 
 local Arena = {}
+
+--[[
+	The names the Quality Engine's visual spec looks for.
+
+	Declared here and generated into the spec by `forge quality`, so the game
+	and the contract cannot disagree about what the landmark is called. A
+	mismatch is silent on both sides: the spec finds nothing and the game
+	marks something nobody asked about.
+]]
+local LANDMARK = "arena-ring"
+local REGION_PROFILE = "arena"
 
 Arena.field = nil
 Arena.spawnPoint = Vector3.new(0, 40, 0)
@@ -299,6 +311,8 @@ function Arena.start()
 	local spawn = World.surface(0, 0)
 	Arena.spawnPoint = (spawn or Vector3.new(0, 34, 0)) + Vector3.new(0, 4, 0)
 
+	Arena.markForReview(props)
+
 	Debug.probe("arena", function()
 		return {
 			radius = Arena.radius,
@@ -310,6 +324,90 @@ function Arena.start()
 	end)
 
 	Debug.info(string.format("arena ready in %.1fs (%d rocks, %d plants)", os.clock() - t0, placed, planted))
+end
+
+--[[
+	Say what this world is, so it can be looked at.
+
+	The Quality Engine measures composition, palette and whether the subject of
+	a scene stays visible — and it finds all of that by tag. An untagged world
+	is not a world that scores badly; it is a world the validator reports as
+	containing nothing to look at, which is indistinguishable from an empty
+	place. Every Forge game was in that state until this ran.
+
+	Three things have to be said, and only three:
+
+	  what the eye lands on   the ring of braziers, which the game already
+	                          builds to mark the fighting boundary
+	  where the play happens  the floor inside that ring
+	  what is scenery         the rocks and the planting
+
+	Nothing here changes how anything looks. It is all labels, and one
+	invisible part that exists so a region has an instance to be.
+]]
+function Arena.markForReview(props: Instance)
+	--[[
+		The braziers, gathered into the thing they already were.
+
+		Eight separate posts are eight props; the ring they describe is the
+		landmark, and a landmark has to be one instance for the camera to be
+		pointed at it. Reparenting rather than rebuilding, so the world on
+		screen is identical to the world before this function existed.
+	]]
+	local ring = Instance.new("Model")
+	ring.Name = "ArenaRing"
+	for _, child in props:GetChildren() do
+		if child.Name == "Brazier" or child.Name == "Flame" then
+			child.Parent = ring
+		end
+	end
+	ring.Parent = props
+
+	if #ring:GetChildren() > 0 then
+		Mark.landmark(ring, LANDMARK)
+		Mark.ringAnchors(ring, LANDMARK, 8, Arena.radius * 0.75)
+	end
+
+	--[[
+		The fighting floor, as an instance.
+
+		The floor is terrain, and terrain cannot carry a tag. A region needs
+		something to be, so this is an invisible, non-colliding slab over the
+		ground the fight happens on — apparatus rather than scenery, and
+		excluded from classification for exactly that reason.
+	]]
+	local floor = Instance.new("Part")
+	floor.Name = "ArenaFloorRegion"
+	floor.Size = Vector3.new(Arena.radius * 2, 1, Arena.radius * 2)
+	floor.CFrame = CFrame.new(Arena.spawnPoint - Vector3.new(0, 4, 0))
+	floor.Transparency = 1
+	floor.CanCollide = false
+	floor.CanQuery = false
+	floor.CanTouch = false
+	floor.Anchored = true
+	floor.Parent = props
+	Mark.region(floor, REGION_PROFILE)
+	Mark.exclude(floor)
+
+	local rocks, plants = 0, 0
+	for _, child in props:GetChildren() do
+		if child == ring or child == floor then
+			continue
+		end
+		if child.Name == "Rock" then
+			Mark.root(child, "rock")
+			rocks += 1
+		elseif child:IsA("Model") or child:IsA("BasePart") then
+			Mark.root(child, "plant")
+			plants += 1
+		end
+	end
+
+	Debug.probe("marks", function()
+		return Mark.describe()
+	end)
+	Debug.info(string.format(
+		"marked for review: %d rocks, %d plants, 1 landmark, 1 region", rocks, plants))
 end
 
 -- Somewhere standable, at least `minDistance` from the centre.

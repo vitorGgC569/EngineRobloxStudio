@@ -1,0 +1,23 @@
+{
+  "name": "provingground",
+  "contract": "contract.robloxqa.json",
+  "rojoProject": "default.project.json",
+  "qualityFocus": "quality/quality-focus.json",
+  "probeRegistry": "quality/probe-registry.v1.json",
+  "agentScenario": "scenarios/play.json",
+  "assetManifest": "assets/asset-manifest.json",
+  "scripts": "src",
+  "scanPaths": [
+    "src"
+  ],
+  "reports": "reports",
+  "release": {
+    "seed": 20260819
+  },
+  "expectedPaths": [
+    "default.project.json",
+    "src/shared/Config.lua",
+    "src/server/init.server.lua",
+    "src/client/init.client.lua"
+  ]
+}

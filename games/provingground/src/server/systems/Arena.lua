@@ -159,7 +159,11 @@ function Arena.start()
 					-- measurable share of a frame for detail nobody sees.
 					Material.renderFidelity(model, Enum.RenderFidelity.Automatic)
 					Material.shadowBudget(model, 3)
-					return model
+					-- Parent, do not return. `World.scatter` expects the
+					-- callback to place the thing; a returned model is an
+					-- orphan that exists in memory and in no world.
+					model.Parent = props
+					return
 				end
 			end
 
@@ -180,9 +184,117 @@ function Arena.start()
 				part.BottomSurface = Enum.SurfaceType.Smooth
 				part.Parent = model
 			end
-			return model
+			model.Parent = props
 		end,
 	})
+
+	--[[
+		Planting, from the same verified catalogue.
+
+		Rocks alone gave the arena something to measure distance against and
+		left it looking like a quarry. Foliage is what makes ground read as
+		ground: a Synty bush is a textured MeshPart, so this costs no upload,
+		no texture authoring and no invented asset id — the pieces were loaded,
+		measured and scanned before they were written into the catalogue.
+
+		Kept to the outer band and off the fighting floor. Scenery a player
+		walks through is scenery that hides an enemy, and this game's whole
+		loop is seeing an attack coming.
+	]]
+	local planted = 0
+	do
+		local foliage = Catalog.byCategory("foliage")
+		if #foliage > 0 then
+			planted = World.scatter(field, {
+				id = "arena.foliage",
+				step = 14,
+				budget = 260,
+				density = function(x, z, height, slope)
+					local distance = math.sqrt(x * x + z * z)
+					-- Between the fighting floor and the wall.
+					if distance < 96 or distance > 150 then
+						return 0
+					end
+					if slope < 0.7 then
+						return 0
+					end
+					return 0.55
+				end,
+				place = function(position, stream)
+					local entry = foliage[stream:int(1, #foliage)]
+					local model = Catalog.load(entry)
+					if not model then
+						return
+					end
+					model.Name = "Foliage"
+					local turn = CFrame.Angles(0, stream:number(0, 6.28), 0)
+					if model:IsA("Model") then
+						model:PivotTo(CFrame.new(position) * turn)
+					elseif model:IsA("BasePart") then
+						(model :: BasePart).CFrame = CFrame.new(position) * turn
+					end
+					for _, d in model:GetDescendants() do
+						if d:IsA("BasePart") then
+							d.Anchored = true
+							-- Plants are not cover and must not block a path;
+							-- an enemy pathing around a fern reads as a bug.
+							d.CanCollide = false
+						end
+					end
+					if model:IsA("BasePart") then
+						(model :: BasePart).Anchored = true
+						;(model :: BasePart).CanCollide = false
+					end
+					Material.renderFidelity(model, Enum.RenderFidelity.Automatic)
+					Material.shadowBudget(model, 4)
+					model.Parent = props
+				end,
+			})
+		end
+	end
+
+	--[[
+		Braziers mark the fighting ring.
+
+		A readable boundary beats an invisible wall: the player learns where
+		the arena ends by seeing it, not by walking into something.
+
+		Restored after an over-wide edit removed them along with the rock
+		placement it was meant to change. Worth naming, because the world
+		looked merely emptier rather than broken, and an absence is the hardest
+		kind of regression to notice.
+	]]
+	for i = 1, 8 do
+		local angle = (i / 8) * math.pi * 2
+		local x, z = math.cos(angle) * 96, math.sin(angle) * 96
+		local ground = World.surface(x, z) or Vector3.new(x, 32, z)
+
+		local post = Instance.new("Part")
+		post.Name = "Brazier"
+		post.Size = Vector3.new(1.2, 9, 1.2)
+		post.CFrame = CFrame.new(ground + Vector3.new(0, 4.5, 0))
+		post.Color = Color3.fromRGB(58, 52, 48)
+		post.Material = Enum.Material.Metal
+		post.Anchored = true
+		post.Parent = props
+
+		local flame = Instance.new("Part")
+		flame.Name = "Flame"
+		flame.Size = Vector3.new(2.2, 2.2, 2.2)
+		flame.Shape = Enum.PartType.Ball
+		flame.CFrame = CFrame.new(ground + Vector3.new(0, 9.6, 0))
+		flame.Color = Color3.fromRGB(255, 148, 62)
+		flame.Material = Enum.Material.Neon
+		flame.Anchored = true
+		flame.CanCollide = false
+		flame.Parent = props
+
+		local light = Instance.new("PointLight")
+		light.Color = Color3.fromRGB(255, 160, 80)
+		light.Range = 42
+		light.Brightness = 2.4
+		light.Parent = flame
+	end
 
 	local spawn = World.surface(0, 0)
 	Arena.spawnPoint = (spawn or Vector3.new(0, 34, 0)) + Vector3.new(0, 4, 0)
@@ -191,12 +303,13 @@ function Arena.start()
 		return {
 			radius = Arena.radius,
 			props = #props:GetChildren(),
+			plants = planted,
 			spawnPoint = { Arena.spawnPoint.X, Arena.spawnPoint.Y, Arena.spawnPoint.Z },
 			seed = Rng.masterSeed(),
 		}
 	end)
 
-	Debug.info(string.format("arena ready in %.1fs (%d rocks)", os.clock() - t0, placed))
+	Debug.info(string.format("arena ready in %.1fs (%d rocks, %d plants)", os.clock() - t0, placed, planted))
 end
 
 -- Somewhere standable, at least `minDistance` from the centre.

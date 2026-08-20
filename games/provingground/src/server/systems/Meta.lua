@@ -14,6 +14,7 @@
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 
 local Forge = require(ReplicatedStorage:WaitForChild("Forge"))
@@ -144,11 +145,75 @@ local function defineAbilities()
 	})
 end
 
+-- ================================= analytics ================================
+--[[
+	Where events actually go.
+
+	`Telemetry` has had a sink API since it was written and nothing ever
+	registered one, so every event this game raised was counted and thrown
+	away. That is the same failure as an unexercised module, just quieter:
+	the instrumentation looked present and produced nothing.
+
+	The destination is a DataStore rather than a third-party endpoint. Not for
+	lack of options — HTTP is enabled on this experience — but because sending
+	player events to an outside service is a decision about someone else's
+	data, and it is not one an engine should make on a developer's behalf. A
+	DataStore keeps the events durable, queryable and inside the account that
+	produced them; swapping in an external sink later is one function.
+
+	Batched by the engine, one write per batch, keyed by day so a month of
+	play is thirty-one keys rather than a key per event.
+]]
+local function installTelemetrySink()
+	local ok, store = pcall(function()
+		return DataStoreService:GetDataStore("ForgeAnalytics")
+	end)
+	if not ok or not store then
+		Debug.warn("no analytics store; events will be counted and dropped")
+		return
+	end
+
+	Telemetry.sink(function(batch)
+		if #batch == 0 then
+			return true
+		end
+		local day = os.date("!%Y-%m-%d")
+		local written = pcall(function()
+			--[[
+				`UpdateAsync`, not `SetAsync`.
+
+				Several servers write the same day's key at once. `SetAsync`
+				would have the last one win and silently discard every other
+				server's events — which for analytics means numbers that are
+				wrong in a way nobody can detect from the numbers.
+			]]
+			store:UpdateAsync("events/" .. day, function(existing)
+				local rows = existing or {}
+				for _, entry in batch do
+					-- A day's key has a size limit; dropping the oldest keeps
+					-- the write succeeding rather than failing wholesale.
+					if #rows >= 900 then
+						table.remove(rows, 1)
+					end
+					table.insert(rows, {
+						t = entry.at or os.time(),
+						n = entry.name,
+						p = entry.props,
+					})
+				end
+				return rows
+			end)
+		end)
+		return written
+	end)
+end
+
 -- ================================== start ===================================
 function Meta.start()
 	defineConfig()
 	defineProducts()
 	defineAbilities()
+	installTelemetrySink()
 
 	LiveOps.start()
 	Monetization.start()

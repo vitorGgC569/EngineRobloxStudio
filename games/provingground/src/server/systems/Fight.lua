@@ -24,6 +24,7 @@ local Save = Forge.Save
 local Debug = Forge.Debug
 local Rng = Forge.Core.Rng
 local Netcode = Forge.Netcode
+local Nav = Forge.Nav
 
 local Arena = require(script.Parent.Arena)
 
@@ -326,12 +327,34 @@ local function buildEnemy(id: string, position: Vector3)
 	-- Without this the rewind has no history and silently does nothing.
 	Netcode.track(model)
 
+	--[[
+		Enemies path rather than walk at you.
+
+		`Humanoid:MoveTo` toward a target is invisible on flat ground and
+		absurd anywhere else: the enemy presses into the first rock between it
+		and the player and stays there. This arena has rocks now, scattered
+		from the catalogue, so the difference is on screen.
+
+		Agent size comes from the rig, not from a constant. A brute is 1.5x
+		scale and genuinely does not fit where a stalker does; giving them the
+		same radius produces either a brute wedged in a gap or a stalker
+		refusing to use one.
+	]]
+	local scale = def.rig.scale or 1
 	local actor = Actor.spawn(model, "husk", {
 		home = position,
 		leash = 220,
 		tag = "enemy",
 		animator = animator,
 		data = { def = def, id = id },
+		navigate = true,
+		standoff = def.reach * 0.7,
+		agentParameters = {
+			AgentRadius = 2.2 * scale * (def.rig.bulky and 1.4 or 1),
+			AgentHeight = 5 * scale,
+			AgentCanJump = true,
+			WaypointSpacing = 4,
+		},
 	})
 	return actor
 end
@@ -577,6 +600,10 @@ function Fight.start()
 			return buildEnemy(pick.id, point)
 		end,
 	})
+
+	Debug.probe("nav", function()
+		return Nav.describe()
+	end)
 
 	Debug.probe("fight", function()
 		local blocking = 0

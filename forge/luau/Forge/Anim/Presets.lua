@@ -188,7 +188,16 @@ return {
 		duration = 0.8, hold = true, mask = UPPER, priority = 3,
 		tracks = {
 			leftArm = { k(0, -40, -14, 0), k(0.30, -90, -10, 0), k(0.8, -92, -8, 0) },
-			rightArm = { k(0, -40, 14, 0), k(0.30, -74, 26, -10), k(0.8, -66, 54, -18) },
+			--[[
+				The draw arm has to end up *near the other one*.
+
+				Only the shoulder is animated on this rig — there is no elbow to
+				bend — so a large spread angle swings the whole arm wide and the
+				archer visibly stops touching the bow with it. Keeping the swing
+				high and the spread modest reads as two hands on one weapon,
+				which is the only thing this pose has to say.
+			]]
+			rightArm = { k(0, -40, 14, 0), k(0.30, -72, 20, -10), k(0.8, -80, 28, -16) },
 			torso = { k(0, 0, 0, 0), k(0.30, 0, 0, -12), k(0.8, -3, 0, -22) },
 			head = { k(0, 0, 0, 0), k(0.8, -3, 0, -14) },
 		},
@@ -201,8 +210,10 @@ return {
 	bow_loose = {
 		duration = 0.44, mask = UPPER, priority = 3,
 		tracks = {
-			rightArm = { k(0, -66, 54, -18), k(0.06, -60, 76, -22), k(0.44, -30, 20, 0) },
-			leftArm = { k(0, -92, -8, 0), k(0.06, -96, -12, 0), k(0.44, -34, -12, 0) },
+			-- Follows through from where bow_draw now leaves the arm, not from
+			-- the wide pose it used to end in.
+			rightArm = { k(0, -80, 28, -16), k(0.06, -74, 46, -20), k(0.44, -34, 14, -6) },
+			leftArm = { k(0, -92, -8, 0), k(0.06, -96, -12, 0), k(0.44, -38, -12, 0) },
 			torso = { k(0, -3, 0, -22), k(0.08, -1, 0, -12), k(0.44, 0, 0, 0) },
 			head = { k(0, -3, 0, -14), k(0.44, 0, 0, 0) },
 		},
@@ -250,8 +261,11 @@ return {
 	hold = {
 		duration = 0.3, loop = true, hold = true, mask = UPPER, priority = 1,
 		tracks = {
-			rightArm = { k(0, -26, 16, -8), k(0.3, -24, 17, -8) },
-			leftArm = { k(0, -14, -12, 0), k(0.3, -13, -13, 0) },
+			-- Carried forward and slightly in, not hanging. An arm left at its
+			-- side reads as empty-handed no matter what is welded to it, and
+			-- whatever it holds points at the floor.
+			rightArm = { k(0, -34, 14, -6), k(0.3, -32, 15, -6) },
+			leftArm = { k(0, -38, -12, 0), k(0.3, -36, -13, 0) },
 			torso = { k(0, 0, 0, -4), k(0.3, 0, 0, -4) },
 		},
 	},

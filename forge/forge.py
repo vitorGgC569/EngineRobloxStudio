@@ -298,6 +298,60 @@ def cmd_engine(args: argparse.Namespace) -> int:
     return 0
 
 
+# =============================== the store ==================================
+def cmd_toolbox(args: argparse.Namespace) -> int:
+    """Harvest and curate Creator Store models through a live Studio."""
+    from cli import toolbox
+
+    if args.step in ("harvest", "all"):
+        report = toolbox.harvest()
+        print(f"\n{report['pieces']} pieces, {report['approved']} approved, "
+              f"{report['carryingScripts']} carrying scripts (refused)")
+        for pack in report["packs"]:
+            if not pack.get("ok"):
+                print(f"  pack {pack['pack']}: {pack.get('error')}")
+
+    if args.step in ("curate", "all"):
+        path, count = toolbox.curate(args.cap)
+        print(f"curated {count} entries -> {path.relative_to(REPO_ROOT)}")
+    return 0
+
+
+# ============================ asset verification ============================
+def cmd_assets(args: argparse.Namespace) -> int:
+    """Load every asset id this project references and record the verdict."""
+    from cli import assetcheck
+
+    roots = [REPO_ROOT / "games", REPO_ROOT / "forge" / "luau"]
+    refs = sorted(assetcheck.scan(roots))
+    if not refs:
+        print("no asset ids referenced")
+        return 0
+
+    if args.step == "scan":
+        for ref in refs:
+            print(" ", ref)
+        print(f"{len(refs)} referenced")
+        return 0
+
+    registry = assetcheck.verify(refs)
+    failed = [r for r, v in registry["assets"].items() if not v.get("ok")]
+    print(f"\n{registry['passing']}/{registry['count']} load")
+    for ref in failed:
+        print(f"  FAILS  {ref}")
+    return 1 if failed else 0
+
+
+# ============================== pose preview ================================
+def cmd_pose(args: argparse.Namespace) -> int:
+    """Pose a rig from a clip in the open place and report the result."""
+    from cli import pose
+
+    report = pose.preview(args.clip, samples=args.samples, duration=args.duration)
+    print(pose.render(report))
+    return 1 if report.get("error") else 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="forge", description="Forge — the authoring half")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -334,6 +388,23 @@ def main(argv: list[str] | None = None) -> int:
     p_bench.add_argument("--anchors", type=int, default=30)
     p_bench.add_argument("--timeout", type=float, default=120)
     p_bench.set_defaults(func=cmd_bench)
+
+    p_toolbox = sub.add_parser("toolbox", help="harvest and curate Creator Store models")
+    p_toolbox.add_argument("step", nargs="?", default="all",
+                           choices=("harvest", "curate", "all"))
+    p_toolbox.add_argument("--cap", type=int, default=200,
+                           help="how many entries to curate (default 200)")
+    p_toolbox.set_defaults(func=cmd_toolbox)
+
+    p_assets = sub.add_parser("assets", help="verify every asset id by loading it in Studio")
+    p_assets.add_argument("step", nargs="?", default="verify", choices=("scan", "verify"))
+    p_assets.set_defaults(func=cmd_assets)
+
+    p_pose = sub.add_parser("pose", help="preview an animation clip on a rig, in edit mode")
+    p_pose.add_argument("clip")
+    p_pose.add_argument("--samples", type=int, default=6)
+    p_pose.add_argument("--duration", type=float, default=1.0)
+    p_pose.set_defaults(func=cmd_pose)
 
     p_engine = sub.add_parser("engine", help="list the engine's modules and public API")
     p_engine.add_argument("--json", action="store_true")

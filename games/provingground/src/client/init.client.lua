@@ -145,32 +145,38 @@ Sky.pin(18.2)
 --[[
 	Combat audio.
 
-	These were marketplace ids I had no way to check, and the first one the game
-	actually reached logged "Asset type does not match requested type" on every
-	hit — an id I had written down as a sound that is not one. Guessed ids are
-	not content; they are errors with a delay.
+	Third attempt, and the first one based on evidence rather than memory.
 
-	`rbxasset://` files ship inside the Roblox client. They cost no download,
-	they cannot 404, and they work with no internet and no marketplace. They are
-	placeholders and they sound like placeholders — but they are honest, and the
-	cue names are what the game refers to, so swapping in real assets later is a
-	one-line change per line.
+	The first set were marketplace ids I invented; the one the game actually
+	reached logged "Asset type does not match requested type". The second set
+	were `rbxasset://` names I was confident about; the first one reached
+	logged "Asset is not approved for the requester". Confidence was not the
+	missing ingredient.
 
-	`cooldown` stops a three-hit combo from stacking three identical swings into
-	one smear.
+	This set was taken from the Roblox client's own `content/sounds` directory
+	on this machine — eleven files, and every name below is one of them. They
+	ship with the client, cost no download and cannot 404.
+
+	The fit is approximate on purpose: `impact_water` for a blade landing is a
+	wet thud that happens to work, `oof` for taking damage is what it sounds
+	like. They are placeholders, they sound like placeholders, and the cue
+	names are what the game refers to — so replacing one with a real asset is
+	a single line.
+
+	`cooldown` stops a three-hit combo from stacking three identical swings
+	into one smear.
 ]]
 Audio.defineMany({
-	["swing"] = { id = "rbxasset://sounds/swoosh.mp3", volume = 0.35, pitch = { 0.9, 1.15 }, cooldown = 0.08 },
-	["hit.flesh"] = { id = "rbxasset://sounds/snap.mp3", volume = 0.55, pitch = { 0.88, 1.12 }, cooldown = 0.03 },
-	["hit.crit"] = { id = "rbxasset://sounds/electronicpingshort.wav", volume = 0.7, pitch = { 1.0, 1.1 } },
-	["hit.blocked"] = { id = "rbxasset://sounds/metal.ogg", volume = 0.5, pitch = { 0.9, 1.0 } },
-	["hurt"] = { id = "rbxasset://sounds/uuhhh.mp3", volume = 0.6, pitch = { 0.7, 0.8 }, cooldown = 0.2 },
-	["shot.bow"] = { id = "rbxasset://sounds/swoosh.mp3", volume = 0.4, pitch = { 1.25, 1.4 }, cooldown = 0.05 },
-	["shot.cannon"] = { id = "rbxasset://sounds/collide.wav", volume = 0.5, pitch = { 0.85, 0.95 }, cooldown = 0.03 },
-	["reload"] = { id = "rbxasset://sounds/switch.wav", volume = 0.35, pitch = { 1.1, 1.2 } },
-	["impact.world"] = { id = "rbxasset://sounds/bass.mp3", volume = 0.3, pitch = { 0.9, 1.2 }, cooldown = 0.04 },
-})
---[[
+	["swing"] = { id = "rbxasset://sounds/action_falling.ogg", volume = 0.3, pitch = { 1.4, 1.7 }, cooldown = 0.08 },
+	["hit.flesh"] = { id = "rbxasset://sounds/impact_water.mp3", volume = 0.5, pitch = { 0.88, 1.12 }, cooldown = 0.03 },
+	["hit.crit"] = { id = "rbxasset://sounds/impact_explosion_03.mp3", volume = 0.45, pitch = { 1.3, 1.45 } },
+	["hit.blocked"] = { id = "rbxasset://sounds/action_jump_land.mp3", volume = 0.5, pitch = { 0.8, 0.95 } },
+	["hurt"] = { id = "rbxasset://sounds/oof.ogg", volume = 0.5, pitch = { 0.85, 1.0 }, cooldown = 0.25 },
+	["shot.bow"] = { id = "rbxasset://sounds/action_falling.ogg", volume = 0.35, pitch = { 1.6, 1.9 }, cooldown = 0.05 },
+	["shot.cannon"] = { id = "rbxasset://sounds/impact_explosion_03.mp3", volume = 0.5, pitch = { 0.9, 1.05 }, cooldown = 0.03 },
+	["reload"] = { id = "rbxasset://sounds/volume_slider.ogg", volume = 0.5, pitch = { 0.9, 1.05 } },
+	["impact.world"] = { id = "rbxasset://sounds/action_jump_land.mp3", volume = 0.3, pitch = { 1.1, 1.4 }, cooldown = 0.04 },
+})--[[
 	Every action the game has, on every device.
 
 	This replaced ContextActionService bindings that named MouseButton1 and Q

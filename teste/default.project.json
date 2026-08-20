@@ -1,0 +1,83 @@
+{
+  "name": "ZombieSurvival3D",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "WorldKit": {
+        "$path": "../roblox/lib/WorldKit"
+      },
+      "GameKit": {
+        "$path": "../roblox/lib/GameKit"
+      },
+      "Core": {
+        "$path": "../roblox/lib/Core"
+      },
+      "Behaviours": {
+        "$path": "../roblox/lib/Behaviours"
+      },
+      "Shared": {
+        "$path": "src/shared"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Gameplay": {
+        "$path": "src/gameplay"
+      },
+      "World": {
+        "$path": "src/world"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Interface": {
+          "$path": "src/interface"
+        }
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "Gravity": 196.2
+      },
+      "Baseplate": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "CanCollide": true,
+          "Size": [600, 4, 600],
+          "Position": [0, -2, 0],
+          "Color": [45, 48, 52],
+          "Material": "Concrete"
+        }
+      },
+      "SpawnLocation": {
+        "$className": "SpawnLocation",
+        "$properties": {
+          "Anchored": true,
+          "CanCollide": true,
+          "Size": [12, 1, 12],
+          "Position": [0, 0.5, 10],
+          "Color": [0, 200, 255],
+          "Material": "Neon",
+          "Duration": 0
+        }
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Ambient": [70, 75, 90],
+        "Brightness": 2.2,
+        "ColorShift_Bottom": [0, 0, 0],
+        "ColorShift_Top": [120, 130, 160],
+        "OutdoorAmbient": [90, 100, 120],
+        "ShadowSoftness": 0.2,
+        "ClockTime": 18.2
+      }
+    }
+  }
+}

@@ -64,8 +64,10 @@ Sky.cycle({ minutesPerDay = 20, startHour = 21.5 })
 Audio.defineMany({
 	["ui.toast"] = { id = "rbxassetid://12221967", volume = 0.25, pitch = { 0.96, 1.04 }, group = "ui" },
 	["salvage.open"] = { id = "rbxassetid://9125402735", volume = 0.5, pitch = { 0.9, 1.1 }, cooldown = 0.05 },
-	["salvage.empty"] = { id = "rbxassetid://9114641275", volume = 0.35, pitch = { 0.95, 1.05 } },
-	["coin"] = { id = "rbxassetid://9083802673", volume = 0.4, pitch = { 0.98, 1.12 }, group = "ui" },
+	-- Both of these were invented ids that never loaded; `forge assets verify`
+	-- found them. Replaced with client-shipped files, which cannot 404.
+	["salvage.empty"] = { id = "rbxasset://sounds/action_jump_land.mp3", volume = 0.35, pitch = { 0.95, 1.05 } },
+	["coin"] = { id = "rbxasset://sounds/volume_slider.ogg", volume = 0.4, pitch = { 0.98, 1.12 }, group = "ui" },
 })
 
 -- Actions, not keys. Declaring a `touch` table is the whole mobile port.

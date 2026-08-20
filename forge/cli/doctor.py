@@ -511,6 +511,55 @@ def check_unknown_globals(root: Path, findings: list[Finding]) -> None:
         )
 
 
+def check_asset_ids(root: Path, findings: list[Finding]) -> None:
+    """Every asset id in this game must have been loaded successfully once.
+
+    An invented id is the one class of mistake that passes every other gate
+    here. It compiles, it sits in a well-formed table, no test asserts on it,
+    and `rojo` writes it into the place without comment. The first thing that
+    disagrees is a player's speakers.
+
+    That is not hypothetical: three separate sets of ids in this project were
+    written from memory and none of them worked. So the rule is that an id
+    must appear in the verification registry, which is only written by actually
+    loading the thing inside Studio.
+
+        forge assets verify
+
+    A game with no registry yet gets a warning rather than an error, because
+    failing a fresh checkout that has never been near a Studio would make the
+    check something people route around.
+    """
+    from cli import assetcheck
+
+    registry = assetcheck.load_registry()
+    references = assetcheck.scan([root])
+    if not references:
+        return
+
+    if not registry:
+        findings.append(Finding(
+            "warning", str(root), 0,
+            f"{len(references)} asset ids referenced and none verified; run 'forge assets verify'",
+        ))
+        return
+
+    for ref, places in sorted(references.items()):
+        record = registry.get(ref)
+        where = places[0]
+        if record is None:
+            findings.append(Finding(
+                "error", where, 0,
+                f"{ref} has never been verified; run 'forge assets verify'",
+            ))
+        elif not record.get("ok"):
+            reason = record.get("error") or "did not load"
+            findings.append(Finding(
+                "error", where, 0,
+                f"{ref} fails to load ({reason})",
+            ))
+
+
 CHECKS = (
     check_compiles,
     check_unknown_globals,
@@ -523,6 +572,7 @@ CHECKS = (
     check_authority,
     check_requires,
     check_forge_wiring,
+    check_asset_ids,
 )
 
 

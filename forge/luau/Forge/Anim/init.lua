@@ -61,13 +61,59 @@ Anim.rigs = {
 		leftLeg = { name = "LeftHip", swing = { 1, 1 }, spread = { 3, 1 }, twist = { 2, -1 } },
 		torso = { name = "Waist", swing = { 1, 1 }, spread = { 3, 1 }, twist = { 2, 1 } },
 		head = { name = "Neck", swing = { 1, 1 }, spread = { 3, 1 }, twist = { 2, 1 } },
+
+		--[[
+			The limbs below the first joint.
+
+			R15 has fifteen joints and this engine drove six of them. That gap
+			had a visible cost: asked for an archer holding a bow with both
+			hands, the best a shoulder-only rig can do is point the whole arm
+			in roughly the right direction, and the draw hand ends up out in
+			space instead of at the string. There is no elbow to bend, so it
+			cannot be posed — only aimed.
+
+			Names were read off a live character rather than remembered, which
+			is how the rest of this file's mistakes were made.
+
+			R6 has no equivalent joints at all. Nothing special handles that:
+			an animator only builds entries for joints it actually finds, so a
+			clip with forearm tracks plays its shoulder tracks on an R6 rig and
+			silently drops the rest.
+		]]
+		rightForearm = { name = "RightElbow", swing = { 1, 1 }, spread = { 3, -1 }, twist = { 2, 1 } },
+		leftForearm = { name = "LeftElbow", swing = { 1, 1 }, spread = { 3, 1 }, twist = { 2, -1 } },
+		rightShin = { name = "RightKnee", swing = { 1, 1 }, spread = { 3, -1 }, twist = { 2, 1 } },
+		leftShin = { name = "LeftKnee", swing = { 1, 1 }, spread = { 3, 1 }, twist = { 2, -1 } },
+		rightHand = { name = "RightWrist", swing = { 1, 1 }, spread = { 3, -1 }, twist = { 2, 1 } },
+		leftHand = { name = "LeftWrist", swing = { 1, 1 }, spread = { 3, 1 }, twist = { 2, -1 } },
+		rightFoot = { name = "RightAnkle", swing = { 1, 1 }, spread = { 3, -1 }, twist = { 2, 1 } },
+		leftFoot = { name = "LeftAnkle", swing = { 1, 1 }, spread = { 3, 1 }, twist = { 2, -1 } },
 	},
 }
 
-Anim.JOINTS = { "rightArm", "leftArm", "rightLeg", "leftLeg", "torso", "head" }
-Anim.UPPER = { "rightArm", "leftArm", "torso", "head" }
-Anim.LOWER = { "rightLeg", "leftLeg" }
-Anim.ARMS = { "rightArm", "leftArm" }
+--[[
+	Joint groups, used as clip masks.
+
+	Every clip written before the lower limbs existed keeps working unchanged:
+	a mask names joints, a clip only moves the joints it has tracks for, and a
+	joint with no track holds at zero — which is the straight arm and straight
+	leg those clips were authored against.
+]]
+Anim.JOINTS = {
+	"rightArm", "leftArm", "rightLeg", "leftLeg", "torso", "head",
+	"rightForearm", "leftForearm", "rightShin", "leftShin",
+	"rightHand", "leftHand", "rightFoot", "leftFoot",
+}
+Anim.UPPER = {
+	"rightArm", "leftArm", "torso", "head",
+	"rightForearm", "leftForearm", "rightHand", "leftHand",
+}
+Anim.LOWER = { "rightLeg", "leftLeg", "rightShin", "leftShin", "rightFoot", "leftFoot" }
+Anim.ARMS = { "rightArm", "leftArm", "rightForearm", "leftForearm", "rightHand", "leftHand" }
+
+-- The six every rig has, R6 included. Clips masked to this play identically
+-- everywhere, which is what an enemy shared between rig types needs.
+Anim.CORE = { "rightArm", "leftArm", "rightLeg", "leftLeg", "torso", "head" }
 
 -- ============================ clip authoring ================================
 -- k(t, swing, spread, twist) — one keyframe on one joint's track.

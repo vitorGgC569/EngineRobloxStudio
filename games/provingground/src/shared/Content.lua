@@ -54,6 +54,20 @@ local function loadRanged()
 		-- bow_draw clip animates.
 		hand = "left",
 		model = "longbow",
+		--[[
+			How the bow sits in the hand.
+
+			Welded with no rotation, a weapon inherits the arm's axis and swings
+			around with the shoulder: upright while the arm hangs, flat on its
+			side the moment the arm comes up. A bow has to stay vertical in the
+			pose that matters.
+
+			A quarter turn about the hand's X puts the limbs along the hand's Z,
+			which reads as vertical once the arm is extended. Negative rather
+			than positive so the string ends up on the archer's side instead of
+			the target's.
+		]]
+		gripOffset = CFrame.new(0, -0.1, -0.15) * CFrame.Angles(math.rad(-90), 0, 0),
 	})
 
 	Weapon.define("handcannon", {
@@ -70,6 +84,9 @@ local function loadRanged()
 		color = Color3.fromRGB(255, 214, 150),
 		hand = "right",
 		model = "handcannon",
+		-- Same reasoning: the barrel runs down the hand's -Y, which points
+		-- where the character is facing once the arm comes up to aim.
+		gripOffset = CFrame.new(0, -0.1, -0.1) * CFrame.Angles(math.rad(-90), 0, 0),
 	})
 end
 

@@ -34,6 +34,8 @@ local RunService = game:GetService("RunService")
 local Visual = require(script.Parent)
 local Signal = require(script.Parent.Parent.Core.Signal)
 
+local Capability = require(script.Parent.Parent.Capability)
+
 local Sky = {}
 
 Sky.hourChanged = Signal.new() -- (hour)
@@ -233,10 +235,7 @@ function Sky.install()
 		cost you that property, not the sky.
 	]]
 	if Sky.config.decoration then
-		local ok = pcall(function()
-			(Workspace.Terrain :: any).Decoration = true
-		end)
-		if not ok then
+		if not Capability.set(Workspace.Terrain, "Decoration", true) then
 			table.insert(Sky.unavailable, "Terrain.Decoration")
 		end
 	end

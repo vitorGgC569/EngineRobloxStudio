@@ -104,7 +104,11 @@ local function showWeapon(player: Player, character: Model)
 		color = def.color,
 		name = def.model,
 	})
-	carried[player] = Rig.grip(character, model, { hand = def.hand, parent = character })
+	carried[player] = Rig.grip(character, model, {
+		hand = def.hand,
+		offset = def.gripOffset,
+		parent = character,
+	})
 end
 
 function Range.equip(player: Player, character: Model)

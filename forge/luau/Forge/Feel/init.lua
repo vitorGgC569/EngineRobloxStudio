@@ -34,6 +34,8 @@ local Workspace = game:GetService("Workspace")
 local Ease = require(script.Parent.Core.Ease)
 local Spring = require(script.Parent.Core.Spring)
 
+local Access = require(script.Parent.Access)
+
 local Feel = {}
 
 local IS_CLIENT = RunService:IsClient()
@@ -59,7 +61,16 @@ Feel.config = {
 
 -- Adds trauma rather than setting it, so three hits in a frame compound.
 function Feel.shake(amount: number, decay: number?)
-	trauma = math.clamp(trauma + amount, 0, 1)
+	--[[
+		Scaled by the player's motion setting.
+
+		This module is deliberately aggressive — shake, tint, hitstop — and all
+		three are common causes of motion sickness. `Access.motionScale`
+		returns 1 for everyone who has not asked otherwise, so the ordinary
+		path is unchanged and the person who needs it gets a quarter of it
+		without the game having to know they exist.
+	]]
+	trauma = math.clamp(trauma + amount * Access.motionScale(), 0, 1)
 	if decay then
 		traumaDecay = decay
 	end

@@ -68,6 +68,11 @@ Net.define({
 	DrawCancel = { dir = "c2s", rate = 8 },
 	Reload = { dir = "c2s", rate = 4 },
 	SwapWeapon = { dir = "c2s", rate = 3 },
+
+	-- The client is the only place that can see a viewport, so the server has
+	-- to ask. Rate-limited hard: this is a once-per-session question.
+	PlatformCheck = { dir = "s2c" },
+	PlatformReport = { dir = "c2s", rate = 1 },
 })
 
 Content.load()
@@ -92,6 +97,7 @@ local Arena = require(Systems.Arena)
 local Fight = require(Systems.Fight)
 local Range = require(Systems.Range)
 local Meta = require(Systems.Meta)
+local Beyond = require(Systems.Beyond)
 
 -- Config first: everything below reads values it may have overridden, and a
 -- system that starts on a default and gets corrected a second later produces
@@ -101,6 +107,9 @@ Arena.start()
 Fight.start()
 -- After Arena: the targets need ground to stand on.
 Range.start()
+-- Last of the systems: everything here reaches outside this server, and
+-- nothing inside it should wait on a web call.
+Beyond.start()
 
 --[[
 	Hand-authored scenes, if any were pulled.

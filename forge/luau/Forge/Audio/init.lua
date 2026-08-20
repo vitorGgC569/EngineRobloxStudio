@@ -37,6 +37,8 @@ local Workspace = game:GetService("Workspace")
 
 local Signal = require(script.Parent.Core.Signal)
 
+local Access = require(script.Parent.Access)
+
 local Audio = {}
 
 Audio.missing = Signal.new() -- (id)
@@ -228,6 +230,16 @@ function Audio.play(name: string, options: any?): Sound?
 	if not spec or not gate(name, spec) then
 		return nil
 	end
+
+	--[[
+		Caption it, if it has one.
+
+		Every cue here already has a name; a subtitle is a caption on a name
+		that exists. Doing it in the engine rather than at each call site is
+		what stops half a game's sounds from going uncaptioned — nobody
+		remembers at the eightieth `Audio.play`.
+	]]
+	Access.announce(name)
 	local opts = options or {}
 
 	local sound = take()

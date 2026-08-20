@@ -1,12 +1,15 @@
 {
-  "generatedAt": "2026-08-20T18:28:30+00:00",
+  "generatedAt": "2026-08-20T18:43:51+00:00",
   "engine": "Forge",
-  "modules": 54,
-  "functions": 743,
+  "modules": 59,
+  "functions": 796,
   "examples": [
+    "Access",
     "Anim",
+    "Camera",
     "Capability",
     "Catalog",
+    "Cluster",
     "Collab",
     "Combat",
     "Core",
@@ -28,8 +31,10 @@
     "Rig",
     "Save",
     "Scene",
+    "Social",
     "Telemetry",
     "Testing",
+    "Travel",
     "UI",
     "Weapon",
     "Weather",
@@ -40,6 +45,11 @@
       "name": "Ability",
       "summary": "Ability — costs, cooldowns, cast windows and targeting",
       "functions": 15
+    },
+    {
+      "name": "Access",
+      "summary": "Access — the game is playable by people this engine had not considered",
+      "functions": 13
     },
     {
       "name": "Actor",
@@ -67,6 +77,11 @@
       "functions": 6
     },
     {
+      "name": "Camera",
+      "summary": "Camera — where the player is looking, and who decides",
+      "functions": 9
+    },
+    {
       "name": "Capability",
       "summary": "Capability — ask Roblox what exists instead of assuming",
       "functions": 9
@@ -75,6 +90,11 @@
       "name": "Catalog",
       "summary": "Catalog — Creator Store models this project has verified",
       "functions": 7
+    },
+    {
+      "name": "Cluster",
+      "summary": "Cluster — the engine stops assuming there is one server",
+      "functions": 15
     },
     {
       "name": "Collab",
@@ -252,6 +272,11 @@
       "functions": 11
     },
     {
+      "name": "Social",
+      "summary": "Social — the player's relationship with everyone outside this server",
+      "functions": 9
+    },
+    {
       "name": "Spring",
       "summary": "Spring — damped harmonic motion for numbers and Vector3",
       "functions": 5
@@ -270,6 +295,11 @@
       "name": "Testing",
       "summary": "Testing — assertions about a game that is actually running",
       "functions": 20
+    },
+    {
+      "name": "Travel",
+      "summary": "Travel — moving players between places, and arriving with something",
+      "functions": 7
     },
     {
       "name": "Trove",
@@ -453,6 +483,135 @@
           "summary": "",
           "examples": [],
           "line": 258
+        }
+      ],
+      "describes": true
+    },
+    {
+      "name": "Access",
+      "file": "forge/luau/Forge/Access/init.lua",
+      "lines": 337,
+      "summary": "Access — the game is playable by people this engine had not considered. Forge had none of this. Not a colour-blind palette, not a subtitle, not a way to make text bigger. On a platform whose audience is mostly young and mostly on a phone held at arm's length, that is not a nice-to-have that can wait for version three. Three things, in the order they matter: **Colour.** Roughly one man in twelve cannot reliably separate red from green, and this engine's damage numbers are red, its health bar is red, and its \"good\" is green. A palette swap fixes all of it at once because every colour in `UI.theme` is a token rather than a literal — which is the reason tokens were worth the trouble. **Subtitles.** Every audio cue that carries information — a boss telegraph, a warning, a line of dialogue — is information a deaf player does not get. `Audio` already names its cues; a subtitle is a caption on a name that already exists. **Text size.** A HUD readable on a monitor is not readable on a phone at arm's length, and Roblox's own accessibility setting is something a game has to honour deliberately. --- Why this is not a settings menu ------------------------------------- Because a setting nobody finds is a setting nobody uses. Everything here is applied by the engine to things the engine already owns: `UI` colours, an `Audio` cue, a `TextLabel`'s size. A game gets it by using the engine normally, and a game that wants a menu builds one over `Access.set`.",
+      "examples": [
+        "Access.palette(\"deuteranopia\")\nAccess.caption(\"boss.telegraph\", \"The Hollowed King raises its arm\")\nAccess.textScale(1.25)"
+      ],
+      "functions": [
+        {
+          "name": "Access.palette",
+          "signature": "Access.palette(name: string)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "Apply a palette to the engine's theme. The original is captured on the first call so a return to `default` is a real restore rather than a second guess at what the colours were.",
+          "examples": [],
+          "line": 129
+        },
+        {
+          "name": "Access.caption",
+          "signature": "Access.caption(cue: string, text: string)",
+          "kind": "function",
+          "returns": null,
+          "summary": "Give an audio cue a caption. Keyed by the cue name `Audio` already uses, so a game that has named its sounds well has already done most of this work. A cue with no caption simply produces none — silence is the right default for a footstep.",
+          "examples": [],
+          "line": 166
+        },
+        {
+          "name": "Access.captionsFor",
+          "signature": "Access.captionsFor(table_: { [string]: string })",
+          "kind": "function",
+          "returns": null,
+          "summary": "",
+          "examples": [],
+          "line": 170
+        },
+        {
+          "name": "Access.announce",
+          "signature": "Access.announce(cue: string, seconds: number?)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "Announce a cue, if it has a caption and captions are on. `Audio` calls this on every play. The engine doing it means a game gets subtitles by naming its sounds, rather than by remembering to caption each one at each call site — which is how half of them end up uncaptioned.",
+          "examples": [],
+          "line": 183
+        },
+        {
+          "name": "Access.captionFor",
+          "signature": "Access.captionFor(cue: string)",
+          "kind": "function",
+          "returns": "string?",
+          "summary": "",
+          "examples": [],
+          "line": 195
+        },
+        {
+          "name": "Access.textScale",
+          "signature": "Access.textScale(scale: number)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "Scale every piece of text the engine renders. Applied to `UI.theme.text` rather than to individual labels, so it reaches widgets built before the setting changed as well as after. Clamped because a scale of four is a HUD that covers the game.",
+          "examples": [],
+          "line": 207
+        },
+        {
+          "name": "Access.followSystem",
+          "signature": "Access.followSystem()",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "Roblox's own accessibility preference, honoured. `GuiService.PreferredTextSize` is a system setting the player already chose. A game that ignores it makes them choose twice, and most never find the second one.",
+          "examples": [],
+          "line": 233
+        },
+        {
+          "name": "Access.reducedMotion",
+          "signature": "Access.reducedMotion(on: boolean)",
+          "kind": "function",
+          "returns": null,
+          "summary": "Turn the engine's own aggression down. `Feel` shakes the screen, tints it and stops time on a hit, and all three are causes of motion sickness. Read by `Feel` rather than enforced here, because a module that reaches into another to disable it is a module the next reader cannot follow.",
+          "examples": [],
+          "line": 261
+        },
+        {
+          "name": "Access.motionScale",
+          "signature": "Access.motionScale()",
+          "kind": "function",
+          "returns": "number",
+          "summary": ": What `Feel` should multiply its intensity by. One call, one number.",
+          "examples": [],
+          "line": 267
+        },
+        {
+          "name": "Access.set",
+          "signature": "Access.set(setting: string, value: any)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "================================== apply ===================================",
+          "examples": [],
+          "line": 272
+        },
+        {
+          "name": "Access.serialize",
+          "signature": "Access.serialize()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 293
+        },
+        {
+          "name": "Access.deserialize",
+          "signature": "Access.deserialize(data: any)",
+          "kind": "function",
+          "returns": null,
+          "summary": "Restore a player's choices. Accessibility settings belong in the save profile, not in a client-side preference: a player who set them up once should not do it again on their next device, and they are the settings a player is least willing to re-discover.",
+          "examples": [],
+          "line": 305
+        },
+        {
+          "name": "Access.describe",
+          "signature": "Access.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 316
         }
       ],
       "describes": true
@@ -1209,7 +1368,7 @@
     {
       "name": "Audio",
       "file": "forge/luau/Forge/Audio/init.lua",
-      "lines": 424,
+      "lines": 436,
       "summary": "Audio — sound as data, pooled, grouped and ducked. `Feel` was built on the argument that impact is where \"functional\" becomes \"professional\", and then shipped only the half you can see. A hit with a particle and no sound has no weight; a hit with a sound and no particle still lands. Three things that separate this from `Instance.new(\"Sound\")` at the call site: * **Pitch variation by default.** The same sample at the same pitch twelve * **Pooling.** Creating and destroying a Sound per hit allocates during * **Groups.** Master/music/sfx/ui/ambient exist from the start, so a",
       "examples": [
         "Audio.define(\"hit.blade\", {\nid = \"rbxassetid://9118823103\",\nvolume = 0.6,\npitch = { 0.92, 1.08 },     -- randomised per play\ngroup = \"sfx\",\n})",
@@ -1226,7 +1385,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 105
+          "line": 107
         },
         {
           "name": "Audio.volume",
@@ -1235,7 +1394,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 113
+          "line": 115
         },
         {
           "name": "Audio.define",
@@ -1244,7 +1403,7 @@
           "returns": null,
           "summary": "================================ definition ================================",
           "examples": [],
-          "line": 119
+          "line": 121
         },
         {
           "name": "Audio.defineMany",
@@ -1253,7 +1412,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 123
+          "line": 125
         },
         {
           "name": "Audio.defined",
@@ -1262,7 +1421,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 129
+          "line": 131
         },
         {
           "name": "Audio.names",
@@ -1271,7 +1430,7 @@
           "returns": "{ string }",
           "summary": "",
           "examples": [],
-          "line": 133
+          "line": 135
         },
         {
           "name": "Audio.play",
@@ -1280,7 +1439,7 @@
           "returns": "Sound?",
           "summary": "================================ playback ================================== 2D: UI, stingers, anything not in the world.",
           "examples": [],
-          "line": 226
+          "line": 228
         },
         {
           "name": "Audio.playAt",
@@ -1289,7 +1448,7 @@
           "returns": "Sound?",
           "summary": "3D: attached to a throwaway part at a position.",
           "examples": [],
-          "line": 255
+          "line": 267
         },
         {
           "name": "Audio.attach",
@@ -1298,7 +1457,7 @@
           "returns": "Sound?",
           "summary": "3D and moving: follows an instance for as long as it lives.",
           "examples": [],
-          "line": 286
+          "line": 298
         },
         {
           "name": "Audio.music",
@@ -1307,7 +1466,7 @@
           "returns": null,
           "summary": "Crossfade between named tracks. Calling it with the track already playing is a no-op, so a system can assert its music every frame without restarting it — which is exactly how music restarts get shipped.",
           "examples": [],
-          "line": 318
+          "line": 330
         },
         {
           "name": "Audio.playingMusic",
@@ -1316,7 +1475,7 @@
           "returns": "string?",
           "summary": "",
           "examples": [],
-          "line": 359
+          "line": 371
         },
         {
           "name": "Audio.duck",
@@ -1325,7 +1484,7 @@
           "returns": null,
           "summary": "Pull music down so something else can be heard, then bring it back. A level-up, a boss line, a death — anything that must land over the mix.",
           "examples": [],
-          "line": 367
+          "line": 379
         },
         {
           "name": "Audio.stopAll",
@@ -1334,7 +1493,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 382
+          "line": 394
         },
         {
           "name": "Audio.describe",
@@ -1343,7 +1502,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 389
+          "line": 401
         }
       ],
       "describes": true
@@ -1410,6 +1569,101 @@
           "summary": "",
           "examples": [],
           "line": 200
+        }
+      ],
+      "describes": true
+    },
+    {
+      "name": "Camera",
+      "file": "forge/luau/Forge/Camera/init.lua",
+      "lines": 359,
+      "summary": "Camera — where the player is looking, and who decides. Forge had no camera at all. `Feel` shakes one and that was the entire surface, which means every game built on this engine had Roblox's default follow camera and no way to tell a story with it: no cutscene, no shoulder framing for a shot, no pull-back when something big arrives. The design is one idea: **modes stack, and the highest priority wins.** A cutscene does not have to know what the aim mode was doing, and the aim mode does not have to be cancelled — it is simply outranked, and returns the moment the cutscene releases. Anything else turns into a pile of booleans that eventually disagree. --- Why this fights Roblox's camera, and how ----------------------------- The default camera script writes `Camera.CFrame` every frame during the `Camera` render step. Anything written before that is overwritten, which is a mistake this project has already made once with an animator. So this binds *after* that step, and when a mode takes over it sets `CameraType = Scriptable` so Roblox stops writing at all. Releasing every mode hands control back rather than leaving the camera frozen where the last one left it, which is the other classic bug: a cutscene that ends and never gives the player their view back.",
+      "examples": [
+        "Camera.mode(\"shoulder\", { priority = 10, ... })   -- while aiming\nCamera.mode(\"cutscene\", { priority = 100, ... })  -- during a scene"
+      ],
+      "functions": [
+        {
+          "name": "Camera.mode",
+          "signature": "Camera.mode(name: string, mode: Mode)",
+          "kind": "function",
+          "returns": null,
+          "summary": "Add or replace a mode. Re-registering a name replaces it rather than stacking, so a system that updates its own mode every frame does not accumulate hundreds.",
+          "examples": [],
+          "line": 181
+        },
+        {
+          "name": "Camera.release",
+          "signature": "Camera.release(name: string)",
+          "kind": "function",
+          "returns": null,
+          "summary": "",
+          "examples": [],
+          "line": 186
+        },
+        {
+          "name": "Camera.releaseAll",
+          "signature": "Camera.releaseAll()",
+          "kind": "function",
+          "returns": null,
+          "summary": "",
+          "examples": [],
+          "line": 190
+        },
+        {
+          "name": "Camera.activeMode",
+          "signature": "Camera.activeMode()",
+          "kind": "function",
+          "returns": "string?",
+          "summary": "",
+          "examples": [],
+          "line": 194
+        },
+        {
+          "name": "Camera.impulse",
+          "signature": "Camera.impulse(offset: Vector3)",
+          "kind": "function",
+          "returns": null,
+          "summary": "A kick, in camera space. Recoil, a heavy landing, a hit taken. Additive on top of whatever mode is winning, so it works during a cutscene and during ordinary play without either knowing about it.",
+          "examples": [],
+          "line": 205
+        },
+        {
+          "name": "Camera.shoulder",
+          "signature": "Camera.shoulder(options: any?)",
+          "kind": "function",
+          "returns": "Mode",
+          "summary": "Over the shoulder. The framing every third-person shooter uses, and the one Roblox's default camera cannot do: the character sits off-centre so the crosshair is not behind their head.",
+          "examples": [],
+          "line": 217
+        },
+        {
+          "name": "Camera.shot",
+          "signature": "Camera.shot(from: any, at: any, options: any?)",
+          "kind": "function",
+          "returns": "Mode",
+          "summary": "Look at something, from somewhere. The building block of every cutscene: a fixed shot. `from` and `at` may be values or functions, and the function form is what makes a shot follow something that is moving.",
+          "examples": [],
+          "line": 258
+        },
+        {
+          "name": "Camera.cutscene",
+          "signature": "Camera.cutscene(shots: { any }, options: any?)",
+          "kind": "function",
+          "returns": "any",
+          "summary": "Play a sequence of shots, then give the camera back. Returns a handle with `skip`, because a cutscene a player cannot skip is a cutscene they resent on the second viewing. The camera is released when the sequence ends *or* is skipped — releasing in only one of those paths is how a game leaves someone stuck staring at a wall.",
+          "examples": [
+            "Camera.cutscene({\n{ from = doorway, at = boss, hold = 2.5 },\n{ from = overhead, at = arena, hold = 1.5, blend = 1 },\n}, { onFinish = function() ... end })"
+          ],
+          "line": 308
+        },
+        {
+          "name": "Camera.describe",
+          "signature": "Camera.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 344
         }
       ],
       "describes": true
@@ -1579,6 +1833,155 @@
           "summary": "",
           "examples": [],
           "line": 345
+        }
+      ],
+      "describes": true
+    },
+    {
+      "name": "Cluster",
+      "file": "forge/luau/Forge/Cluster/init.lua",
+      "lines": 472,
+      "summary": "Cluster — the engine stops assuming there is one server. Everything Forge did before this ended at the edge of a session. `Save` had a session lock but nothing to coordinate with; `LiveOps` polled a DataStore on a timer because it had no way to be *told*; a leaderboard could only ever rank the twelve people in the room. None of that reads as a bug from inside one server, which is exactly why it survived: a single-server assumption is invisible until the day the game has two. Two Roblox services do the work, and they are for different things: `MessagingService` is a shout. Fire-and-forget, roughly a second of latency, no history, no delivery guarantee. Right for \"a boss just spawned in server 12\" and for pushing a config change that would otherwise wait a minute for the next poll. `MemoryStoreService` is shared *state*. Fast, transactional, and it expires. Right for a matchmaking queue, a global counter, a live-event total that every server contributes to. Using one where the other belongs is the classic mistake. A queue built on messages loses players; a shout built on a memory store polls forever. --- Limits that are real ------------------------------------------------ Roblox rate-limits both services per universe, and exceeding the limit drops calls rather than erroring. So every publish here goes through a token bucket sized under the documented ceiling, and a message that cannot be sent now is queued rather than lost. A cross-server layer that silently drops under load is worse than none, because it works in testing.",
+      "examples": [
+        "Cluster.on(\"boss.spawned\", function(payload, fromServer) ... end)\nCluster.shout(\"boss.spawned\", { name = \"Hollowed King\" })",
+        "Cluster.queue(\"ranked\"):push(player.UserId, { rating = 1400 })\nlocal party = Cluster.queue(\"ranked\"):take(4)",
+        "Cluster.counter(\"event.shards\"):add(12)"
+      ],
+      "functions": [
+        {
+          "name": "Cluster.shout",
+          "signature": "Cluster.shout(topic: string, payload: any?)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "Tell every other server something. Rate-limited and queued rather than sent immediately, because Roblox drops calls past the limit instead of refusing them. Returns whether it went out now; either way it is either delivered or reported dropped, never silently lost.",
+          "examples": [],
+          "line": 164
+        },
+        {
+          "name": "Cluster.on",
+          "signature": "Cluster.on(topic: string, fn: (payload: any, from: string) -> ())",
+          "kind": "function",
+          "returns": "() -> ()",
+          "summary": "Listen for what other servers shout. One Roblox subscription per topic no matter how many handlers register: subscriptions are a limited resource and a module that opens one per listener runs out on a busy game. A server never hears its own shout — Roblox delivers it back, and a handler that acts on its own message double-counts everything.",
+          "examples": [],
+          "line": 190
+        },
+        {
+          "name": "Counter:add",
+          "signature": "Counter:add(amount: number)",
+          "kind": "method",
+          "returns": "number?",
+          "summary": "",
+          "examples": [],
+          "line": 264
+        },
+        {
+          "name": "Counter:get",
+          "signature": "Counter:get()",
+          "kind": "method",
+          "returns": "number",
+          "summary": "",
+          "examples": [],
+          "line": 284
+        },
+        {
+          "name": "Cluster.counter",
+          "signature": "Cluster.counter(name: string, key: string?)",
+          "kind": "function",
+          "returns": "any",
+          "summary": "",
+          "examples": [],
+          "line": 295
+        },
+        {
+          "name": "Queue:push",
+          "signature": "Queue:push(subject: any, payload: any?, priority: number?)",
+          "kind": "method",
+          "returns": "boolean",
+          "summary": "",
+          "examples": [],
+          "line": 311
+        },
+        {
+          "name": "Queue:take",
+          "signature": "Queue:take(count: number, waitSeconds: number?)",
+          "kind": "method",
+          "returns": "({ any }, () -> ())",
+          "summary": "Claim up to `count` entries. Returns the entries and a `confirm` function. Nothing is removed from the queue until `confirm` is called, so a server that fails to build the match releases the players back rather than losing them. Calling `confirm` is the promise that the match happened.",
+          "examples": [],
+          "line": 333
+        },
+        {
+          "name": "Cluster.queue",
+          "signature": "Cluster.queue(name: string)",
+          "kind": "function",
+          "returns": "any",
+          "summary": "",
+          "examples": [],
+          "line": 350
+        },
+        {
+          "name": "Board:submit",
+          "signature": "Board:submit(subject: string, score: number)",
+          "kind": "method",
+          "returns": "boolean",
+          "summary": "",
+          "examples": [],
+          "line": 371
+        },
+        {
+          "name": "Board:top",
+          "signature": "Board:top(count: number?)",
+          "kind": "method",
+          "returns": "{ any }",
+          "summary": "",
+          "examples": [],
+          "line": 385
+        },
+        {
+          "name": "Cluster.board",
+          "signature": "Cluster.board(name: string)",
+          "kind": "function",
+          "returns": "any",
+          "summary": "",
+          "examples": [],
+          "line": 396
+        },
+        {
+          "name": "Cluster.announce",
+          "signature": "Cluster.announce(extra: any?)",
+          "kind": "function",
+          "returns": null,
+          "summary": "How many servers are live, and how full they are. Each server writes its own row on a heartbeat and lets it expire; there is no deregistration, because a crashed server cannot deregister and a list that only shrinks when asked politely is a list of ghosts.",
+          "examples": [],
+          "line": 408
+        },
+        {
+          "name": "Cluster.servers",
+          "signature": "Cluster.servers(limit: number?)",
+          "kind": "function",
+          "returns": "{ any }",
+          "summary": "",
+          "examples": [],
+          "line": 426
+        },
+        {
+          "name": "Cluster.start",
+          "signature": "Cluster.start(announceEvery: number?)",
+          "kind": "function",
+          "returns": null,
+          "summary": "",
+          "examples": [],
+          "line": 437
+        },
+        {
+          "name": "Cluster.describe",
+          "signature": "Cluster.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 449
         }
       ],
       "describes": true
@@ -3332,7 +3735,7 @@
     {
       "name": "Examples",
       "file": "forge/luau/Forge/Examples/init.lua",
-      "lines": 467,
+      "lines": 533,
       "summary": "Examples — one runnable demonstration per module. A documented example rots. It is written once, the API moves, and nobody notices until an agent copies it and gets an error. This project has been bitten by that exact shape all day: a comment describing a call that was no longer true is worse than no comment, because it is believed. So these are not snippets in a docstring. Each one is a function that actually runs inside the live game, does the thing, asserts something small about the result, and cleans up after itself. `forge example --all` runs every one of them; if the API moves, the example fails, and it fails in CI rather than in an agent's hands. --- What an example is for ---------------------------------------------- Not test coverage — `Testing` does that, and these deliberately assert almost nothing. An example answers \"what does using this module look like\", which is the question an agent has when it has never seen the engine and is deciding whether a module is the right tool. That is why each one is short, uses the shortest path through its module, and reads top to bottom.",
       "examples": [
         "forge example Combat      run one\nforge example --all       run all of them"
@@ -3345,7 +3748,7 @@
           "returns": "{ string }",
           "summary": "=================================== run ====================================",
           "examples": [],
-          "line": 408
+          "line": 474
         },
         {
           "name": "Examples.run",
@@ -3354,7 +3757,7 @@
           "returns": "{ [string]: any }",
           "summary": "Run one example and report what happened. Failures are returned rather than thrown: running twenty examples and stopping at the first broken one hides the other nineteen, and the whole point is to find out which parts of the surface have drifted.",
           "examples": [],
-          "line": 424
+          "line": 490
         },
         {
           "name": "Examples.runAll",
@@ -3363,7 +3766,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 441
+          "line": 507
         },
         {
           "name": "Examples.describe",
@@ -3372,7 +3775,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 462
+          "line": 528
         }
       ],
       "describes": true
@@ -3380,7 +3783,7 @@
     {
       "name": "Feel",
       "file": "forge/luau/Forge/Feel/init.lua",
-      "lines": 534,
+      "lines": 545,
       "summary": "Feel — impact, weight and reaction. This is the module that decides whether a game reads as professional. Two games with identical mechanics, one with hitstop and screen shake and damage numbers that arc, one without — players will describe the first as \"polished\" and the second as \"unfinished\", and neither will be able to say why. It is also the layer agents skip, because nothing breaks without it. So it ships here, in the engine, as one call per effect. Camera shake here is trauma-based and noise-driven, not random jitter. Trauma decays, and offset scales with trauma squared, so small hits barely register and big ones hit hard — the difference between shake that feels like impact and shake that feels like a loose cable.",
       "examples": [
         "Feel.mount()                              -- once, on the client\nFeel.shake(0.6)                           -- trauma, 0..1\nFeel.hitstop(0.08)                        -- the pause that sells a hit\nFeel.number(pos, \"142\", { crit = true })\nFeel.impact(pos, { color = c, kind = \"burst\" })\nFeel.flash(model, Color3.new(1,1,1), 0.1)\nFeel.knockback(model, direction, 40)"
@@ -3393,7 +3796,7 @@
           "returns": null,
           "summary": "Adds trauma rather than setting it, so three hits in a frame compound.",
           "examples": [],
-          "line": 61
+          "line": 63
         },
         {
           "name": "Feel.trauma",
@@ -3402,7 +3805,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 68
+          "line": 79
         },
         {
           "name": "Feel.hitstop",
@@ -3411,7 +3814,7 @@
           "returns": null,
           "summary": "A short pause on impact. Registered animators freeze; everything else keeps running, which is what makes it read as weight rather than as lag.",
           "examples": [],
-          "line": 74
+          "line": 85
         },
         {
           "name": "Feel.isPaused",
@@ -3420,7 +3823,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 78
+          "line": 89
         },
         {
           "name": "Feel.registerAnimator",
@@ -3429,7 +3832,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 82
+          "line": 93
         },
         {
           "name": "Feel.punch",
@@ -3438,7 +3841,7 @@
           "returns": null,
           "summary": "FOV punch: small, fast, and the cheapest way to sell a heavy hit.",
           "examples": [],
-          "line": 93
+          "line": 104
         },
         {
           "name": "Feel.mount",
@@ -3447,7 +3850,7 @@
           "returns": null,
           "summary": "Installs the per-frame driver. Call once from a client script. It writes to `camera.CFrame` after the default camera script has run, so it composes with whatever camera mode the game uses instead of fighting it.",
           "examples": [],
-          "line": 103
+          "line": 114
         },
         {
           "name": "Feel.unmount",
@@ -3456,7 +3859,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 146
+          "line": 157
         },
         {
           "name": "Feel.number",
@@ -3465,7 +3868,7 @@
           "returns": null,
           "summary": "A number that rises, drifts sideways and fades. The sideways drift is what stops a burst of hits from stacking into an unreadable column — it is a two-line detail that decides whether the player can read their own DPS.",
           "examples": [],
-          "line": 162
+          "line": 173
         },
         {
           "name": "Feel.impact",
@@ -3474,7 +3877,7 @@
           "returns": null,
           "summary": "kind: \"burst\"  omnidirectional spark — generic hit \"spray\"  directional, needs options.direction — slashes, bullet impacts \"ring\"   expanding disc — slams, shockwaves, spawns \"puff\"   slow soft cloud — dust, landings, footfalls",
           "examples": [],
-          "line": 247
+          "line": 258
         },
         {
           "name": "Feel.flash",
@@ -3483,7 +3886,7 @@
           "returns": null,
           "summary": "============================= character feedback =========================== White flash on hit. Restores the original colours, so it is safe to stack.",
           "examples": [],
-          "line": 329
+          "line": 340
         },
         {
           "name": "Feel.knockback",
@@ -3492,7 +3895,7 @@
           "returns": null,
           "summary": "Impulse-based knockback that respects mass, so a golem shrugs off what staggers a rat without any per-enemy special case.",
           "examples": [],
-          "line": 352
+          "line": 363
         },
         {
           "name": "Feel.screenTint",
@@ -3501,7 +3904,7 @@
           "returns": null,
           "summary": "A brief full-screen tint. Damage taken, healing, level up.",
           "examples": [],
-          "line": 366
+          "line": 377
         },
         {
           "name": "Feel.breath",
@@ -3510,7 +3913,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 460
+          "line": 471
         },
         {
           "name": "Feel.breathing",
@@ -3519,7 +3922,7 @@
           "returns": null,
           "summary": "Keep breathing until stopped. Interval jitters slightly: a puff on an exact metronome reads as a machine. Real panting slows as it recovers, which the caller can drive by changing `interval` on the fly.",
           "examples": [],
-          "line": 476
+          "line": 487
         },
         {
           "name": "Feel.isBreathing",
@@ -3528,7 +3931,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 502
+          "line": 513
         },
         {
           "name": "Feel.hit",
@@ -3537,7 +3940,7 @@
           "returns": null,
           "summary": "One call for the common case: something got hit here, sell it. Keeps the four things that always go together from drifting apart.",
           "examples": [],
-          "line": 508
+          "line": 519
         }
       ],
       "describes": false
@@ -6419,6 +6822,99 @@
       "describes": true
     },
     {
+      "name": "Social",
+      "file": "forge/luau/Forge/Social/init.lua",
+      "lines": 312,
+      "summary": "Social — the player's relationship with everyone outside this server. Three Roblox services that Forge had never touched, grouped because they answer one question between them: what may this particular player see, do and say, and who can they bring. `PolicyService` decides what a player is *allowed* to be shown. Paid items, random rewards and links to other experiences are all gated by region and age, and the gate is not optional — it is compliance. A game that shows a loot box to a player whose policy forbids it is a game with a real problem, and nothing in Roblox stops you doing it by accident. `SocialService` is invites. Roughly half of a Roblox game's growth is one player pulling in a friend, and the prompt to do that is three lines nobody writes. `TextChatService` is chat, and more usefully, the filter. **Any** text a player authored that another player will see must be filtered — names, signs, pet names, guild tags. Not filtering is the single most common way a Roblox game gets moderated off the platform. --- Fail closed -------------------------------------------------------- Every question here fails closed. If the policy service cannot be reached, `may` returns false; if the filter errors, `filter` returns a redacted string rather than the original. Failing open on either would mean the one time the service is down is the one time a game shows a minor a paid item or broadcasts unfiltered text.",
+      "examples": [
+        "if Social.may(player, \"paidItems\") then ... end\nSocial.inviteFriend(player)\nlocal safe = Social.filter(text, player)"
+      ],
+      "functions": [
+        {
+          "name": "Social.policy",
+          "signature": "Social.policy(player: Player)",
+          "kind": "function",
+          "returns": "any?",
+          "summary": "What this player's region and age permit. Cached per player, because `GetPolicyInfoForPlayerAsync` is a web call and the answer does not change during a session. A game that asks on every shop render makes a web call per frame.",
+          "examples": [],
+          "line": 68
+        },
+        {
+          "name": "Social.may",
+          "signature": "Social.may(player: Player, what: string)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "May this player be shown a thing? `paidItems`      anything bought with real money or Robux `randomItems`    loot boxes, crates, gacha — restricted in several regions `leaveExperience` links out to other experiences `trading`        player-to-player trade Returns **false** when the policy cannot be read. That is the whole design: a permission question that answers \"yes\" on failure is a permission question that eventually answers yes to the wrong person, and the cost of being wrong here is regulatory rather than cosmetic.",
+          "examples": [],
+          "line": 103
+        },
+        {
+          "name": "Social.filter",
+          "signature": "Social.filter(text: string, from: Player, to: Player?)",
+          "kind": "function",
+          "returns": "string",
+          "summary": "Make player-authored text safe to show another player. Every string a player wrote and another will read goes through here. Not filtering is the most common way a Roblox game gets taken down, and the surface is wider than chat: a pet's name, a sign, a guild tag, a custom message on a gift. `fromUserId` matters. Roblox filters differently depending on who wrote the text and who is about to see it, and passing the wrong author produces a filter that is legal but wrong.",
+          "examples": [],
+          "line": 140
+        },
+        {
+          "name": "Social.filterForAll",
+          "signature": "Social.filterForAll(text: string, from: Player)",
+          "kind": "function",
+          "returns": "{ [Player]: string }",
+          "summary": "Filter one string for every player who will see it. Roblox's filter is per viewer, so one broadcast string is genuinely several strings. Returning a map rather than one value is the honest shape of that, and a caller that ignores it and sends one string to everybody is a caller filtering for the wrong audience.",
+          "examples": [],
+          "line": 189
+        },
+        {
+          "name": "Social.canInvite",
+          "signature": "Social.canInvite(player: Player)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "Ask a player to bring a friend. Roughly half of a Roblox game's growth is one player inviting another, and the prompt is three lines that almost nobody writes. `CanSendGameInvite` is checked first because the prompt errors rather than no-ops when the player cannot send one.",
+          "examples": [],
+          "line": 206
+        },
+        {
+          "name": "Social.inviteFriend",
+          "signature": "Social.inviteFriend(player: Player, options: any?)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "",
+          "examples": [],
+          "line": 213
+        },
+        {
+          "name": "Social.system",
+          "signature": "Social.system(player: Player, message: string, colour: Color3?)",
+          "kind": "function",
+          "returns": null,
+          "summary": "Say something as the game, in a player's own chat. Uses `TextChatService` when the experience is on it and falls back silently otherwise, because which chat version an experience uses is a place setting rather than a code decision and a module that assumes one breaks in half the projects that adopt it.",
+          "examples": [],
+          "line": 256
+        },
+        {
+          "name": "Social.start",
+          "signature": "Social.start()",
+          "kind": "function",
+          "returns": null,
+          "summary": "",
+          "examples": [],
+          "line": 276
+        },
+        {
+          "name": "Social.describe",
+          "signature": "Social.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 298
+        }
+      ],
+      "describes": true
+    },
+    {
       "name": "Spring",
       "file": "forge/luau/Forge/Core/Spring.lua",
       "lines": 95,
@@ -6935,6 +7431,82 @@
           "summary": "",
           "examples": [],
           "line": 428
+        }
+      ],
+      "describes": true
+    },
+    {
+      "name": "Travel",
+      "file": "forge/luau/Forge/Travel/init.lua",
+      "lines": 318,
+      "summary": "Travel — moving players between places, and arriving with something. A Roblox experience is many places: a lobby, a match, a hub. Forge has only ever known one, so a game built on it could only ever be one room. This is the layer that makes a game an experience. Three things `TeleportService` does badly on its own, and this fixes each: **It fails.** Teleports fail for reasons nobody controls — a full server, a place still updating, a flood check. Roblox raises `TeleportInitFailed` and the player is left standing there with no explanation. Every teleport here retries with backoff and reports what happened. **It loses the party.** Teleporting four friends individually sends them to four different servers. `TeleportPartyAsync` and reserved servers exist precisely to avoid that and are easy to forget. **It forgets why.** Teleport data is the only thing that survives the trip, and it is unsigned — a modified client can rewrite it. So anything that matters travels through `MemoryStore` keyed by a token, and the teleport carries only the token. --- On trusting what arrives ------------------------------------------- `TeleportService:GetLocalPlayerTeleportData` is client-supplied. Reading a match's difficulty, a reward, or a permission out of it is the same as letting the player choose them. The token pattern below costs one MemoryStore read and removes the entire class of exploit.",
+      "examples": [
+        "Travel.define(\"match\", { placeId = 0, reserved = true, party = true })\nTravel.send(players, \"match\", { mode = \"ranked\", seed = 41 })",
+        "-- on arrival, in the destination place\nlocal arrival = Travel.arrival(player)\nif arrival then print(arrival.mode) end"
+      ],
+      "functions": [
+        {
+          "name": "Travel.define",
+          "signature": "Travel.define(name: string, destination: Destination)",
+          "kind": "function",
+          "returns": null,
+          "summary": "================================= define ===================================",
+          "examples": [],
+          "line": 90
+        },
+        {
+          "name": "Travel.defineMany",
+          "signature": "Travel.defineMany(table_: { [string]: Destination })",
+          "kind": "function",
+          "returns": null,
+          "summary": "",
+          "examples": [],
+          "line": 94
+        },
+        {
+          "name": "Travel.names",
+          "signature": "Travel.names()",
+          "kind": "function",
+          "returns": "{ string }",
+          "summary": "",
+          "examples": [],
+          "line": 100
+        },
+        {
+          "name": "Travel.send",
+          "signature": "Travel.send(who: Player | { Player }, name: string, payload: any?)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "Send one player or a party. A party goes together or not at all: teleporting four friends with four separate calls is four different servers, and the whole reason they pressed the button was to be in one. Retries with backoff, because teleport failures are routine rather than exceptional — a full destination, a place mid-update, a flood check. A player left standing with no explanation is the default behaviour this exists to replace.",
+          "examples": [],
+          "line": 188
+        },
+        {
+          "name": "Travel.arrival",
+          "signature": "Travel.arrival(player: Player)",
+          "kind": "function",
+          "returns": "any?",
+          "summary": "What a player arrived with, if anything. Read on the server from the sealed store, never from the teleport data itself. The teleport data carries only the token; the payload was never in the player's hands.",
+          "examples": [],
+          "line": 247
+        },
+        {
+          "name": "Travel.start",
+          "signature": "Travel.start()",
+          "kind": "function",
+          "returns": null,
+          "summary": "Start listening for arrivals. Called once in a destination place's bootstrap. Every joining player's teleport data is checked for a token and, if one is there, the sealed payload is fetched and handed to `Travel.arrived`.",
+          "examples": [],
+          "line": 258
+        },
+        {
+          "name": "Travel.describe",
+          "signature": "Travel.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 304
         }
       ],
       "describes": true

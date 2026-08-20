@@ -396,6 +396,72 @@ Examples.of = {
 		}
 	end,
 
+	Cluster = function(Forge)
+		local Cluster = Forge.Cluster
+		-- Nothing is shouted: a demonstration that broadcasts to every live
+		-- server is a demonstration with consequences.
+		local report = Cluster.describe()
+		return {
+			serverId = report.serverId:sub(1, 8),
+			topics = #report.topics,
+			tokensAvailable = report.tokens,
+		}
+	end,
+
+	Travel = function(Forge)
+		local Travel = Forge.Travel
+		Travel.define("example_lobby", { placeId = 0, party = true })
+		-- No teleport either, for the same reason. What is demonstrated is the
+		-- declaration and the refusal, which is the part a caller gets wrong.
+		return {
+			destinations = Travel.names(),
+			sendingToAnUndefinedPlaceReturns = Travel.send({}, "example_missing"),
+		}
+	end,
+
+	Social = function(Forge)
+		local Social = Forge.Social
+		local player = game:GetService("Players"):GetPlayers()[1]
+		if not player then
+			return { skipped = "no player in the session to ask about" }
+		end
+		return {
+			mayBuy = Social.may(player, "paidItems"),
+			mayTrade = Social.may(player, "trading"),
+			-- Fails closed, so an unreachable policy reads as a refusal.
+			unknownPolicyIsRefused = Social.may(player, "notARealPolicy"),
+		}
+	end,
+
+	Camera = function(Forge)
+		local Camera = Forge.Camera
+		Camera.mode("example_low", { priority = 1, cframe = function()
+			return CFrame.new(0, 100, 0)
+		end })
+		Camera.mode("example_high", { priority = 50, cframe = function()
+			return CFrame.new(0, 200, 0)
+		end })
+		local report = Camera.describe()
+		Camera.releaseAll()
+		return { modes = report.modes, releasedTo = #Camera.describe().modes }
+	end,
+
+	Access = function(Forge)
+		local Access = Forge.Access
+		local before = Forge.UI.theme.color.danger
+		Access.palette("deuteranopia")
+		local after = Forge.UI.theme.color.danger
+		Access.palette("default")
+
+		Access.caption("example.cue", "A door opens")
+		return {
+			paletteChangedDanger = tostring(before) ~= tostring(after),
+			restored = tostring(Forge.UI.theme.color.danger) == tostring(before),
+			captionFor = Access.captionFor("example.cue"),
+			motionScale = Access.motionScale(),
+		}
+	end,
+
 	Debug = function(Forge)
 		local Debug = Forge.Debug
 		local knob = Debug.tunable("example.knob", 7)

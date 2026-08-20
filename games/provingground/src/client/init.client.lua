@@ -30,6 +30,9 @@ local Combat = Forge.Combat
 local Weapon = Forge.Weapon
 local Spring = Forge.Core.Spring
 local Material = Forge.Material
+local Platform = Forge.Platform
+local Camera = Forge.Camera
+local Access = Forge.Access
 local IK = Forge.IK
 
 local Hud = require(script:WaitForChild("ui"):WaitForChild("Hud"))
@@ -57,6 +60,9 @@ Net.define({
 	DrawCancel = { dir = "c2s", rate = 8 },
 	Reload = { dir = "c2s", rate = 4 },
 	SwapWeapon = { dir = "c2s", rate = 3 },
+
+	PlatformCheck = { dir = "s2c" },
+	PlatformReport = { dir = "c2s", rate = 1 },
 })
 
 -- The client needs the same weapon numbers the server has, for the tracer it
@@ -775,6 +781,64 @@ end)
 
 Net.on("Notify", function(payload)
 	UI.toast(payload.text, { color = payload.color })
+end)
+
+--[[
+	Accessibility, honoured before anything is drawn.
+
+	`followSystem` reads the text size the player already chose in Roblox's own
+	settings. A game that ignores it makes them choose twice, and most never
+	find the second menu.
+]]
+Access.followSystem()
+
+--[[
+	Answer the server's device question.
+
+	A viewport only exists on a client, so this is the only place the audit can
+	run. Reported rather than acted on: what a phone-sized HUD should do is a
+	decision about this game, and the engine's job is to say what is wrong.
+]]
+Net.on("PlatformCheck", function()
+	local audit = Platform.audit()
+	local budget = Platform.sceneBudget()
+	Net.send("PlatformReport", {
+		device = audit.device,
+		offscreen = #audit.offscreen,
+		tooSmall = #audit.tooSmall,
+		withinBudget = budget.ok,
+	})
+
+	if not audit.ok then
+		-- Loud in Studio, quiet in production: a developer needs to know, a
+		-- player does not.
+		warn(string.format(
+			"[platform] %s: %d offscreen, %d under the topbar, %d too small to hit",
+			audit.device, #audit.offscreen, #audit.underTopbar, #audit.tooSmall))
+	end
+end)
+
+--[[
+	Over-the-shoulder framing while a ranged weapon is drawn.
+
+	Roblox's default camera puts the character between the player and their
+	crosshair, which is survivable for melee and useless for a bow. The mode
+	is registered on draw and released on loose, so the ordinary camera comes
+	back on its own rather than needing to be restored.
+]]
+Input.bind("shoot", function(phase)
+	if phase == "begin" then
+		Camera.mode("aim", Camera.shoulder({ distance = 7, side = 2, fieldOfView = 62 }))
+	elseif phase == "end" then
+		Camera.release("aim")
+	end
+end)
+
+-- A shot pushes the view, whatever mode is winning.
+Net.on("Shot", function(payload)
+	if payload.shooter == player then
+		Camera.impulse(Vector3.new(0, 0.12, 0.25))
+	end
 end)
 
 print(string.format("[%s] client ready", Config.name))

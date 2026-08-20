@@ -137,8 +137,13 @@ class EngineTests(unittest.TestCase):
             code.append(text)
         source = "\n".join(code).lower()
 
+        # Whole words, not substrings. The first version matched "obby" inside
+        # "lobby" and failed on a cross-server destination name — a check whose
+        # false positives look exactly like true ones is a check people learn
+        # to silence.
         for genre_word in ("tycoon", "dropper", "obby", "simulator"):
-            self.assertNotIn(genre_word, source, f"engine leaked a genre: {genre_word}")
+            found = re.search(rf"{genre_word}", source)
+            self.assertIsNone(found, f"engine leaked a genre: {genre_word}")
 
 
 class ReuseTests(unittest.TestCase):

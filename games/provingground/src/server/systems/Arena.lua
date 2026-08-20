@@ -14,6 +14,9 @@ local Forge = require(ReplicatedStorage:WaitForChild("Forge"))
 local World = Forge.World
 local Rng = Forge.Core.Rng
 local Debug = Forge.Debug
+local Catalog = Forge.Catalog
+local Material = Forge.Material
+local Nav = Forge.Nav
 
 local Arena = {}
 
@@ -112,7 +115,55 @@ function Arena.start()
 			end
 			return 0.3
 		end,
+		--[[
+			Scenery, from the verified catalogue.
+
+			These used to be three boxes each, rotated randomly and tinted
+			grey. They read as three boxes, because that is what they were —
+			and no amount of lighting work fixes a silhouette.
+
+			`Catalog` holds two hundred pieces that were pulled out of Synty
+			packs Roblox released free, loaded inside Studio, measured and
+			scanned for scripts before they earned an entry. Using them is the
+			single largest visual change available to this game and it costs a
+			lookup.
+
+			The hand-built rock stays as the fallback. A catalogue miss must
+			not produce an empty arena: a world with worse rocks is a world, a
+			world with no rocks is a bug.
+		]]
 		place = function(position, stream)
+			local pieces = Catalog.byCategory("ground")
+			if #pieces > 0 then
+				local entry = pieces[stream:int(1, #pieces)]
+				local model = Catalog.load(entry)
+				if model then
+					model.Name = "Rock"
+					if model:IsA("Model") then
+						model:PivotTo(CFrame.new(position + Vector3.new(0, entry.size.Y * 0.3, 0))
+							* CFrame.Angles(0, stream:number(0, 6.28), 0))
+					elseif model:IsA("BasePart") then
+						(model :: BasePart).CFrame = CFrame.new(position)
+							* CFrame.Angles(0, stream:number(0, 6.28), 0)
+					end
+					for _, d in model:GetDescendants() do
+						if d:IsA("BasePart") then
+							d.Anchored = true
+						end
+					end
+					if model:IsA("BasePart") then
+						(model :: BasePart).Anchored = true
+					end
+					-- Distance fidelity and no shadows on the small stuff:
+					-- a field of scattered props each casting a shadow is a
+					-- measurable share of a frame for detail nobody sees.
+					Material.renderFidelity(model, Enum.RenderFidelity.Automatic)
+					Material.shadowBudget(model, 3)
+					return model
+				end
+			end
+
+			-- Fallback: the original boxes.
 			local model = Instance.new("Model")
 			model.Name = "Rock"
 			local chunks = stream:int(1, 3)
@@ -129,40 +180,9 @@ function Arena.start()
 				part.BottomSurface = Enum.SurfaceType.Smooth
 				part.Parent = model
 			end
-			model.Parent = props
+			return model
 		end,
 	})
-
-	-- Braziers mark the fighting ring: a readable boundary beats an invisible wall.
-	for i = 1, 8 do
-		local angle = (i / 8) * math.pi * 2
-		local x, z = math.cos(angle) * 96, math.sin(angle) * 96
-		local ground = World.surface(x, z) or Vector3.new(x, 32, z)
-
-		local post = Instance.new("Part")
-		post.Size = Vector3.new(1.2, 9, 1.2)
-		post.CFrame = CFrame.new(ground + Vector3.new(0, 4.5, 0))
-		post.Color = Color3.fromRGB(58, 52, 48)
-		post.Material = Enum.Material.Metal
-		post.Anchored = true
-		post.Parent = props
-
-		local flame = Instance.new("Part")
-		flame.Size = Vector3.new(2.2, 2.2, 2.2)
-		flame.Shape = Enum.PartType.Ball
-		flame.CFrame = CFrame.new(ground + Vector3.new(0, 9.6, 0))
-		flame.Color = Color3.fromRGB(255, 148, 62)
-		flame.Material = Enum.Material.Neon
-		flame.Anchored = true
-		flame.CanCollide = false
-		flame.Parent = props
-
-		local light = Instance.new("PointLight")
-		light.Color = Color3.fromRGB(255, 160, 80)
-		light.Range = 42
-		light.Brightness = 2.4
-		light.Parent = flame
-	end
 
 	local spawn = World.surface(0, 0)
 	Arena.spawnPoint = (spawn or Vector3.new(0, 34, 0)) + Vector3.new(0, 4, 0)

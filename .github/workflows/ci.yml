@@ -1,0 +1,102 @@
+name: forge
+
+# What runs without a Roblox Studio, and what cannot.
+#
+# Everything here is static: the Luau compiler, the authoring checks, and the
+# Python suite. That is the honest boundary of a headless runner — the parts of
+# this project that matter most (does combat work, does a save survive a
+# rejoin) need a live Studio session and are run by `forge gametest` on a
+# machine that has one. Pretending otherwise, by mocking a Roblox API in CI,
+# would produce a green badge that means nothing.
+#
+# So this gate answers one question well: does the source still hold together.
+
+on:
+  push:
+    branches: [main]
+  pull_request:
+  workflow_dispatch:
+
+jobs:
+  static:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+
+      - name: Fetch the pinned Luau tools
+        # Pinned by version rather than "latest" on purpose: a compiler that
+        # changes under the project turns an unrelated push into a red build.
+        env:
+          LUAU_VERSION: "0.640"
+        run: |
+          set -euo pipefail
+          mkdir -p .tools/luau
+          curl -sSL -o /tmp/luau.zip \
+            "https://github.com/luau-lang/luau/releases/download/${LUAU_VERSION}/luau-ubuntu.zip"
+          unzip -o -q /tmp/luau.zip -d .tools/luau
+          chmod +x .tools/luau/luau-compile .tools/luau/luau-analyze
+          .tools/luau/luau-compile --version || true
+
+      - name: Every Luau file compiles
+        run: |
+          set -euo pipefail
+          failed=0
+          while IFS= read -r file; do
+            if ! .tools/luau/luau-compile --binary "$file" > /dev/null 2>&1; then
+              echo "::error file=$file::does not compile"
+              .tools/luau/luau-compile --binary "$file" 2>&1 | head -5
+              failed=1
+            fi
+          done < <(find forge/luau games -name '*.lua')
+          exit $failed
+
+      - name: Python suite
+        run: python -m pytest tests/ -q
+
+      - name: Authoring checks
+        # The doctor is a gate for structure, not for assets: `check_asset_ids`
+        # needs a Studio to verify against and reports a warning, not a failure,
+        # when the registry is absent. That is deliberate — a check that cannot
+        # run here must not fail here.
+        run: |
+          set -euo pipefail
+          for game in games/*/; do
+            name=$(basename "$game")
+            [ -f "$game/default.project.json" ] || continue
+            echo "--- $name"
+            python forge/forge.py doctor "$name"
+          done
+
+      - name: Engine has no undeclared globals
+        run: |
+          python - <<'PY'
+          import sys
+          from pathlib import Path
+          sys.path.insert(0, "forge")
+          from cli import doctor
+
+          findings = []
+          root = Path("forge/luau/Forge")
+          doctor.check_unknown_globals(root, findings)
+          doctor.check_use_before_declare(root, findings)
+          doctor.check_requires(root, findings)
+          for f in findings:
+              print(f"::error file={f.file},line={f.line}::{f.message}")
+          sys.exit(1 if findings else 0)
+          PY
+
+      - name: API index is current
+        # Regenerated and compared rather than trusted. An index that drifts
+        # from the source is worse than none, because it is believed.
+        run: |
+          set -euo pipefail
+          python forge/forge.py api > /dev/null
+          if ! git diff --quiet -- forge/catalog/api.json; then
+            echo "::error::forge/catalog/api.json is stale; run 'forge api' and commit"
+            git diff --stat -- forge/catalog/api.json
+            exit 1
+          fi

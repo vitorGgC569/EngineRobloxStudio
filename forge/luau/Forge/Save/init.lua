@@ -195,12 +195,23 @@ end
 
 Save.checksum = checksum
 
+--[[
+	Does this payload's checksum match its contents?
+
+	Public because it is the single most important decision `Save` makes and it
+	was, until now, untestable: a corrupted profile has to be treated as absent,
+	since loading half of one leaves a player with their level and none of their
+	inventory. Exposing it lets a live suite stage a deliberately corrupt record
+	and prove the refusal actually happens.
+]]
 local function verify(data: any): boolean
 	if type(data) ~= "table" or type(data.__checksum) ~= "string" then
 		return false -- pre-checksum saves: treated as unverified, not as corrupt
 	end
 	return checksum(data) == data.__checksum
 end
+
+Save.verify = verify
 
 local function retry<T>(label: string, fn: () -> T): (boolean, T?)
 	local delaySeconds = 0.5

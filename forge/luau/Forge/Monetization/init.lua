@@ -237,6 +237,18 @@ local function processReceipt(receipt: any): Enum.ProductPurchaseDecision
 	return Enum.ProductPurchaseDecision.PurchaseGranted
 end
 
+--[[
+	The receipt handler, callable directly.
+
+	Roblox owns the real one, which makes it unreachable from a test — and this
+	is the one function in the engine whose bug costs money. Exposing it lets a
+	live suite deliver the same receipt twice and assert that the grant happened
+	once, which is the failure Roblox's retry behaviour causes routinely.
+]]
+function Monetization.processReceipt(receipt: any): Enum.ProductPurchaseDecision
+	return processReceipt(receipt)
+end
+
 function Monetization.start()
 	if started or not RunService:IsServer() then
 		return

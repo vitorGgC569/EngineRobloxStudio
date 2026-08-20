@@ -338,12 +338,20 @@ class EditorPersistenceTests(unittest.TestCase):
         self.assertIn("ForgeScenes", engine)
         self.assertIn("ForgeScenes", cli)
 
-    def test_the_puller_does_not_trust_dm_properties(self) -> None:
-        """`dm.properties` omits StringValue.Value, so reading it pulls nothing."""
+    def test_the_puller_names_the_property_it_wants(self) -> None:
+        """`dm.properties` returns a generic set unless you ask for a field.
+
+        This test previously asserted the opposite — that the puller must avoid
+        `dm.properties` entirely — because the first version called it without
+        `properties`, got nothing back, and concluded the command could not
+        read a StringValue at all. It could; it just answers what it is asked.
+        A test written from that mistake locked the workaround in place, and
+        the workaround only ran in edit mode.
+        """
         cli = (REPO / "forge/cli/scene.py").read_text(encoding="utf-8")
-        pull = cli[cli.index("def pull("):cli.index("_PUSH_LUAU")]
-        self.assertNotIn('_call("dm.properties"', pull)
-        self.assertIn("bridge.exec", pull)
+        pull = cli[cli.index("def pull("):cli.index("_MODULE_HEADER")]
+        self.assertIn('"properties": ["Value"]', pull,
+                      "the puller must name the field it wants")
 
 
 class RigTests(unittest.TestCase):

@@ -184,7 +184,22 @@ local function remoteFor(name: string): any
 	if not def then
 		error(string.format("[Net] '%s' was never defined. Add it to Net.define.", tostring(name)), 3)
 	end
+	--[[
+		Wait, but say so if it never arrives.
+
+		Remotes are created by the server; a client asking for one before the
+		server has defined it waits here. Returning nil silently made the next
+		line index a nil value and blamed the caller — and, worse, a timeout
+		looked exactly like a listener that had simply never fired.
+	]]
 	local instance = ensureFolder():WaitForChild(name, 20)
+	if not instance then
+		error(string.format(
+			"[Net] '%s' never appeared. The server defines remotes; a client "
+			.. "listening for one the server has not defined yet waits 20s and "
+			.. "then fails. Define shared channels at module load, not inside "
+			.. "a system that starts late.", name), 3)
+	end
 	remotes[name] = instance
 	return instance
 end

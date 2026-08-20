@@ -29,6 +29,8 @@ local Netcode = Forge.Netcode
 local Combat = Forge.Combat
 local Weapon = Forge.Weapon
 local Spring = Forge.Core.Spring
+local Material = Forge.Material
+local IK = Forge.IK
 
 local Hud = require(script:WaitForChild("ui"):WaitForChild("Hud"))
 
@@ -136,6 +138,29 @@ end)())
 	enemy silhouette has to work at every hour, and it will not. Golden hour is
 	picked and pinned.
 ]]
+--[[
+	Physically based surfaces.
+
+	Everything in this arena has been rendering on Roblox's legacy materials:
+	a colour and a noise texture, with no normal, roughness or metalness map.
+	No lighting work fixes that, because there is nothing in the surface for
+	light to catch.
+
+	`MaterialVariant` is the high-leverage half — it replaces a legacy material
+	*everywhere*, terrain included, so one call re-surfaces the whole world
+	without touching a part. Texture ids are left empty here deliberately:
+	Roblox's own PBR textures for these materials are applied by naming the
+	variant, and an invented texture id renders as flat grey, which is exactly
+	the silent failure this project has been bitten by three times.
+]]
+Material.defineMany({
+	arena_rock = { base = Enum.Material.Slate, studsPerTile = 12 },
+	arena_ground = { base = Enum.Material.Ground, studsPerTile = 16 },
+	arena_path = { base = Enum.Material.Sand, studsPerTile = 10 },
+})
+Material.applyTerrain(Enum.Material.Slate, "arena_rock")
+Material.applyTerrain(Enum.Material.Ground, "arena_ground")
+
 local Sky = require(ReplicatedStorage.Forge.Visual.Sky)
 Sky.install()
 -- `pin`, not `setHour`: the place file's ClockTime replicates in afterwards
@@ -252,6 +277,20 @@ local function onCharacter(character: Model)
 	animator = Anim.new(character)
 	Anim.bind(animator)
 	Feel.registerAnimator(animator)
+
+	--[[
+		Feet on the ground, not through it.
+
+		Runs after the animator because it is a correction, not a pose: the
+		clip still decides what the legs are doing and this only bends the last
+		two bones so the foot lands on whatever is actually under it. On the
+		arena's slopes and low mounds it is the difference between standing on
+		the terrain and intersecting it.
+
+		R15 only, and it says so rather than failing quietly if the rig has no
+		knee.
+	]]
+	IK.footPlant(character, { maxDrop = 3 })
 
 	-- Says out loud what the animator found. A rig whose joints do not resolve
 	-- animates nothing and reports nothing, which is exactly how a stiff,

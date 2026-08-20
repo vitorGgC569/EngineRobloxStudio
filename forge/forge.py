@@ -379,6 +379,34 @@ def cmd_scene(args: argparse.Namespace) -> int:
         return 1
 
 
+# ============================== live gameplay ===============================
+def cmd_gametest(args: argparse.Namespace) -> int:
+    """Run the game's own scenarios inside the open Studio session."""
+    from cli import gametest
+
+    try:
+        report = gametest.run(args.filter)
+    except gametest.BridgeError as exc:
+        print(f"gametest: {exc}")
+        return 1
+    print(gametest.render(report))
+    return 0 if report.get("ok") else 1
+
+
+# ============================== api index ===================================
+def cmd_api(args: argparse.Namespace) -> int:
+    """Describe the engine as JSON, or print one module's surface."""
+    from cli import apiindex
+
+    if args.module:
+        print(apiindex.render_module(args.module))
+        return 0
+    path, data = apiindex.write()
+    print(f"{data['modules']} modules, {data['functions']} public functions "
+          f"-> {path.relative_to(REPO_ROOT)}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="forge", description="Forge — the authoring half")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -440,6 +468,14 @@ def main(argv: list[str] | None = None) -> int:
     p_scene.add_argument("game", nargs="?", default="provingground")
     p_scene.add_argument("name", nargs="?", default=None)
     p_scene.set_defaults(func=cmd_scene)
+
+    p_gt = sub.add_parser("gametest", help="run gameplay scenarios inside the live game")
+    p_gt.add_argument("--filter", default=None, help="only scenarios whose name contains this")
+    p_gt.set_defaults(func=cmd_gametest)
+
+    p_api = sub.add_parser("api", help="write a machine-readable index of the engine")
+    p_api.add_argument("--module", default=None, help="print one module instead")
+    p_api.set_defaults(func=cmd_api)
 
     p_engine = sub.add_parser("engine", help="list the engine's modules and public API")
     p_engine.add_argument("--json", action="store_true")

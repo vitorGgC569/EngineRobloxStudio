@@ -43,6 +43,8 @@ local Signal = require(script.Parent.Core.Signal)
 local Sched = require(script.Parent.Core.Sched)
 local Combat = require(script.Parent.Combat)
 
+local Nav = require(script.Parent.Nav)
+
 local Actor = {}
 
 Actor.spawned = Signal.new() -- (actor)
@@ -55,6 +57,9 @@ local group = nil
 
 Actor.config = {
 	tickRate = 8, -- state machine ticks per second
+	-- Pathfinding for every actor. Off by default: an open arena gains
+	-- nothing from it and pays a path computation per repath.
+	navigation = false,
 	slices = 4, -- spread across this many frames
 	logTransitions = false,
 }
@@ -156,14 +161,52 @@ function Instance_:leashed(): boolean
 end
 
 -- ================================ steering ==================================
+--[[
+	Where an actor is trying to get to.
+
+	Two modes, and the difference is visible from across a room.
+
+	`direct` points the Humanoid at the goal and lets it walk. On flat ground
+	that is indistinguishable from anything better and costs nothing. Put a
+	rock in the way and the actor presses into it forever, which is the single
+	most recognisable "amateur Roblox game" behaviour there is.
+
+	`navigate` hands the goal to `Nav`, which computes a real path over
+	Roblox's navmesh, follows the waypoints, notices when it is wedged and
+	repaths. It costs a path computation per repath, which is why it is not
+	simply always on: a swarm of thirty melee enemies in an open arena gains
+	nothing and pays for all of it.
+
+	Set `Actor.config.navigation = true`, or per actor in the spawn spec, to
+	turn it on. Anything with a world worth navigating wants it.
+]]
 function Instance_:moveTo(position: Vector3)
-	if self.humanoid then
-		self.humanoid:MoveTo(position)
-		self.destination = position
+	if not self.humanoid then
+		return
 	end
+	self.destination = position
+
+	if self.navigate then
+		if not self._agent then
+			self._agent = Nav.follow(self.model, {
+				target = function()
+					return self.destination
+				end,
+				standoff = self.standoff or 0,
+				parameters = self.agentParameters,
+			})
+		end
+		return
+	end
+
+	self.humanoid:MoveTo(position)
 end
 
 function Instance_:stop()
+	if self._agent then
+		self._agent:stop()
+		self._agent = nil
+	end
 	if self.humanoid then
 		self.humanoid:MoveTo(self:position())
 		self.destination = nil
@@ -294,6 +337,10 @@ function Instance_:stateTime(): number
 end
 
 function Instance_:despawn(reason: string?)
+	if self._agent then
+		self._agent:stop()
+		self._agent = nil
+	end
 	if self._despawned then
 		return
 	end
@@ -336,6 +383,12 @@ function Actor.spawn(model: Model, brainName: string, config: any?): any
 		tag = cfg.tag,
 		animator = cfg.animator,
 		data = cfg.data or {},
+		-- Per actor, falling back to the engine-wide setting. A brute with a
+		-- wide agent radius and a stalker that fits through gaps genuinely
+		-- need different paths, so this travels with the actor.
+		navigate = cfg.navigate ~= nil and cfg.navigate or Actor.config.navigation,
+		agentParameters = cfg.agentParameters,
+		standoff = cfg.standoff,
 		blackboard = {},
 		target = nil,
 		state = nil,
@@ -466,8 +519,11 @@ function Actor.start()
 
 			-- Only while there is somewhere to be, and only until we are
 			-- there: re-commanding on arrival makes the actor jitter in place.
+			-- Only for direct movers. An actor on a path already has `Nav`
+			-- issuing MoveTo along its waypoints, and two systems commanding
+			-- one Humanoid produces a walk that stutters between two goals.
 			local destination = self.destination
-			if destination and self.humanoid then
+			if destination and self.humanoid and not self._agent then
 				if (self:position() - destination).Magnitude > 1.5 then
 					self.humanoid:MoveTo(destination)
 				end

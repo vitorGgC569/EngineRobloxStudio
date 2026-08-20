@@ -87,11 +87,52 @@ local Systems = script:WaitForChild("systems")
 local Arena = require(Systems.Arena)
 local Fight = require(Systems.Fight)
 local Range = require(Systems.Range)
+local Meta = require(Systems.Meta)
 
+-- Config first: everything below reads values it may have overridden, and a
+-- system that starts on a default and gets corrected a second later produces
+-- one wave of enemies nobody asked for.
+Meta.start()
 Arena.start()
 Fight.start()
 -- After Arena: the targets need ground to stand on.
 Range.start()
+
+--[[
+	Hand-authored scenes, if any were pulled.
+
+	This is the other half of `forge scene pull`. Without it the Editor round
+	trip stops at the repository: an edit survives to disk and is never seen
+	again, which is exactly the state this engine was in until now.
+
+	Missing is normal and silent — most games have no pulled scenes, and a
+	warning on every boot for the ordinary case is a warning people learn to
+	skip.
+]]
+do
+	local module = Shared:FindFirstChild("Scenes")
+	if module and module:IsA("ModuleScript") then
+		local ok, scenes = pcall(require, module)
+		if ok and typeof(scenes) == "table" then
+			local Scene = Forge.Scene
+			local restored = 0
+			for name, json in scenes do
+				local built, err = pcall(function()
+					return Scene.fromJson(json)
+				end)
+				if built then
+					Scene.activate(name, Workspace:FindFirstChild("Props"))
+					restored += 1
+				else
+					Debug.warn(string.format("scene '%s' did not load: %s", name, tostring(err)))
+				end
+			end
+			if restored > 0 then
+				Debug.info(string.format("restored %d authored scene(s)", restored))
+			end
+		end
+	end
+end
 
 -- ============================== the player ==================================
 local function onCharacter(player: Player, character: Model)
@@ -117,7 +158,7 @@ local function onCharacter(player: Player, character: Model)
 			profile.best = math.max(profile.best, profile.score)
 			profile.score = 0
 			Net.fire(player, "StateSync", profile)
-			Net.fire(player, "Notify", { text = "You fell. Score reset." })
+			Net.fire(player, "Notify", { text = Forge.LiveOps.textFor(player, "notify.death") })
 		end
 		Debug.count("player.deaths")
 		task.delay(3, function()
@@ -148,7 +189,7 @@ end
 -- character would ever spawn.
 Save.observe(function(player, profile)
 	Net.fire(player, "StateSync", profile)
-	Net.fire(player, "Notify", { text = "Proving Ground. LMB strikes, Q dodges, RMB blocks, F shoots." })
+	Net.fire(player, "Notify", { text = Forge.LiveOps.textFor(player, "notify.welcome") })
 	if not player.Character then
 		player:LoadCharacter()
 	end
@@ -166,6 +207,28 @@ task.defer(function()
 		end
 	end
 end)
+
+--[[
+	The live suite.
+
+	Last, deliberately: these scenarios assert against systems that must
+	already be running, and a suite that starts before the game does tests a
+	game that does not exist yet.
+
+	Deferred so bootstrap returns first. The report is published to a
+	replicated StringValue that `forge gametest` reads, which is how a machine
+	finds out whether combat still works without anybody watching a screen.
+]]
+if Config.selfTest then
+	task.defer(function()
+		local Testing = Forge.Testing
+		local suite = script:FindFirstChild("tests")
+		local report = Testing.runAndPublish(suite)
+		Debug.info(string.format(
+			"self test: %d passed, %d failed, %d hung",
+			report.passed or 0, report.failed or 0, report.timedOut or 0))
+	end)
+end
 
 -- ================================ the seam ==================================
 Debug.expose()

@@ -322,6 +322,29 @@ function Netcode.defineMany(table_: { [string]: Command })
 	end
 end
 
+--[[
+	Create the netcode channel and start listening.
+
+	Called at module load, not from `Netcode.define`. That ordering was the
+	whole bug behind the latency sweep never reaching a client:
+
+	  * remotes are only instantiated on the server;
+	  * the server only reached `Netcode.define` inside `Fight.start()`, which
+	    runs after terrain generation and takes seconds;
+	  * the client, which starts immediately, called `Net.on("NetcodeSim")`
+	    and sat in a bounded `WaitForChild` for a remote that did not exist
+	    yet.
+
+	Under Studio's fast terrain it resolved and the sweep looked merely flaky;
+	on a slower machine the wait expired and the client never heard a
+	simulation instruction again for the whole session. Either way the
+	existence of the engine's own channel was hostage to how long a game's
+	world took to build.
+
+	Wiring at load makes the remotes exist as soon as anything requires
+	`Forge.Netcode`, which on the server is during the first line of the
+	bootstrap. Still idempotent, because `define` also calls it.
+]]
 function Netcode.wire()
 	if wired then
 		return
@@ -729,5 +752,13 @@ if IS_SERVER then
 		rtt[player] = nil
 	end)
 end
+
+--[[
+	Wire at load.
+
+	The channel must not depend on a game reaching its own netcode setup: the
+	server has to own these remotes before any client asks for one.
+]]
+Netcode.wire()
 
 return Netcode

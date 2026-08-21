@@ -311,6 +311,7 @@ function Arena.start()
 	local spawn = World.surface(0, 0)
 	Arena.spawnPoint = (spawn or Vector3.new(0, 34, 0)) + Vector3.new(0, 4, 0)
 
+	Arena.placeSpawn(props)
 	Arena.markForReview(props)
 
 	Debug.probe("arena", function()
@@ -324,6 +325,45 @@ function Arena.start()
 	end)
 
 	Debug.info(string.format("arena ready in %.1fs (%d rocks, %d plants)", os.clock() - t0, placed, planted))
+end
+
+--[[
+	A real SpawnLocation, on the ground the fight happens on.
+
+	This game placed players by code — `PivotTo` on the character, at a point
+	the arena computed — and never created one. It works, and it is invisible
+	to everything that is not this game: Roblox itself, any validator, and any
+	tool that asks where a player enters. The release run measured zero spawns
+	and could say nothing at all about navigation as a result, because "can a
+	player reach the objective" has no meaning without a place they start.
+
+	Neutral team and no forcefield: this is an arena, and a spawn that hands
+	out ten seconds of invulnerability is a spawn people camp.
+]]
+function Arena.placeSpawn(parent: Instance)
+	local existing = parent:FindFirstChild("ArenaSpawn")
+	if existing then
+		existing:Destroy()
+	end
+
+	local spawn = Instance.new("SpawnLocation")
+	spawn.Name = "ArenaSpawn"
+	spawn.Size = Vector3.new(12, 1, 12)
+	-- Sunk half a stud so it reads as part of the floor rather than a slab
+	-- dropped on top of it.
+	spawn.CFrame = CFrame.new(Arena.spawnPoint - Vector3.new(0, 4.5, 0))
+	spawn.Anchored = true
+	spawn.CanCollide = true
+	spawn.Neutral = true
+	spawn.Duration = 0
+	spawn.Color = Color3.fromRGB(196, 202, 214)
+	spawn.Material = Enum.Material.Slate
+	spawn.TopSurface = Enum.SurfaceType.Smooth
+	spawn.Parent = parent
+
+	Debug.info(string.format("spawn placed at %d, %d, %d",
+		Arena.spawnPoint.X, Arena.spawnPoint.Y, Arena.spawnPoint.Z))
+	return spawn
 end
 
 --[[
@@ -392,6 +432,14 @@ function Arena.markForReview(props: Instance)
 	local rocks, plants = 0, 0
 	for _, child in props:GetChildren() do
 		if child == ring or child == floor then
+			continue
+		end
+		if child:IsA("SpawnLocation") then
+			-- Functional, not scenery. Counted as a prop it would move every
+			-- density number the visual spec computes, and the spawn is the
+			-- one part of this world that is there for a rule rather than a
+			-- picture.
+			Mark.exclude(child)
 			continue
 		end
 		if child.Name == "Rock" then

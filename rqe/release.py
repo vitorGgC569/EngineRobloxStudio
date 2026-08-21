@@ -8,6 +8,7 @@ fixture.
 from __future__ import annotations
 
 import json
+import time
 import subprocess
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -407,6 +408,40 @@ def _needs_play_session(project: Project, visual_spec: Any) -> bool:
     return False
 
 
+def _wait_for_a_player(bridge: StudioBridge, command_errors: list[dict[str, Any]],
+                      timeout: float = 300.0) -> bool:
+    """Wait until somebody is standing in the game before measuring it.
+
+    A session exists the moment F5 lands; the game does not. A Forge place
+    writes terrain, scatters a world and starts its systems before it lets
+    anyone in, and measuring the instant the bridge connects photographs an
+    empty Workspace — sixteen instances, no SpawnLocation, and a navigation
+    probe that can say nothing because there is nowhere to start. Every one of
+    those read as a failing game rather than as an early look.
+
+    A player with a character is the readiness signal, and it is the same one
+    the scenarios use, so the measurement and the scenarios describe the same
+    moment instead of two different ones.
+    """
+    deadline = time.monotonic() + timeout
+    last: str | None = None
+    while time.monotonic() < deadline:
+        try:
+            bridge.actor_attach(None)
+            return True
+        except Exception as exc:  # noqa: BLE001
+            last = str(exc)
+            time.sleep(2.0)
+
+    command_errors.append({
+        "code": "E_NO_PLAYER",
+        "message": f"no player had a character within {timeout:.0f}s; "
+                   "the measurement describes a world that is still being built",
+        "lastError": (last or "")[:200],
+    })
+    return False
+
+
 def _play_session(bridge: StudioBridge, expected_place: str) -> dict[str, Any] | None:
     """The play-session half of a Studio that is running the release build.
 
@@ -625,6 +660,7 @@ def _execute_release_attempt(
                             if play is not None:
                                 bridge.pinned_session = str(play["session"])
                                 played_first = True
+                                _wait_for_a_player(bridge, command_errors)
 
                 try:
                     observation = measure_place(

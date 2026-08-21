@@ -187,6 +187,10 @@ end
 	A server never hears its own shout — Roblox delivers it back, and a handler
 	that acts on its own message double-counts everything.
 ]]
+--: Topics whose subscription is in flight, so a second caller does not start
+--: a second one while the first is still waiting on the service.
+local subscribing: { [string]: boolean } = {}
+
 function Cluster.on(topic: string, fn: (payload: any, from: string) -> ()): () -> ()
 	if not serverOnly("on") then
 		return function() end
@@ -195,7 +199,28 @@ function Cluster.on(topic: string, fn: (payload: any, from: string) -> ()): () -
 	handlers[topic] = handlers[topic] or {}
 	table.insert(handlers[topic], fn)
 
-	if not subscriptions[topic] then
+	--[[
+		Subscribe off the bootstrap path, never on it.
+
+		`SubscribeAsync` yields, and on a place that is not published it does
+		not fail quickly — it waits. Called inline this stopped a game's whole
+		server bootstrap dead: the world was built, the systems were up, and
+		the line after this one never ran, so `CharacterAutoLoads` was never
+		re-enabled and no player ever got a body. From the outside it looked
+		like a game with no characters and no error.
+
+		A `pcall` was already here and did nothing about it: it catches a
+		failure and has no opinion about a call that simply does not return.
+
+		The handler is registered above, synchronously, so the API contract
+		holds the instant this returns. The transport catches up when it can,
+		and a game that never gets one still runs — it just does not hear from
+		other servers, which is the correct behaviour for a place that has no
+		other servers.
+	]]
+	if not subscriptions[topic] and not subscribing[topic] then
+		subscribing[topic] = true
+		task.spawn(function()
 		local ok, connection = pcall(function()
 			return MessagingService:SubscribeAsync(topic, function(message)
 				local data = message.Data
@@ -212,6 +237,7 @@ function Cluster.on(topic: string, fn: (payload: any, from: string) -> ()): () -
 				end
 			end)
 		end)
+		subscribing[topic] = nil
 		if ok and connection then
 			subscriptions[topic] = connection
 		else
@@ -219,6 +245,7 @@ function Cluster.on(topic: string, fn: (payload: any, from: string) -> ()): () -
 			warn(string.format("[Cluster] could not subscribe to '%s': %s",
 				topic, tostring(connection)))
 		end
+		end)
 	end
 
 	return function()

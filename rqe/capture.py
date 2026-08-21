@@ -208,7 +208,22 @@ class Win32CaptureBackend:
         finally:
             if attached:
                 self.user32.AttachThreadInput(foreground_thread, current_thread, False)
-        time.sleep(0.25)
+
+        # Retried, because one refusal is not a verdict. Whether Windows grants
+        # the change depends on what the desktop is doing at that instant, and
+        # a Studio busy running a game is often slow to come forward.
+        for _ in range(6):
+            time.sleep(0.25)
+            current = self.foreground()
+            if current is not None and current.hwnd == window.hwnd:
+                return
+            self.user32.keybd_event(0x12, 0, 0, 0)
+            self.user32.keybd_event(0x12, 0, 0x0002, 0)
+            self.user32.AllowSetForegroundWindow(-1)   # ASFW_ANY
+            self.user32.ShowWindow(window.hwnd, 9)     # SW_RESTORE
+            self.user32.SetForegroundWindow(window.hwnd)
+            self.user32.SwitchToThisWindow(window.hwnd, True)
+
         current = self.foreground()
         if current is None or current.hwnd != window.hwnd:
             raise RuntimeError("Windows refused to focus the selected Roblox Studio window")
@@ -346,6 +361,60 @@ def _camera_response(bridge: StudioBridge, method: str, params: dict[str, Any], 
     result = response.unwrap()
     if not isinstance(result, dict):
         raise RuntimeError(f"{method} returned no structured camera state")
+
+    # [[
+    #     A viewport is a client fact.
+    #
+    #     `camera.get` reads `workspace.CurrentCamera.ViewportSize` in whatever
+    #     context answers, and on a server that is (1, 1) — there is no screen.
+    #     Every capture taken during a play session therefore measured a
+    #     one-pixel viewport, failed the resolution check, and produced a set
+    #     marked untrustworthy with a visual score of zero.
+    #
+    #     So when the answer is the server's placeholder, the real one is asked
+    #     of the client half. Best effort: a failure here leaves the
+    #     placeholder in place and the integrity check still refuses it, which
+    #     is the correct outcome when nobody could say what the viewport was.
+    # ]]
+    # [[
+    #     A (1, 1) viewport is never a real screen.
+    #
+    #     It is what `Camera.ViewportSize` returns where there is nothing to
+    #     draw on — a server. Every capture taken during a play session
+    #     therefore measured a one-pixel viewport and failed the resolution
+    #     check, so the real one is asked of the client half instead.
+    #
+    #     Applied to the pose nested under `camera.set`'s result as well as to
+    #     the top level. Fixing only one of them is worse than fixing neither:
+    #     `_same_pose` compares the viewport too, so a requested framing
+    #     carrying (1, 1) against a measured pose carrying the true size reads
+    #     as "the camera moved" when nothing moved at all.
+    # ]]
+    def _repair(pose: dict[str, Any]) -> None:
+        if pose.get("viewportSize") != [1, 1]:
+            return
+        pose["viewportAskedFrom"] = response.context
+        try:
+            viewport = bridge.call("client.viewport", {}, timeout=timeout)
+        except Exception as exc:  # noqa: BLE001
+            # Recorded rather than swallowed. A silent fallback leaves a
+            # one-pixel viewport in the evidence and no trace of why, which is
+            # the shape of failure this pipeline keeps producing.
+            pose["viewportError"] = f"{type(exc).__name__}: {exc}"[:200]
+            return
+        if isinstance(viewport, dict):
+            # `viewport`, which is what that command's own result schema calls
+            # it — not `viewportSize`, which is what `camera.get` calls it.
+            size = viewport.get("viewport")
+            if isinstance(size, list) and len(size) == 2:
+                pose["viewportSize"] = [int(size[0]), int(size[1])]
+                pose["viewportSource"] = "client"
+                pose["deviceClass"] = viewport.get("deviceClass")
+
+    _repair(result)
+    nested = result.get("camera")
+    if isinstance(nested, dict):
+        _repair(nested)
     return result, response
 
 
@@ -475,6 +544,18 @@ def capture(
             shot.camera_before, before_response = _camera_response(bridge, "camera.get", {})
         except (BridgeError, RuntimeError, ValueError) as exc:
             issues.append(f"camera.get before capture failed: {exc}")
+
+    # Re-assert the focus immediately before the picture.
+    #
+    # `focus` ran several bridge round trips ago — reading the camera, and
+    # asking the client for its viewport — and seconds are long enough for
+    # something else to come forward. The assertion below is what guarantees
+    # the photograph is of Studio rather than of whatever replaced it, so the
+    # window is brought back right next to it rather than hopefully earlier.
+    try:
+        capture_backend.focus(selected)
+    except RuntimeError as exc:
+        issues.append(f"focus before capture: {exc}")
 
     shot.foreground_before = capture_backend.foreground()
     if shot.foreground_before is None or shot.foreground_before.hwnd != selected.hwnd:

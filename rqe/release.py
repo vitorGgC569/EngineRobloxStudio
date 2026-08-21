@@ -8,6 +8,7 @@ fixture.
 from __future__ import annotations
 
 import json
+import time
 import subprocess
 from dataclasses import dataclass
 from datetime import datetime, timezone
@@ -16,6 +17,7 @@ from typing import Any
 
 from .contract import validate_contract
 from .hub.client import StudioBridge
+from .hub.lifecycle import restart_for_bridge, start_play_solo
 from .measurement_plan import MeasurementPlan, compile_measurement_plan
 from .models import Evidence
 from .observe import Observation, measure_place
@@ -384,6 +386,96 @@ def _matching_live_session(bridge: StudioBridge, expected_place: str) -> dict[st
     return matches[0]
 
 
+def _needs_play_session(project: Project, visual_spec: Any) -> bool:
+    """Does any evaluation state declare that it needs a real Player?
+
+    Read from the scenarios themselves rather than assumed, so a spec whose
+    states are all satisfiable headlessly never pays for a Play Solo it does
+    not need.
+    """
+    for state in visual_spec.data.get("evaluationStates", {}).values():
+        relative = str((state or {}).get("scenario") or "")
+        if not relative:
+            continue
+        path = project.root / relative
+        try:
+            scenario = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            continue
+        requires = scenario.get("requires")
+        if isinstance(requires, dict) and requires.get("playSession") is True:
+            return True
+    return False
+
+
+def _wait_for_a_player(bridge: StudioBridge, command_errors: list[dict[str, Any]],
+                      timeout: float = 300.0) -> bool:
+    """Wait until somebody is standing in the game before measuring it.
+
+    A session exists the moment F5 lands; the game does not. A Forge place
+    writes terrain, scatters a world and starts its systems before it lets
+    anyone in, and measuring the instant the bridge connects photographs an
+    empty Workspace — sixteen instances, no SpawnLocation, and a navigation
+    probe that can say nothing because there is nowhere to start. Every one of
+    those read as a failing game rather than as an early look.
+
+    A player with a character is the readiness signal, and it is the same one
+    the scenarios use, so the measurement and the scenarios describe the same
+    moment instead of two different ones.
+    """
+    deadline = time.monotonic() + timeout
+    last: str | None = None
+    while time.monotonic() < deadline:
+        try:
+            bridge.actor_attach(None)
+            return True
+        except Exception as exc:  # noqa: BLE001
+            last = str(exc)
+            time.sleep(2.0)
+
+    command_errors.append({
+        "code": "E_NO_PLAYER",
+        "message": f"no player had a character within {timeout:.0f}s; "
+                   "the measurement describes a world that is still being built",
+        "lastError": (last or "")[:200],
+    })
+    return False
+
+
+def _play_session(bridge: StudioBridge, expected_place: str) -> dict[str, Any] | None:
+    """The play-session half of a Studio that is running the release build.
+
+    Play Solo adds a second connection in a `server` context alongside the
+    edit one, and the scenarios need that one. Matched on the place name as
+    well as the context, so a Studio running something else can never be
+    mistaken for this build.
+    """
+    sessions = bridge.status().get("sessions", [])
+
+    #: A play session does not carry the file name.
+    #:
+    #: Its place is the DataModel's name — "Game" for an unpublished build —
+    #: so matching it the way the edit session is matched finds nothing and
+    #: silently leaves the scenarios in the headless context they cannot run
+    #: in. That was invisible: no error, just a category at zero.
+    #:
+    #: So the anchor is the edit session, which does carry the file name. If
+    #: this Studio is demonstrably open on the release build, the one running
+    #: session beside it is that build running. Anything less certain — no
+    #: edit session on the expected place, or more than one running session —
+    #: returns nothing and fails closed.
+    edit = [item for item in sessions
+            if str((item.get("place") or {}).get("name")) == expected_place]
+    if not edit:
+        return None
+
+    running = [item for item in sessions
+               if str(item.get("context")) in {"server", "client"}]
+    if len(running) != 1:
+        return None
+    return running[0]
+
+
 def _execute_release_attempt(
     project: Project,
     run: RunArtifacts,
@@ -464,7 +556,49 @@ def _execute_release_attempt(
     if not static_only:
         bridge = StudioBridge(hub_url)
         try:
+            #: Decided before Studio is launched, because it changes how.
+            needs_play = _needs_play_session(project, visual_spec)
+
             session = _matching_live_session(bridge, place.name)
+            if session is None:
+                # Open the build this run just made.
+                #
+                # The place is named after the run id, and a run id is unique by
+                # construction, so no Studio session can already be running it:
+                # the match could only ever fail. Requiring an operator to have
+                # opened a file whose name the run invents a moment later made
+                # runtime evidence unreachable, and every release therefore
+                # blocked with every category at zero coverage — which reads as
+                # a failing game and means "nobody looked".
+                #
+                # Opening it here does not weaken the check. The session is
+                # still matched by name afterwards, so a Studio that failed to
+                # start, or started on something else, still fails closed.
+                try:
+                    restart_for_bridge(
+                        place,
+                        project.root / ".rqe" / "studio-archive",
+                        bridge=bridge,
+                        wait_seconds=240.0,
+                        # Minimised by default, because Studio taking the
+                        # screen during a release run is rude. But Play Solo
+                        # cannot be started without focus — Studio ignores
+                        # synthesised key messages — and a minimised window
+                        # has no composited surface to photograph either. So a
+                        # run that needs a player needs the screen, and the
+                        # alternative is a silent zero in every visual
+                        # category.
+                        background=not needs_play,
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    command_errors.append({
+                        "code": "E_STUDIO_LAUNCH",
+                        "message": f"could not open the release build in Studio: {exc}",
+                        "expectedPlace": place.name,
+                    })
+                else:
+                    session = _matching_live_session(bridge, place.name)
+
             if session is None:
                 available = [
                     (item.get("place") or {}).get("name")
@@ -479,16 +613,65 @@ def _execute_release_attempt(
             else:
                 bridge.pinned_session = str(session["session"])
                 observation: Observation | None = None
+
+                # [[
+                #     When a player is needed, play *first* and measure that.
+                #
+                #     `run.start` is `RunService:Run()`, which runs the game's
+                #     scripts inside the **edit** DataModel. Stopping it does
+                #     not undo them: every part the world generator made is
+                #     still there. Starting Play Solo afterwards therefore
+                #     began from a world that had already been built once, the
+                #     game built it again, and the visual spec refused the
+                #     result with "viewpoint requires exactly one landmark,
+                #     measured 2". Two arenas, and nothing named the cause.
+                #
+                #     A play session brings the world to life just as well, so
+                #     when the scenarios need a player there is no reason to
+                #     run it twice. The measurement then describes the session
+                #     the scenarios and the captures actually use, which it
+                #     should have done all along.
+                # ]]
+                played_first = False
+                if needs_play:
+                    try:
+                        report = start_play_solo(bridge, wait_seconds=180.0, restart=True)
+                    except Exception as exc:  # noqa: BLE001
+                        command_errors.append({
+                            "code": "E_PLAY_SOLO",
+                            "message": f"could not start Play Solo: {exc}",
+                        })
+                    else:
+                        client_bridge = report.get("clientBridge")
+                        if isinstance(client_bridge, dict) and not client_bridge.get("ok"):
+                            command_errors.append({
+                                "code": "E_CLIENT_BRIDGE",
+                                "message": str(client_bridge.get("error")
+                                               or "the client half was not installed"),
+                            })
+                        if not report.get("started"):
+                            command_errors.append({
+                                "code": "E_PLAY_SOLO",
+                                "message": "Play Solo did not produce a session",
+                                "report": report,
+                            })
+                        else:
+                            play = _play_session(bridge, place.name)
+                            if play is not None:
+                                bridge.pinned_session = str(play["session"])
+                                played_first = True
+                                _wait_for_a_player(bridge, command_errors)
+
                 try:
                     observation = measure_place(
                         bridge,
                         project,
                         run_id=run.run_id,
-                        start_run=True,
+                        start_run=not played_first,
                         stop_after=False,
                     )
                     artifact_assembler.record_observation(observation)
-                    if observation.measurements.get("runStart") is not None:
+                    if played_first or observation.measurements.get("runStart") is not None:
                         try:
                             response = bridge.call_response(
                                 "product.identity", {}, timeout=20
@@ -510,6 +693,108 @@ def _execute_release_attempt(
                             })
 
                         active_session = str(bridge.pinned_session or "")
+                        scenario_context = observation.context
+                        capture_place = place.name
+
+                        # Give the scenarios the player they ask for.
+                        #
+                        # `measure_place` starts the world with `run.start`,
+                        # which is real physics and real navigation and no
+                        # Player at all. A scenario that declares
+                        # `requires.playSession` is then refused with "pinned
+                        # Studio context is 'run'", every viewpoint loses its
+                        # PASS state, and the capture set is rejected — so a
+                        # release blocks on visual evidence that was never
+                        # allowed to be gathered.
+                        #
+                        # Play Solo is the only way to get a Player, and it is
+                        # started only when a scenario actually asked for one:
+                        # it takes the screen for a moment, and paying that
+                        # cost when nothing needs it would be rude.
+                        if played_first:
+                            scenario_context = str(observation.context or "server")
+                            capture_place = str(
+                                (_play_session(bridge, place.name) or {})
+                                .get("place", {}).get("name") or place.name)
+
+                        if needs_play and not played_first and scenario_context == "run":
+                            play_report: dict[str, Any] | None = None
+                            try:
+                                # `restart=True`, because `measure_place` has
+                                # already put Studio into Run mode and a
+                                # session that is already running swallows the
+                                # F5. The run has to be stopped before Play
+                                # Solo can start, which is the one part of
+                                # this that cannot be scripted any other way.
+                                play_report = start_play_solo(
+                                    bridge, wait_seconds=180.0, restart=True)
+                            except Exception as exc:  # noqa: BLE001
+                                command_errors.append({
+                                    "code": "E_PLAY_SOLO",
+                                    "message": f"could not start Play Solo: {exc}",
+                                })
+
+                            # `start_play_solo` reports rather than raises.
+                            #
+                            # It returns `started: False` when the keystroke
+                            # landed nowhere, and catching only exceptions made
+                            # that indistinguishable from success — the run
+                            # carried on in the headless context, the scenarios
+                            # were refused, and the reason never reached the
+                            # log. Its own account of the attempt is recorded
+                            # here whatever happened, because the whole
+                            # difference between a diagnosable failure and a
+                            # mystery is whether the thing that failed said so.
+                            # The client half is what every `client.*` command
+                            # rides on — viewport, GUI, player state. When it
+                            # is missing the failures surface as timeouts on
+                            # whatever asked first, naming the symptom and
+                            # never the cause, so its own verdict is recorded
+                            # here even when Play Solo otherwise succeeded.
+                            client_bridge = (play_report or {}).get("clientBridge")
+                            if isinstance(client_bridge, dict) and not client_bridge.get("ok"):
+                                command_errors.append({
+                                    "code": "E_CLIENT_BRIDGE",
+                                    "message": str(client_bridge.get("error")
+                                                   or "the client half was not installed"),
+                                    "detail": client_bridge.get("detail"),
+                                })
+
+                            if play_report is not None and not play_report.get("started"):
+                                command_errors.append({
+                                    "code": "E_PLAY_SOLO",
+                                    "message": "Play Solo did not produce a session",
+                                    "report": play_report,
+                                })
+
+                            if play_report is not None and play_report.get("started"):
+                                play = _play_session(bridge, place.name)
+                                if play is not None:
+                                    bridge.pinned_session = str(play["session"])
+                                    active_session = str(play["session"])
+                                    scenario_context = str(play.get("context") or "server")
+                                    # [[
+                                    #    A running session identifies itself by
+                                    #    DataModel, not by file.
+                                    #
+                                    #    Its place is "Game" for an unpublished
+                                    #    build, so the capture's identity check
+                                    #    compared the release file name against
+                                    #    it and refused every shot — a set with
+                                    #    no shots, marked untrustworthy, and a
+                                    #    visual score of zero.
+                                    #
+                                    #    Nothing is loosened by following it.
+                                    #    `_play_session` only returns a session
+                                    #    when this Studio also holds an edit
+                                    #    session on the expected file, so the
+                                    #    build is already established; this
+                                    #    just names the same DataModel the way
+                                    #    the running half names it.
+                                    # ]]
+                                    capture_place = str(
+                                        (play.get("place") or {}).get("name") or place.name)
+
                         execute_quality_snapshot(
                             artifact_assembler,
                             bridge,
@@ -522,7 +807,7 @@ def _execute_release_attempt(
                             bridge,
                             visual_spec,
                             session_id=active_session,
-                            context=observation.context,
+                            context=scenario_context,
                             place_name=place.name,
                         )
                         try:
@@ -531,7 +816,7 @@ def _execute_release_attempt(
                                 bridge,
                                 visual_spec,
                                 build_path=place,
-                                expected_place=place.name,
+                                expected_place=capture_place,
                                 session_id=active_session,
                                 state_outcomes=state_outcomes,
                             )

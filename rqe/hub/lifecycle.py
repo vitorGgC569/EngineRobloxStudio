@@ -316,6 +316,34 @@ def _focus_studio() -> tuple[Any, int, str]:
         time.sleep(0.6)
 
     if user32.GetForegroundWindow() != hwnd:
+        # [[
+        #     Release the foreground lock, then ask again.
+        #
+        #     Windows refuses `SetForegroundWindow` from a process that does
+        #     not own the foreground, and the lock only clears on input. A
+        #     synthesised ALT press and release counts: it is the documented
+        #     way to reset the foreground lock timeout, and it costs nothing
+        #     because ALT alone does nothing to Studio.
+        #
+        #     Retried rather than tried once. Whether this succeeds depends on
+        #     what else the desktop is doing at that instant, and the whole
+        #     release pipeline — Play Solo, and therefore every runtime and
+        #     visual measurement — hangs off it. One refusal is not evidence
+        #     that it cannot be done.
+        # ]]
+        VK_MENU = 0x12
+        for _ in range(6):
+            user32.keybd_event(VK_MENU, 0, 0, 0)
+            user32.keybd_event(VK_MENU, 0, 2, 0)
+            user32.AllowSetForegroundWindow(-1)   # ASFW_ANY
+            user32.ShowWindow(hwnd, 9)            # SW_RESTORE
+            user32.SetForegroundWindow(hwnd)
+            user32.SwitchToThisWindow(hwnd, True)
+            time.sleep(0.5)
+            if user32.GetForegroundWindow() == hwnd:
+                break
+
+    if user32.GetForegroundWindow() != hwnd:
         raise RuntimeError(
             "could not bring Roblox Studio to the foreground; Windows refused the focus change. "
             "Click the Studio window once, or run this while Studio is already focused."
@@ -334,6 +362,94 @@ def stop_play_solo(bridge: Any | None = None, wait_seconds: float = 30.0) -> dic
     if os.name != "nt":
         raise RuntimeError("Play Solo automation is implemented for Windows only")
 
+    # [[
+    #    Stop a simulation the way it was started.
+    #
+    #    Shift+F5 ends a *Play* session. It does nothing at all to one started
+    #    by `RunService:Run()` through the bridge, which is what `run.start`
+    #    does and what every measurement pass leaves behind — so this returned
+    #    `stopped: false`, `bridge.install_client` was then refused for
+    #    "context run", the F5 that followed was swallowed by the still-running
+    #    simulation, and Play Solo never began. Four symptoms, one cause, none
+    #    of them naming it.
+    #
+    #    So a `run` context is stopped over the bridge and only a real play
+    #    session gets the keystroke. Best effort: if the command fails the
+    #    keystroke below is still worth sending.
+    # ]]
+    running_headless = False
+    if bridge is not None:
+        try:
+            running_headless = any(
+                item.get("context") == "run"
+                for item in bridge.status().get("sessions", [])
+            )
+        except Exception:
+            running_headless = False
+    stopped_over_bridge: Any | None = None
+    if running_headless:
+        try:
+            stopped_over_bridge = bridge.run_stop()
+        except Exception as error:
+            stopped_over_bridge = {"error": str(error)}
+        else:
+            # [[
+            #     Wait for the editor to come back, do not guess at it.
+            #
+            #     `RunService:Stop()` returns before Studio has finished
+            #     restoring the edit DataModel, and that restore *discards*
+            #     what the run touched. Installing the client half two fixed
+            #     seconds later wrote it into a document that was about to be
+            #     thrown away: the channel reported installed, the play session
+            #     started without it, and `client.viewport` timed out saying
+            #     the client half is not running — which was true, and said
+            #     nothing about why.
+            #
+            #     So this waits for an edit-context session to actually be
+            #     there, and gives up after a bounded time rather than looping
+            #     forever on a Studio that never came back.
+            # ]]
+            deadline = time.monotonic() + 30.0
+            while time.monotonic() < deadline:
+                try:
+                    contexts = {item.get("context")
+                                for item in bridge.status().get("sessions", [])}
+                except Exception:
+                    contexts = set()
+                if "edit" in contexts and not (contexts & {"run", "server", "client"}):
+                    break
+                time.sleep(1.0)
+            # A beat more: the session announces itself as soon as the plugin
+            # reconnects, which is a little before the DataModel settles.
+            time.sleep(2)
+
+            # [[
+            #     Re-pin: a session id does not survive stopping the run.
+            #
+            #     The pin exists so consecutive reads cannot mix two
+            #     DataModels, and it is worth having. But Studio tears the
+            #     plugin down with the simulation and reconnects it under a
+            #     *new* id, so every pinned call afterwards answered
+            #     "E_NOT_FOUND: no connected plugin session" — including the
+            #     one that installs the client half. That was reported as an
+            #     instrumentation nicety and swallowed, and surfaced much later
+            #     as `client.viewport` timing out, a one-pixel viewport, an
+            #     untrustworthy capture set and a visual score of zero.
+            # ]]
+            if getattr(bridge, "pinned_session", None):
+                try:
+                    live = [item for item in bridge.status().get("sessions", [])
+                            if item.get("context") == "edit"]
+                except Exception:
+                    live = []
+                if len(live) == 1:
+                    bridge.pinned_session = str(live[0]["session"])
+                else:
+                    # Two editors, or none: pinning to a guess would install
+                    # the client half into the wrong place, which is worse
+                    # than not pinning at all.
+                    bridge.pinned_session = None
+
     user32, _hwnd, title = _focus_studio()
 
     VK_SHIFT, VK_F5 = 0x10, 0x74
@@ -343,6 +459,8 @@ def stop_play_solo(bridge: Any | None = None, wait_seconds: float = 30.0) -> dic
     user32.keybd_event(VK_SHIFT, 0, 2, 0)
 
     result: dict[str, Any] = {"keySent": "Shift+F5", "focusedWindow": title}
+    if stopped_over_bridge is not None:
+        result["runStop"] = stopped_over_bridge
     if bridge is None:
         return result
 
@@ -402,10 +520,49 @@ def start_play_solo(bridge: Any | None = None, wait_seconds: float = 90.0, resta
     # back as a bridge timeout and read like a flaky plugin. Every `client.*`
     # command was unreachable from the manual path -- camera control, GUI
     # clicks, viewport reads, player state.
+    def _client_script_present() -> bool:
+        """Is the LocalScript actually in the place, or only reported to be?
+
+        `bridge.install_client` answers `installed: true` from the DataModel it
+        wrote to, and that is not the same claim as "the play session about to
+        start will run it". Studio restoring the editor after a run, or a
+        second connected session, can leave the report true and the place
+        without it — which surfaces much later as `client.viewport` timing out
+        with "the client half is not installed or not running", three commands
+        away from anything that mentions installing.
+        """
+        try:
+            children = bridge.call(
+                "instance.children",
+                {"path": "StarterPlayer.StarterPlayerScripts"},
+                timeout=20,
+            )
+        except Exception:
+            return False
+        if not isinstance(children, dict):
+            return False
+        return any(
+            str(item.get("name")) == "RQEClientBridge"
+            for item in (children.get("children") or [])
+            if isinstance(item, dict)
+        )
+
     installed: dict[str, Any] | None = None
     if bridge is not None:
         try:
-            installed = {"ok": True, "detail": bridge.call("bridge.install_client", timeout=40)}
+            detail = bridge.call("bridge.install_client", timeout=40)
+            present = _client_script_present()
+            if not present:
+                # One retry, because the common cause is a race with Studio
+                # finishing its restore rather than anything being wrong.
+                time.sleep(3)
+                detail = bridge.call("bridge.install_client", timeout=40)
+                present = _client_script_present()
+            installed = {"ok": present, "verified": present, "detail": detail}
+            if not present:
+                installed["error"] = (
+                    "bridge.install_client reported success but "
+                    "StarterPlayerScripts.RQEClientBridge is not in the place")
         except Exception as error:
             # Reported, not raised. Play Solo without the client half is still
             # worth having -- capture and the server commands work -- and a

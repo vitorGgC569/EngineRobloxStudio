@@ -314,6 +314,29 @@ Examples.of = {
 		}
 	end,
 
+	Reference = function(Forge)
+		local Reference = Forge.Reference
+		--[[
+			The manual, consulted the way an agent would consult it: ask for a
+			shape, then hold a bad number up against it and read the sentence
+			that comes back.
+		]]
+		local brute = Reference.enemy("brute")
+		local bow = Reference.weapon("bow")
+		local complaints = Reference.check("enemy", { health = 7000, damage = 90, speed = 40 })
+		return {
+			bruteHealth = brute.health,
+			bruteHits = brute.health / Reference.frame.playerDamage,
+			bowDamage = bow.damage,
+			-- Three separate things wrong with that enemy, each named.
+			complaints = #complaints,
+			first = complaints[1],
+			-- And nothing wrong with the one the module itself proposes,
+			-- which is the check and the tables agreeing.
+			bruteComplaints = #Reference.check("enemy", brute),
+		}
+	end,
+
 	Examples = function(Forge)
 		-- Self-describing, so `--all` proves the runner itself is reachable.
 		return { available = #Forge.Examples.names() }

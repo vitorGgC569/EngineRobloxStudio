@@ -310,19 +310,62 @@ end
 ]]
 local packCache: { [number]: Instance } = {}
 
+--: Seconds to wait for one pack before falling back. Per pack, not per piece.
+Catalog.loadTimeout = 8
+
+--: Packs that already refused, so a scatter of two hundred pieces pays the
+--: timeout once rather than two hundred times.
+local failedPacks: { [number]: boolean } = {}
+
 local function loadPack(packId: number): Instance?
 	if packCache[packId] then
 		return packCache[packId]
+	end
+	if failedPacks[packId] then
+		return nil
 	end
 	if not Catalog.verifiedPack(packId) then
 		warn(string.format("[Catalog] pack %d is not in the verified list", packId))
 		return nil
 	end
-	local ok, container = pcall(function()
-		return InsertService:LoadAsset(packId)
+	--[[
+		Bounded, because `LoadAsset` does not always come back.
+
+		A `pcall` catches an error and does nothing about a hang, and this
+		hangs: in a play session on an unpublished place the request is
+		refused somewhere that never answers. The whole world generator waited
+		on it — no terrain, no props, no players, and a server that printed
+		its last line and then simply stopped. Nothing in the log said the
+		word "asset".
+
+		Giving up produces the fallback geometry instead, which is the rule
+		this catalogue already lives by: a world with worse rocks is a world,
+		and a world with no rocks is a bug. The failure is cached so the next
+		two hundred pieces do not each pay the timeout.
+	]]
+	local finished, ok, container = false, false, nil
+	task.spawn(function()
+		ok, container = pcall(function()
+			return InsertService:LoadAsset(packId)
+		end)
+		finished = true
 	end)
+
+	local deadline = os.clock() + Catalog.loadTimeout
+	while not finished and os.clock() < deadline do
+		task.wait(0.05)
+	end
+
+	if not finished then
+		warn(string.format(
+			"[Catalog] pack %d did not answer within %.0fs; using fallback geometry",
+			packId, Catalog.loadTimeout))
+		failedPacks[packId] = true
+		return nil
+	end
 	if not ok or not container then
 		warn(string.format("[Catalog] pack %d failed to load: %s", packId, tostring(container)))
+		failedPacks[packId] = true
 		return nil
 	end
 	packCache[packId] = container

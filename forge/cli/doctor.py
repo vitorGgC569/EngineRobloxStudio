@@ -344,6 +344,34 @@ def check_forge_wiring(root: Path, findings: list[Finding]) -> None:
         findings.append(
             Finding("error", str(root), 0, "Save.get is used but Save.start() is never called — no profile will ever load")
         )
+    if "Telemetry." in text and "Telemetry.start" not in text:
+        findings.append(
+            Finding(
+                "error",
+                str(root),
+                0,
+                "Telemetry is used but Telemetry.start() is never called — events "
+                "are counted into a buffer that nothing ever drains",
+            )
+        )
+    # A sink can be registered directly or through one of the engine's ready
+    # made ones. Matching only the direct call flagged both games in this
+    # repository the moment they moved to `dataStoreSink`, which is the check
+    # being wrong rather than the games.
+    registers_sink = any(
+        call in text
+        for call in ("Telemetry.sink", "Telemetry.dataStoreSink", "Telemetry.printSink")
+    )
+    if "Telemetry.event" in text and not registers_sink:
+        findings.append(
+            Finding(
+                "warning",
+                str(root),
+                0,
+                "Telemetry.event is raised but no sink is registered — every event "
+                "is buffered and discarded",
+            )
+        )
     if "Debug.expose" not in text:
         findings.append(
             Finding(

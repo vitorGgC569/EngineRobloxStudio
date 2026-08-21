@@ -1,0 +1,339 @@
+{
+  "$comment": [
+    "Every trap here cost this project real time, and most of them were",
+    "documented in a code comment first. A comment is written for a human who",
+    "opens that file; an agent that has not opened it repeats the mistake.",
+    "This is the same knowledge as data, loaded before writing rather than",
+    "read after breaking.",
+    "",
+    "The author of these comments repeated three of them in a single session",
+    "after writing them, which is the whole argument for this file existing."
+  ],
+  "schemaVersion": 1,
+  "traps": [
+    {
+      "id": "netcode-perform-is-client-only",
+      "symptom": "attempt to call Netcode.perform on the server raises an error",
+      "rule": "Netcode.perform runs only on a client. The server applies; it never predicts.",
+      "why": "A server that predicts is a server rolling back its own authority. The error is the design, not a limitation.",
+      "instead": "Drive commands from the client. On the server, assert with Netcode.simulate and read Netcode.describe().",
+      "modules": [
+        "Netcode"
+      ],
+      "severity": "error"
+    },
+    {
+      "id": "materialvariant-needs-plugin-capability",
+      "symptom": "the current thread cannot write 'BaseMaterial' (lacking capability Plugin)",
+      "rule": "MaterialVariant properties are writable only from a plugin context, which means Studio edit mode, never a running game script.",
+      "why": "A bare assignment throws and takes out every line after it in the same script. This killed an entire client for a cosmetic feature.",
+      "instead": "Author variants into the place file, or go through Capability.set, which records the miss and continues.",
+      "modules": [
+        "Material",
+        "Capability"
+      ],
+      "severity": "error"
+    },
+    {
+      "id": "terrain-decoration-does-not-always-exist",
+      "symptom": "Decoration is not a valid member of Terrain",
+      "rule": "Terrain.Decoration is absent on some Roblox builds, including 0.735.",
+      "why": "Sky.install was a straight run of property writes, so one missing property aborted the water settings that followed it. The world merely looked slightly wrong.",
+      "instead": "Capability.set for anything optional. A missing property should cost you that property, not the rest of the function.",
+      "modules": [
+        "Visual",
+        "Capability"
+      ],
+      "severity": "error"
+    },
+    {
+      "id": "stepped-runs-after-renderstepped",
+      "symptom": "a pose written every frame is silently replaced by another system's",
+      "rule": "Per frame the order is RenderStepped, then Stepped, then Heartbeat. Whatever writes last wins.",
+      "why": "IK.footPlant ran on Stepped and overwrote the animator's pose from RenderStepped, replacing the walk cycle with a static crouch. It reads as a freeze, not as an ordering bug.",
+      "instead": "Compose with the joint's current value rather than with a captured rest pose, and know which step you are on.",
+      "modules": [
+        "IK",
+        "Anim",
+        "Camera"
+      ],
+      "severity": "error"
+    },
+    {
+      "id": "yielding-during-require-kills-the-script",
+      "symptom": "ModuleScript cannot resume non-suspended awaiting coroutine",
+      "rule": "Nothing may yield at a module's top level. Net.on resolves its remote with WaitForChild, which yields.",
+      "why": "The require suspends, the lazy module loader is re-entered while it is suspended, and Roblox refuses. The entire script dies at its first require, far from the cause.",
+      "instead": "Wrap it in a function, or task.defer it. On a server that creates its own remotes the wait returns immediately and is safe.",
+      "modules": [
+        "Net",
+        "Netcode"
+      ],
+      "severity": "error"
+    },
+    {
+      "id": "remotes-are-created-only-on-the-server",
+      "symptom": "a client listener never fires, with no error",
+      "rule": "Net.define instantiates RemoteEvents on the server only. A client asking earlier waits, then fails.",
+      "why": "The netcode channel was created inside a game's own setup, which on the server runs after terrain generation. The client asked first and gave up after twenty seconds.",
+      "instead": "Define shared channels at module load, not inside a system that starts late.",
+      "modules": [
+        "Net",
+        "Netcode"
+      ],
+      "severity": "error"
+    },
+    {
+      "id": "r15-players-use-animationconstraint",
+      "symptom": "an animator resolves zero joints and the character slides with no animation",
+      "rule": "Roblox's current R15 player rig joints are AnimationConstraint, not Motor6D. Motor6D animates by writing C0; AnimationConstraint by writing Transform.",
+      "why": "Anim looked for Motor6D only, so every clip in the engine was a no-op on the one character a person controls, while code-built NPCs beside them moved correctly.",
+      "instead": "Handle both classes, and capture each joint's rest pose — writing a bare rotation into Transform detaches the limb.",
+      "modules": [
+        "Anim",
+        "Rig"
+      ],
+      "severity": "error"
+    },
+    {
+      "id": "the-humanoid-animator-overwrites-joints",
+      "symptom": "joints reset to rest every frame no matter what is written",
+      "rule": "The Humanoid's Animator re-evaluates and resets constraint joints every frame. No render priority is late enough to beat it.",
+      "why": "Measured: with the Animator present, 30 of 30 samples read identity; with it removed, 30 of 30 carried the pose.",
+      "instead": "Rig.stripDefaultAnimate destroys it. The trade-off is that the character can no longer play Roblox AnimationTracks.",
+      "modules": [
+        "Rig",
+        "Anim"
+      ],
+      "severity": "error"
+    },
+    {
+      "id": "slicing-a-single-member-group-does-nothing",
+      "symptom": "a system runs at a quarter of its configured rate with no change in peak cost",
+      "rule": "Sched slices *members* across frames. Slicing a group with one member that loops internally skips it, it does not spread it.",
+      "why": "Actor had one member iterating every actor and four slices, so brains ran at 2Hz instead of 8Hz for an identical peak frame cost. Enemies walked, arrived, stopped and waited.",
+      "instead": "Slice many members, or register one member per subject. With a single member, use one slice.",
+      "modules": [
+        "Actor",
+        "Core"
+      ],
+      "severity": "warning"
+    },
+    {
+      "id": "movto-stops-on-arrival",
+      "symptom": "an actor chasing a moving target walks, stops, waits, walks",
+      "rule": "Humanoid:MoveTo walks to a point and stops there, and its own timeout is eight seconds.",
+      "why": "An actor re-issued a destination only at brain rate, so it arrived at where the player used to be and stood still until the next decision.",
+      "instead": "Re-issue the destination on a faster tick, or use Nav.follow, which does it and repaths.",
+      "modules": [
+        "Actor",
+        "Nav"
+      ],
+      "severity": "warning"
+    },
+    {
+      "id": "scatter-callbacks-parent-they-do-not-return",
+      "symptom": "a scatter reports placements and the world is empty, with no error",
+      "rule": "World.scatter hands its callback a position and expects the callback to put something in the world.",
+      "why": "A callback that returns its model instead leaves every rock and plant orphaned: created, counted, and parented to nothing.",
+      "instead": "Set model.Parent inside the callback.",
+      "modules": [
+        "World"
+      ],
+      "severity": "error"
+    },
+    {
+      "id": "dm-properties-answers-only-what-it-is-asked",
+      "symptom": "reading a StringValue through the bridge returns no Value",
+      "rule": "dm.properties returns a generic property set unless the request names the fields it wants.",
+      "why": "A caller concluded the command could not read a StringValue at all and routed around it through bridge.exec, which is edit-mode only and cannot read a running game.",
+      "instead": "Name the properties you want: dm.properties with properties: [\"Value\"]. The generic set is a default, not the whole instance, and an absent field means unasked rather than unset.",
+      "modules": [
+        "bridge"
+      ],
+      "severity": "warning"
+    },
+    {
+      "id": "bridge-exec-is-edit-mode-only",
+      "symptom": "loadstring() is not available",
+      "rule": "bridge.exec runs Luau only in Studio's edit context. In a play session it refuses.",
+      "why": "A gameplay suite that spawns Humanoids needs a running game, so it cannot be driven through bridge.exec.",
+      "instead": "Have the game publish a report to a replicated StringValue and read it with dm.properties, which works in every context.",
+      "modules": [
+        "bridge",
+        "Testing"
+      ],
+      "severity": "warning"
+    },
+    {
+      "id": "asset-ids-cannot-be-remembered",
+      "symptom": "Failed to load sound: Asset type does not match requested type",
+      "rule": "An asset id written from memory is almost always wrong, and nothing static will catch it.",
+      "why": "Three separate sets of ids in this project were invented. The rbxasset:// filenames were guessed with equal confidence and equal failure: the client ships eleven sounds and none of the eight guessed names was among them.",
+      "instead": "forge assets verify loads every referenced id in Studio; the doctor refuses any that is not in the registry. forge upload registers a new one only if moderation approves it.",
+      "modules": [
+        "Audio",
+        "Assets"
+      ],
+      "severity": "error"
+    },
+    {
+      "id": "unanchored-rigs-fall-into-the-game",
+      "symptom": "bodies appear from the sky beside the player and vanish",
+      "rule": "Rig.build produces unanchored parts with a Humanoid. Spawning at altitude means falling.",
+      "why": "Test scenarios staged rigs at Y=200 and they landed in the arena next to whoever was playing, then were deleted at cleanup.",
+      "instead": "Anchor what a scenario spawns, and stage it far away laterally. Height is not distance.",
+      "modules": [
+        "Testing",
+        "Rig"
+      ],
+      "severity": "warning"
+    },
+    {
+      "id": "capture-needs-a-composited-window",
+      "symptom": "a screenshot comes back a few kilobytes and is rejected",
+      "rule": "A minimised or occluded Studio window has no composited surface. The capture is not wrong; the window is.",
+      "why": "rqe studio restart launches minimised by default, so every capture failed validation and looked like a broken pipeline for weeks.",
+      "instead": "forge look raises the window, waits for it to paint, then shoots.",
+      "modules": [
+        "capture"
+      ],
+      "severity": "warning"
+    },
+    {
+      "id": "a-scenario-does-not-own-the-globals",
+      "symptom": "a live scenario fails with a count larger than it created",
+      "rule": "In a running game, other systems are using the same registries.",
+      "why": "A Nav leak scenario asserted an absolute agent count and failed with expected 12, got 26 — the game's own enemies are agents too.",
+      "instead": "Measure a delta: read before, act, assert the difference.",
+      "modules": [
+        "Testing"
+      ],
+      "severity": "warning"
+    },
+    {
+      "id": "substring-checks-produce-false-positives",
+      "symptom": "a validator fails on a word that merely contains the forbidden one",
+      "rule": "Word-boundary matching, not substring matching.",
+      "why": "A genre check matched \"obby\" inside \"lobby\" and failed a cross-server destination name. A doctor check for module-level yields flagged 26 lines, nearly all of them the standard require pattern, and would not have caught the real bug.",
+      "instead": "Use \\\\b anchors, and delete a check whose false positives outnumber its true ones.",
+      "modules": [
+        "doctor",
+        "tests"
+      ],
+      "severity": "warning"
+    },
+    {
+      "id": "lua-and-or-is-not-a-ternary",
+      "symptom": "a boolean toggle inverts instead of setting",
+      "rule": "`a and b or c` returns c whenever b is false or nil, regardless of a.",
+      "why": "`force ~= nil and force or not visible` meant toggle(false) toggled rather than closed.",
+      "instead": "Write the if. `a and b or c` yields c whenever b is false or nil, so any expression that can legitimately be false silently takes the wrong branch.",
+      "modules": [
+        "UI"
+      ],
+      "severity": "warning"
+    },
+    {
+      "id": "a-local-cannot-reference-itself",
+      "symptom": "a connection is never disconnected and leaks for the session",
+      "rule": "In `local conn = signal:Connect(function() conn:Disconnect() end)`, the inner `conn` is a nil global.",
+      "why": "It compiles, runs, and silently never disconnects.",
+      "instead": "Declare the local on its own line first.",
+      "modules": [
+        "UI",
+        "Core"
+      ],
+      "severity": "error"
+    },
+    {
+      "id": "functions-defined-inside-functions-do-not-exist-yet",
+      "symptom": "attempt to call a nil value on a function that is plainly defined",
+      "rule": "A function declaration with no body swallows the declarations that follow it as its own contents.",
+      "why": "Netcode.latency had no body, so simulate, broadcastSimulation and resetStats were defined inside it and did not exist until lag compensation ran once. This is the real reason the latency sweep never produced a number, and it type-checked for as long as it existed.",
+      "instead": "Every function gets a body and an end. The doctor's use-before-declare pass catches the common form; this one it did not.",
+      "modules": [
+        "Netcode"
+      ],
+      "severity": "error"
+    },
+    {
+      "id": "r6-has-no-elbow",
+      "symptom": "a clip's forearm or shin tracks silently do nothing",
+      "rule": "R6 has six joints. Elbows, knees, wrists and ankles exist only on R15.",
+      "why": "Anything posed with IK or written against rightForearm is a no-op on an R6 rig, with no warning.",
+      "instead": "Anim.CORE is the six every rig has. Check jointKinds in the animator's describe().",
+      "modules": [
+        "Anim",
+        "IK",
+        "Rig"
+      ],
+      "severity": "warning"
+    },
+    {
+      "id": "field-by-field-copies-drop-what-you-add-later",
+      "symptom": "a field set in content never reaches the builder",
+      "rule": "A named list of fields is a list somebody will forget to update.",
+      "why": "An enemy spec was copied field by field, so `weapon` and `spikes` were configured and never applied. The husks swung daggers they were not holding.",
+      "instead": "Pass the table through, or clone it.",
+      "modules": [
+        "Data",
+        "Rig"
+      ],
+      "severity": "warning"
+    },
+    {
+      "id": "policy-and-filters-must-fail-closed",
+      "symptom": "everything works until a Roblox service has a bad day",
+      "rule": "A permission question that answers yes on failure eventually answers yes to the wrong person; a text filter that falls back to the raw string is not a filter.",
+      "why": "The one day the service is unreachable is the day the most is at stake, and the cost here is regulatory rather than cosmetic.",
+      "instead": "Social.may returns false and Social.filter returns a visible redaction when they cannot reach Roblox.",
+      "modules": [
+        "Social"
+      ],
+      "severity": "error"
+    },
+    {
+      "id": "setasync-loses-concurrent-writes",
+      "symptom": "analytics undercount and grants go missing, with no error anywhere",
+      "rule": "Several servers writing one key with SetAsync means the last one wins and the rest are discarded.",
+      "why": "For analytics it produces numbers that are wrong in a way the numbers cannot reveal; for purchases it is money.",
+      "instead": "UpdateAsync, always, for anything more than one server touches.",
+      "modules": [
+        "Save",
+        "Telemetry",
+        "Monetization",
+        "Cluster"
+      ],
+      "severity": "error"
+    },
+    {
+      "id": "telemetry-sink-without-a-pump",
+      "symptom": "a sink is registered, Telemetry.describe() looks healthy, and the DataStore is empty",
+      "rule": "Telemetry.sink chooses the destination. Telemetry.start is what drains the buffer into it.",
+      "why": "Without start there is no periodic flush, no session events, no error capture and no BindToClose flush. The buffer only empties on its own once it reaches a hundred entries, which a short session never does. Every symptom points at the sink, and the sink is fine.",
+      "instead": "Call Telemetry.start() once on the server. Verify from outside with `forge analytics`: if the datastore does not exist, nothing ever flushed.",
+      "modules": [
+        "Telemetry"
+      ],
+      "severity": "error"
+    },
+    {
+      "id": "instrumentation-that-nobody-reads-is-not-instrumentation",
+      "symptom": "the game has analytics and no one can answer a question about players",
+      "rule": "A write path with no read path is a write path with no value. Build the query at the same time as the sink.",
+      "why": "Telemetry that is written and never read looks exactly like telemetry that works, from every angle inside the game. This project shipped a sink, tested it, and only discovered it had never delivered a single row when something finally asked Roblox for the data.",
+      "instead": "`forge analytics <game>` reads the same store the sink writes. Run it after a real session, not after a test.",
+      "modules": [
+        "Telemetry"
+      ],
+      "severity": "warning"
+    }
+  ],
+  "areas": {
+    "bridge": "the RQE Studio bridge (rqe studio *)",
+    "capture": "the screenshot pipeline (rqe/capture.py, forge look)",
+    "doctor": "the authoring-time checks (forge doctor)",
+    "tests": "the test suites themselves"
+  }
+}

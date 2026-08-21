@@ -56,12 +56,19 @@ def _evidence(name: str, category: str, severity: str, passed: bool | None, mess
 
 
 def run_probes(project: Project, runtime: dict[str, Any], static_scan: dict[str, Any]) -> list[Evidence]:
-    v = project.fixture.get("validation", {})
-    geometry = project.fixture.get("geometry", {})
-    spawn = project.fixture.get("spawn", {})
-    ui = project.fixture.get("ui", {})
-    performance = project.fixture.get("performance", {})
-    network = project.fixture.get("network", {})
+    # A project with no fixture has simply never been measured, and that is a
+    # state the probes must be able to describe rather than crash on. Every
+    # probe below already reports itself as `headless-runtime` /
+    # NOT_VALIDATED, which the release gate refuses as insufficient evidence —
+    # so an unmeasured project reads as "nobody looked", which is the truth,
+    # instead of as a traceback or as a pile of false failures.
+    fixture = project.fixture if isinstance(project.fixture, dict) else {}
+    v = fixture.get("validation", {})
+    geometry = fixture.get("geometry", {})
+    spawn = fixture.get("spawn", {})
+    ui = fixture.get("ui", {})
+    performance = fixture.get("performance", {})
+    network = fixture.get("network", {})
     probes: list[Evidence] = []
 
     samples = geometry.get("groundSupport", {}).get("samples", [])

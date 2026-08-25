@@ -393,3 +393,93 @@ class TestMissionInstance(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+class TestSparseSet(unittest.TestCase):
+    def test_swap_remove_keeps_both_halves_agreeing(self) -> None:
+        """The one way a sparse set corrupts, and it corrupts silently."""
+        out = _run([FORGE / "Core"], """
+            local SparseSet = Require("SparseSet")
+            local set = SparseSet.new()
+            for id = 1, 200 do SparseSet.add(set, id) end
+            for id = 1, 200, 2 do SparseSet.remove(set, id) end
+
+            local report = SparseSet.describe(set)
+            assert(report.count == 100, "count: " .. report.count)
+            assert(report.consistent, "sparse and dense disagree")
+            for id = 2, 200, 2 do
+                assert(SparseSet.has(set, id), "lost " .. id)
+            end
+            print('{"consistent":true}')
+        """)
+        assert "consistent" in out
+
+    def test_adding_twice_does_not_duplicate(self) -> None:
+        out = _run([FORGE / "Core"], """
+            local SparseSet = Require("SparseSet")
+            local set = SparseSet.new()
+            assert(SparseSet.add(set, 7) == true, "first add is new")
+            assert(SparseSet.add(set, 7) == false, "second add is not")
+            assert(SparseSet.size(set) == 1, "size must stay 1")
+            print('{"unique":true}')
+        """)
+        assert "unique" in out
+
+    def test_intersect_walks_the_smaller_set(self) -> None:
+        out = _run([FORGE / "Core"], """
+            local SparseSet = Require("SparseSet")
+            local many, few = SparseSet.new(), SparseSet.new()
+            for id = 1, 1000 do SparseSet.add(many, id) end
+            SparseSet.add(few, 5) SparseSet.add(few, 500) SparseSet.add(few, 9999)
+            local both = SparseSet.intersect(many, few)
+            assert(#both == 2, "expected 2, got " .. #both)
+            print('{"joined":true}')
+        """)
+        assert "joined" in out
+
+
+class TestEconomyAudit(unittest.TestCase):
+    def test_a_wall_in_the_curve_is_named(self) -> None:
+        out = _run([FORGE / "Economy"], """
+            local Audit = Require("Audit")
+            Audit.faucet("kill", { amount = 12, perMinute = 4 })
+            Audit.sink("sword", { price = 500, tier = 1 })
+            Audit.sink("armour", { price = 6000, tier = 2 })
+            local report = Audit.report()
+            local walls = 0
+            for _, note in report.notes do
+                if string.find(note, "longer than the step before") then walls += 1 end
+            end
+            assert(walls == 1, "the eleven-fold jump must be named")
+            print('{"wall":true}')
+        """)
+        assert "wall" in out
+
+    def test_an_economy_with_nothing_to_spend_on_is_named(self) -> None:
+        out = _run([FORGE / "Economy"], """
+            local Audit = Require("Audit")
+            Audit.faucet("kill", { amount = 10, perMinute = 6 })
+            local report = Audit.report()
+            local found = false
+            for _, note in report.notes do
+                if string.find(note, "nothing to spend it on") then found = true end
+            end
+            assert(found, "an economy with no sinks must say so")
+            print('{"noSink":true}')
+        """)
+        assert "noSink" in out
+
+    def test_a_price_in_a_currency_nobody_earns_is_unreachable(self) -> None:
+        out = _run([FORGE / "Economy"], """
+            local Audit = Require("Audit")
+            Audit.sink("relic", { price = 100, currency = "gem", tier = 1 })
+            local report = Audit.report("gem")
+            assert(report.incomePerMinute == 0, "no faucet")
+            local found = false
+            for _, note in report.notes do
+                if string.find(note, "unreachable") then found = true end
+            end
+            assert(found, "must say the currency is unreachable")
+            print('{"unreachable":true}')
+        """)
+        assert "unreachable" in out

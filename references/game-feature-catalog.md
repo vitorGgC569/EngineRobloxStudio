@@ -219,3 +219,66 @@ fonte exata para mineração de implementação.
 12. `PhysicsInteractable` família (rojo) + `DeclarativeWorldBuilder`
 13. `Iso2dEngine` (2d) — pacote isolado
 14. `AccelMove`/FPS kit (lapskaus/quake) — referências
+
+---
+
+# Segunda passagem — o que a primeira deixou (2026-08-21)
+
+A primeira mineração foi densa nos projetos pequenos e rasa nos grandes. Medido
+por menções neste catálogo contra arquivos Luau no projeto:
+
+| Projeto | Arquivos | Menções (1ª passagem) |
+|---|---:|---:|
+| HaloAndHorns | 1594 | 4 |
+| maze-world | 185 | 2 |
+| RPGJECS | 127 | 1 |
+| robloquake | 173 | 7 |
+| vesteria | 419 | 19 |
+| minershaven | 143 | 32 |
+
+É o inverso do que o valor recomenda, e a causa é legível: um projeto de 150
+arquivos se lê inteiro, um de 1594 exige decidir por onde entrar. HaloAndHorns
+sozinho tem **104 serviços** e **87 documentos de design**.
+
+## Extraído nesta passagem
+
+| Origem | Módulo | O que ganhamos |
+|---|---|---|
+| HaloAndHorns `BOOT_ORCHESTRATION.md` | `Core.Boot` | Latch idempotente + grafo de marcos validado. Um `await` de algo já sinalizado retorna na hora — é o que torna o *hang* impossível |
+| HaloAndHorns `ServerClockService` | `Core.Clock` | Dias UTC, semente diária que todo servidor deriva igual, expiração como instante absoluto |
+| HaloAndHorns `TRADE_ESCROW_CRASH_SAFETY.md` | `Save.TransactionJournal` | WAL exatamente-uma-vez. O `holdId` é cunhado uma vez e nunca regenerado — é o primitivo de deduplicação |
+| HaloAndHorns `ModifierPipeline` | `Progression.ModifierPipeline` | Estágios nomeados com modo de combinação, e **trilha de auditoria**: o número e o porquê |
+| HaloAndHorns `AchievementsService` | `Progression.Achievements` | Uma vez na vida, e retroativo — os veteranos não podem ser os únicos que nunca ganham |
+| HaloAndHorns `GlobalEffectsService` | `LiveOps.GlobalEffects` | Efeitos de servidor inteiro, dobrados por eixo em vez de listados |
+| HaloAndHorns `ZoneService` | `World.Areas` | Onde o jogador pode estar, e onde acorda quando a resposta muda |
+| HaloAndHorns `MissionInstanceService` | `Match.MissionInstance` | Várias parties no mesmo conteúdo, num servidor só |
+| HaloAndHorns `AutoTargetService` | `Combat.AutoTarget` | Mira dominando distância — a diferença entre combate que obedece e combate que discute |
+| vesteria `ragdoll_manager` | `Rig.Ragdoll` | `BallSocketConstraint` nos pares de `RigAttachment`, pulando o Root |
+| robloquake `render/viewmodel` | `Camera.Viewmodel` | Arma em `ViewportFrame` com câmera própria — não atravessa parede porque nunca foi testada contra ela |
+| maze-world (Rodux) | `State.Store` + `State.Replication` | Store com reducers e replicação filtrada. Padrão fechado por omissão |
+| BloxAI `economy-audit` | `Economy.Audit` | Torneiras e ralos, e as duas falhas que ninguém vê: a parede e o nada-para-gastar |
+| ecr (sparse sets) | `Core.SparseSet` | Adicionar, remover e iterar em tempo constante, sem GC |
+| StarCode `_CAPTURE_PRESETS` | `forge look` `ANGLES` | Sete ângulos relativos ao assunto em vez de quatro pontos escritos para uma arena |
+
+## Verificado como já coberto
+
+Não são lacunas — a primeira passagem os pegou, ou eles chegam por outro nome:
+
+`RPGJECS`/`matter` → `Entity` já tem query, systems e escalonamento ·
+`YetAnotherNet` → `Net.Serdes`, que se descreve como "YAN-style" ·
+`2d-adventure` → `Iso2D` inteiro, incluindo áudio espacial ·
+`roblox-lapskaus` → `Movement.AccelMove` (mesmo integrador, estilo Source) ·
+`QuickZone` → `Vendor/QuickZone` ·
+`ProfileService` → `Save.ServerProfile` · os dez repos de UI → VisualKit completo ·
+loot/aggro/quest/rotação → `CrateRoll`, `AggroTable`, `QuestEngine`, `Director`
+
+## Achados que não são código
+
+- **`ProfileServiceRoblox` é um clone quebrado.** O submódulo `ProfileSerivce`
+  (com o erro de digitação) está vazio. Não há o que extrair.
+- **O emulador de dispositivo é alcançável.** BloxAI usa `set_device_simulator`
+  de outro MCP. Nossa ponte não tem o comando — mas a ausência é nossa, não da
+  plataforma. É o que hoje impede evidência visual de celular e tablet.
+- **`Roblox_Industrial_Reusability_Architecture.tex`** é o plano original desta
+  extração, com uma matriz de 16 mapeamentos. Quinze estão feitos; o décimo
+  sexto (nove ângulos no plugin) está no lado Python e não no plugin.

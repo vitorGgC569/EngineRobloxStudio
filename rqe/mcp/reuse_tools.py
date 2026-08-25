@@ -220,6 +220,149 @@ Core.Events.onPlayerLeft(function(player)
     GameKit.Save.store(player, snapshot)
 end)''',
     },
+
+    # Mined from the user's own shipped projects; canonical implementations
+    # live under forge/luau/Forge/. The shapes show the essence so an agent
+    # can copy either level.
+
+    "authoritative-debit": {
+        "what": "Atomic multi-currency purchase: validate everything, then debit once.",
+        "why": (
+            "Checking then spending in two steps lets a second remote fire "
+            "between them and spend money twice (bocchi Balance.luau)."
+        ),
+        "source": '''-- Canonical: forge/luau/Forge/Economy/Balance.lua
+local Balance = require(ReplicatedStorage.Forge.Economy.Balance)
+
+local ok, remainder = wallet:debit({ gold = cost.gold, gems = cost.gems or 0 })
+if not ok then
+    return false, "cannot_afford"
+end
+grantItem(player, itemId)   -- only after money actually left''',
+    },
+    "validated-remote": {
+        "what": "Every client->server channel declared with a validator and a rate limit.",
+        "why": (
+            "An undeclared event does not exist and an unthrottled one is an "
+            "exploit amplifier (roblox-infected Remotes.luau)."
+        ),
+        "source": '''-- Canonical: forge/luau/Forge/Net/init.lua (+ Validators / RateLimit siblings)
+Net.define({
+    BuyItem = { dir = "c2s", rate = 4,
+        shape = { shop = "string", item = "string" },
+        check = function(p) return Shops[p.shop] ~= nil end },
+})
+Net.on("BuyItem", function(player, payload) ... end)''',
+    },
+    "grid-placement-proof": {
+        "what": "Client renders the ghost, but the server runs the SAME placement math and decides.",
+        "why": (
+            "A placement UI that trusts its own click hands free items to "
+            "everyone (minershaven PlacementModule)."
+        ),
+        "source": '''-- Canonical: forge/luau/Forge/Tycoon/GridPlacement.lua
+local planner = GridPlacement.new({ cellSize = 3, bounds = plotBounds })
+local snapped = planner:snap(mousePlaneHit)
+local ok, reason = planner:fits(itemId, rotationSteps, snapped)
+if ok then planner:place(placementId, itemId, rotationSteps, snapped) end''',
+    },
+    "hit-window-validation": {
+        "what": "Server accepts a hit only inside animation time +- latency forgiveness, with per-target lockout.",
+        "why": (
+            "Without windows and lockouts every melee becomes a machinegun "
+            "(vesteria manager_damage)."
+        ),
+        "source": '''-- Canonical: forge/luau/Forge/Combat/HitValidator.lua
+local HitValidator = require(...Combat.HitValidator)
+if not HitValidator.withinLatencyWindow(swingTime, os.clock()) then return end
+local allowed = lockout:register(attackerKey, victimKey, os.clock())
+if not allowed then return end  -- multihit refused''',
+    },
+    "hit-resolution-pipeline": {
+        "what": "One ordered pipeline resolves i-frames, blocking, guardbreak, super armor.",
+        "why": (
+            "Scattered ifs across class scripts make two characters obey two "
+            "different combat laws (Fighting-game HitHandler)."
+        ),
+        "source": '''-- Canonical: forge/luau/Forge/Combat/DamagePipeline.lua
+local outcome = DamagePipeline.resolve(move, attackerCtx, victimCtx)
+for _, event in outcome.events do apply(event) end'''
+    },
+    "delta-merge-counters": {
+        "what": "Persist live counters by merging add-only deltas in UpdateAsync; clear deltas after success only.",
+        "why": (
+            "SetAsync-with-total double counts on retry races; delta merge is "
+            "idempotent under retries (robloquake statstore)."
+        ),
+        "source": '''-- Canonical: forge/luau/Forge/Save/DeltaCounter.lua
+counter:add("kills", 1)
+counter:commit(adapter, "player/" .. userId)  -- deltas cleared only on ok=true''',
+    },
+    "streak-calendar": {
+        "what": "Daily rewards keyed to absolute days with streak reset and modular milestones.",
+        "why": (
+            "Local-time or session-based streaks drift; floor(now/86400) does "
+            "not (minershaven DailyRewards)."
+        ),
+        "source": '''-- Canonical: forge/luau/Forge/Progression/DailyRewardCalendar.lua
+local calendar = DailyRewardCalendar.new({ milestones = {...}, cycleLength = 7 })
+local newState, reward, info = calendar:claim(save.daily, os.time())''',
+    },
+    "offline-earnings-cap": {
+        "what": "Pay income for time away, capped in seconds and relative to balance.",
+        "why": (
+            "An uncapped rate turns a weekend offline into infinite money "
+            "(minershaven TimeAway block)."
+        ),
+        "source": '''-- Canonical: forge/luau/Forge/Progression/OfflineEarnings.lua
+local payout = OfflineEarnings.compute(incomePerSec, awaySeconds, {
+    minSeconds = 600, temporalCap = 259200, relativeCapMultiple = 500, currentBalance = bal })''',
+    },
+    "loot-range-roll": {
+        "what": "Loot pool as cumulative weight ranges over one integer space; roll lands in exactly one.",
+        "why": (
+            "Independent percentage tables can drop zero or several items; "
+            "ranges always drop exactly one (minershaven LotteryLib)."
+        ),
+        "source": '''-- Canonical: forge/luau/Forge/LiveOps/Lottery.lua
+pool:add("dust", { weightFn = Lottery.wealthWeight(50, { { above = 1e6, mult = 0.5 } }) })
+pool:add("legendary", { weightFn = function(ctx) return ctx.vip and 3 or 1 end })
+local id = pool:roll(rng, { wealth = cash, vip = isVip })''',
+    },
+    "trade-lock-confirm": {
+        "what": "Trade as offer -> both lock -> both confirm -> exact transfer list.",
+        "why": (
+            "Free-form item swapping lets one side swap contents after the "
+            "other confirmed (vesteria manager_trade)."
+        ),
+        "source": '''-- Canonical: forge/luau/Forge/Social/TradeSession.lua
+session:offer(sideA, myOffer); session:lock(sideA); session:lock(sideB)
+session:confirm(sideA); session:confirm(sideB)
+local transfer = session:result()  -- nil unless both confirmed''',
+    },
+    "trait-ai-hysteresis": {
+        "what": "AI states chosen by weighted traits and held for a minimum dwell before re-rolling.",
+        "why": (
+            "Re-deciding every frame makes crowds jitter between chase/flee "
+            "(RPGJECS mob_brain minDwell=0.45)."
+        ),
+        "source": '''-- Canonical: forge/luau/Forge/AI/TraitBrain.lua
+local brain = TraitBrain.new({ traits = { chaseWeight = 2, detectRange = 40, minDwell = 0.45 } })
+local decision = brain:decide(mobPos, targets, state, now)''',
+    },
+    "proxy-replication": {
+        "what": "Replicate one invisible anchored hitbox per NPC; clients build visuals locally from attributes.",
+        "why": (
+            "150 replicated models per player melts bandwidth; native part "
+            "replication plus attribute metadata is nearly free (RPGJECS)."
+        ),
+        "source": '''-- Server: anchor one Part in workspace.NPC_Hitboxes with attributes
+-- MobType/MobSize; physics carries it. Client:
+hitboxes.ChildAdded:Connect(function(part)
+    local visual = catalog[part:GetAttribute("MobType")]:Clone()
+    visual:PivotTo(part.CFrame); visual.Parent = cameraRoot
+end)''',
+    },
 }
 
 

@@ -1,0 +1,61 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rqe.local/schemas/runtime-product-identity-receipt.v1.schema.json",
+  "title": "RQE Runtime Product Identity Receipt v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema", "schemaVersion", "receiptId", "runId", "buildId", "sessionId",
+    "commandId", "source", "validationLevel", "observedAt", "coverage",
+    "conclusive", "truncated", "measuredIdentity", "artifactHashes"
+  ],
+  "properties": {
+    "$schema": {"type": "string", "minLength": 1},
+    "schemaVersion": {"const": 1},
+    "receiptId": {"$ref": "#/$defs/qualifiedId"},
+    "runId": {"type": "string", "minLength": 1, "maxLength": 200},
+    "buildId": {"type": "string", "minLength": 1, "maxLength": 200},
+    "sessionId": {"type": "string", "minLength": 1, "maxLength": 200},
+    "commandId": {"type": "string", "minLength": 1, "maxLength": 200},
+    "source": {"const": "studio-bridge"},
+    "validationLevel": {"const": "RUNTIME_VALIDATED"},
+    "observedAt": {"$ref": "#/$defs/timestamp"},
+    "coverage": {"const": 1},
+    "conclusive": {"const": true},
+    "truncated": {"const": false},
+    "measuredIdentity": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["productId", "contractId", "visualSpecId"],
+      "properties": {
+        "productId": {"$ref": "#/$defs/qualifiedId"},
+        "contractId": {"$ref": "#/$defs/qualifiedId"},
+        "visualSpecId": {"$ref": "#/$defs/qualifiedId"}
+      }
+    },
+    "artifactHashes": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "productIntent", "contract", "visualQualitySpec", "referenceBenchmark",
+        "visualCalibration", "place"
+      ],
+      "properties": {
+        "productIntent": {"$ref": "#/$defs/sha256"},
+        "contract": {"$ref": "#/$defs/sha256"},
+        "visualQualitySpec": {"$ref": "#/$defs/sha256"},
+        "referenceBenchmark": {"$ref": "#/$defs/sha256"},
+        "visualCalibration": {"$ref": "#/$defs/sha256"},
+        "place": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  },
+  "$defs": {
+    "qualifiedId": {"type": "string", "pattern": "^[a-z][a-z0-9._-]+$"},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+    }
+  }
+}

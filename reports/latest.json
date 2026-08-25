@@ -4,7 +4,7 @@
     "version": "0.1.0"
   },
   "project": "C:\\Users\\vitor\\OneDrive\\Desktop\\RobloxGamesMCP",
-  "generatedAt": "2026-08-20T01:58:28.630568+00:00",
+  "generatedAt": "2026-08-22T20:20:06.506847+00:00",
   "summary": {
     "executed": 38,
     "PASS": 37,
@@ -126,7 +126,7 @@
       "message": "Manifesto de assets alocado, aprovado e validado",
       "details": {
         "manifestPath": "assets/asset-manifest.json",
-        "assetCount": 14,
+        "assetCount": 21,
         "policy": {
           "externalToolboxAssets": "blocked_until_review",
           "requireScriptScan": true,
@@ -155,6 +155,24 @@
       "details": {
         "inspected": [
           {
+            "key": "field_lantern_v1",
+            "path": "assets/generated/cards/field-lantern-v1.png",
+            "width": 1254,
+            "height": 1254,
+            "ratio": 1.0,
+            "mode": "RGB",
+            "bytes": 148203
+          },
+          {
+            "key": "tunnel_mole_v1",
+            "path": "assets/generated/cards/tunnel-mole-v1.png",
+            "width": 1254,
+            "height": 1254,
+            "ratio": 1.0,
+            "mode": "RGB",
+            "bytes": 118594
+          },
+          {
             "key": "copper_lynx_prospector_v1",
             "path": "assets/generated/cards/copper-lynx-prospector-v1.png",
             "width": 1254,
@@ -182,6 +200,15 @@
             "bytes": 1954183
           },
           {
+            "key": "ridge_warden_v1",
+            "path": "assets/generated/cards/ridge-warden-v1.png",
+            "width": 1254,
+            "height": 1254,
+            "ratio": 1.0,
+            "mode": "RGB",
+            "bytes": 158518
+          },
+          {
             "key": "card_gallery_panel_v1",
             "path": "assets/generated/ui/card-gallery-panel-v1.png",
             "width": 1536,
@@ -189,9 +216,45 @@
             "ratio": 1.5,
             "mode": "RGB",
             "bytes": 2535205
+          },
+          {
+            "key": "hud_currency_coin_v1",
+            "path": "assets/generated/hud/hud_currency_coin_1787191378282.jpg",
+            "width": 1024,
+            "height": 1024,
+            "ratio": 1.0,
+            "mode": "RGB",
+            "bytes": 580408
+          },
+          {
+            "key": "hud_pickaxe_mining_v1",
+            "path": "assets/generated/hud/hud_pickaxe_mining_1787191394864.jpg",
+            "width": 1024,
+            "height": 1024,
+            "ratio": 1.0,
+            "mode": "RGB",
+            "bytes": 681141
+          },
+          {
+            "key": "hud_backpack_inv_v1",
+            "path": "assets/generated/hud/hud_backpack_inv_1787191412449.jpg",
+            "width": 1024,
+            "height": 1024,
+            "ratio": 1.0,
+            "mode": "RGB",
+            "bytes": 556628
+          },
+          {
+            "key": "hud_glass_container_v1",
+            "path": "assets/generated/hud/hud_glass_container_1787191436802.jpg",
+            "width": 1376,
+            "height": 768,
+            "ratio": 1.792,
+            "mode": "RGB",
+            "bytes": 561752
           }
         ],
-        "assetCount": 4,
+        "assetCount": 11,
         "issues": []
       },
       "source": "visual-asset-validator",
@@ -267,7 +330,7 @@
             "file": "08-card-gallery.png",
             "width": 1600,
             "height": 900,
-            "bytes": 916339
+            "bytes": 1032179
           },
           {
             "file": "09-mobile-ui.png",
@@ -299,7 +362,7 @@
         "status": "PASS",
         "studioDetected": true,
         "processRunning": false,
-        "executablePath": "C:\\Users\\vitor\\AppData\\Local\\Roblox\\Versions\\version-b2d03e4efaa04174\\RobloxStudioBeta.exe",
+        "executablePath": "C:\\Users\\vitor\\AppData\\Local\\Roblox\\Versions\\version-dcbeee682ce74ee0\\RobloxStudioBeta.exe",
         "captureAdapter": "runtime-manifest",
         "liveStudioCapture": true,
         "runtime": {
@@ -1124,7 +1187,7 @@
         "status": "PASS",
         "studioDetected": true,
         "processRunning": false,
-        "executablePath": "C:\\Users\\vitor\\AppData\\Local\\Roblox\\Versions\\version-b2d03e4efaa04174\\RobloxStudioBeta.exe",
+        "executablePath": "C:\\Users\\vitor\\AppData\\Local\\Roblox\\Versions\\version-dcbeee682ce74ee0\\RobloxStudioBeta.exe",
         "captureAdapter": "runtime-manifest",
         "liveStudioCapture": true,
         "runtime": {
@@ -1183,7 +1246,7 @@
         "actionRecords": [
           {
             "sequence": 1,
-            "timestamp": "2026-08-20T01:58:28.630568+00:00",
+            "timestamp": "2026-08-22T20:20:06.506847+00:00",
             "before": {
               "mode": "blackbox",
               "screenshot": "headless://frame/000003.png",
@@ -1272,7 +1335,7 @@
           },
           {
             "sequence": 2,
-            "timestamp": "2026-08-20T01:58:28.630568+00:00",
+            "timestamp": "2026-08-22T20:20:06.506847+00:00",
             "before": {
               "mode": "blackbox",
               "screenshot": "headless://frame/000006.png",
@@ -1357,7 +1420,7 @@
           },
           {
             "sequence": 3,
-            "timestamp": "2026-08-20T01:58:28.630568+00:00",
+            "timestamp": "2026-08-22T20:20:06.506847+00:00",
             "before": {
               "mode": "blackbox",
               "screenshot": "headless://frame/000009.png",
@@ -1550,7 +1613,7 @@
     "assetManifestIssues": [],
     "assetManifest": {
       "manifestPath": "assets/asset-manifest.json",
-      "assetCount": 14,
+      "assetCount": 21,
       "policy": {
         "externalToolboxAssets": "blocked_until_review",
         "requireScriptScan": true,
@@ -1562,6 +1625,24 @@
     "visualAssetIssues": [],
     "visualAssets": {
       "inspected": [
+        {
+          "key": "field_lantern_v1",
+          "path": "assets/generated/cards/field-lantern-v1.png",
+          "width": 1254,
+          "height": 1254,
+          "ratio": 1.0,
+          "mode": "RGB",
+          "bytes": 148203
+        },
+        {
+          "key": "tunnel_mole_v1",
+          "path": "assets/generated/cards/tunnel-mole-v1.png",
+          "width": 1254,
+          "height": 1254,
+          "ratio": 1.0,
+          "mode": "RGB",
+          "bytes": 118594
+        },
         {
           "key": "copper_lynx_prospector_v1",
           "path": "assets/generated/cards/copper-lynx-prospector-v1.png",
@@ -1590,6 +1671,15 @@
           "bytes": 1954183
         },
         {
+          "key": "ridge_warden_v1",
+          "path": "assets/generated/cards/ridge-warden-v1.png",
+          "width": 1254,
+          "height": 1254,
+          "ratio": 1.0,
+          "mode": "RGB",
+          "bytes": 158518
+        },
+        {
           "key": "card_gallery_panel_v1",
           "path": "assets/generated/ui/card-gallery-panel-v1.png",
           "width": 1536,
@@ -1597,9 +1687,45 @@
           "ratio": 1.5,
           "mode": "RGB",
           "bytes": 2535205
+        },
+        {
+          "key": "hud_currency_coin_v1",
+          "path": "assets/generated/hud/hud_currency_coin_1787191378282.jpg",
+          "width": 1024,
+          "height": 1024,
+          "ratio": 1.0,
+          "mode": "RGB",
+          "bytes": 580408
+        },
+        {
+          "key": "hud_pickaxe_mining_v1",
+          "path": "assets/generated/hud/hud_pickaxe_mining_1787191394864.jpg",
+          "width": 1024,
+          "height": 1024,
+          "ratio": 1.0,
+          "mode": "RGB",
+          "bytes": 681141
+        },
+        {
+          "key": "hud_backpack_inv_v1",
+          "path": "assets/generated/hud/hud_backpack_inv_1787191412449.jpg",
+          "width": 1024,
+          "height": 1024,
+          "ratio": 1.0,
+          "mode": "RGB",
+          "bytes": 556628
+        },
+        {
+          "key": "hud_glass_container_v1",
+          "path": "assets/generated/hud/hud_glass_container_1787191436802.jpg",
+          "width": 1376,
+          "height": 768,
+          "ratio": 1.792,
+          "mode": "RGB",
+          "bytes": 561752
         }
       ],
-      "assetCount": 4
+      "assetCount": 11
     },
     "visualSnapshotIssues": [],
     "visualSnapshots": {
@@ -1659,7 +1785,7 @@
           "file": "08-card-gallery.png",
           "width": 1600,
           "height": 900,
-          "bytes": 916339
+          "bytes": 1032179
         },
         {
           "file": "09-mobile-ui.png",
@@ -1674,7 +1800,7 @@
       "status": "PASS",
       "studioDetected": true,
       "processRunning": false,
-      "executablePath": "C:\\Users\\vitor\\AppData\\Local\\Roblox\\Versions\\version-b2d03e4efaa04174\\RobloxStudioBeta.exe",
+      "executablePath": "C:\\Users\\vitor\\AppData\\Local\\Roblox\\Versions\\version-dcbeee682ce74ee0\\RobloxStudioBeta.exe",
       "captureAdapter": "runtime-manifest",
       "liveStudioCapture": true,
       "runtime": {
@@ -1783,7 +1909,7 @@
           },
           "evidence": {
             "sequence": 1,
-            "timestamp": "2026-08-20T01:58:28.630568+00:00",
+            "timestamp": "2026-08-22T20:20:06.506847+00:00",
             "before": {
               "mode": "blackbox",
               "screenshot": "headless://frame/000003.png",
@@ -1922,7 +2048,7 @@
           },
           "evidence": {
             "sequence": 2,
-            "timestamp": "2026-08-20T01:58:28.630568+00:00",
+            "timestamp": "2026-08-22T20:20:06.506847+00:00",
             "before": {
               "mode": "blackbox",
               "screenshot": "headless://frame/000006.png",
@@ -2057,7 +2183,7 @@
           },
           "evidence": {
             "sequence": 3,
-            "timestamp": "2026-08-20T01:58:28.630568+00:00",
+            "timestamp": "2026-08-22T20:20:06.506847+00:00",
             "before": {
               "mode": "blackbox",
               "screenshot": "headless://frame/000009.png",
@@ -2184,7 +2310,7 @@
     "actionRecords": [
       {
         "sequence": 1,
-        "timestamp": "2026-08-20T01:58:28.630568+00:00",
+        "timestamp": "2026-08-22T20:20:06.506847+00:00",
         "before": {
           "mode": "blackbox",
           "screenshot": "headless://frame/000003.png",
@@ -2273,7 +2399,7 @@
       },
       {
         "sequence": 2,
-        "timestamp": "2026-08-20T01:58:28.630568+00:00",
+        "timestamp": "2026-08-22T20:20:06.506847+00:00",
         "before": {
           "mode": "blackbox",
           "screenshot": "headless://frame/000006.png",
@@ -2358,7 +2484,7 @@
       },
       {
         "sequence": 3,
-        "timestamp": "2026-08-20T01:58:28.630568+00:00",
+        "timestamp": "2026-08-22T20:20:06.506847+00:00",
         "before": {
           "mode": "blackbox",
           "screenshot": "headless://frame/000009.png",

@@ -144,4 +144,77 @@ def register_ui_tools(server: EngineMcpServer) -> EngineMcpServer:
         handler=ui_screens_for_model,
     ))
 
+    def ui_spec_check(arguments: dict[str, Any]) -> dict[str, Any]:
+        """Fail-closed conformance for a declarative UiSpec.
+
+        Mirrors forge/luau/Forge/UI/VisualSpec.lua so the same rules run at
+        build time (Luau) and at plan time (here). Raw hex is forbidden --
+        styling comes from tokens; unknown kinds and missing required props
+        are named, never guessed.
+        """
+
+        spec = arguments["spec"]
+        node_kinds: dict[str, list[str]] = {
+            "frame": [],
+            "button": ["text", "variant"],
+            "label": ["text"],
+            "image": ["assetToken"],
+            "scroll": ["canvasSize"],
+        }
+        max_nodes = int(arguments.get("maxNodes", 512))
+        problems: list[str] = []
+        count = 0
+
+        def walk(node: dict[str, Any], path: str) -> None:
+            nonlocal count
+            count += 1
+            if count > max_nodes:
+                problems.append(f"tree_exceeds_{max_nodes}_nodes")
+                return
+            kind = str(node.get("kind", ""))
+            if kind not in node_kinds:
+                problems.append(f"{path}:unknown_kind:{kind}")
+                return
+            props = node.get("props") or {}
+            for required in node_kinds[kind]:
+                if props.get(required) is None:
+                    problems.append(f"{path}.{kind}:missing_prop:{required}")
+            for prop_name, value in props.items():
+                if isinstance(value, str) and value.startswith("#") and len(value) >= 3:
+                    problems.append(f"{path}.{prop_name}:raw_hex_forbidden")
+            for index, child in enumerate(node.get("children") or []):
+                walk(child, f"{path}/{child.get('name') or kind + str(index)}")
+
+        walk(spec, str(spec.get("name") or "root"))
+        return {
+            "ok": not problems,
+            "problems": problems,
+            "nodes": count,
+            "source": "rqe-engine",
+            "note": (
+                "mirror of Forge/UI/VisualSpec.validate; the Luau side is authoritative "
+                "at runtime, this runs the same rules before anything is built"
+            ),
+        }
+
+    server.register(Tool(
+        name="ui_spec_check",
+        description=(
+            "Validate a declarative UiSpec against the VisualKit contract before it is "
+            "built: known node kinds only, required props present, raw hex colors "
+            "forbidden (styling comes from design tokens), subtree size capped. The same "
+            "rules run in Luau at mount time; failing here is cheap."
+        ),
+        input_schema={
+            "type": "object",
+            "required": ["spec"],
+            "additionalProperties": False,
+            "properties": {
+                "spec": {"type": "object"},
+                "maxNodes": {"type": "integer", "minimum": 1},
+            },
+        },
+        handler=ui_spec_check,
+    ))
+
     return server

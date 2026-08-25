@@ -21,8 +21,10 @@ that scores.
 
 from __future__ import annotations
 
+import random
 import subprocess
 import threading
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any, Mapping, Sequence
@@ -301,3 +303,159 @@ def _text_of(result: Mapping[str, Any]) -> str:
         if isinstance(item, dict) and item.get("type") == "text"
     ]
     return "\n".join(part for part in parts if part)
+
+
+class CircuitBreaker:
+    """Fail-closed gate: after N consecutive failures the peer is considered
+    down for a cooldown instead of every caller paying the timeout again."""
+
+    def __init__(
+        self,
+        *,
+        threshold: int = 5,
+        cooldown_seconds: float = 60.0,
+        clock: Callable[[], float] = time.monotonic,
+    ) -> None:
+        self._threshold = max(1, threshold)
+        self._cooldown = cooldown_seconds
+        self._clock = clock
+        self._consecutive_failures = 0
+        self._opened_at: float | None = None
+
+    def allow(self) -> tuple[bool, float]:
+        """(allowed, seconds_until_retry)."""
+        if self._opened_at is None:
+            return True, 0.0
+        elapsed = self._clock() - self._opened_at
+        if elapsed >= self._cooldown:
+            # half-open: one probe is allowed through.
+            return True, 0.0
+        return False, round(self._cooldown - elapsed, 3)
+
+    def record_success(self) -> None:
+        self._consecutive_failures = 0
+        self._opened_at = None
+
+    def record_failure(self) -> bool:
+        """Returns True when this failure OPENED the breaker."""
+        self._consecutive_failures += 1
+        if self._consecutive_failures >= self._threshold and self._opened_at is None:
+            self._opened_at = self._clock()
+            return True
+        return False
+
+    def state(self) -> dict[str, Any]:
+        allowed, retry_in = self.allow()
+        return {
+            "state": "closed" if self._opened_at is None else ("half-open" if allowed else "open"),
+            "consecutiveFailures": self._consecutive_failures,
+            "retryIn": retry_in,
+        }
+
+
+class ResilientSession:
+    """A StudioMcpClient lifecycle with StarCode's reliability patterns:
+    circuit breaker over consecutive failures, per-call watchdog (the peer's
+    timeout), and reconnect with jittered backoff. The wrapped call contract
+    is unchanged -- results stay FederatedResults either way."""
+
+    def __init__(
+        self,
+        command: Sequence[str],
+        *,
+        breaker: CircuitBreaker | None = None,
+        max_retries: int = 2,
+        base_backoff: float = 0.5,
+        jitter: float = 0.25,
+        call_timeout: float = 60.0,
+        client_name: str = "rqe-engine",
+        clock: Callable[[], float] = time.monotonic,
+        sleep: Callable[[float], None] = time.sleep,
+    ) -> None:
+        self._command = list(command)
+        self._breaker = breaker or CircuitBreaker()
+        self._max_retries = max_retries
+        self._base_backoff = base_backoff
+        self._jitter = jitter
+        self._call_timeout = call_timeout
+        self._client_name = client_name
+        self._clock = clock
+        self._sleep = sleep
+        self._client: StudioMcpClient | None = None
+
+    def _connect(self) -> StudioMcpClient:
+        process = subprocess.Popen(
+            self._command,
+            stdin=subprocess.PIPE,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.DEVNULL,
+        )
+        peer = StdioPeer(process.stdin, process.stdout, on_close=process.terminate)
+        client = StudioMcpClient(peer, client_name=self._client_name)
+        client.initialize(timeout=30.0)
+        return client
+
+    def _disconnect(self) -> None:
+        if self._client is not None:
+            try:
+                self._client.close()
+            except Exception:  # noqa: BLE001
+                pass
+            self._client = None
+
+    def breaker_state(self) -> dict[str, Any]:
+        return self._breaker.state()
+
+    def call_tool(
+        self,
+        name: str,
+        arguments: Mapping[str, Any] | None = None,
+        *,
+        run_id: str = "",
+        build_hash: str = "",
+    ) -> FederatedResult:
+        observed_at = datetime.now(timezone.utc).isoformat()
+        allowed, retry_in = self._breaker.allow()
+        if not allowed:
+            return FederatedResult(
+                tool=name,
+                ok=False,
+                error=f"circuit open; retry in {retry_in}s",
+                observed_at=observed_at,
+                run_id=run_id,
+                build_hash=build_hash,
+            )
+
+        last_error = ""
+        for attempt in range(self._max_retries + 1):
+            try:
+                if self._client is None:
+                    self._client = self._connect()
+                result = self._client.call_tool(
+                    name,
+                    arguments,
+                    run_id=run_id,
+                    build_hash=build_hash,
+                    timeout=self._call_timeout,
+                )
+                self._breaker.record_success()
+                return result
+            except McpClientError as exc:
+                last_error = str(exc)
+                self.opened_now = self._breaker.record_failure()
+                self._disconnect()
+                if attempt < self._max_retries:
+                    backoff = self._base_backoff * (2**attempt)
+                    self._sleep(backoff + random.uniform(0, self._jitter))
+
+        return FederatedResult(
+            tool=name,
+            ok=False,
+            error=f"exhausted {self._max_retries + 1} attempts: {last_error}",
+            observed_at=observed_at,
+            run_id=run_id,
+            build_hash=build_hash,
+        )
+
+    def close(self) -> None:
+        self._disconnect()

@@ -1,0 +1,117 @@
+{
+  "$schema": "../schemas/product-intent.v1.schema.json",
+  "schemaVersion": 1,
+  "intentId": "kb-reef-sim.intent",
+  "revision": 1,
+  "productId": "kb-reef-sim",
+  "title": "Kb Reef Sim",
+  "productClass": {
+    "genre": "simulator",
+    "templateFamily": "simulator"
+  },
+  "pillars": [
+    {
+      "id": "verb-collect",
+      "description": "The product loop explicitly includes collect."
+    },
+    {
+      "id": "verb-sell",
+      "description": "The product loop explicitly includes sell."
+    },
+    {
+      "id": "verb-upgrade",
+      "description": "The product loop explicitly includes upgrade."
+    },
+    {
+      "id": "verb-unlock",
+      "description": "The product loop explicitly includes unlock."
+    },
+    {
+      "id": "verb-buy",
+      "description": "The product loop explicitly includes buy."
+    }
+  ],
+  "audience": {
+    "description": "Provisional platform baseline for desktop and phone, pending human audience approval; up to 1 concurrent player(s).",
+    "targetDevices": [
+      "desktop",
+      "phone"
+    ]
+  },
+  "coreLoop": [
+    "collect",
+    "sell",
+    "upgrade",
+    "unlock",
+    "buy"
+  ],
+  "semantics": {
+    "worldRoles": [
+      {
+        "id": "primary-landmark",
+        "description": "The primary navigational landmark selected by the hub_and_zones world."
+      }
+    ],
+    "uiSurfaces": [
+      {
+        "id": "initial-interface",
+        "description": "The player-facing interface visible in the initial session."
+      }
+    ],
+    "gameplayVerbs": [
+      {
+        "id": "collect",
+        "description": "Player-observable behavior for the collect loop verb."
+      },
+      {
+        "id": "sell",
+        "description": "Player-observable behavior for the sell loop verb."
+      },
+      {
+        "id": "upgrade",
+        "description": "Player-observable behavior for the upgrade loop verb."
+      },
+      {
+        "id": "unlock",
+        "description": "Player-observable behavior for the unlock loop verb."
+      },
+      {
+        "id": "buy",
+        "description": "Player-observable behavior for the buy loop verb."
+      }
+    ]
+  },
+  "authorship": {
+    "authorityKind": "pending-human-approval",
+    "authorityId": null,
+    "approvedAt": null,
+    "candidateDerived": false
+  },
+  "calibrationPolicy": {
+    "requireIndependentReferences": true,
+    "forbidCandidateDerivedThresholds": true,
+    "requireCompleteThresholdCoverage": true
+  },
+  "bindings": {
+    "contract": {
+      "path": "contracts/game-contract.json",
+      "artifactId": "kb-reef-sim.release",
+      "sha256": "b56cbb4331261d634994c304c0e8866bc651cbda48dc1a6c78ff1df3523f11e9"
+    },
+    "visualQualitySpec": {
+      "path": "contracts/visual/visual-quality.json",
+      "artifactId": "kb-reef-sim.visual",
+      "sha256": "d6699af43ac1127cd889afd97bedb78f2127d6112d86d3267c56a364227a0163"
+    },
+    "referenceBenchmark": {
+      "path": "definition/reference-benchmark.json",
+      "artifactId": "kb-reef-sim.reference-benchmark",
+      "sha256": "e74b0237610efd20ed15ef7ad6e68e43702b6511ba373004512f932c2a24ece1"
+    },
+    "visualCalibration": {
+      "path": "definition/visual-calibration.json",
+      "artifactId": "kb-reef-sim.visual-calibration",
+      "sha256": "9fa292e7d21c9dfc57802ad7272fca69d98509fbc32bfa36e285b7035cb92371"
+    }
+  }
+}

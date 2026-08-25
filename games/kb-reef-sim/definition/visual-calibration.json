@@ -1,0 +1,20 @@
+{
+  "$schema": "../schemas/visual-calibration-receipt.v1.schema.json",
+  "schemaVersion": 1,
+  "calibrationId": "kb-reef-sim.visual-calibration",
+  "revision": 1,
+  "productId": "kb-reef-sim",
+  "status": "BLOCKED",
+  "benchmark": {
+    "benchmarkId": "kb-reef-sim.reference-benchmark",
+    "sha256": "e74b0237610efd20ed15ef7ad6e68e43702b6511ba373004512f932c2a24ece1"
+  },
+  "methodology": {
+    "calibratedAt": null,
+    "calibratedBy": null,
+    "freezeBeforeCandidateEvaluation": true,
+    "candidateInputsUsed": false,
+    "method": "PENDING_INDEPENDENT_REFERENCE_MEASUREMENT"
+  },
+  "thresholds": []
+}

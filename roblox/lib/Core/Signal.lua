@@ -29,6 +29,8 @@ export type Class = {
 	Connect: (Class, (...any) -> ()) -> Connection,
 	once: (Class, (...any) -> ()) -> Connection,
 	Once: (Class, (...any) -> ()) -> Connection,
+	connectParallel: (Class, (...any) -> ()) -> Connection,
+	ConnectParallel: (Class, (...any) -> ()) -> Connection,
 	fire: (Class, ...any) -> (),
 	Fire: (Class, ...any) -> (),
 	wait: (Class) -> ...any,
@@ -88,6 +90,19 @@ function Signal.once(self, handler: (...any) -> ()): Connection
 end
 Signal.Once = Signal.once
 
+--- ConnectParallel: the handler runs in a parallel Luau actor phase. Reads
+--- stay safe; writes to shared state must hop back with task.synchronize.
+function Signal.connectParallel(self, handler: (...any) -> ()): Connection
+	return self:connect(function(...)
+		local args = table.pack(...)
+		task.spawn(function()
+			task.desynchronize()
+			handler(table.unpack(args, 1, args.n))
+			task.synchronize()
+		end)
+	end)
+end
+Signal.ConnectParallel = Signal.connectParallel
 function Signal.fire(self, ...)
 	-- Copied before iterating: a handler that disconnects itself -- or connects
 	-- something new -- must not corrupt the walk. This is the single most

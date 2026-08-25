@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rqe.local/schemas/asset-creation-receipt.v1.schema.json",
+  "title": "RQE Original Asset Creation Receipt v1",
+  "description": "A creation receipt never proves publication, moderation, integration, or runtime use.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "receiptId",
+    "jobId",
+    "briefSha256",
+    "provider",
+    "recordedAt",
+    "outcome",
+    "status",
+    "message",
+    "generator",
+    "rights",
+    "references",
+    "blockers",
+    "retryable",
+    "productionReady"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "receiptId": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "jobId": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "briefSha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "provider": {"type": "string", "minLength": 1, "maxLength": 200},
+    "recordedAt": {"type": "string", "minLength": 1, "maxLength": 100},
+    "outcome": {"enum": ["PROGRESSED", "BLOCKED", "FAILED"]},
+    "status": {"enum": ["QUEUED", "COMPLETE", "BLOCKED", "FAILED"]},
+    "message": {"type": "string", "minLength": 1, "maxLength": 4000},
+    "providerJobId": {"type": "string", "minLength": 1, "maxLength": 1000},
+    "generator": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prompt", "tool", "toolVersion", "model", "modelVersion", "seed"],
+      "properties": {
+        "prompt": {"type": "string", "minLength": 1, "maxLength": 20000},
+        "negativePrompt": {"type": "string", "minLength": 1, "maxLength": 10000},
+        "tool": {"type": "string", "minLength": 1, "maxLength": 200},
+        "toolVersion": {"type": "string", "minLength": 1, "maxLength": 200},
+        "model": {"type": "string", "minLength": 1, "maxLength": 200},
+        "modelVersion": {"type": "string", "minLength": 1, "maxLength": 200},
+        "seed": {"type": "integer"}
+      }
+    },
+    "rights": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "termsUrl", "usageScope", "verified", "commercialUse", "evidence", "attributionRequired"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 200},
+        "termsUrl": {"type": "string", "minLength": 1, "maxLength": 4000},
+        "usageScope": {"type": "string", "minLength": 1, "maxLength": 1000},
+        "verified": {"type": "boolean"},
+        "commercialUse": {"type": "boolean"},
+        "evidence": {"type": "string", "minLength": 1, "maxLength": 4000},
+        "attributionRequired": {"type": "boolean"},
+        "attribution": {"type": "string", "minLength": 1, "maxLength": 2000}
+      }
+    },
+    "references": {"type": "array", "maxItems": 100, "items": {"type": "object"}},
+    "blockers": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["code", "message"],
+        "properties": {
+          "code": {"type": "string", "minLength": 1, "maxLength": 200},
+          "message": {"type": "string", "minLength": 1, "maxLength": 4000},
+          "requirement": {"type": "string", "minLength": 1, "maxLength": 1000}
+        }
+      }
+    },
+    "retryable": {"type": "boolean"},
+    "productionReady": {"const": false},
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["readyForPublication", "validationLevel", "artifact", "previews", "asset", "validationProfile", "validationChecks"],
+      "properties": {
+        "readyForPublication": {"const": true},
+        "validationLevel": {"const": "STATICALLY_VALIDATED"},
+        "artifact": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["path", "sha256", "byteLength", "mediaType"],
+          "properties": {
+            "path": {"type": "string", "pattern": "^objects/[0-9a-f]{64}\\.[A-Za-z0-9]+$"},
+            "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+            "byteLength": {"type": "integer", "minimum": 1},
+            "mediaType": {"type": "string", "minLength": 1, "maxLength": 200}
+          }
+        },
+        "previews": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["path", "sha256", "byteLength", "mediaType"],
+            "properties": {
+              "path": {"type": "string", "pattern": "^objects/[0-9a-f]{64}\\.[A-Za-z0-9]+$"},
+              "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+              "byteLength": {"type": "integer", "minimum": 1},
+              "mediaType": {"type": "string", "minLength": 1, "maxLength": 200}
+            }
+          }
+        },
+        "asset": {"type": "object"},
+        "validationProfile": {"type": "string", "minLength": 1, "maxLength": 200},
+        "validationChecks": {"type": "array", "items": {"type": "object"}}
+      }
+    }
+  }
+}

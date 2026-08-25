@@ -114,6 +114,7 @@ DEFAULT_SOURCE_ROOTS = (
     "roblox/mvp/src",
     "roblox/runtime",
     "apps/studio-plugin/src",
+    "forge/luau",
     "sdk",
 )
 

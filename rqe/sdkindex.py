@@ -27,6 +27,20 @@ from typing import Any
 #: Where the SDK lives, in the order a caller is likely to mean them.
 LIBRARY_ROOTS = ("Core", "Behaviours", "GameKit", "WorldKit")
 
+#: Additional library roots outside roblox/lib, as (name, repo-relative path).
+#: The Forge game-library and the Iso2D package ship Luau that agents must be
+#: able to discover the same way -- by parsing source, not a manifest.
+EXTRA_LIBRARY_ROOTS: tuple[tuple[str, str], ...] = (
+    ("Forge", "forge/luau/Forge"),
+    ("Iso2D", "roblox/lib/Iso2D"),
+)
+
+
+def _library_bases(root: Path) -> list[tuple[str, Path]]:
+    bases = [(name, root / "roblox" / "lib" / name) for name in LIBRARY_ROOTS]
+    bases += [(name, root / relative) for name, relative in EXTRA_LIBRARY_ROOTS]
+    return [(name, base) for name, base in bases if base.is_dir()]
+
 _FUNCTION = re.compile(
     r"^function\s+(?P<module>[A-Z][A-Za-z0-9_]*)[.:](?P<name>[A-Za-z_][A-Za-z0-9_]*)"
     r"\s*\((?P<params>.*?)\)\s*(?::\s*(?P<returns>.+?))?\s*$",
@@ -138,8 +152,7 @@ def _index(root_key: str) -> tuple[list[Entry], dict[str, list[str]]]:
     entries: list[Entry] = []
     types: dict[str, list[str]] = {}
 
-    for library in LIBRARY_ROOTS:
-        base = root / "roblox" / "lib" / library
+    for library, base in _library_bases(root):
         if not base.is_dir():
             continue
         for path in sorted(base.rglob("*.lua")):
@@ -395,8 +408,7 @@ def source(root: Path, name: str, around: int | None = None) -> dict[str, Any]:
     wanted = name.strip().lower()
 
     # A module name: hand back the whole file.
-    for library in LIBRARY_ROOTS:
-        base = root / "roblox" / "lib" / library
+    for library, base in _library_bases(root):
         for candidate in (
             base / f"{name.split('.')[-1]}.lua",
             base / name.split(".")[-1] / "init.lua",

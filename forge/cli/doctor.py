@@ -318,6 +318,97 @@ def check_requires(root: Path, findings: list[Finding]) -> None:
                 )
 
 
+def check_module_graph(root: Path, findings: list[Finding]) -> None:
+    """Resolve every `require(script...)` against the folder it really means.
+
+    `check_requires` above only understands `script.Parent.X`. This walks the
+    whole path — `Parent`, nested folders, `init.lua` families — and it exists
+    because the narrower check missed a whole class that cost three run cycles
+    to find one at a time.
+
+    The semantics that trip people up: inside `Family/init.lua`, `script` *is*
+    the family, so a sibling is `script.X`. Inside `Family/Thing.lua`, `script`
+    is Thing, so a sibling is `script.Parent.X`. Four family indexes in this
+    repository had it backwards, and every one of them compiled — Luau checks
+    syntax, not whether an instance is there.
+    """
+    engine = root / "forge" / "luau" / "Forge"
+    roots = [engine] if engine.exists() else []
+    roots += [p for p in (root / "src",) if p.exists()]
+    if not roots:
+        roots = [root]
+
+    pattern = re.compile(r"require\(script((?:\.[A-Za-z_][A-Za-z0-9_]*)+)\)")
+
+    for base in roots:
+        for path in sorted(base.rglob("*.lua")):
+            text = _strip_comments(path.read_text(encoding="utf-8", errors="replace"))
+            here = path.parent
+            # `init.server.lua` and `init.client.lua` make the *folder* the
+            # script exactly as `init.lua` does, so their children are
+            # `script.X` too. Treating them as ordinary modules reported a
+            # correct require as broken — this check finding its own bug.
+            is_init = path.name in ("init.lua", "init.server.lua", "init.client.lua")
+            for match in pattern.finditer(text):
+                parts = match.group(1).lstrip(".").split(".")
+                cursor = here if is_init else (here / path.stem)
+                resolved = True
+                for part in parts:
+                    if part == "Parent":
+                        cursor = cursor.parent
+                        continue
+                    if (cursor / f"{part}.lua").exists():
+                        cursor = cursor / f"{part}.lua"
+                    elif (cursor / part).is_dir():
+                        # A plain folder is a Folder instance at runtime; only
+                        # a family index needs `init.lua`. Demanding one turned
+                        # `script.systems.Progress` — which is correct — into
+                        # an error.
+                        cursor = cursor / part
+                    else:
+                        resolved = False
+                        break
+                if not resolved:
+                    line = text[: match.start()].count(chr(10)) + 1
+                    findings.append(Finding(
+                        "error", str(path), line,
+                        f"require(script{match.group(1)}) resolves to nothing on disk",
+                    ))
+
+
+def check_family_exports(root: Path, findings: list[Finding]) -> None:
+    """A module beside a family index that the index cannot reach.
+
+    An unreachable module is inventory with an engine address. `Forge.Core.Boot`
+    was nil for exactly this reason while `Boot.lua` sat next to `init.lua`,
+    compiled and specced — and the first game written against it died on
+    `attempt to index nil`.
+
+    A lazy `__index` on the family counts: it resolves any sibling on demand,
+    which is the whole point.
+    """
+    engine = root / "forge" / "luau" / "Forge"
+    if not engine.exists():
+        return
+
+    for family in sorted(engine.iterdir()):
+        index = family / "init.lua"
+        if not family.is_dir() or not index.exists():
+            continue
+        text = index.read_text(encoding="utf-8", errors="replace")
+        if "FindFirstChild(key)" in text:
+            # A lazy resolver reaches everything; nothing to list.
+            continue
+        siblings = sorted(p.stem for p in family.glob("*.lua") if p.name != "init.lua")
+        missing = [s for s in siblings if f"require(script.{s})" not in text]
+        if missing:
+            findings.append(Finding(
+                "warning", str(index), 0,
+                f"{family.name} does not expose {', '.join(missing[:6])}"
+                + (f" and {len(missing) - 6} more" if len(missing) > 6 else ""),
+            ))
+
+
 def check_forge_wiring(root: Path, findings: list[Finding]) -> None:
     """Things Forge expects to be called once, that are easy to forget."""
     text = "\n".join(
@@ -599,6 +690,8 @@ CHECKS = (
     check_context,
     check_authority,
     check_requires,
+    check_module_graph,
+    check_family_exports,
     check_forge_wiring,
     check_asset_ids,
 )

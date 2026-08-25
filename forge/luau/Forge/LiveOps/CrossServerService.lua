@@ -10,7 +10,10 @@
 
 local MessagingService = game:GetService("MessagingService")
 
-local Channels = require(script.Parent.CrossServerChannels)
+-- `CrossServerChannels` lives under Tycoon, not beside this file. Written as
+-- a sibling it resolved to nothing, and requiring this module threw — which
+-- nothing noticed, because nothing had required it yet.
+local Channels = require(script.Parent.Parent.Tycoon.CrossServerChannels)
 
 local CrossServerService = {}
 

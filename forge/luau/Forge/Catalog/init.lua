@@ -372,7 +372,92 @@ local function loadPack(packId: number): Instance?
 	return container
 end
 
+-- =============================== local kits =================================
+--[[
+	Content that ships with the place instead of being fetched.
+
+	`InsertService:LoadAsset` needs a published experience and a network round
+	trip, and on an unpublished build it does not fail — it hangs, which cost
+	this project a whole afternoon of a server that booted and never finished.
+	A kit is the other half of the answer: `.rbxm` files mounted by rojo, in
+	the place file, available the instant the game starts.
+
+	It is also the only way to use content you hold a licence to but have not
+	uploaded. Nothing here reaches the network.
+
+		Catalog.mountKit(ReplicatedStorage.Kits.halo)
+		Catalog.fromKit("guardians", "SentinelA")
+
+	Kits are searched before packs, so a piece present locally is never
+	fetched. Falling back the other way would mean a slow path shadowing a
+	fast one that was already there.
+]]
+local kits: { Instance } = {}
+
+function Catalog.mountKit(container: Instance?): boolean
+	if not container then
+		return false
+	end
+	if table.find(kits, container) then
+		return false
+	end
+	table.insert(kits, container)
+	return true
+end
+
+function Catalog.kitNames(): { string }
+	local names = {}
+	for _, kit in kits do
+		table.insert(names, kit.Name)
+	end
+	table.sort(names)
+	return names
+end
+
+--[[
+	Find a piece by name in any mounted kit.
+
+	Deep search, because a kit is however the licensed project happened to
+	organise itself and insisting on a flat folder would mean re-organising
+	somebody else's export by hand.
+]]
+function Catalog.fromKit(name: string): Instance?
+	for _, kit in kits do
+		local found = kit:FindFirstChild(name, true)
+		if found and (found:IsA("Model") or found:IsA("BasePart")) then
+			return found:Clone()
+		end
+	end
+	return nil
+end
+
+--: Everything a kit holds, as ids you can pass to `fromKit`.
+function Catalog.kitPieces(limit: number?): { string }
+	local out = {}
+	local cap = limit or 200
+	for _, kit in kits do
+		for _, descendant in kit:GetDescendants() do
+			if descendant:IsA("Model") or descendant:IsA("MeshPart") then
+				table.insert(out, descendant.Name)
+				if #out >= cap then
+					return out
+				end
+			end
+		end
+	end
+	return out
+end
+
 function Catalog.load(entry: any): Instance?
+	-- A local kit first: it is already in the place, so it cannot hang and
+	-- cannot be moderated away between one session and the next.
+	if entry.name then
+		local local_ = Catalog.fromKit(entry.name)
+		if local_ then
+			return local_
+		end
+	end
+
 	local container = loadPack(entry.packId)
 	if not container then
 		return nil

@@ -584,6 +584,42 @@ def cmd_traps(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_kit(args: argparse.Namespace) -> int:
+    """Bring authored content out of a licensed project.
+
+    The half of the mining that was never done: everything so far was code, and
+    code alone builds grey boxes.
+    """
+    from cli import kit
+
+    try:
+        if args.step == "list":
+            if args.source:
+                pieces = kit.survey(Path(args.source))
+                by_category: dict[str, int] = {}
+                for piece in pieces:
+                    by_category[piece["category"]] = by_category.get(piece["category"], 0) + 1
+                total = sum(p["bytes"] for p in pieces)
+                print(f"  {len(pieces)} mountable files, {total / 1_000_000:.1f}MB")
+                for category, count in sorted(by_category.items()):
+                    print(f"    {category:<14} {count}")
+                return 0
+
+            for entry in kit.installed():
+                print(f"  {entry['kit']:<16} {entry['pieces']:>4} pieces  "
+                      + ", ".join(f"{k} {v}" for k, v in sorted(entry["byCategory"].items())))
+            return 0
+
+        if not args.source or not args.name:
+            raise SystemExit("forge: kit add needs a source path and --name")
+        manifest = kit.add(Path(args.source), args.name,
+                           categories=args.only or None)
+        print(kit.render(manifest))
+    except kit.KitError as exc:
+        raise SystemExit(f"forge: {exc}")
+    return 0
+
+
 def main(argv: list[str] | None = None) -> int:
     parser = argparse.ArgumentParser(prog="forge", description="Forge — the authoring half")
     sub = parser.add_subparsers(dest="command", required=True)
@@ -702,6 +738,14 @@ def main(argv: list[str] | None = None) -> int:
     p_an.add_argument("--raw", action="store_true", help="the events, unaggregated")
     p_an.add_argument("--json", action="store_true")
     p_an.set_defaults(func=cmd_analytics)
+
+    p_kit = sub.add_parser("kit", help="harvest authored content from a licensed project")
+    p_kit.add_argument("step", nargs="?", default="list", choices=("list", "add"))
+    p_kit.add_argument("source", nargs="?", default=None, help="path to the project")
+    p_kit.add_argument("--name", default=None, help="what to call the kit")
+    p_kit.add_argument("--only", nargs="*", default=None,
+                       help="categories to take (enemy, structure, prop, pickup, interface)")
+    p_kit.set_defaults(func=cmd_kit)
 
     p_traps = sub.add_parser("traps", help="what breaks, and what to do instead")
     p_traps.add_argument("search", nargs="?", default=None)

@@ -143,6 +143,73 @@ TOUR = [
     {"name": "horizon", "at": (0, 34, 0), "distance": 300, "height": 40},
 ]
 
+#: Angles relative to whatever is being looked at, rather than places.
+#:
+#: `TOUR` above is four points written for one arena, and it is worth exactly
+#: as much on the next game as the coordinates happen to be. These are yaw and
+#: pitch around a subject, with distance and height as fractions of its size,
+#: so the same seven shots frame a boss, a lobby or a whole map without anybody
+#: editing numbers.
+#:
+#: Adapted from a bridge that photographs a Studio scene from a fixed set of
+#: angles for a vision model to inspect. The set is chosen, not arbitrary:
+#: three orthogonal views to read shape, an isometric to read arrangement, a
+#: low hero shot for how it presents, and two wides for context — which is
+#: roughly what an artist takes when asked "show me the thing".
+#:
+#: yaw and pitch are degrees; distance and lift are multiples of the subject's
+#: largest horizontal dimension.
+ANGLES = [
+    {"name": "front",      "yaw": 0,   "pitch": 0,   "distance": 1.6, "lift": 0.10},
+    {"name": "side-right", "yaw": 85,  "pitch": -5,  "distance": 1.6, "lift": 0.10},
+    {"name": "side-left",  "yaw": -85, "pitch": -5,  "distance": 1.6, "lift": 0.10},
+    {"name": "isometric",  "yaw": 45,  "pitch": -25, "distance": 1.8, "lift": 0.35},
+    {"name": "hero-low",   "yaw": 15,  "pitch": -8,  "distance": 1.2, "lift": 0.05},
+    {"name": "wide",       "yaw": 0,   "pitch": -20, "distance": 3.0, "lift": 0.80},
+    {"name": "high",       "yaw": 180, "pitch": -65, "distance": 2.4, "lift": 2.20},
+]
+
+
+def orbit(centre: tuple[float, float, float], size: float,
+          angles: list[dict] | None = None) -> list[Path]:
+    """Photograph one subject from every angle in `ANGLES`.
+
+    `size` is the subject's largest horizontal dimension, which is what turns
+    the fractions above into studs. Reading it from the world rather than
+    guessing is what makes the same seven shots work on a helmet and on a
+    mountain; `world.bounds` over the bridge already answers it.
+    """
+    import math
+
+    shots: list[Path] = []
+    for angle in angles or ANGLES:
+        radians = math.radians(angle["yaw"])
+        reach = size * angle["distance"]
+        # Pitch becomes height, because the camera looks at the centre either
+        # way — raising the eye and letting it look down is the same framing
+        # with one fewer rotation to get wrong.
+        height = size * angle["lift"] + reach * math.tan(math.radians(-angle["pitch"]))
+
+        # `aim` puts the eye at a fixed 45 degrees, which is the one thing an
+        # orbit cannot use, so this positions the camera itself.
+        try:
+            _call("camera.set", {
+                "position": [centre[0] + math.sin(radians) * reach,
+                             centre[1] + height,
+                             centre[2] + math.cos(radians) * reach],
+                "target": list(centre),
+            })
+        except LookError:
+            # An unaimed shot of the right window still beats no shot.
+            pass
+
+        time.sleep(0.4)
+        try:
+            shots.append(shoot(angle["name"]))
+        except LookError as exc:
+            print(f"  {angle['name']}: {exc}")
+    return shots
+
 
 def tour(points: list[dict] | None = None) -> list[Path]:
     """Photograph the standard viewpoints, in order."""

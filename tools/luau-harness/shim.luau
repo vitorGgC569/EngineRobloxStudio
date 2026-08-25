@@ -74,6 +74,24 @@ function Vector3:Lerp(other, alpha)
 		self.Y + (other.Y - self.Y) * alpha,
 		self.Z + (other.Z - self.Z) * alpha)
 end
+--[[
+	`Dot` and `Cross`.
+
+	The two operations that answer "which way is this relative to that", which
+	is what every targeting cone, facing check and arc test is built on. Their
+	absence made a whole family of pure geometry modules compile and refuse to
+	run — and geometry is the most testable thing in the engine, so that was
+	exactly backwards.
+]]
+function Vector3:Dot(other)
+	return self.X * other.X + self.Y * other.Y + self.Z * other.Z
+end
+function Vector3:Cross(other)
+	return Vector3.new(
+		self.Y * other.Z - self.Z * other.Y,
+		self.Z * other.X - self.X * other.Z,
+		self.X * other.Y - self.Y * other.X)
+end
 Vector3.zero = Vector3.new(0, 0, 0)
 rawset(Vector3, "Magnitude", nil)
 local vectorIndex = function(self, key)
@@ -132,7 +150,30 @@ end
 -- and belongs on the other side of the bridge.
 
 local CFrame = {}
-CFrame.__index = CFrame
+--[[
+	`LookVector` and `RightVector`, derived from the yaw.
+
+	Added because a module that asks a CFrame which way it is facing is doing
+	*framing maths*, not engine work — auto-targeting, camera orbits, arcs —
+	and those are exactly the portable layers this harness exists to run. The
+	shim already knows the yaw, so the two direction vectors are a sine and a
+	cosine away, and without them a whole class of module compiled fine and
+	could not be executed.
+
+	Still yaw only: `LookVector.Y` is always zero here. A module that needs
+	pitch is doing engine work and belongs on the other side of the bridge,
+	which is the same line this shim has always drawn.
+]]
+CFrame.__index = function(self, key)
+	if key == "LookVector" then
+		return Vector3.new(math.sin(self.Yaw), 0, math.cos(self.Yaw))
+	elseif key == "RightVector" then
+		return Vector3.new(math.cos(self.Yaw), 0, -math.sin(self.Yaw))
+	elseif key == "UpVector" then
+		return Vector3.new(0, 1, 0)
+	end
+	return rawget(CFrame, key)
+end
 local function makeCFrame(position, yaw)
 	return setmetatable({
 		Position = position,

@@ -27,6 +27,7 @@ local Forge = require(ReplicatedStorage:WaitForChild("Forge"))
 local Debug = Forge.Debug
 local World = Forge.World
 local Visual = Forge.Visual
+local Material = Forge.Material
 local Mark = Forge.Mark
 local Rng = Forge.Core.Rng
 local Boot = Forge.Core.Boot
@@ -56,27 +57,53 @@ end
 ]]
 local function defineLook()
 	Visual.defineLook("quarry_morning", {
-		ambient = Color3.fromRGB(72, 74, 82),
-		outdoorAmbient = Color3.fromRGB(148, 150, 158),
-		brightness = 2.6,
-		clockTime = 9.5,
+		--: Lifted well above the old value. A dark ambient is how a scene ends
+		--: up reading as overcast even with a bright key, and shadowed faces
+		--: are where a stylised look dies first.
+		ambient = Color3.fromRGB(104, 106, 118),
+		outdoorAmbient = Color3.fromRGB(178, 182, 196),
+		brightness = 3.0,
+		clockTime = 10.5,
 		geographicLatitude = 24,
-		fogEnd = 1400,
-		fogColor = Color3.fromRGB(186, 188, 196),
+		fogEnd = 2200,
+		--: Blue rather than grey. Grey haze reads as smog and drains every
+		--: colour behind it; blue reads as air.
+		fogColor = Color3.fromRGB(178, 210, 236),
 		atmosphere = {
-			density = 0.32,
-			haze = 1.6,
-			glare = 0.2,
-			color = Color3.fromRGB(206, 200, 190),
-			decay = Color3.fromRGB(112, 118, 132),
+			--: Thinner and clearer than before. The old 0.32/1.6 put a grey
+			--: veil over the middle distance, which is most of what the player
+			--: is looking at.
+			density = 0.24,
+			haze = 0.9,
+			glare = 0.25,
+			color = Color3.fromRGB(216, 232, 248),
+			decay = Color3.fromRGB(130, 150, 180),
 		},
-		bloom = { intensity = 0.5, size = 20, threshold = 1.4 },
+		bloom = { intensity = 0.6, size = 24, threshold = 1.5 },
 		colorCorrection = {
-			contrast = 0.08,
-			saturation = -0.04,
-			tint = Color3.fromRGB(255, 250, 242),
+			contrast = 0.10,
+			--: Positive, where it used to be negative. The old look was
+			--: deliberately drained for industrial realism; this is a game on
+			--: a phone, and legibility beats accuracy.
+			saturation = 0.18,
+			tint = Color3.fromRGB(255, 252, 246),
 		},
 	})
+end
+
+--[[
+	Restain the terrain materials.
+
+	Roblox ships Ground and Grass as a dark olive that makes any world built on
+	them look like the same dead field. One call, no textures and no uploads,
+	and the floor reads as somewhere rather than as a default.
+
+	Applied before the floor is painted so the first chunk a player sees is
+	already the right colour.
+]]
+local function paintPalette()
+	local applied = Material.palette("stylised")
+	Debug.info(string.format("terrain palette applied (%d materials)", applied))
 end
 
 -- ================================= the floor ================================
@@ -385,6 +412,7 @@ end
 -- =================================== start ==================================
 function Ground.start()
 	defineLook()
+	paintPalette()
 	Visual.apply("quarry_morning")
 
 	local scenery = Instance.new("Folder")

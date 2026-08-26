@@ -177,6 +177,157 @@ function Material.clearTerrain(base: Enum.Material): boolean
 	return Capability.set(MaterialService, base.Name .. "Name", "")
 end
 
+-- ================================== tinting =================================
+--[[
+	Recolour a built-in terrain material. No textures, no variants, no uploads.
+
+	`applyTerrain` above is the powerful path and it is also the expensive one:
+	a variant needs texture maps, and texture maps need somebody to author and
+	upload them. This is the cheap path, and for the single most common
+	complaint about a Roblox world -- that the ground is a dead olive green --
+	it is the whole fix.
+
+		Material.tint(Enum.Material.Grass, Color3.fromRGB(126, 200, 96))
+
+	Worth knowing before reaching for it:
+
+	  * **It is global and it persists.** One call restains every surface of
+	    that material in the place, and the value is saved with the place. A
+	    game that tints at runtime and a designer who tints in Studio will
+	    fight over the same property.
+
+	  * **It tints, it does not repaint.** The material keeps its own texture
+	    and its luminance; the colour multiplies through. So a saturated tint
+	    on a dark material reads muddy rather than bright, and the way to a
+	    vivid ground is a light tint, not a strong one.
+
+	  * **Only some materials accept it.** Roblox exposes `SetMaterialColor`
+	    for the terrain set -- Grass, Slate, Ground, Rock, Sand and their
+	    siblings -- and ignores the rest. The pcall is not defensive
+	    decoration; passing an unsupported material really does throw.
+
+	  * **Water is not one of them.** It looks like a terrain material and it
+	    is not tinted like one: it has its own properties on `Terrain`. Use
+	    `Material.water` for it. This is measured, not assumed -- passing
+	    `Enum.Material.Water` here throws.
+]]
+function Material.tint(base: Enum.Material, colour: Color3): boolean
+	local ok = pcall(function()
+		Workspace.Terrain:SetMaterialColor(base, colour)
+	end)
+	if not ok then
+		warn(string.format("[Material] %s does not take a terrain colour", base.Name))
+	end
+	return ok
+end
+
+--: What a material is currently tinted to, or nil where it takes no tint.
+function Material.tintOf(base: Enum.Material): Color3?
+	local ok, colour = pcall(function()
+		return Workspace.Terrain:GetMaterialColor(base)
+	end)
+	return ok and colour or nil
+end
+
+--[[
+	Apply a whole palette at once, and say how many took.
+
+	Keyed by `Enum.Material` so a palette is a plain table a designer can read
+	and reorder. Unsupported materials are skipped rather than aborting the
+	rest, because a palette written against one Roblox version should not stop
+	working entirely on another that dropped a material from the terrain set.
+]]
+function Material.tintAll(palette: { [Enum.Material]: Color3 }): number
+	local applied = 0
+	for base, colour in palette do
+		if Material.tint(base, colour) then
+			applied += 1
+		end
+	end
+	return applied
+end
+
+--[[
+	Ready-made ground palettes.
+
+	`stylised` is the look most successful Roblox games use and the one people
+	mean by "colourful": light, high-chroma, and readable at a glance. It is
+	not realism and is not trying to be -- a bright ground makes objects
+	standing on it legible, which matters more in a game played on a phone than
+	any amount of physical accuracy.
+
+	`natural` is muted and earthy, for a world meant to read as a place rather
+	than as a playground. `arid` is the same idea shifted warm.
+
+	Offered as starting points. The values are light because tint multiplies
+	through the material's own texture -- see `Material.tint`.
+]]
+Material.palettes = {
+	stylised = {
+		[Enum.Material.Grass] = Color3.fromRGB(132, 208, 104),
+		[Enum.Material.LeafyGrass] = Color3.fromRGB(118, 196, 96),
+		[Enum.Material.Ground] = Color3.fromRGB(186, 158, 116),
+		[Enum.Material.Rock] = Color3.fromRGB(178, 176, 182),
+		[Enum.Material.Slate] = Color3.fromRGB(150, 152, 164),
+		[Enum.Material.Sand] = Color3.fromRGB(240, 222, 172),
+		[Enum.Material.Mud] = Color3.fromRGB(150, 120, 90),
+		[Enum.Material.Snow] = Color3.fromRGB(248, 250, 255),
+	},
+	natural = {
+		[Enum.Material.Grass] = Color3.fromRGB(104, 138, 82),
+		[Enum.Material.LeafyGrass] = Color3.fromRGB(92, 126, 74),
+		[Enum.Material.Ground] = Color3.fromRGB(134, 116, 92),
+		[Enum.Material.Rock] = Color3.fromRGB(140, 138, 136),
+		[Enum.Material.Slate] = Color3.fromRGB(118, 120, 126),
+		[Enum.Material.Sand] = Color3.fromRGB(206, 190, 152),
+	},
+	arid = {
+		[Enum.Material.Grass] = Color3.fromRGB(176, 178, 108),
+		[Enum.Material.Ground] = Color3.fromRGB(202, 166, 116),
+		[Enum.Material.Rock] = Color3.fromRGB(196, 170, 140),
+		[Enum.Material.Slate] = Color3.fromRGB(178, 156, 132),
+		[Enum.Material.Sand] = Color3.fromRGB(244, 226, 178),
+	},
+}
+
+--[[
+	Water, which is its own thing.
+
+	`SetMaterialColor` rejects `Enum.Material.Water`; water colour, reflectance,
+	transparency and wave motion are properties of `Terrain` itself. Kept beside
+	the palettes because anybody tinting a world will want it and would
+	otherwise discover the hard way that the obvious call throws.
+]]
+function Material.water(colour: Color3, options: { [string]: any }?): boolean
+	local settings = options or {}
+	local ok = pcall(function()
+		Workspace.Terrain.WaterColor = colour
+		if settings.reflectance then
+			Workspace.Terrain.WaterReflectance = settings.reflectance
+		end
+		if settings.transparency then
+			Workspace.Terrain.WaterTransparency = settings.transparency
+		end
+		if settings.waveSize then
+			Workspace.Terrain.WaterWaveSize = settings.waveSize
+		end
+		if settings.waveSpeed then
+			Workspace.Terrain.WaterWaveSpeed = settings.waveSpeed
+		end
+	end)
+	return ok
+end
+
+--: Apply one of the named palettes. Returns how many materials took it.
+function Material.palette(name: string): number
+	local palette = Material.palettes[name]
+	if not palette then
+		warn(string.format("[Material] no palette named '%s'", name))
+		return 0
+	end
+	return Material.tintAll(palette)
+end
+
 --[[
 	Give one MeshPart its own textures.
 

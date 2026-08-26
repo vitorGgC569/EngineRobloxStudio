@@ -317,6 +317,50 @@ def cmd_toolbox(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_shop(args: argparse.Namespace) -> int:
+    """Search the Creator Store and rank what survives the filters.
+
+    The stage before a person looks. Nothing is inserted and nothing is
+    downloaded: this narrows a keyword's worth of results to the handful worth
+    opening, and says why it dropped the rest.
+    """
+    import sys
+
+    sys.path.insert(0, str(REPO_ROOT))
+    from rqe.assets import toolbox as store
+
+    limits = {}
+    if args.triangles:
+        limits["triangles"] = args.triangles
+    if args.approval:
+        limits["approval"] = args.approval
+
+    result = store.shortlist(args.query, role=args.role, limit=args.limit,
+                             allow_scripts=args.allow_scripts, **limits)
+
+    accepted, rejected = result["accepted"], result["rejected"]
+    print(f"{args.query!r} as {args.role}: "
+          f"{len(accepted)} to look at, {len(rejected)} filtered out\n")
+
+    for verdict in accepted[: args.show]:
+        piece = verdict["candidate"]
+        badges = "".join((
+            "E" if piece["endorsed"] else " ",
+            "V" if piece["verified"] else " ",
+        ))
+        print(f"  {verdict['score']:5.2f} {badges} {piece['id']:<12} "
+              f"{piece['name'][:38]:40} {piece['triangles']:>6} tri  "
+              f"+{piece['upVotes']}/-{piece['downVotes']}")
+        for warning in verdict["warnings"]:
+            print(f"              ! {warning}")
+
+    if rejected and args.why:
+        print("\n  filtered out:")
+        for verdict in rejected[: args.show]:
+            print(f"    {verdict['name'][:38]:40} {'; '.join(verdict['reasons'])}")
+    return 0
+
+
 # ============================ asset verification ============================
 def cmd_assets(args: argparse.Namespace) -> int:
     """Load every asset id this project references and record the verdict."""
@@ -738,6 +782,19 @@ def main(argv: list[str] | None = None) -> int:
     p_toolbox.add_argument("--cap", type=int, default=200,
                            help="how many entries to curate (default 200)")
     p_toolbox.set_defaults(func=cmd_toolbox)
+
+    p_shop = sub.add_parser("shop", help="search the Creator Store and rank what survives")
+    p_shop.add_argument("query")
+    p_shop.add_argument("--role", default="prop",
+                        help="scatter | prop | hero | character | structure; sets the triangle budget")
+    p_shop.add_argument("--limit", type=int, default=24, help="how many results to fetch")
+    p_shop.add_argument("--show", type=int, default=10, help="how many to print")
+    p_shop.add_argument("--triangles", type=int, help="override the role's triangle budget")
+    p_shop.add_argument("--approval", type=float, help="minimum approval %% where votes exist")
+    p_shop.add_argument("--allow-scripts", action="store_true",
+                        help="keep models containing scripts; they still need reading before use")
+    p_shop.add_argument("--why", action="store_true", help="also print why each rejection was dropped")
+    p_shop.set_defaults(func=cmd_shop)
 
     p_assets = sub.add_parser("assets", help="verify every asset id by loading it in Studio")
     p_assets.add_argument("step", nargs="?", default="verify", choices=("scan", "verify"))

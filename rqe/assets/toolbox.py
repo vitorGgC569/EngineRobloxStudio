@@ -57,7 +57,27 @@ def _get(url: str, headers: dict[str, str] | None = None, timeout: float = 30.0)
         return json.loads(response.read().decode("utf-8", "replace"))
 
 
-def search(query: str, limit: int = 12, category: int = CATEGORY_MODEL) -> list[dict[str, Any]]:
+#: Roblox's own creator account. Assets under it are the only third-party ones
+#: `InsertService:LoadAsset` will fetch -- see `ROBLOX_CREATOR` below.
+ROBLOX_USER_ID = 1
+
+#: Why this constant earns a name.
+#:
+#: `InsertService:LoadAsset` refuses anything the signed-in user does not own:
+#: "User is not authorized to access Asset", for free public models included.
+#: Measured, not inferred -- an asset this account uploaded loads, and a free
+#: model by somebody else does not.
+#:
+#: The exception is assets created by Roblox, which load for everybody. That
+#: makes the official library the only source this pipeline can pull from
+#: without a person first adding each model to their inventory by hand, and it
+#: happens to be the best one: the showcase packs (Duvall Drive, Beyond the
+#: Dark) are PBR-textured and consistent in scale.
+ROBLOX_CREATOR = {"creatorTargetId": str(ROBLOX_USER_ID), "creatorType": "User"}
+
+
+def search(query: str, limit: int = 12, category: int = CATEGORY_MODEL,
+           official: bool = False) -> list[dict[str, Any]]:
     """Find assets by keyword, with enough detail to choose between them.
 
     Two calls, because the search endpoint returns bare ids and nothing else --
@@ -88,9 +108,12 @@ def search(query: str, limit: int = 12, category: int = CATEGORY_MODEL) -> list[
     `creator.hasVerifiedBadge`, which is not a key on this response, so every
     result reported `verified: false` -- including creators who are verified.
     """
+    query_parts = {"limit": str(int(limit)), "keyword": query}
+    if official:
+        query_parts.update(ROBLOX_CREATOR)
     found = _get(
         SEARCH_URL.format(category=int(category))
-        + f"?limit={int(limit)}&keyword={urllib.parse.quote(query)}")
+        + "?" + urllib.parse.urlencode(query_parts))
     ids = [str(item["id"]) for item in (found.get("data") or []) if item.get("id")]
     if not ids:
         return []
@@ -267,13 +290,14 @@ def _score(candidate: dict[str, Any], budget: int) -> float:
 
 
 def shortlist(query: str, role: str = "prop", limit: int = 24,
-              allow_scripts: bool = False, **limits: Any) -> dict[str, Any]:
+              allow_scripts: bool = False, official: bool = False,
+              **limits: Any) -> dict[str, Any]:
     """Search, assess and rank in one call. The stage before a person looks.
 
     Returns the accepted and the rejected, because a shortlist with nothing in
     it is a question about the query, and the rejection reasons are the answer.
     """
-    found = search(query, limit=limit)
+    found = search(query, limit=limit, official=official)
     by_id = {c["id"]: c for c in found}
 
     accepted, rejected = [], []

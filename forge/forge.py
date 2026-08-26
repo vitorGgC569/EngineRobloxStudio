@@ -336,7 +336,8 @@ def cmd_shop(args: argparse.Namespace) -> int:
         limits["approval"] = args.approval
 
     result = store.shortlist(args.query, role=args.role, limit=args.limit,
-                             allow_scripts=args.allow_scripts, **limits)
+                             allow_scripts=args.allow_scripts,
+                             official=args.official, **limits)
 
     accepted, rejected = result["accepted"], result["rejected"]
     print(f"{args.query!r} as {args.role}: "
@@ -358,6 +359,69 @@ def cmd_shop(args: argparse.Namespace) -> int:
         print("\n  filtered out:")
         for verdict in rejected[: args.show]:
             print(f"    {verdict['name'][:38]:40} {'; '.join(verdict['reasons'])}")
+    return 0
+
+
+def cmd_pack(args: argparse.Namespace) -> int:
+    """Insert one asset in Studio, scan it, and list what is inside.
+
+    The official packs are the point of this: a single id is 242 individually
+    usable props filed under the categories their author wrote.
+    """
+    import collections
+    import sys
+
+    sys.path.insert(0, str(REPO_ROOT))
+    from rqe.assets import inspection
+
+    try:
+        inserted = inspection.insert(args.assetId)
+    except Exception as error:  # noqa: BLE001 - the message is the whole point
+        print(f"could not insert {args.assetId}: {error}")
+        return 1
+
+    roots = inserted.get("roots") or []
+    if not roots:
+        print("asset contained nothing")
+        return 1
+    root = roots[0]
+
+    report = inspection.inspect(root)
+    if report.get("error"):
+        print(f"could not inspect: {report['error']}")
+        return 1
+    verdict = inspection.judge(report, role=args.role)
+
+    print(f"{root}: {verdict['verdict']}")
+    print(f"  {verdict['parts']} parts, {verdict['meshes']} meshes, "
+          f"{verdict['textures']} textures, {verdict['scripts']} scripts")
+    for finding in verdict["blocked"]:
+        print(f"  BLOCKED  {finding['name']}: {finding['detail']}")
+        print(f"           {finding.get('where', '')}")
+    for finding in verdict["suspicious"]:
+        print(f"  read it  {finding['name']}: {finding['detail']}")
+        print(f"           {finding.get('where', '')}")
+    for note in verdict["notes"]:
+        print(f"  note     {note}")
+
+    catalogued = inspection.catalogue(root)
+    if catalogued.get("error"):
+        return 0
+
+    items = catalogued.get("items") or []
+    if not items:
+        return 0
+
+    categories = collections.Counter(row["category"] or "(top level)" for row in items)
+    print(f"\n  {len(items)} props inside, by the pack's own folders:")
+    for category, count in categories.most_common(args.show):
+        print(f"    {count:>4}  {category}")
+
+    loose = [r for r in items if r["unanchored"]]
+    if loose:
+        total = sum(r["unanchored"] for r in loose)
+        print(f"\n  {total} unanchored parts across {len(loose)} props; "
+              "anchor them before placing many")
     return 0
 
 
@@ -794,7 +858,16 @@ def main(argv: list[str] | None = None) -> int:
     p_shop.add_argument("--allow-scripts", action="store_true",
                         help="keep models containing scripts; they still need reading before use")
     p_shop.add_argument("--why", action="store_true", help="also print why each rejection was dropped")
+    p_shop.add_argument("--official", action="store_true",
+                        help="only assets created by Roblox; the only third-party ones "
+                             "InsertService will load without a manual inventory add")
     p_shop.set_defaults(func=cmd_shop)
+
+    p_pack = sub.add_parser("pack", help="insert an asset and list the props inside it")
+    p_pack.add_argument("assetId", type=int)
+    p_pack.add_argument("--role", default="prop", help="triangle budget to judge it against")
+    p_pack.add_argument("--show", type=int, default=20, help="how many props to print")
+    p_pack.set_defaults(func=cmd_pack)
 
     p_assets = sub.add_parser("assets", help="verify every asset id by loading it in Studio")
     p_assets.add_argument("step", nargs="?", default="verify", choices=("scan", "verify"))

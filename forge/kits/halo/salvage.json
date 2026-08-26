@@ -1,0 +1,4056 @@
+{
+ "$comment": "Unmodified source copied from a licensed project, kept whole so the relationships between modules survive. Generalising anything here into a Forge family is a separate step; nothing in this folder has been reviewed, adapted, or cleared for shipping as-is.",
+ "kit": "halo",
+ "source": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\HaloAndHorns",
+ "files": 809,
+ "lines": 264805,
+ "skipped": 943,
+ "takenAt": "2026-08-26T21:25:25+00:00",
+ "manifest": [
+  {
+   "path": ".codex/config.toml",
+   "bytes": 175,
+   "lines": 6
+  },
+  {
+   "path": ".mcp.json",
+   "bytes": 156,
+   "lines": 9
+  },
+  {
+   "path": ".mise.toml",
+   "bytes": 7514,
+   "lines": 143
+  },
+  {
+   "path": "aftman.toml",
+   "bytes": 279,
+   "lines": 9
+  },
+  {
+   "path": "assets/manifest/pets.json",
+   "bytes": 38519,
+   "lines": 919
+  },
+  {
+   "path": "assets/ui/disarm_manifest.json",
+   "bytes": 1959,
+   "lines": 77
+  },
+  {
+   "path": "configs/achievements.lua",
+   "bytes": 17455,
+   "lines": 468
+  },
+  {
+   "path": "configs/admins.lua",
+   "bytes": 3564,
+   "lines": 70
+  },
+  {
+   "path": "configs/aggro.lua",
+   "bytes": 5618,
+   "lines": 81
+  },
+  {
+   "path": "configs/animations.lua",
+   "bytes": 7525,
+   "lines": 140
+  },
+  {
+   "path": "configs/archetypes.lua",
+   "bytes": 7731,
+   "lines": 171
+  },
+  {
+   "path": "configs/area_fx.lua",
+   "bytes": 3490,
+   "lines": 76
+  },
+  {
+   "path": "configs/areas.lua",
+   "bytes": 27086,
+   "lines": 704
+  },
+  {
+   "path": "configs/augmentation.lua",
+   "bytes": 2323,
+   "lines": 78
+  },
+  {
+   "path": "configs/auto_systems.lua",
+   "bytes": 3058,
+   "lines": 78
+  },
+  {
+   "path": "configs/biomes.lua",
+   "bytes": 1643,
+   "lines": 31
+  },
+  {
+   "path": "configs/boot.lua",
+   "bytes": 4382,
+   "lines": 78
+  },
+  {
+   "path": "configs/breakables.lua",
+   "bytes": 67117,
+   "lines": 1516
+  },
+  {
+   "path": "configs/buff_auras.lua",
+   "bytes": 1870,
+   "lines": 44
+  },
+  {
+   "path": "configs/buffs.lua",
+   "bytes": 2020,
+   "lines": 37
+  },
+  {
+   "path": "configs/build_info.lua",
+   "bytes": 733,
+   "lines": 16
+  },
+  {
+   "path": "configs/capital_baddies.lua",
+   "bytes": 6063,
+   "lines": 115
+  },
+  {
+   "path": "configs/challenge_runs.lua",
+   "bytes": 12930,
+   "lines": 300
+  },
+  {
+   "path": "configs/chat_announcements.lua",
+   "bytes": 937,
+   "lines": 35
+  },
+  {
+   "path": "configs/combat.lua",
+   "bytes": 39661,
+   "lines": 659
+  },
+  {
+   "path": "configs/combat_fx.lua",
+   "bytes": 34515,
+   "lines": 709
+  },
+  {
+   "path": "configs/context_menus.lua",
+   "bytes": 7733,
+   "lines": 216
+  },
+  {
+   "path": "configs/controls.lua",
+   "bytes": 1396,
+   "lines": 34
+  },
+  {
+   "path": "configs/creator.lua",
+   "bytes": 5718,
+   "lines": 98
+  },
+  {
+   "path": "configs/creators.lua",
+   "bytes": 3561,
+   "lines": 73
+  },
+  {
+   "path": "configs/currencies.lua",
+   "bytes": 3573,
+   "lines": 115
+  },
+  {
+   "path": "configs/daily.lua",
+   "bytes": 1529,
+   "lines": 31
+  },
+  {
+   "path": "configs/drops.lua",
+   "bytes": 3485,
+   "lines": 66
+  },
+  {
+   "path": "configs/economy.lua",
+   "bytes": 1247,
+   "lines": 43
+  },
+  {
+   "path": "configs/egg_hatching.lua",
+   "bytes": 6779,
+   "lines": 172
+  },
+  {
+   "path": "configs/egg_system.lua",
+   "bytes": 26038,
+   "lines": 546
+  },
+  {
+   "path": "configs/elements.lua",
+   "bytes": 2836,
+   "lines": 55
+  },
+  {
+   "path": "configs/enchants.lua",
+   "bytes": 19536,
+   "lines": 436
+  },
+  {
+   "path": "configs/enemies.lua",
+   "bytes": 40808,
+   "lines": 781
+  },
+  {
+   "path": "configs/enemy_leash.lua",
+   "bytes": 2751,
+   "lines": 54
+  },
+  {
+   "path": "configs/enhancements.lua",
+   "bytes": 25164,
+   "lines": 456
+  },
+  {
+   "path": "configs/events.lua",
+   "bytes": 14341,
+   "lines": 387
+  },
+  {
+   "path": "configs/flash_effects.lua",
+   "bytes": 3393,
+   "lines": 99
+  },
+  {
+   "path": "configs/flora.lua",
+   "bytes": 7940,
+   "lines": 152
+  },
+  {
+   "path": "configs/focus.lua",
+   "bytes": 1157,
+   "lines": 24
+  },
+  {
+   "path": "configs/friend_boost.lua",
+   "bytes": 707,
+   "lines": 23
+  },
+  {
+   "path": "configs/fusion.lua",
+   "bytes": 876,
+   "lines": 21
+  },
+  {
+   "path": "configs/future_call.lua",
+   "bytes": 3008,
+   "lines": 80
+  },
+  {
+   "path": "configs/game.lua",
+   "bytes": 2128,
+   "lines": 81
+  },
+  {
+   "path": "configs/game_events.lua",
+   "bytes": 30955,
+   "lines": 637
+  },
+  {
+   "path": "configs/gameplay_tips.lua",
+   "bytes": 6311,
+   "lines": 110
+  },
+  {
+   "path": "configs/gems.lua",
+   "bytes": 5343,
+   "lines": 122
+  },
+  {
+   "path": "configs/gifts.lua",
+   "bytes": 1225,
+   "lines": 33
+  },
+  {
+   "path": "configs/guardians.lua",
+   "bytes": 3184,
+   "lines": 56
+  },
+  {
+   "path": "configs/hall_of_worlds.lua",
+   "bytes": 13789,
+   "lines": 376
+  },
+  {
+   "path": "configs/hotbar.lua",
+   "bytes": 5312,
+   "lines": 109
+  },
+  {
+   "path": "configs/hoverboard.lua",
+   "bytes": 13877,
+   "lines": 368
+  },
+  {
+   "path": "configs/internal_accounts.lua",
+   "bytes": 2614,
+   "lines": 57
+  },
+  {
+   "path": "configs/inventory.lua",
+   "bytes": 31949,
+   "lines": 755
+  },
+  {
+   "path": "configs/items.lua",
+   "bytes": 11044,
+   "lines": 382
+  },
+  {
+   "path": "configs/layers.lua",
+   "bytes": 26545,
+   "lines": 503
+  },
+  {
+   "path": "configs/leaderboards.lua",
+   "bytes": 15889,
+   "lines": 448
+  },
+  {
+   "path": "configs/level_track.lua",
+   "bytes": 5375,
+   "lines": 129
+  },
+  {
+   "path": "configs/leveling.lua",
+   "bytes": 8091,
+   "lines": 134
+  },
+  {
+   "path": "configs/logging.lua",
+   "bytes": 6066,
+   "lines": 132
+  },
+  {
+   "path": "configs/markers.lua",
+   "bytes": 6816,
+   "lines": 215
+  },
+  {
+   "path": "configs/missions.lua",
+   "bytes": 54657,
+   "lines": 1212
+  },
+  {
+   "path": "configs/monetization.lua",
+   "bytes": 24814,
+   "lines": 539
+  },
+  {
+   "path": "configs/network.lua",
+   "bytes": 84673,
+   "lines": 2124
+  },
+  {
+   "path": "configs/party.lua",
+   "bytes": 1868,
+   "lines": 43
+  },
+  {
+   "path": "configs/pet_follow.lua",
+   "bytes": 32525,
+   "lines": 636
+  },
+  {
+   "path": "configs/pet_index.lua",
+   "bytes": 955,
+   "lines": 40
+  },
+  {
+   "path": "configs/pet_power.lua",
+   "bytes": 4014,
+   "lines": 69
+  },
+  {
+   "path": "configs/pet_progression.lua",
+   "bytes": 2526,
+   "lines": 80
+  },
+  {
+   "path": "configs/pet_roles.lua",
+   "bytes": 33257,
+   "lines": 529
+  },
+  {
+   "path": "configs/pet_thumbnail_assets.lua",
+   "bytes": 19003,
+   "lines": 523
+  },
+  {
+   "path": "configs/pets.lua",
+   "bytes": 380061,
+   "lines": 8853
+  },
+  {
+   "path": "configs/pill_ui.lua",
+   "bytes": 2179,
+   "lines": 52
+  },
+  {
+   "path": "configs/player_progression.lua",
+   "bytes": 3142,
+   "lines": 78
+  },
+  {
+   "path": "configs/potions.lua",
+   "bytes": 8613,
+   "lines": 181
+  },
+  {
+   "path": "configs/power_descriptions.lua",
+   "bytes": 4973,
+   "lines": 84
+  },
+  {
+   "path": "configs/power_fx.lua",
+   "bytes": 18186,
+   "lines": 373
+  },
+  {
+   "path": "configs/power_icons.lua",
+   "bytes": 22774,
+   "lines": 435
+  },
+  {
+   "path": "configs/power_icons_assets.lua",
+   "bytes": 13713,
+   "lines": 323
+  },
+  {
+   "path": "configs/powers.lua",
+   "bytes": 59536,
+   "lines": 1248
+  },
+  {
+   "path": "configs/prologue.lua",
+   "bytes": 4456,
+   "lines": 87
+  },
+  {
+   "path": "configs/promo_codes.lua",
+   "bytes": 1361,
+   "lines": 42
+  },
+  {
+   "path": "configs/quests.lua",
+   "bytes": 45005,
+   "lines": 1074
+  },
+  {
+   "path": "configs/ratelimits.lua",
+   "bytes": 10625,
+   "lines": 266
+  },
+  {
+   "path": "configs/retention.lua",
+   "bytes": 5448,
+   "lines": 137
+  },
+  {
+   "path": "configs/rewards.lua",
+   "bytes": 1102,
+   "lines": 24
+  },
+  {
+   "path": "configs/rifts.lua",
+   "bytes": 893,
+   "lines": 25
+  },
+  {
+   "path": "configs/rosters.lua",
+   "bytes": 528,
+   "lines": 14
+  },
+  {
+   "path": "configs/shop.lua",
+   "bytes": 1266,
+   "lines": 36
+  },
+  {
+   "path": "configs/showcase.lua",
+   "bytes": 3012,
+   "lines": 71
+  },
+  {
+   "path": "configs/soul.lua",
+   "bytes": 742,
+   "lines": 20
+  },
+  {
+   "path": "configs/sounds.lua",
+   "bytes": 20177,
+   "lines": 404
+  },
+  {
+   "path": "configs/spirit_form.lua",
+   "bytes": 603,
+   "lines": 20
+  },
+  {
+   "path": "configs/squad.lua",
+   "bytes": 2694,
+   "lines": 50
+  },
+  {
+   "path": "configs/squad_diversity.lua",
+   "bytes": 2054,
+   "lines": 39
+  },
+  {
+   "path": "configs/stack_pool.lua",
+   "bytes": 456,
+   "lines": 16
+  },
+  {
+   "path": "configs/starter_pets.lua",
+   "bytes": 2156,
+   "lines": 60
+  },
+  {
+   "path": "configs/stats.lua",
+   "bytes": 10601,
+   "lines": 305
+  },
+  {
+   "path": "configs/teaming.lua",
+   "bytes": 6968,
+   "lines": 113
+  },
+  {
+   "path": "configs/tester_rewards.lua",
+   "bytes": 4289,
+   "lines": 119
+  },
+  {
+   "path": "configs/theme_utility.lua",
+   "bytes": 1138,
+   "lines": 35
+  },
+  {
+   "path": "configs/trade.lua",
+   "bytes": 2679,
+   "lines": 59
+  },
+  {
+   "path": "configs/trial_rewards.lua",
+   "bytes": 2397,
+   "lines": 71
+  },
+  {
+   "path": "configs/tutorial.lua",
+   "bytes": 12712,
+   "lines": 236
+  },
+  {
+   "path": "configs/ui.lua",
+   "bytes": 67559,
+   "lines": 1638
+  },
+  {
+   "path": "configs/ui_theme.lua",
+   "bytes": 2158,
+   "lines": 63
+  },
+  {
+   "path": "configs/upgrades.lua",
+   "bytes": 1991,
+   "lines": 69
+  },
+  {
+   "path": "configs/veteran.lua",
+   "bytes": 1407,
+   "lines": 29
+  },
+  {
+   "path": "configs/zone_tracker.lua",
+   "bytes": 3081,
+   "lines": 55
+  },
+  {
+   "path": "default.project.json",
+   "bytes": 1422,
+   "lines": 63
+  },
+  {
+   "path": "docs/PET_CATALOG_BY_AREA.json",
+   "bytes": 160956,
+   "lines": 4703
+  },
+  {
+   "path": "docs/wiki/raw/retention/2026-07-21_home_grass_consistent_pets_baseline.json",
+   "bytes": 3808,
+   "lines": 65
+  },
+  {
+   "path": "scripts/_resolved.json",
+   "bytes": 285,
+   "lines": 10
+  },
+  {
+   "path": "scripts/admin_cleanup_my_profile.lua",
+   "bytes": 2844,
+   "lines": 89
+  },
+  {
+   "path": "scripts/analyze_pet_origins.luau",
+   "bytes": 5773,
+   "lines": 198
+  },
+  {
+   "path": "scripts/animation_ids.json",
+   "bytes": 1372,
+   "lines": 33
+  },
+  {
+   "path": "scripts/architecture_allowlist.json",
+   "bytes": 2347,
+   "lines": 56
+  },
+  {
+   "path": "scripts/asset_manifest.json",
+   "bytes": 37346,
+   "lines": 1424
+  },
+  {
+   "path": "scripts/audio_ids.json",
+   "bytes": 3797,
+   "lines": 94
+  },
+  {
+   "path": "scripts/backfill_pet_origins.luau",
+   "bytes": 5936,
+   "lines": 210
+  },
+  {
+   "path": "scripts/champion_thumbnail_decals.json",
+   "bytes": 436,
+   "lines": 12
+  },
+  {
+   "path": "scripts/champion_thumbnail_images.json",
+   "bytes": 437,
+   "lines": 13
+  },
+  {
+   "path": "scripts/cleanup_orphaned_buckets.lua",
+   "bytes": 4617,
+   "lines": 137
+  },
+  {
+   "path": "scripts/cogwheel_model_ids.json",
+   "bytes": 757,
+   "lines": 22
+  },
+  {
+   "path": "scripts/cogwheel_texture_ids.json",
+   "bytes": 243,
+   "lines": 8
+  },
+  {
+   "path": "scripts/create_test_orphaned_buckets.lua",
+   "bytes": 5864,
+   "lines": 192
+  },
+  {
+   "path": "scripts/debug_client_network.lua",
+   "bytes": 3628,
+   "lines": 119
+  },
+  {
+   "path": "scripts/debug_expose_services.server.lua",
+   "bytes": 1131,
+   "lines": 32
+  },
+  {
+   "path": "scripts/debug_inventory_service.lua",
+   "bytes": 2980,
+   "lines": 89
+  },
+  {
+   "path": "scripts/debug_player_profile.lua",
+   "bytes": 5220,
+   "lines": 141
+  },
+  {
+   "path": "scripts/debug_server_direct.lua",
+   "bytes": 4031,
+   "lines": 116
+  },
+  {
+   "path": "scripts/debug_server_direct_fixed.lua",
+   "bytes": 6049,
+   "lines": 175
+  },
+  {
+   "path": "scripts/debug_server_simple.lua",
+   "bytes": 2592,
+   "lines": 87
+  },
+  {
+   "path": "scripts/delete_all_pets.lua",
+   "bytes": 3858,
+   "lines": 129
+  },
+  {
+   "path": "scripts/delete_all_pets_command.lua",
+   "bytes": 1170,
+   "lines": 44
+  },
+  {
+   "path": "scripts/egg_assets.json",
+   "bytes": 18557,
+   "lines": 510
+  },
+  {
+   "path": "scripts/enchant_ring_ids.json",
+   "bytes": 184,
+   "lines": 7
+  },
+  {
+   "path": "scripts/fix_anim_axes.luau",
+   "bytes": 1650,
+   "lines": 54
+  },
+  {
+   "path": "scripts/fix_anim_axes_mirror.luau",
+   "bytes": 2532,
+   "lines": 81
+  },
+  {
+   "path": "scripts/fix_anim_axes_swap.luau",
+   "bytes": 3402,
+   "lines": 114
+  },
+  {
+   "path": "scripts/flora_cacti_model_ids.json",
+   "bytes": 265,
+   "lines": 9
+  },
+  {
+   "path": "scripts/flora_cacti_texture_decal_ids.json",
+   "bytes": 266,
+   "lines": 9
+  },
+  {
+   "path": "scripts/flora_rocks2_model_ids.json",
+   "bytes": 303,
+   "lines": 10
+  },
+  {
+   "path": "scripts/flora_rocks2_texture_decal_ids.json",
+   "bytes": 303,
+   "lines": 10
+  },
+  {
+   "path": "scripts/flora_rocks_cacti_texture_image_ids.json",
+   "bytes": 1198,
+   "lines": 19
+  },
+  {
+   "path": "scripts/flora_set2_model_ids.json",
+   "bytes": 701,
+   "lines": 21
+  },
+  {
+   "path": "scripts/flora_set2_texture_decal_ids.json",
+   "bytes": 704,
+   "lines": 21
+  },
+  {
+   "path": "scripts/flora_set2_texture_image_ids.json",
+   "bytes": 1046,
+   "lines": 23
+  },
+  {
+   "path": "scripts/flora_theme_set_model_ids.json",
+   "bytes": 460,
+   "lines": 14
+  },
+  {
+   "path": "scripts/flora_theme_set_texture_decal_ids.json",
+   "bytes": 459,
+   "lines": 14
+  },
+  {
+   "path": "scripts/flora_theme_set_texture_image_ids.json",
+   "bytes": 868,
+   "lines": 16
+  },
+  {
+   "path": "scripts/flora_tree_model_ids.json",
+   "bytes": 284,
+   "lines": 9
+  },
+  {
+   "path": "scripts/flora_tree_texture_decal_ids.json",
+   "bytes": 284,
+   "lines": 9
+  },
+  {
+   "path": "scripts/flora_tree_texture_image_ids.json",
+   "bytes": 554,
+   "lines": 11
+  },
+  {
+   "path": "scripts/gem_decals.json",
+   "bytes": 629,
+   "lines": 17
+  },
+  {
+   "path": "scripts/gem_model_ids.json",
+   "bytes": 499,
+   "lines": 14
+  },
+  {
+   "path": "scripts/gem_ui_ids.blue.json",
+   "bytes": 39,
+   "lines": 3
+  },
+  {
+   "path": "scripts/gem_ui_ids.green.json",
+   "bytes": 39,
+   "lines": 3
+  },
+  {
+   "path": "scripts/gem_ui_ids.purple.json",
+   "bytes": 39,
+   "lines": 3
+  },
+  {
+   "path": "scripts/gem_ui_ids.red.json",
+   "bytes": 39,
+   "lines": 3
+  },
+  {
+   "path": "scripts/gem_ui_ids.yellow.json",
+   "bytes": 39,
+   "lines": 3
+  },
+  {
+   "path": "scripts/gen_pet_catalog.luau",
+   "bytes": 11836,
+   "lines": 361
+  },
+  {
+   "path": "scripts/generate_monetization.lua",
+   "bytes": 11964,
+   "lines": 464
+  },
+  {
+   "path": "scripts/gift_icon_ids.json",
+   "bytes": 47,
+   "lines": 3
+  },
+  {
+   "path": "scripts/gift_model_ids.json",
+   "bytes": 42,
+   "lines": 3
+  },
+  {
+   "path": "scripts/hall_egg_stand_assets.json",
+   "bytes": 217,
+   "lines": 9
+  },
+  {
+   "path": "scripts/hall_pet_thumbnail_assets.json",
+   "bytes": 1295,
+   "lines": 33
+  },
+  {
+   "path": "scripts/hall_pet_thumbnail_decals.json",
+   "bytes": 1297,
+   "lines": 32
+  },
+  {
+   "path": "scripts/hall_stand_texture_decal.json",
+   "bytes": 43,
+   "lines": 3
+  },
+  {
+   "path": "scripts/hatch_progression.luau",
+   "bytes": 11255,
+   "lines": 329
+  },
+  {
+   "path": "scripts/hoverboard_assets.json",
+   "bytes": 5379,
+   "lines": 135
+  },
+  {
+   "path": "scripts/icon_ids.blue.json",
+   "bytes": 1851,
+   "lines": 57
+  },
+  {
+   "path": "scripts/icon_ids.colorado.json",
+   "bytes": 184,
+   "lines": 7
+  },
+  {
+   "path": "scripts/icon_ids.discs.json",
+   "bytes": 1333,
+   "lines": 39
+  },
+  {
+   "path": "scripts/icon_ids.green.json",
+   "bytes": 1856,
+   "lines": 57
+  },
+  {
+   "path": "scripts/icon_ids.json",
+   "bytes": 1886,
+   "lines": 58
+  },
+  {
+   "path": "scripts/icon_ids.purple.json",
+   "bytes": 1891,
+   "lines": 58
+  },
+  {
+   "path": "scripts/icon_ids.red.json",
+   "bytes": 1853,
+   "lines": 57
+  },
+  {
+   "path": "scripts/icon_ids.rings.json",
+   "bytes": 801,
+   "lines": 27
+  },
+  {
+   "path": "scripts/icon_ids.white.json",
+   "bytes": 1851,
+   "lines": 57
+  },
+  {
+   "path": "scripts/icon_ids.yellow.json",
+   "bytes": 1849,
+   "lines": 57
+  },
+  {
+   "path": "scripts/landmark_model_asset_ids.json",
+   "bytes": 111,
+   "lines": 5
+  },
+  {
+   "path": "scripts/manual_inventory_cleanup.lua",
+   "bytes": 3507,
+   "lines": 98
+  },
+  {
+   "path": "scripts/manual_test_orphaned_buckets.lua",
+   "bytes": 2558,
+   "lines": 72
+  },
+  {
+   "path": "scripts/migration/asset_orphans_allowlist.json",
+   "bytes": 1698,
+   "lines": 94
+  },
+  {
+   "path": "scripts/migration/extract_place_assets.luau",
+   "bytes": 1000,
+   "lines": 25
+  },
+  {
+   "path": "scripts/migration/group_migration_audit.json",
+   "bytes": 26323,
+   "lines": 1242
+  },
+  {
+   "path": "scripts/migration/move2_deferred_grants.json",
+   "bytes": 855,
+   "lines": 11
+  },
+  {
+   "path": "scripts/migration/move2_id_map.json",
+   "bytes": 9900,
+   "lines": 351
+  },
+  {
+   "path": "scripts/migration/move2_upload_queue.json",
+   "bytes": 7008,
+   "lines": 284
+  },
+  {
+   "path": "scripts/mission_decor_blessed/heaven_archive.json",
+   "bytes": 5297,
+   "lines": 145
+  },
+  {
+   "path": "scripts/mission_decor_blessed/heaven_compass_banner.json",
+   "bytes": 5361,
+   "lines": 145
+  },
+  {
+   "path": "scripts/mission_decor_blessed/heaven_diamond_altar.json",
+   "bytes": 5391,
+   "lines": 145
+  },
+  {
+   "path": "scripts/mission_decor_blessed/heaven_flamecrest_shield.json",
+   "bytes": 5468,
+   "lines": 145
+  },
+  {
+   "path": "scripts/mission_decor_blessed/heaven_gilded_bookcase.json",
+   "bytes": 6361,
+   "lines": 168
+  },
+  {
+   "path": "scripts/mission_decor_blessed/heaven_golden_codex.json",
+   "bytes": 5385,
+   "lines": 145
+  },
+  {
+   "path": "scripts/mission_decor_blessed/heaven_golden_guardian.json",
+   "bytes": 5392,
+   "lines": 145
+  },
+  {
+   "path": "scripts/mission_decor_blessed/heaven_golden_throne.json",
+   "bytes": 5377,
+   "lines": 145
+  },
+  {
+   "path": "scripts/mission_decor_blessed/heaven_ivory_throne.json",
+   "bytes": 5395,
+   "lines": 145
+  },
+  {
+   "path": "scripts/mission_decor_blessed/heaven_marble_throne.json",
+   "bytes": 5373,
+   "lines": 145
+  },
+  {
+   "path": "scripts/mission_decor_blessed/heaven_star_fountain.json",
+   "bytes": 5334,
+   "lines": 145
+  },
+  {
+   "path": "scripts/mission_decor_blessed/hell_gate_of_damned.json",
+   "bytes": 5279,
+   "lines": 145
+  },
+  {
+   "path": "scripts/mission_decor_blessed/hell_infernal_archive.json",
+   "bytes": 5451,
+   "lines": 145
+  },
+  {
+   "path": "scripts/mission_decor_blessed/hell_infernal_crest.json",
+   "bytes": 5372,
+   "lines": 145
+  },
+  {
+   "path": "scripts/mission_decor_blessed/hell_infernal_fountain.json",
+   "bytes": 5495,
+   "lines": 145
+  },
+  {
+   "path": "scripts/mission_decor_blessed/hell_infernal_throne.json",
+   "bytes": 5380,
+   "lines": 145
+  },
+  {
+   "path": "scripts/mission_decor_blessed/hell_infernal_throne_flat.json",
+   "bytes": 5457,
+   "lines": 145
+  },
+  {
+   "path": "scripts/mission_decor_blessed/hell_skull_banner.json",
+   "bytes": 5332,
+   "lines": 145
+  },
+  {
+   "path": "scripts/mission_decor_blessed/hell_skull_lantern.json",
+   "bytes": 5385,
+   "lines": 145
+  },
+  {
+   "path": "scripts/mission_decor_blessed/hell_skull_sconce.json",
+   "bytes": 5333,
+   "lines": 145
+  },
+  {
+   "path": "scripts/mission_decor_blessed/INDEX.json",
+   "bytes": 761,
+   "lines": 28
+  },
+  {
+   "path": "scripts/mission_decor_bookcase_swap_dump.json",
+   "bytes": 2105,
+   "lines": 94
+  },
+  {
+   "path": "scripts/mission_decor_fingerprints.json",
+   "bytes": 12139,
+   "lines": 187
+  },
+  {
+   "path": "scripts/mission_decor_lineup_dump.json",
+   "bytes": 100319,
+   "lines": 2581
+  },
+  {
+   "path": "scripts/mission_decor_live_dump.json",
+   "bytes": 6854,
+   "lines": 229
+  },
+  {
+   "path": "scripts/mission_decor_meshy_lineup_manifest.json",
+   "bytes": 2116,
+   "lines": 99
+  },
+  {
+   "path": "scripts/mission_decor_model_ids.json",
+   "bytes": 1424,
+   "lines": 24
+  },
+  {
+   "path": "scripts/mission_decor_model_ids.superseded.json",
+   "bytes": 5791,
+   "lines": 98
+  },
+  {
+   "path": "scripts/mission_decor_pairings.json",
+   "bytes": 24169,
+   "lines": 492
+  },
+  {
+   "path": "scripts/mission_decor_texture_ids.json",
+   "bytes": 1180,
+   "lines": 24
+  },
+  {
+   "path": "scripts/pet_body_plans.json",
+   "bytes": 25154,
+   "lines": 916
+  },
+  {
+   "path": "scripts/pet_mesh_ids.json",
+   "bytes": 82752,
+   "lines": 2464
+  },
+  {
+   "path": "scripts/pet_rig_manifest.json",
+   "bytes": 6146,
+   "lines": 221
+  },
+  {
+   "path": "scripts/pet_thumbnail_ids.json",
+   "bytes": 14121,
+   "lines": 510
+  },
+  {
+   "path": "scripts/pill_ids.images.json",
+   "bytes": 421,
+   "lines": 9
+  },
+  {
+   "path": "scripts/pill_ids.json",
+   "bytes": 682,
+   "lines": 14
+  },
+  {
+   "path": "scripts/prebake/build_mesh_place_asset.luau",
+   "bytes": 1365,
+   "lines": 47
+  },
+  {
+   "path": "scripts/prebake/sanitize_prebake.luau",
+   "bytes": 3293,
+   "lines": 96
+  },
+  {
+   "path": "scripts/prebake/summarize_prebake.luau",
+   "bytes": 7022,
+   "lines": 214
+  },
+  {
+   "path": "scripts/purple_assets_ids.json",
+   "bytes": 1149,
+   "lines": 11
+  },
+  {
+   "path": "scripts/quick_orphaned_buckets.lua",
+   "bytes": 1319,
+   "lines": 33
+  },
+  {
+   "path": "scripts/reference_ids.json",
+   "bytes": 108,
+   "lines": 4
+  },
+  {
+   "path": "scripts/runtime_wait_classifications.json",
+   "bytes": 6486,
+   "lines": 284
+  },
+  {
+   "path": "scripts/server_bucket_cleanup.lua",
+   "bytes": 1683,
+   "lines": 66
+  },
+  {
+   "path": "scripts/skybox_heaven_1_ft.json",
+   "bytes": 37,
+   "lines": 3
+  },
+  {
+   "path": "scripts/skybox_heaven_1_ids.json",
+   "bytes": 305,
+   "lines": 11
+  },
+  {
+   "path": "scripts/skybox_heaven_2_ids.json",
+   "bytes": 346,
+   "lines": 11
+  },
+  {
+   "path": "scripts/studio/align_challenge_pads.luau",
+   "bytes": 1951,
+   "lines": 53
+  },
+  {
+   "path": "scripts/studio/audit_authored_map_candidates.luau",
+   "bytes": 3850,
+   "lines": 137
+  },
+  {
+   "path": "scripts/studio/audit_ownership.luau",
+   "bytes": 3716,
+   "lines": 107
+  },
+  {
+   "path": "scripts/studio/create_reference_map.luau",
+   "bytes": 9030,
+   "lines": 287
+  },
+  {
+   "path": "scripts/studio/dump_mission_decor_live.luau",
+   "bytes": 2458,
+   "lines": 74
+  },
+  {
+   "path": "scripts/studio/find_asset.luau",
+   "bytes": 5011,
+   "lines": 148
+  },
+  {
+   "path": "scripts/studio/flip_training_ground_signs.luau",
+   "bytes": 1419,
+   "lines": 35
+  },
+  {
+   "path": "scripts/studio/harvest_wall_decor.luau",
+   "bytes": 4251,
+   "lines": 113
+  },
+  {
+   "path": "scripts/studio/install_origin_leaderboards.luau",
+   "bytes": 6674,
+   "lines": 212
+  },
+  {
+   "path": "scripts/studio/normalize_generic_part_names.luau",
+   "bytes": 3102,
+   "lines": 114
+  },
+  {
+   "path": "scripts/studio/place_challenge_boards.luau",
+   "bytes": 6769,
+   "lines": 217
+  },
+  {
+   "path": "scripts/studio/rebuild_meshy_lineup.luau",
+   "bytes": 6839,
+   "lines": 211
+  },
+  {
+   "path": "scripts/studio/rebuild_rigged_prebakes.luau",
+   "bytes": 7880,
+   "lines": 174
+  },
+  {
+   "path": "scripts/studio/relocate_home_challenge_gates.luau",
+   "bytes": 6369,
+   "lines": 161
+  },
+  {
+   "path": "scripts/studio/repair_landmarks.luau",
+   "bytes": 11623,
+   "lines": 334
+  },
+  {
+   "path": "scripts/studio/stamp_arch_lightning.luau",
+   "bytes": 3079,
+   "lines": 92
+  },
+  {
+   "path": "scripts/studio/stamp_authored_egg_stands.luau",
+   "bytes": 7096,
+   "lines": 234
+  },
+  {
+   "path": "scripts/studio/stamp_authored_spawn_surfaces.luau",
+   "bytes": 4936,
+   "lines": 143
+  },
+  {
+   "path": "scripts/studio/stamp_award_podiums.luau",
+   "bytes": 3797,
+   "lines": 130
+  },
+  {
+   "path": "scripts/studio/stamp_kade_board_lineup.luau",
+   "bytes": 2986,
+   "lines": 95
+  },
+  {
+   "path": "scripts/studio/stamp_mission_graybox.luau",
+   "bytes": 3570,
+   "lines": 82
+  },
+  {
+   "path": "scripts/studio/tag_enchanter_station.luau",
+   "bytes": 1574,
+   "lines": 48
+  },
+  {
+   "path": "scripts/studio/wire_hall_of_worlds.luau",
+   "bytes": 32981,
+   "lines": 941
+  },
+  {
+   "path": "scripts/studio/wire_home_ascension_altar.luau",
+   "bytes": 5542,
+   "lines": 137
+  },
+  {
+   "path": "scripts/test_egg_hatching_commands.lua",
+   "bytes": 5412,
+   "lines": 181
+  },
+  {
+   "path": "scripts/test_egg_speeds.lua",
+   "bytes": 3319,
+   "lines": 100
+  },
+  {
+   "path": "scripts/test_flash_effects.lua",
+   "bytes": 4254,
+   "lines": 125
+  },
+  {
+   "path": "scripts/verify_inventory_phase1.lua",
+   "bytes": 6767,
+   "lines": 181
+  },
+  {
+   "path": "scripts/vfx_alpha_assets.json",
+   "bytes": 942,
+   "lines": 2
+  },
+  {
+   "path": "scripts/waycoin_model_assets.json",
+   "bytes": 269,
+   "lines": 10
+  },
+  {
+   "path": "scripts/waycoin_texture_atlas_decals.json",
+   "bytes": 231,
+   "lines": 9
+  },
+  {
+   "path": "scripts/waycoin_texture_decals.json",
+   "bytes": 157,
+   "lines": 6
+  },
+  {
+   "path": "scripts/waycoin_texture_images.json",
+   "bytes": 232,
+   "lines": 9
+  },
+  {
+   "path": "scripts/wayfinder_currency_assets.json",
+   "bytes": 36,
+   "lines": 3
+  },
+  {
+   "path": "scripts/wayfinder_thumbnail_decals.json",
+   "bytes": 426,
+   "lines": 12
+  },
+  {
+   "path": "selene.toml",
+   "bytes": 348,
+   "lines": 13
+  },
+  {
+   "path": "src/Client/init.client.lua",
+   "bytes": 54495,
+   "lines": 1469
+  },
+  {
+   "path": "src/Client/Systems/AdminController.lua",
+   "bytes": 14901,
+   "lines": 360
+  },
+  {
+   "path": "src/Client/Systems/AdminPowerBar.lua",
+   "bytes": 16713,
+   "lines": 411
+  },
+  {
+   "path": "src/Client/Systems/AllianceBanner.lua",
+   "bytes": 4477,
+   "lines": 117
+  },
+  {
+   "path": "src/Client/Systems/ArchLightning.lua",
+   "bytes": 11602,
+   "lines": 363
+  },
+  {
+   "path": "src/Client/Systems/AreaMusicController.lua",
+   "bytes": 13169,
+   "lines": 285
+  },
+  {
+   "path": "src/Client/Systems/AscensionPresentation.lua",
+   "bytes": 10471,
+   "lines": 301
+  },
+  {
+   "path": "src/Client/Systems/AudioPrefs.lua",
+   "bytes": 4542,
+   "lines": 119
+  },
+  {
+   "path": "src/Client/Systems/AutomationControlBridge.lua",
+   "bytes": 2037,
+   "lines": 62
+  },
+  {
+   "path": "src/Client/Systems/AutoTarget.lua",
+   "bytes": 2269,
+   "lines": 77
+  },
+  {
+   "path": "src/Client/Systems/AwardPodium.lua",
+   "bytes": 17192,
+   "lines": 522
+  },
+  {
+   "path": "src/Client/Systems/BlockLetterRainbow.lua",
+   "bytes": 4120,
+   "lines": 128
+  },
+  {
+   "path": "src/Client/Systems/BuffAuraController.lua",
+   "bytes": 6192,
+   "lines": 177
+  },
+  {
+   "path": "src/Client/Systems/BuffStatsHud.lua",
+   "bytes": 46494,
+   "lines": 1019
+  },
+  {
+   "path": "src/Client/Systems/ChatAnnouncements.lua",
+   "bytes": 6424,
+   "lines": 210
+  },
+  {
+   "path": "src/Client/Systems/CombatAuraController.lua",
+   "bytes": 29929,
+   "lines": 686
+  },
+  {
+   "path": "src/Client/Systems/CombatTextController.lua",
+   "bytes": 4320,
+   "lines": 125
+  },
+  {
+   "path": "src/Client/Systems/ConsoleActionRouter.lua",
+   "bytes": 4851,
+   "lines": 160
+  },
+  {
+   "path": "src/Client/Systems/CurrencyStack.lua",
+   "bytes": 14204,
+   "lines": 326
+  },
+  {
+   "path": "src/Client/Systems/CurrencyStyle.lua",
+   "bytes": 7348,
+   "lines": 206
+  },
+  {
+   "path": "src/Client/Systems/DevMetricsHud.lua",
+   "bytes": 9545,
+   "lines": 273
+  },
+  {
+   "path": "src/Client/Systems/DevSpawnPanel.lua",
+   "bytes": 5773,
+   "lines": 162
+  },
+  {
+   "path": "src/Client/Systems/DropVisibility.lua",
+   "bytes": 2255,
+   "lines": 69
+  },
+  {
+   "path": "src/Client/Systems/EggIdleAnimator.lua",
+   "bytes": 3254,
+   "lines": 99
+  },
+  {
+   "path": "src/Client/Systems/EnemyBurnFx.lua",
+   "bytes": 3012,
+   "lines": 78
+  },
+  {
+   "path": "src/Client/Systems/EnemyHud.lua",
+   "bytes": 22922,
+   "lines": 464
+  },
+  {
+   "path": "src/Client/Systems/EnemyMotion.lua",
+   "bytes": 12948,
+   "lines": 277
+  },
+  {
+   "path": "src/Client/Systems/EventLiveLabel.lua",
+   "bytes": 4923,
+   "lines": 133
+  },
+  {
+   "path": "src/Client/Systems/FoundersChoiceController.lua",
+   "bytes": 10677,
+   "lines": 309
+  },
+  {
+   "path": "src/Client/Systems/GameEvents.lua",
+   "bytes": 25348,
+   "lines": 636
+  },
+  {
+   "path": "src/Client/Systems/GameplayTips.lua",
+   "bytes": 4930,
+   "lines": 163
+  },
+  {
+   "path": "src/Client/Systems/HallComingSoon.lua",
+   "bytes": 3774,
+   "lines": 126
+  },
+  {
+   "path": "src/Client/Systems/HallPlayAreaMarquee.lua",
+   "bytes": 7849,
+   "lines": 238
+  },
+  {
+   "path": "src/Client/Systems/HallRouteGates.lua",
+   "bytes": 7231,
+   "lines": 221
+  },
+  {
+   "path": "src/Client/Systems/HideTogglesInBattle.lua",
+   "bytes": 1606,
+   "lines": 59
+  },
+  {
+   "path": "src/Client/Systems/HotbarBar.lua",
+   "bytes": 78206,
+   "lines": 1762
+  },
+  {
+   "path": "src/Client/Systems/HotbarFlank.lua",
+   "bytes": 6696,
+   "lines": 161
+  },
+  {
+   "path": "src/Client/Systems/HotbarKeyboard.lua",
+   "bytes": 1434,
+   "lines": 55
+  },
+  {
+   "path": "src/Client/Systems/HoverboardController.lua",
+   "bytes": 48804,
+   "lines": 1354
+  },
+  {
+   "path": "src/Client/Systems/HudLayoutState.lua",
+   "bytes": 3038,
+   "lines": 99
+  },
+  {
+   "path": "src/Client/Systems/InputContext.lua",
+   "bytes": 3905,
+   "lines": 107
+  },
+  {
+   "path": "src/Client/Systems/LeaderboardController.lua",
+   "bytes": 2113,
+   "lines": 59
+  },
+  {
+   "path": "src/Client/Systems/LevelUpController.lua",
+   "bytes": 21864,
+   "lines": 594
+  },
+  {
+   "path": "src/Client/Systems/MenuTrayStyle.lua",
+   "bytes": 14874,
+   "lines": 358
+  },
+  {
+   "path": "src/Client/Systems/MissionAtmosphere.lua",
+   "bytes": 8401,
+   "lines": 212
+  },
+  {
+   "path": "src/Client/Systems/MissionGatePrompt.lua",
+   "bytes": 1928,
+   "lines": 56
+  },
+  {
+   "path": "src/Client/Systems/MissionMap.lua",
+   "bytes": 15867,
+   "lines": 404
+  },
+  {
+   "path": "src/Client/Systems/MissionStreamGuard.lua",
+   "bytes": 4123,
+   "lines": 120
+  },
+  {
+   "path": "src/Client/Systems/PetAnimator.lua",
+   "bytes": 5762,
+   "lines": 153
+  },
+  {
+   "path": "src/Client/Systems/PetFollowController.lua",
+   "bytes": 67305,
+   "lines": 1247
+  },
+  {
+   "path": "src/Client/Systems/PetSyncDiag.lua",
+   "bytes": 5773,
+   "lines": 151
+  },
+  {
+   "path": "src/Client/Systems/PlayerBar.lua",
+   "bytes": 22848,
+   "lines": 530
+  },
+  {
+   "path": "src/Client/Systems/PlayerPowerBadges.lua",
+   "bytes": 44584,
+   "lines": 1027
+  },
+  {
+   "path": "src/Client/Systems/PowerFXProbe.lua",
+   "bytes": 9580,
+   "lines": 281
+  },
+  {
+   "path": "src/Client/Systems/PrologueCinematics.lua",
+   "bytes": 5405,
+   "lines": 143
+  },
+  {
+   "path": "src/Client/Systems/QuestDisplayState.lua",
+   "bytes": 1632,
+   "lines": 56
+  },
+  {
+   "path": "src/Client/Systems/QuestTrackerStyle.lua",
+   "bytes": 29598,
+   "lines": 750
+  },
+  {
+   "path": "src/Client/Systems/RangeLoadoutSession.lua",
+   "bytes": 7559,
+   "lines": 273
+  },
+  {
+   "path": "src/Client/Systems/RangePicker.lua",
+   "bytes": 2686,
+   "lines": 91
+  },
+  {
+   "path": "src/Client/Systems/RealmAtmosphere.lua",
+   "bytes": 10764,
+   "lines": 280
+  },
+  {
+   "path": "src/Client/Systems/RealmHellFaces.lua",
+   "bytes": 15239,
+   "lines": 337
+  },
+  {
+   "path": "src/Client/Systems/RealmPortalLock.lua",
+   "bytes": 6698,
+   "lines": 177
+  },
+  {
+   "path": "src/Client/Systems/RealmPortalSideGate.lua",
+   "bytes": 5575,
+   "lines": 132
+  },
+  {
+   "path": "src/Client/Systems/RealmTravelPrompt.lua",
+   "bytes": 3820,
+   "lines": 114
+  },
+  {
+   "path": "src/Client/Systems/RetentionContext.lua",
+   "bytes": 2425,
+   "lines": 66
+  },
+  {
+   "path": "src/Client/Systems/ShopWorldPrompt.lua",
+   "bytes": 4968,
+   "lines": 148
+  },
+  {
+   "path": "src/Client/Systems/SquadDisplayState.lua",
+   "bytes": 1628,
+   "lines": 56
+  },
+  {
+   "path": "src/Client/Systems/SquadHud.lua",
+   "bytes": 89379,
+   "lines": 1876
+  },
+  {
+   "path": "src/Client/Systems/StarterPetController.lua",
+   "bytes": 17051,
+   "lines": 494
+  },
+  {
+   "path": "src/Client/Systems/TargetBeams.lua",
+   "bytes": 6228,
+   "lines": 162
+  },
+  {
+   "path": "src/Client/Systems/TeamFollowController.lua",
+   "bytes": 12907,
+   "lines": 292
+  },
+  {
+   "path": "src/Client/Systems/TopHudStack.lua",
+   "bytes": 2902,
+   "lines": 77
+  },
+  {
+   "path": "src/Client/Systems/TutorialController.lua",
+   "bytes": 38324,
+   "lines": 952
+  },
+  {
+   "path": "src/Client/Systems/TutorialLanguageState.lua",
+   "bytes": 4254,
+   "lines": 129
+  },
+  {
+   "path": "src/Client/Systems/WorldTravelMenu.lua",
+   "bytes": 10358,
+   "lines": 344
+  },
+  {
+   "path": "src/Client/Systems/XpGlide.lua",
+   "bytes": 670,
+   "lines": 23
+  },
+  {
+   "path": "src/Client/Systems/ZoneUnlockPrompt.lua",
+   "bytes": 7736,
+   "lines": 215
+  },
+  {
+   "path": "src/Client/UI/BaseUI.lua",
+   "bytes": 140641,
+   "lines": 3662
+  },
+  {
+   "path": "src/Client/UI/Components/AwardReceiptModal.lua",
+   "bytes": 9097,
+   "lines": 272
+  },
+  {
+   "path": "src/Client/UI/Components/Button.lua",
+   "bytes": 16053,
+   "lines": 545
+  },
+  {
+   "path": "src/Client/UI/Components/CloseButton.lua",
+   "bytes": 3437,
+   "lines": 91
+  },
+  {
+   "path": "src/Client/UI/Components/KeyedCardGrid.lua",
+   "bytes": 2098,
+   "lines": 63
+  },
+  {
+   "path": "src/Client/UI/Components/Panel.lua",
+   "bytes": 18008,
+   "lines": 571
+  },
+  {
+   "path": "src/Client/UI/Components/PanelChrome.lua",
+   "bytes": 11128,
+   "lines": 270
+  },
+  {
+   "path": "src/Client/UI/Components/QuantitySelector.lua",
+   "bytes": 13996,
+   "lines": 408
+  },
+  {
+   "path": "src/Client/UI/Components/TextInput.lua",
+   "bytes": 19968,
+   "lines": 617
+  },
+  {
+   "path": "src/Client/UI/Components/TextLabel.lua",
+   "bytes": 17512,
+   "lines": 572
+  },
+  {
+   "path": "src/Client/UI/ComponentShowcase.lua",
+   "bytes": 21299,
+   "lines": 745
+  },
+  {
+   "path": "src/Client/UI/CoreGuiStateGuard.lua",
+   "bytes": 1675,
+   "lines": 58
+  },
+  {
+   "path": "src/Client/UI/DragHandle.lua",
+   "bytes": 2941,
+   "lines": 96
+  },
+  {
+   "path": "src/Client/UI/EffectsStatusGUI.lua",
+   "bytes": 10786,
+   "lines": 301
+  },
+  {
+   "path": "src/Client/UI/FillBar.lua",
+   "bytes": 4434,
+   "lines": 129
+  },
+  {
+   "path": "src/Client/UI/FocusNavigator.lua",
+   "bytes": 7030,
+   "lines": 198
+  },
+  {
+   "path": "src/Client/UI/HudCard.lua",
+   "bytes": 9857,
+   "lines": 239
+  },
+  {
+   "path": "src/Client/UI/MenuManager.lua",
+   "bytes": 27535,
+   "lines": 857
+  },
+  {
+   "path": "src/Client/UI/Menus/AchievementsPanel.lua",
+   "bytes": 16743,
+   "lines": 462
+  },
+  {
+   "path": "src/Client/UI/Menus/AdminPanel.lua",
+   "bytes": 93118,
+   "lines": 2367
+  },
+  {
+   "path": "src/Client/UI/Menus/DailyPanel.lua",
+   "bytes": 12306,
+   "lines": 355
+  },
+  {
+   "path": "src/Client/UI/Menus/EffectsPanel.lua",
+   "bytes": 16891,
+   "lines": 474
+  },
+  {
+   "path": "src/Client/UI/Menus/EnchantPanel.lua",
+   "bytes": 35064,
+   "lines": 1054
+  },
+  {
+   "path": "src/Client/UI/Menus/EnhancementSellPanel.lua",
+   "bytes": 39398,
+   "lines": 1060
+  },
+  {
+   "path": "src/Client/UI/Menus/HoverboardShopPanel.lua",
+   "bytes": 23890,
+   "lines": 719
+  },
+  {
+   "path": "src/Client/UI/Menus/InventoryDraftView.lua",
+   "bytes": 2778,
+   "lines": 82
+  },
+  {
+   "path": "src/Client/UI/Menus/InventoryPanel.lua",
+   "bytes": 396098,
+   "lines": 9557
+  },
+  {
+   "path": "src/Client/UI/Menus/PotionShopPanel.lua",
+   "bytes": 15532,
+   "lines": 473
+  },
+  {
+   "path": "src/Client/UI/Menus/PowerChoiceMenu.lua",
+   "bytes": 111012,
+   "lines": 2781
+  },
+  {
+   "path": "src/Client/UI/Menus/PromoCodePanel.lua",
+   "bytes": 7253,
+   "lines": 222
+  },
+  {
+   "path": "src/Client/UI/Menus/QuestPanel.lua",
+   "bytes": 24495,
+   "lines": 680
+  },
+  {
+   "path": "src/Client/UI/Menus/RewardShopPanel.lua",
+   "bytes": 21900,
+   "lines": 639
+  },
+  {
+   "path": "src/Client/UI/Menus/SettingsPanel.lua",
+   "bytes": 39000,
+   "lines": 1129
+  },
+  {
+   "path": "src/Client/UI/Menus/ShopPanel.lua",
+   "bytes": 33483,
+   "lines": 999
+  },
+  {
+   "path": "src/Client/UI/Menus/TeamPanel.lua",
+   "bytes": 24671,
+   "lines": 738
+  },
+  {
+   "path": "src/Client/UI/Menus/TeamPanelLayout.lua",
+   "bytes": 2063,
+   "lines": 58
+  },
+  {
+   "path": "src/Client/UI/Menus/TradePanel.lua",
+   "bytes": 72229,
+   "lines": 1986
+  },
+  {
+   "path": "src/Client/UI/PetBadge.lua",
+   "bytes": 16108,
+   "lines": 388
+  },
+  {
+   "path": "src/Client/UI/PetCardStyle.lua",
+   "bytes": 6026,
+   "lines": 154
+  },
+  {
+   "path": "src/Client/UI/Pill.lua",
+   "bytes": 4560,
+   "lines": 129
+  },
+  {
+   "path": "src/Client/UI/PowerBadges.lua",
+   "bytes": 3057,
+   "lines": 74
+  },
+  {
+   "path": "src/Client/UI/PowerSlotRow.lua",
+   "bytes": 11752,
+   "lines": 300
+  },
+  {
+   "path": "src/Client/UI/StatusBadges.lua",
+   "bytes": 19933,
+   "lines": 381
+  },
+  {
+   "path": "src/Client/UI/StatusEffectsRegistry.lua",
+   "bytes": 10300,
+   "lines": 243
+  },
+  {
+   "path": "src/Client/UI/UITheme.lua",
+   "bytes": 1601,
+   "lines": 48
+  },
+  {
+   "path": "src/Client/UI/UIViewportScale.lua",
+   "bytes": 4210,
+   "lines": 120
+  },
+  {
+   "path": "src/Client/Utils/DisplayPreferences.lua",
+   "bytes": 3737,
+   "lines": 98
+  },
+  {
+   "path": "src/ReplicatedFirst/BootLoader.client.lua",
+   "bytes": 15882,
+   "lines": 391
+  },
+  {
+   "path": "src/ReplicatedFirst/ForeignArtifactGuard.client.lua",
+   "bytes": 1820,
+   "lines": 54
+  },
+  {
+   "path": "src/Server/CombatApplication.lua",
+   "bytes": 7150,
+   "lines": 204
+  },
+  {
+   "path": "src/Server/Diagnostics/HeapTrace.lua",
+   "bytes": 6573,
+   "lines": 174
+  },
+  {
+   "path": "src/Server/ForeignArtifactGuard.server.lua",
+   "bytes": 1409,
+   "lines": 40
+  },
+  {
+   "path": "src/Server/init.server.lua",
+   "bytes": 62833,
+   "lines": 1624
+  },
+  {
+   "path": "src/Server/OpsAlert.lua",
+   "bytes": 3567,
+   "lines": 115
+  },
+  {
+   "path": "src/Server/PetEnduranceBar.lua",
+   "bytes": 5123,
+   "lines": 164
+  },
+  {
+   "path": "src/Server/PetRevive.lua",
+   "bytes": 3959,
+   "lines": 91
+  },
+  {
+   "path": "src/Server/Services/AchievementsService.lua",
+   "bytes": 11225,
+   "lines": 287
+  },
+  {
+   "path": "src/Server/Services/ActiveSquadService.lua",
+   "bytes": 3977,
+   "lines": 117
+  },
+  {
+   "path": "src/Server/Services/AdminService.lua",
+   "bytes": 12482,
+   "lines": 386
+  },
+  {
+   "path": "src/Server/Services/AdminToolsService.lua",
+   "bytes": 49674,
+   "lines": 1237
+  },
+  {
+   "path": "src/Server/Services/AlignmentService.lua",
+   "bytes": 4428,
+   "lines": 126
+  },
+  {
+   "path": "src/Server/Services/ArchetypeService.lua",
+   "bytes": 5225,
+   "lines": 131
+  },
+  {
+   "path": "src/Server/Services/AscensionAltarService.lua",
+   "bytes": 9545,
+   "lines": 241
+  },
+  {
+   "path": "src/Server/Services/AssetPreloadService.lua",
+   "bytes": 85926,
+   "lines": 2021
+  },
+  {
+   "path": "src/Server/Services/AugmentationService.lua",
+   "bytes": 7943,
+   "lines": 215
+  },
+  {
+   "path": "src/Server/Services/AutomationService.lua",
+   "bytes": 15802,
+   "lines": 427
+  },
+  {
+   "path": "src/Server/Services/AutoTargetService.lua",
+   "bytes": 29022,
+   "lines": 785
+  },
+  {
+   "path": "src/Server/Services/AwardDeliveryService.lua",
+   "bytes": 8324,
+   "lines": 238
+  },
+  {
+   "path": "src/Server/Services/BaddieSpawnerService.lua",
+   "bytes": 30920,
+   "lines": 647
+  },
+  {
+   "path": "src/Server/Services/BootOrchestrator.lua",
+   "bytes": 5225,
+   "lines": 126
+  },
+  {
+   "path": "src/Server/Services/BreakableService.lua",
+   "bytes": 8243,
+   "lines": 219
+  },
+  {
+   "path": "src/Server/Services/BreakableSpawner.lua",
+   "bytes": 125551,
+   "lines": 2870
+  },
+  {
+   "path": "src/Server/Services/ChatAnnouncementService.lua",
+   "bytes": 7412,
+   "lines": 196
+  },
+  {
+   "path": "src/Server/Services/CombatService.lua",
+   "bytes": 18286,
+   "lines": 389
+  },
+  {
+   "path": "src/Server/Services/DailyRewardZoneService.lua",
+   "bytes": 11405,
+   "lines": 280
+  },
+  {
+   "path": "src/Server/Services/DailyService.lua",
+   "bytes": 3603,
+   "lines": 100
+  },
+  {
+   "path": "src/Server/Services/DataService.lua",
+   "bytes": 109240,
+   "lines": 2954
+  },
+  {
+   "path": "src/Server/Services/DiagnosticsService.lua",
+   "bytes": 3207,
+   "lines": 87
+  },
+  {
+   "path": "src/Server/Services/DropService.lua",
+   "bytes": 45922,
+   "lines": 1091
+  },
+  {
+   "path": "src/Server/Services/EconomyService.lua",
+   "bytes": 57874,
+   "lines": 1656
+  },
+  {
+   "path": "src/Server/Services/EffectiveStatsService.lua",
+   "bytes": 6264,
+   "lines": 159
+  },
+  {
+   "path": "src/Server/Services/EggService.lua",
+   "bytes": 75563,
+   "lines": 1883
+  },
+  {
+   "path": "src/Server/Services/EggStandPlacement.server.lua",
+   "bytes": 16642,
+   "lines": 427
+  },
+  {
+   "path": "src/Server/Services/EnchantService.lua",
+   "bytes": 51638,
+   "lines": 1374
+  },
+  {
+   "path": "src/Server/Services/EnemyService.lua",
+   "bytes": 337397,
+   "lines": 6782
+  },
+  {
+   "path": "src/Server/Services/EnhancementService.lua",
+   "bytes": 27208,
+   "lines": 604
+  },
+  {
+   "path": "src/Server/Services/EnhancementShopService.lua",
+   "bytes": 20970,
+   "lines": 526
+  },
+  {
+   "path": "src/Server/Services/EventService.lua",
+   "bytes": 19914,
+   "lines": 581
+  },
+  {
+   "path": "src/Server/Services/FloraService.lua",
+   "bytes": 7146,
+   "lines": 170
+  },
+  {
+   "path": "src/Server/Services/FocusService.lua",
+   "bytes": 8203,
+   "lines": 182
+  },
+  {
+   "path": "src/Server/Services/FoundersChoiceService.lua",
+   "bytes": 12889,
+   "lines": 347
+  },
+  {
+   "path": "src/Server/Services/FriendBoostService.lua",
+   "bytes": 9427,
+   "lines": 283
+  },
+  {
+   "path": "src/Server/Services/FusionService.lua",
+   "bytes": 6239,
+   "lines": 167
+  },
+  {
+   "path": "src/Server/Services/FutureCallService.lua",
+   "bytes": 16739,
+   "lines": 423
+  },
+  {
+   "path": "src/Server/Services/GameAPIService.lua",
+   "bytes": 130944,
+   "lines": 3059
+  },
+  {
+   "path": "src/Server/Services/GameStructureService.server.lua",
+   "bytes": 18531,
+   "lines": 563
+  },
+  {
+   "path": "src/Server/Services/GiftDeliveryService.lua",
+   "bytes": 8520,
+   "lines": 244
+  },
+  {
+   "path": "src/Server/Services/GiftService.lua",
+   "bytes": 19262,
+   "lines": 526
+  },
+  {
+   "path": "src/Server/Services/GlobalEffectsService.lua",
+   "bytes": 16660,
+   "lines": 452
+  },
+  {
+   "path": "src/Server/Services/HatchEntitlementService.lua",
+   "bytes": 7385,
+   "lines": 212
+  },
+  {
+   "path": "src/Server/Services/HotbarService.lua",
+   "bytes": 24087,
+   "lines": 551
+  },
+  {
+   "path": "src/Server/Services/HoverboardService.lua",
+   "bytes": 14645,
+   "lines": 398
+  },
+  {
+   "path": "src/Server/Services/HoverboardShopService.lua",
+   "bytes": 11800,
+   "lines": 315
+  },
+  {
+   "path": "src/Server/Services/InventoryService.lua",
+   "bytes": 114144,
+   "lines": 2911
+  },
+  {
+   "path": "src/Server/Services/LayerService.lua",
+   "bytes": 15643,
+   "lines": 356
+  },
+  {
+   "path": "src/Server/Services/LeaderboardAwardService.lua",
+   "bytes": 11364,
+   "lines": 300
+  },
+  {
+   "path": "src/Server/Services/LeaderboardBoardService.lua",
+   "bytes": 12895,
+   "lines": 374
+  },
+  {
+   "path": "src/Server/Services/LeaderboardService.lua",
+   "bytes": 26673,
+   "lines": 746
+  },
+  {
+   "path": "src/Server/Services/MeetCreatorService.lua",
+   "bytes": 19787,
+   "lines": 474
+  },
+  {
+   "path": "src/Server/Services/MissionInstanceService.lua",
+   "bytes": 165747,
+   "lines": 3811
+  },
+  {
+   "path": "src/Server/Services/ModifierService.lua",
+   "bytes": 2425,
+   "lines": 77
+  },
+  {
+   "path": "src/Server/Services/MonetizationService.lua",
+   "bytes": 45871,
+   "lines": 1200
+  },
+  {
+   "path": "src/Server/Services/NpcPrincipalService.lua",
+   "bytes": 38631,
+   "lines": 887
+  },
+  {
+   "path": "src/Server/Services/PartyService.lua",
+   "bytes": 20206,
+   "lines": 515
+  },
+  {
+   "path": "src/Server/Services/PetAbilityService.lua",
+   "bytes": 5740,
+   "lines": 148
+  },
+  {
+   "path": "src/Server/Services/PetCharacterAttachments.server.lua",
+   "bytes": 2479,
+   "lines": 64
+  },
+  {
+   "path": "src/Server/Services/PetCompatibilityService.server.lua",
+   "bytes": 2633,
+   "lines": 80
+  },
+  {
+   "path": "src/Server/Services/PetEquipmentBridge.lua",
+   "bytes": 5467,
+   "lines": 154
+  },
+  {
+   "path": "src/Server/Services/PetFollowService.lua",
+   "bytes": 70250,
+   "lines": 1441
+  },
+  {
+   "path": "src/Server/Services/PetGrantService.lua",
+   "bytes": 13414,
+   "lines": 346
+  },
+  {
+   "path": "src/Server/Services/PetHandler.server.lua",
+   "bytes": 81595,
+   "lines": 1970
+  },
+  {
+   "path": "src/Server/Services/PetIndexService.lua",
+   "bytes": 15014,
+   "lines": 399
+  },
+  {
+   "path": "src/Server/Services/PetProgressionService.lua",
+   "bytes": 15542,
+   "lines": 411
+  },
+  {
+   "path": "src/Server/Services/PetSerialService.lua",
+   "bytes": 7048,
+   "lines": 199
+  },
+  {
+   "path": "src/Server/Services/PetTransferService.lua",
+   "bytes": 876,
+   "lines": 26
+  },
+  {
+   "path": "src/Server/Services/PlayerEffectsService.lua",
+   "bytes": 34273,
+   "lines": 904
+  },
+  {
+   "path": "src/Server/Services/PlayerProgressionService.lua",
+   "bytes": 51370,
+   "lines": 1114
+  },
+  {
+   "path": "src/Server/Services/PotionService.lua",
+   "bytes": 19692,
+   "lines": 479
+  },
+  {
+   "path": "src/Server/Services/PotionShopService.lua",
+   "bytes": 11614,
+   "lines": 316
+  },
+  {
+   "path": "src/Server/Services/PowerService.lua",
+   "bytes": 168959,
+   "lines": 3451
+  },
+  {
+   "path": "src/Server/Services/PrologueService.lua",
+   "bytes": 33108,
+   "lines": 703
+  },
+  {
+   "path": "src/Server/Services/PromoCodeService.lua",
+   "bytes": 10644,
+   "lines": 280
+  },
+  {
+   "path": "src/Server/Services/QuestService.lua",
+   "bytes": 26093,
+   "lines": 570
+  },
+  {
+   "path": "src/Server/Services/RateLimitService.lua",
+   "bytes": 31162,
+   "lines": 904
+  },
+  {
+   "path": "src/Server/Services/RealmAllianceService.lua",
+   "bytes": 9867,
+   "lines": 263
+  },
+  {
+   "path": "src/Server/Services/RealmPortalService.lua",
+   "bytes": 18923,
+   "lines": 435
+  },
+  {
+   "path": "src/Server/Services/RespecService.lua",
+   "bytes": 5276,
+   "lines": 136
+  },
+  {
+   "path": "src/Server/Services/RetentionService.lua",
+   "bytes": 31820,
+   "lines": 883
+  },
+  {
+   "path": "src/Server/Services/RewardService.lua",
+   "bytes": 10581,
+   "lines": 259
+  },
+  {
+   "path": "src/Server/Services/RosterService.lua",
+   "bytes": 4842,
+   "lines": 136
+  },
+  {
+   "path": "src/Server/Services/RuntimeServiceBindings.lua",
+   "bytes": 898,
+   "lines": 30
+  },
+  {
+   "path": "src/Server/Services/ServerClockService.lua",
+   "bytes": 7282,
+   "lines": 240
+  },
+  {
+   "path": "src/Server/Services/SettingsService.lua",
+   "bytes": 39513,
+   "lines": 1036
+  },
+  {
+   "path": "src/Server/Services/ShopService.lua",
+   "bytes": 4326,
+   "lines": 113
+  },
+  {
+   "path": "src/Server/Services/SpiritFormService.lua",
+   "bytes": 2630,
+   "lines": 66
+  },
+  {
+   "path": "src/Server/Services/StackPoolService.lua",
+   "bytes": 1709,
+   "lines": 45
+  },
+  {
+   "path": "src/Server/Services/StarterPetService.lua",
+   "bytes": 9299,
+   "lines": 243
+  },
+  {
+   "path": "src/Server/Services/StatEventCounters.lua",
+   "bytes": 2011,
+   "lines": 54
+  },
+  {
+   "path": "src/Server/Services/StatsService.lua",
+   "bytes": 2294,
+   "lines": 80
+  },
+  {
+   "path": "src/Server/Services/StudioSmokeTestService.lua",
+   "bytes": 93813,
+   "lines": 2618
+  },
+  {
+   "path": "src/Server/Services/SummonService.lua",
+   "bytes": 19518,
+   "lines": 454
+  },
+  {
+   "path": "src/Server/Services/TesterRewardService.lua",
+   "bytes": 15850,
+   "lines": 394
+  },
+  {
+   "path": "src/Server/Services/TradeService.lua",
+   "bytes": 44593,
+   "lines": 1185
+  },
+  {
+   "path": "src/Server/Services/TrialEggRewardService.lua",
+   "bytes": 11210,
+   "lines": 300
+  },
+  {
+   "path": "src/Server/Services/TutorialService.lua",
+   "bytes": 18690,
+   "lines": 443
+  },
+  {
+   "path": "src/Server/Services/UpgradeService.lua",
+   "bytes": 9554,
+   "lines": 290
+  },
+  {
+   "path": "src/Server/Services/WorldBindingService.lua",
+   "bytes": 37908,
+   "lines": 1073
+  },
+  {
+   "path": "src/Server/Services/WorldTravelService.lua",
+   "bytes": 5629,
+   "lines": 155
+  },
+  {
+   "path": "src/Server/Services/ZoneService.lua",
+   "bytes": 56408,
+   "lines": 1567
+  },
+  {
+   "path": "src/Server/Services/ZoneTrackerService.lua",
+   "bytes": 12709,
+   "lines": 301
+  },
+  {
+   "path": "src/Server/World/MissionStamper.lua",
+   "bytes": 5194,
+   "lines": 134
+  },
+  {
+   "path": "src/Server/World/TileKitBuilder.lua",
+   "bytes": 4207,
+   "lines": 114
+  },
+  {
+   "path": "src/Shared/API/CommandBus.lua",
+   "bytes": 7358,
+   "lines": 213
+  },
+  {
+   "path": "src/Shared/API/Navigation.lua",
+   "bytes": 2487,
+   "lines": 67
+  },
+  {
+   "path": "src/Shared/API/TestReport.lua",
+   "bytes": 2147,
+   "lines": 70
+  },
+  {
+   "path": "src/Shared/API/Validators.lua",
+   "bytes": 3632,
+   "lines": 115
+  },
+  {
+   "path": "src/Shared/Assets/BlockLetterSign.lua",
+   "bytes": 11427,
+   "lines": 275
+  },
+  {
+   "path": "src/Shared/Assets/DecorFingerprints.lua",
+   "bytes": 4286,
+   "lines": 143
+  },
+  {
+   "path": "src/Shared/Assets/LandmarkAssets.lua",
+   "bytes": 3225,
+   "lines": 76
+  },
+  {
+   "path": "src/Shared/Assets/MeshAssembly.lua",
+   "bytes": 2890,
+   "lines": 68
+  },
+  {
+   "path": "src/Shared/Boot/BootGraph.lua",
+   "bytes": 3642,
+   "lines": 110
+  },
+  {
+   "path": "src/Shared/Boot/BootReadiness.lua",
+   "bytes": 5413,
+   "lines": 155
+  },
+  {
+   "path": "src/Shared/ConfigLoader.lua",
+   "bytes": 199851,
+   "lines": 5573
+  },
+  {
+   "path": "src/Shared/ConfigSchemas.lua",
+   "bytes": 10262,
+   "lines": 248
+  },
+  {
+   "path": "src/Shared/Economy/ModifierPipeline.lua",
+   "bytes": 3011,
+   "lines": 103
+  },
+  {
+   "path": "src/Shared/Effects/AreaFX.lua",
+   "bytes": 42133,
+   "lines": 923
+  },
+  {
+   "path": "src/Shared/Effects/CombatFX.lua",
+   "bytes": 45824,
+   "lines": 1030
+  },
+  {
+   "path": "src/Shared/Effects/CombatHitFX.lua",
+   "bytes": 2361,
+   "lines": 47
+  },
+  {
+   "path": "src/Shared/Effects/EggHatchFX.lua",
+   "bytes": 5838,
+   "lines": 181
+  },
+  {
+   "path": "src/Shared/Effects/EnchantLightning.lua",
+   "bytes": 17203,
+   "lines": 492
+  },
+  {
+   "path": "src/Shared/Effects/FloatingText.lua",
+   "bytes": 2722,
+   "lines": 80
+  },
+  {
+   "path": "src/Shared/Effects/PowerFXRender.lua",
+   "bytes": 4123,
+   "lines": 108
+  },
+  {
+   "path": "src/Shared/Effects/PowerSound.lua",
+   "bytes": 4675,
+   "lines": 113
+  },
+  {
+   "path": "src/Shared/Effects/RangedFX.lua",
+   "bytes": 25468,
+   "lines": 603
+  },
+  {
+   "path": "src/Shared/Effects/SoundGroups.lua",
+   "bytes": 2448,
+   "lines": 64
+  },
+  {
+   "path": "src/Shared/Game/Accuracy.lua",
+   "bytes": 1542,
+   "lines": 38
+  },
+  {
+   "path": "src/Shared/Game/ActiveSquad.lua",
+   "bytes": 2644,
+   "lines": 69
+  },
+  {
+   "path": "src/Shared/Game/AdminPowerPalette.lua",
+   "bytes": 7144,
+   "lines": 176
+  },
+  {
+   "path": "src/Shared/Game/AggroLeash.lua",
+   "bytes": 3912,
+   "lines": 73
+  },
+  {
+   "path": "src/Shared/Game/AggroModel.lua",
+   "bytes": 5030,
+   "lines": 119
+  },
+  {
+   "path": "src/Shared/Game/AggroTable.lua",
+   "bytes": 5631,
+   "lines": 154
+  },
+  {
+   "path": "src/Shared/Game/Allegiance.lua",
+   "bytes": 3149,
+   "lines": 75
+  },
+  {
+   "path": "src/Shared/Game/AllianceRules.lua",
+   "bytes": 3691,
+   "lines": 72
+  },
+  {
+   "path": "src/Shared/Game/AmplifiedBurst.lua",
+   "bytes": 2143,
+   "lines": 51
+  },
+  {
+   "path": "src/Shared/Game/ArchetypeLogic.lua",
+   "bytes": 2782,
+   "lines": 78
+  },
+  {
+   "path": "src/Shared/Game/ArchLightning.lua",
+   "bytes": 4994,
+   "lines": 169
+  },
+  {
+   "path": "src/Shared/Game/AssetReport.lua",
+   "bytes": 4030,
+   "lines": 122
+  },
+  {
+   "path": "src/Shared/Game/AttackAnim.lua",
+   "bytes": 3543,
+   "lines": 81
+  },
+  {
+   "path": "src/Shared/Game/Augmentation.lua",
+   "bytes": 3591,
+   "lines": 90
+  },
+  {
+   "path": "src/Shared/Game/AwardDelivery.lua",
+   "bytes": 5641,
+   "lines": 161
+  },
+  {
+   "path": "src/Shared/Game/AwardPodiumLogic.lua",
+   "bytes": 3248,
+   "lines": 111
+  },
+  {
+   "path": "src/Shared/Game/BattleSim.lua",
+   "bytes": 14160,
+   "lines": 370
+  },
+  {
+   "path": "src/Shared/Game/BreakableBoost.lua",
+   "bytes": 1113,
+   "lines": 34
+  },
+  {
+   "path": "src/Shared/Game/BreakableDensity.lua",
+   "bytes": 937,
+   "lines": 28
+  },
+  {
+   "path": "src/Shared/Game/BrewMeter.lua",
+   "bytes": 3066,
+   "lines": 72
+  },
+  {
+   "path": "src/Shared/Game/BuffStack.lua",
+   "bytes": 3428,
+   "lines": 92
+  },
+  {
+   "path": "src/Shared/Game/ChallengeRun.lua",
+   "bytes": 25963,
+   "lines": 739
+  },
+  {
+   "path": "src/Shared/Game/ChatAnnouncementRules.lua",
+   "bytes": 7557,
+   "lines": 215
+  },
+  {
+   "path": "src/Shared/Game/ClaimLogic.lua",
+   "bytes": 1376,
+   "lines": 44
+  },
+  {
+   "path": "src/Shared/Game/CombatAllies.lua",
+   "bytes": 1393,
+   "lines": 41
+  },
+  {
+   "path": "src/Shared/Game/CombatMath.lua",
+   "bytes": 3599,
+   "lines": 99
+  },
+  {
+   "path": "src/Shared/Game/CombatOrigin.lua",
+   "bytes": 3374,
+   "lines": 79
+  },
+  {
+   "path": "src/Shared/Game/CombatRoll.lua",
+   "bytes": 1283,
+   "lines": 36
+  },
+  {
+   "path": "src/Shared/Game/CombatSim.lua",
+   "bytes": 4421,
+   "lines": 133
+  },
+  {
+   "path": "src/Shared/Game/Condition.lua",
+   "bytes": 3345,
+   "lines": 93
+  },
+  {
+   "path": "src/Shared/Game/ConsoleHotbar.lua",
+   "bytes": 1074,
+   "lines": 40
+  },
+  {
+   "path": "src/Shared/Game/CrowdControl.lua",
+   "bytes": 1632,
+   "lines": 48
+  },
+  {
+   "path": "src/Shared/Game/CurrencyKeys.lua",
+   "bytes": 1575,
+   "lines": 34
+  },
+  {
+   "path": "src/Shared/Game/CurrencyTransaction.lua",
+   "bytes": 2807,
+   "lines": 76
+  },
+  {
+   "path": "src/Shared/Game/DailyStreak.lua",
+   "bytes": 1915,
+   "lines": 61
+  },
+  {
+   "path": "src/Shared/Game/DamageOverTime.lua",
+   "bytes": 2477,
+   "lines": 56
+  },
+  {
+   "path": "src/Shared/Game/EarlyBoostSampler.lua",
+   "bytes": 2331,
+   "lines": 62
+  },
+  {
+   "path": "src/Shared/Game/EffectiveStats.lua",
+   "bytes": 11680,
+   "lines": 302
+  },
+  {
+   "path": "src/Shared/Game/EggHatchFront.lua",
+   "bytes": 1198,
+   "lines": 42
+  },
+  {
+   "path": "src/Shared/Game/EggHatchVisual.lua",
+   "bytes": 926,
+   "lines": 32
+  },
+  {
+   "path": "src/Shared/Game/EggStandResolver.lua",
+   "bytes": 1942,
+   "lines": 41
+  },
+  {
+   "path": "src/Shared/Game/ElementResonance.lua",
+   "bytes": 3394,
+   "lines": 80
+  },
+  {
+   "path": "src/Shared/Game/EnchantRuntime.lua",
+   "bytes": 4357,
+   "lines": 115
+  },
+  {
+   "path": "src/Shared/Game/EnemyAI.lua",
+   "bytes": 3549,
+   "lines": 90
+  },
+  {
+   "path": "src/Shared/Game/EnemyCon.lua",
+   "bytes": 2229,
+   "lines": 73
+  },
+  {
+   "path": "src/Shared/Game/EnemyLeash.lua",
+   "bytes": 3517,
+   "lines": 88
+  },
+  {
+   "path": "src/Shared/Game/EnhancementPricing.lua",
+   "bytes": 12001,
+   "lines": 272
+  },
+  {
+   "path": "src/Shared/Game/EnhancementReward.lua",
+   "bytes": 2924,
+   "lines": 95
+  },
+  {
+   "path": "src/Shared/Game/Enhancements.lua",
+   "bytes": 11089,
+   "lines": 284
+  },
+  {
+   "path": "src/Shared/Game/Evasion.lua",
+   "bytes": 1579,
+   "lines": 40
+  },
+  {
+   "path": "src/Shared/Game/FarmTargetRetention.lua",
+   "bytes": 1718,
+   "lines": 47
+  },
+  {
+   "path": "src/Shared/Game/FloraTheme.lua",
+   "bytes": 2974,
+   "lines": 80
+  },
+  {
+   "path": "src/Shared/Game/FocusFire.lua",
+   "bytes": 1972,
+   "lines": 52
+  },
+  {
+   "path": "src/Shared/Game/FocusMath.lua",
+   "bytes": 2082,
+   "lines": 60
+  },
+  {
+   "path": "src/Shared/Game/FocusUpkeep.lua",
+   "bytes": 2939,
+   "lines": 68
+  },
+  {
+   "path": "src/Shared/Game/FoundersChoice.lua",
+   "bytes": 5184,
+   "lines": 136
+  },
+  {
+   "path": "src/Shared/Game/FriendBoost.lua",
+   "bytes": 1529,
+   "lines": 40
+  },
+  {
+   "path": "src/Shared/Game/FusionLogic.lua",
+   "bytes": 2851,
+   "lines": 75
+  },
+  {
+   "path": "src/Shared/Game/FusionTransaction.lua",
+   "bytes": 2502,
+   "lines": 79
+  },
+  {
+   "path": "src/Shared/Game/FutureCallLogic.lua",
+   "bytes": 7064,
+   "lines": 179
+  },
+  {
+   "path": "src/Shared/Game/Gait.lua",
+   "bytes": 5093,
+   "lines": 125
+  },
+  {
+   "path": "src/Shared/Game/GameplayTipRotation.lua",
+   "bytes": 2688,
+   "lines": 75
+  },
+  {
+   "path": "src/Shared/Game/GiftDelivery.lua",
+   "bytes": 4599,
+   "lines": 151
+  },
+  {
+   "path": "src/Shared/Game/GiftLogic.lua",
+   "bytes": 4409,
+   "lines": 135
+  },
+  {
+   "path": "src/Shared/Game/HallEggStand.lua",
+   "bytes": 3323,
+   "lines": 93
+  },
+  {
+   "path": "src/Shared/Game/HallFieldOutline.lua",
+   "bytes": 5479,
+   "lines": 167
+  },
+  {
+   "path": "src/Shared/Game/HallOfWorldsLogic.lua",
+   "bytes": 12737,
+   "lines": 355
+  },
+  {
+   "path": "src/Shared/Game/HallPlayAreas.lua",
+   "bytes": 3070,
+   "lines": 88
+  },
+  {
+   "path": "src/Shared/Game/HatchGridLayout.lua",
+   "bytes": 5859,
+   "lines": 127
+  },
+  {
+   "path": "src/Shared/Game/HatchRevealPolicy.lua",
+   "bytes": 683,
+   "lines": 20
+  },
+  {
+   "path": "src/Shared/Game/HatchTiming.lua",
+   "bytes": 6091,
+   "lines": 136
+  },
+  {
+   "path": "src/Shared/Game/HitReact.lua",
+   "bytes": 2162,
+   "lines": 53
+  },
+  {
+   "path": "src/Shared/Game/HotbarLogic.lua",
+   "bytes": 10495,
+   "lines": 270
+  },
+  {
+   "path": "src/Shared/Game/HotbarSize.lua",
+   "bytes": 4310,
+   "lines": 109
+  },
+  {
+   "path": "src/Shared/Game/HoverboardLogic.lua",
+   "bytes": 7137,
+   "lines": 217
+  },
+  {
+   "path": "src/Shared/Game/HudLayout.lua",
+   "bytes": 1153,
+   "lines": 37
+  },
+  {
+   "path": "src/Shared/Game/InputGlyphs.lua",
+   "bytes": 1111,
+   "lines": 48
+  },
+  {
+   "path": "src/Shared/Game/InputPlatform.lua",
+   "bytes": 3124,
+   "lines": 87
+  },
+  {
+   "path": "src/Shared/Game/InternalAccounts.lua",
+   "bytes": 1094,
+   "lines": 41
+  },
+  {
+   "path": "src/Shared/Game/InventoryCategories.lua",
+   "bytes": 1772,
+   "lines": 41
+  },
+  {
+   "path": "src/Shared/Game/LayerAccess.lua",
+   "bytes": 5253,
+   "lines": 127
+  },
+  {
+   "path": "src/Shared/Game/LeaderboardScoring.lua",
+   "bytes": 5228,
+   "lines": 159
+  },
+  {
+   "path": "src/Shared/Game/LeaderboardStatus.lua",
+   "bytes": 1654,
+   "lines": 47
+  },
+  {
+   "path": "src/Shared/Game/LeaderboardWindowAward.lua",
+   "bytes": 4808,
+   "lines": 133
+  },
+  {
+   "path": "src/Shared/Game/LevelCurve.lua",
+   "bytes": 2851,
+   "lines": 82
+  },
+  {
+   "path": "src/Shared/Game/LevelDiffYield.lua",
+   "bytes": 2332,
+   "lines": 55
+  },
+  {
+   "path": "src/Shared/Game/LevelScale.lua",
+   "bytes": 1976,
+   "lines": 60
+  },
+  {
+   "path": "src/Shared/Game/LevelTrack.lua",
+   "bytes": 4652,
+   "lines": 122
+  },
+  {
+   "path": "src/Shared/Game/MagnetRadius.lua",
+   "bytes": 819,
+   "lines": 30
+  },
+  {
+   "path": "src/Shared/Game/MissionRankScale.lua",
+   "bytes": 2261,
+   "lines": 72
+  },
+  {
+   "path": "src/Shared/Game/MissionSchema.lua",
+   "bytes": 15978,
+   "lines": 356
+  },
+  {
+   "path": "src/Shared/Game/MonetizationCatalog.lua",
+   "bytes": 4200,
+   "lines": 117
+  },
+  {
+   "path": "src/Shared/Game/MountainTime.lua",
+   "bytes": 5660,
+   "lines": 147
+  },
+  {
+   "path": "src/Shared/Game/MovingTargetPosition.lua",
+   "bytes": 795,
+   "lines": 19
+  },
+  {
+   "path": "src/Shared/Game/OnHitEffects.lua",
+   "bytes": 4057,
+   "lines": 89
+  },
+  {
+   "path": "src/Shared/Game/PackScale.lua",
+   "bytes": 2886,
+   "lines": 71
+  },
+  {
+   "path": "src/Shared/Game/PartyMath.lua",
+   "bytes": 4852,
+   "lines": 138
+  },
+  {
+   "path": "src/Shared/Game/PermanentEnchantSlots.lua",
+   "bytes": 846,
+   "lines": 29
+  },
+  {
+   "path": "src/Shared/Game/PetAbility.lua",
+   "bytes": 1942,
+   "lines": 59
+  },
+  {
+   "path": "src/Shared/Game/PetAbilityRuntime.lua",
+   "bytes": 7123,
+   "lines": 204
+  },
+  {
+   "path": "src/Shared/Game/PetAnimState.lua",
+   "bytes": 2124,
+   "lines": 62
+  },
+  {
+   "path": "src/Shared/Game/PetAttackMotion.lua",
+   "bytes": 5837,
+   "lines": 157
+  },
+  {
+   "path": "src/Shared/Game/PetCombat.lua",
+   "bytes": 1537,
+   "lines": 37
+  },
+  {
+   "path": "src/Shared/Game/PetElement.lua",
+   "bytes": 1282,
+   "lines": 33
+  },
+  {
+   "path": "src/Shared/Game/PetEnchantView.lua",
+   "bytes": 1284,
+   "lines": 37
+  },
+  {
+   "path": "src/Shared/Game/PetEndurance.lua",
+   "bytes": 4700,
+   "lines": 114
+  },
+  {
+   "path": "src/Shared/Game/PetEquipCapacity.lua",
+   "bytes": 970,
+   "lines": 29
+  },
+  {
+   "path": "src/Shared/Game/PetFormation.lua",
+   "bytes": 17212,
+   "lines": 412
+  },
+  {
+   "path": "src/Shared/Game/PetLockout.lua",
+   "bytes": 11053,
+   "lines": 288
+  },
+  {
+   "path": "src/Shared/Game/PetMeander.lua",
+   "bytes": 5465,
+   "lines": 129
+  },
+  {
+   "path": "src/Shared/Game/PetPower.lua",
+   "bytes": 7630,
+   "lines": 177
+  },
+  {
+   "path": "src/Shared/Game/PetPowerView.lua",
+   "bytes": 6609,
+   "lines": 143
+  },
+  {
+   "path": "src/Shared/Game/PetSurvivability.lua",
+   "bytes": 2610,
+   "lines": 51
+  },
+  {
+   "path": "src/Shared/Game/PetTargeting.lua",
+   "bytes": 5543,
+   "lines": 121
+  },
+  {
+   "path": "src/Shared/Game/PlayerListStatus.lua",
+   "bytes": 3400,
+   "lines": 109
+  },
+  {
+   "path": "src/Shared/Game/PotionDescribe.lua",
+   "bytes": 2257,
+   "lines": 72
+  },
+  {
+   "path": "src/Shared/Game/PotionShopLogic.lua",
+   "bytes": 5074,
+   "lines": 169
+  },
+  {
+   "path": "src/Shared/Game/PowerCastGate.lua",
+   "bytes": 1572,
+   "lines": 46
+  },
+  {
+   "path": "src/Shared/Game/PowerDescribe.lua",
+   "bytes": 10500,
+   "lines": 265
+  },
+  {
+   "path": "src/Shared/Game/PowerFormula.lua",
+   "bytes": 1320,
+   "lines": 39
+  },
+  {
+   "path": "src/Shared/Game/PowerRegistry.lua",
+   "bytes": 5850,
+   "lines": 172
+  },
+  {
+   "path": "src/Shared/Game/PowerSelection.lua",
+   "bytes": 5341,
+   "lines": 132
+  },
+  {
+   "path": "src/Shared/Game/PowerStats.lua",
+   "bytes": 6863,
+   "lines": 143
+  },
+  {
+   "path": "src/Shared/Game/PowerStatsDiff.lua",
+   "bytes": 3029,
+   "lines": 65
+  },
+  {
+   "path": "src/Shared/Game/Principal.lua",
+   "bytes": 6685,
+   "lines": 168
+  },
+  {
+   "path": "src/Shared/Game/PrologueSpawnGate.lua",
+   "bytes": 583,
+   "lines": 21
+  },
+  {
+   "path": "src/Shared/Game/PromoCodeLogic.lua",
+   "bytes": 8536,
+   "lines": 226
+  },
+  {
+   "path": "src/Shared/Game/QuestActivation.lua",
+   "bytes": 1658,
+   "lines": 39
+  },
+  {
+   "path": "src/Shared/Game/QuestChain.lua",
+   "bytes": 2653,
+   "lines": 63
+  },
+  {
+   "path": "src/Shared/Game/QuestDisplayMode.lua",
+   "bytes": 338,
+   "lines": 15
+  },
+  {
+   "path": "src/Shared/Game/QuestReward.lua",
+   "bytes": 1544,
+   "lines": 44
+  },
+  {
+   "path": "src/Shared/Game/RangeCatalogView.lua",
+   "bytes": 6573,
+   "lines": 196
+  },
+  {
+   "path": "src/Shared/Game/RealmTheme.lua",
+   "bytes": 4233,
+   "lines": 120
+  },
+  {
+   "path": "src/Shared/Game/RealmTokens.lua",
+   "bytes": 3467,
+   "lines": 88
+  },
+  {
+   "path": "src/Shared/Game/RecallTarget.lua",
+   "bytes": 3125,
+   "lines": 99
+  },
+  {
+   "path": "src/Shared/Game/ResSickness.lua",
+   "bytes": 1401,
+   "lines": 31
+  },
+  {
+   "path": "src/Shared/Game/RetentionLogic.lua",
+   "bytes": 25575,
+   "lines": 650
+  },
+  {
+   "path": "src/Shared/Game/RewardBundle.lua",
+   "bytes": 3074,
+   "lines": 94
+  },
+  {
+   "path": "src/Shared/Game/RewardResolver.lua",
+   "bytes": 2040,
+   "lines": 53
+  },
+  {
+   "path": "src/Shared/Game/RiftMultiplier.lua",
+   "bytes": 999,
+   "lines": 30
+  },
+  {
+   "path": "src/Shared/Game/RingSeparate.lua",
+   "bytes": 3351,
+   "lines": 79
+  },
+  {
+   "path": "src/Shared/Game/RingTopology.lua",
+   "bytes": 2800,
+   "lines": 94
+  },
+  {
+   "path": "src/Shared/Game/RosterLogic.lua",
+   "bytes": 3399,
+   "lines": 97
+  },
+  {
+   "path": "src/Shared/Game/RoundedOutline.lua",
+   "bytes": 8492,
+   "lines": 257
+  },
+  {
+   "path": "src/Shared/Game/ServerLuck.lua",
+   "bytes": 1091,
+   "lines": 32
+  },
+  {
+   "path": "src/Shared/Game/ShopLogic.lua",
+   "bytes": 1561,
+   "lines": 48
+  },
+  {
+   "path": "src/Shared/Game/ShopPurchaseTransaction.lua",
+   "bytes": 1988,
+   "lines": 61
+  },
+  {
+   "path": "src/Shared/Game/SoulMath.lua",
+   "bytes": 3037,
+   "lines": 88
+  },
+  {
+   "path": "src/Shared/Game/SpawnGroupGate.lua",
+   "bytes": 487,
+   "lines": 16
+  },
+  {
+   "path": "src/Shared/Game/SpawnSlots.lua",
+   "bytes": 11913,
+   "lines": 333
+  },
+  {
+   "path": "src/Shared/Game/SpiritForm.lua",
+   "bytes": 2269,
+   "lines": 68
+  },
+  {
+   "path": "src/Shared/Game/SquadDisplayMode.lua",
+   "bytes": 336,
+   "lines": 15
+  },
+  {
+   "path": "src/Shared/Game/SquadDiversity.lua",
+   "bytes": 3270,
+   "lines": 100
+  },
+  {
+   "path": "src/Shared/Game/StackPool.lua",
+   "bytes": 3158,
+   "lines": 97
+  },
+  {
+   "path": "src/Shared/Game/StarterPetChoice.lua",
+   "bytes": 2645,
+   "lines": 81
+  },
+  {
+   "path": "src/Shared/Game/SupportAura.lua",
+   "bytes": 10006,
+   "lines": 194
+  },
+  {
+   "path": "src/Shared/Game/Targeting.lua",
+   "bytes": 1337,
+   "lines": 46
+  },
+  {
+   "path": "src/Shared/Game/TargetPriority.lua",
+   "bytes": 3437,
+   "lines": 109
+  },
+  {
+   "path": "src/Shared/Game/TeamCast.lua",
+   "bytes": 2568,
+   "lines": 83
+  },
+  {
+   "path": "src/Shared/Game/TesterRewardCampaign.lua",
+   "bytes": 7394,
+   "lines": 186
+  },
+  {
+   "path": "src/Shared/Game/ThemeUtility.lua",
+   "bytes": 812,
+   "lines": 25
+  },
+  {
+   "path": "src/Shared/Game/TradeDeliveryTransaction.lua",
+   "bytes": 2300,
+   "lines": 70
+  },
+  {
+   "path": "src/Shared/Game/TradeLogic.lua",
+   "bytes": 4922,
+   "lines": 141
+  },
+  {
+   "path": "src/Shared/Game/TradePetSort.lua",
+   "bytes": 1948,
+   "lines": 66
+  },
+  {
+   "path": "src/Shared/Game/TradeReveal.lua",
+   "bytes": 2096,
+   "lines": 58
+  },
+  {
+   "path": "src/Shared/Game/TrialEggRewardLadder.lua",
+   "bytes": 6651,
+   "lines": 163
+  },
+  {
+   "path": "src/Shared/Game/TutorialFlow.lua",
+   "bytes": 7361,
+   "lines": 189
+  },
+  {
+   "path": "src/Shared/Game/TutorialLocalization.lua",
+   "bytes": 11191,
+   "lines": 146
+  },
+  {
+   "path": "src/Shared/Game/UIPalette.lua",
+   "bytes": 1310,
+   "lines": 39
+  },
+  {
+   "path": "src/Shared/Game/VeteranTrack.lua",
+   "bytes": 2349,
+   "lines": 67
+  },
+  {
+   "path": "src/Shared/Game/VulnMark.lua",
+   "bytes": 3852,
+   "lines": 88
+  },
+  {
+   "path": "src/Shared/Game/WorldContext.lua",
+   "bytes": 4205,
+   "lines": 96
+  },
+  {
+   "path": "src/Shared/Game/WorldTravelLogic.lua",
+   "bytes": 3785,
+   "lines": 114
+  },
+  {
+   "path": "src/Shared/Game/XpReward.lua",
+   "bytes": 2639,
+   "lines": 62
+  },
+  {
+   "path": "src/Shared/Game/ZoneResolver.lua",
+   "bytes": 4800,
+   "lines": 112
+  },
+  {
+   "path": "src/Shared/Game/ZoneSchema.lua",
+   "bytes": 2338,
+   "lines": 62
+  },
+  {
+   "path": "src/Shared/Inventory/BestPetSelector.lua",
+   "bytes": 4864,
+   "lines": 166
+  },
+  {
+   "path": "src/Shared/Inventory/PetCompaction.lua",
+   "bytes": 5872,
+   "lines": 161
+  },
+  {
+   "path": "src/Shared/Inventory/PetEquipMigration.lua",
+   "bytes": 2943,
+   "lines": 87
+  },
+  {
+   "path": "src/Shared/Inventory/PetInventoryView.lua",
+   "bytes": 24309,
+   "lines": 616
+  },
+  {
+   "path": "src/Shared/Inventory/PetMigrationV5.lua",
+   "bytes": 9012,
+   "lines": 227
+  },
+  {
+   "path": "src/Shared/Inventory/PetProjectionPolicy.lua",
+   "bytes": 1019,
+   "lines": 32
+  },
+  {
+   "path": "src/Shared/Inventory/RecordMutationBatch.lua",
+   "bytes": 735,
+   "lines": 30
+  },
+  {
+   "path": "src/Shared/Libraries/Maid.lua",
+   "bytes": 7738,
+   "lines": 300
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/Archetype.luau",
+   "bytes": 2625,
+   "lines": 104
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/Archetype.spec.luau",
+   "bytes": 1641,
+   "lines": 40
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/component.luau",
+   "bytes": 5614,
+   "lines": 177
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/component.spec.luau",
+   "bytes": 3013,
+   "lines": 106
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/clientBindings.luau",
+   "bytes": 1893,
+   "lines": 63
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/debugger.luau",
+   "bytes": 14341,
+   "lines": 518
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/EventBridge.luau",
+   "bytes": 5697,
+   "lines": 208
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/formatTable.luau",
+   "bytes": 5045,
+   "lines": 186
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/hookWidgets.luau",
+   "bytes": 2290,
+   "lines": 102
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/hookWorld.luau",
+   "bytes": 1943,
+   "lines": 59
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/mouseHighlight.luau",
+   "bytes": 2412,
+   "lines": 79
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/ui.luau",
+   "bytes": 13815,
+   "lines": 391
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/widgets/codeText.luau",
+   "bytes": 1128,
+   "lines": 34
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/widgets/container.luau",
+   "bytes": 1075,
+   "lines": 35
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/widgets/entityInspect.luau",
+   "bytes": 2087,
+   "lines": 62
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/widgets/errorInspect.luau",
+   "bytes": 1453,
+   "lines": 46
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/widgets/frame.luau",
+   "bytes": 1635,
+   "lines": 50
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/widgets/hoverInspect.luau",
+   "bytes": 840,
+   "lines": 27
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/widgets/link.luau",
+   "bytes": 3228,
+   "lines": 103
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/widgets/panel.luau",
+   "bytes": 2430,
+   "lines": 68
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/widgets/queryInspect.luau",
+   "bytes": 2020,
+   "lines": 57
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/widgets/realmSwitch.luau",
+   "bytes": 2968,
+   "lines": 95
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/widgets/selectionList.luau",
+   "bytes": 8111,
+   "lines": 231
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/widgets/tooltip.luau",
+   "bytes": 1623,
+   "lines": 52
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/widgets/valueInspect.luau",
+   "bytes": 3001,
+   "lines": 85
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/debugger/widgets/worldInspect.luau",
+   "bytes": 9061,
+   "lines": 231
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/hooks/log.luau",
+   "bytes": 942,
+   "lines": 42
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/hooks/useDeltaTime.luau",
+   "bytes": 463,
+   "lines": 19
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/hooks/useEvent.luau",
+   "bytes": 6336,
+   "lines": 201
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/hooks/useEvent.spec.luau",
+   "bytes": 4346,
+   "lines": 163
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/hooks/useThrottle.luau",
+   "bytes": 1666,
+   "lines": 52
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/immutable.luau",
+   "bytes": 883,
+   "lines": 48
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/init.luau",
+   "bytes": 2132,
+   "lines": 82
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/Loop.luau",
+   "bytes": 18789,
+   "lines": 540
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/Loop.spec.luau",
+   "bytes": 18170,
+   "lines": 636
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/mock/BindableEvent.luau",
+   "bytes": 945,
+   "lines": 46
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/Queue.luau",
+   "bytes": 641,
+   "lines": 40
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/rollingAverage.luau",
+   "bytes": 428,
+   "lines": 22
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/topoRuntime.luau",
+   "bytes": 5527,
+   "lines": 178
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/topoRuntime.spec.luau",
+   "bytes": 2967,
+   "lines": 116
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/World.luau",
+   "bytes": 34219,
+   "lines": 1153
+  },
+  {
+   "path": "src/Shared/Libraries/Matter/World.spec.luau",
+   "bytes": 24779,
+   "lines": 797
+  },
+  {
+   "path": "src/Shared/Libraries/Promise.lua",
+   "bytes": 430,
+   "lines": 13
+  },
+  {
+   "path": "src/Shared/Libraries/Sift.lua",
+   "bytes": 1256,
+   "lines": 56
+  },
+  {
+   "path": "src/Shared/Libraries/Signal.lua",
+   "bytes": 1436,
+   "lines": 61
+  },
+  {
+   "path": "src/Shared/Locations.lua",
+   "bytes": 10539,
+   "lines": 334
+  },
+  {
+   "path": "src/Shared/Network/FireGameEvent.lua",
+   "bytes": 3208,
+   "lines": 82
+  },
+  {
+   "path": "src/Shared/Network/NetworkManifest.lua",
+   "bytes": 6765,
+   "lines": 196
+  },
+  {
+   "path": "src/Shared/Network/RuntimeTransport.lua",
+   "bytes": 1713,
+   "lines": 56
+  },
+  {
+   "path": "src/Shared/Network/SignalRegistry.lua",
+   "bytes": 1327,
+   "lines": 35
+  },
+  {
+   "path": "src/Shared/Network/Signals.lua",
+   "bytes": 1063,
+   "lines": 20
+  },
+  {
+   "path": "src/Shared/Services/AssetImageGenerator.lua",
+   "bytes": 14712,
+   "lines": 462
+  },
+  {
+   "path": "src/Shared/Services/DynamicImageCache.lua",
+   "bytes": 17592,
+   "lines": 556
+  },
+  {
+   "path": "src/Shared/Services/EggCurrentTargetService.lua",
+   "bytes": 23745,
+   "lines": 671
+  },
+  {
+   "path": "src/Shared/Services/EggHatchingService.lua",
+   "bytes": 125361,
+   "lines": 3083
+  },
+  {
+   "path": "src/Shared/Services/EggInteractionService.lua",
+   "bytes": 93320,
+   "lines": 2528
+  },
+  {
+   "path": "src/Shared/Services/EggPetPreviewService.lua",
+   "bytes": 52480,
+   "lines": 1342
+  },
+  {
+   "path": "src/Shared/Services/EggSpawner.lua",
+   "bytes": 10055,
+   "lines": 336
+  },
+  {
+   "path": "src/Shared/Services/EggWorldQuery.lua",
+   "bytes": 8603,
+   "lines": 305
+  },
+  {
+   "path": "src/Shared/Services/PetRuntimeBridge.lua",
+   "bytes": 1549,
+   "lines": 65
+  },
+  {
+   "path": "src/Shared/Services/PetVariantVisuals.lua",
+   "bytes": 5865,
+   "lines": 184
+  },
+  {
+   "path": "src/Shared/Services/TemplateManager.lua",
+   "bytes": 18890,
+   "lines": 589
+  },
+  {
+   "path": "src/Shared/Services/UserDisplayPreferences.lua",
+   "bytes": 30692,
+   "lines": 871
+  },
+  {
+   "path": "src/Shared/UI/OverheadBar.lua",
+   "bytes": 3343,
+   "lines": 81
+  },
+  {
+   "path": "src/Shared/UI/PetThumbnailFetchPolicy.lua",
+   "bytes": 719,
+   "lines": 24
+  },
+  {
+   "path": "src/Shared/UI/PetThumbnailResolver.lua",
+   "bytes": 821,
+   "lines": 25
+  },
+  {
+   "path": "src/Shared/UI/ViewportModelPlacement.lua",
+   "bytes": 651,
+   "lines": 23
+  },
+  {
+   "path": "src/Shared/Utils/AdminChecker.lua",
+   "bytes": 3006,
+   "lines": 110
+  },
+  {
+   "path": "src/Shared/Utils/AssetFetch.lua",
+   "bytes": 1347,
+   "lines": 35
+  },
+  {
+   "path": "src/Shared/Utils/CompletionGroup.lua",
+   "bytes": 1639,
+   "lines": 71
+  },
+  {
+   "path": "src/Shared/Utils/Logger.lua",
+   "bytes": 11966,
+   "lines": 402
+  },
+  {
+   "path": "src/Shared/Utils/ModuleLoader.lua",
+   "bytes": 8192,
+   "lines": 300
+  },
+  {
+   "path": "src/Shared/Utils/NetworkConfig.lua",
+   "bytes": 1034,
+   "lines": 37
+  },
+  {
+   "path": "src/Shared/Utils/ProductIdMapper.lua",
+   "bytes": 10029,
+   "lines": 344
+  },
+  {
+   "path": "src/Shared/Utils/Readiness.lua",
+   "bytes": 1573,
+   "lines": 53
+  },
+  {
+   "path": "src/Shared/Utils/Retry.lua",
+   "bytes": 1035,
+   "lines": 33
+  },
+  {
+   "path": "src/Shared/Worldgen/GrayBoxKit.lua",
+   "bytes": 23803,
+   "lines": 596
+  },
+  {
+   "path": "src/Shared/Worldgen/LayoutSolver.lua",
+   "bytes": 24587,
+   "lines": 671
+  },
+  {
+   "path": "src/Shared/Worldgen/MissionDecor.lua",
+   "bytes": 9964,
+   "lines": 232
+  },
+  {
+   "path": "src/Shared/Worldgen/MissionPopulation.lua",
+   "bytes": 8343,
+   "lines": 183
+  },
+  {
+   "path": "src/Shared/Worldgen/MissionSeed.lua",
+   "bytes": 2772,
+   "lines": 71
+  },
+  {
+   "path": "src/Shared/Worldgen/TileCatalog.lua",
+   "bytes": 6828,
+   "lines": 192
+  },
+  {
+   "path": "stylua.toml",
+   "bytes": 147,
+   "lines": 6
+  },
+  {
+   "path": "tools/rigging/build_keyframes.luau",
+   "bytes": 2625,
+   "lines": 83
+  },
+  {
+   "path": "wally.toml",
+   "bytes": 702,
+   "lines": 20
+  }
+ ]
+}

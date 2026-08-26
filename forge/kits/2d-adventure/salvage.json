@@ -1,0 +1,236 @@
+{
+ "$comment": "Unmodified source copied from a licensed project, kept whole so the relationships between modules survive. Generalising anything here into a Forge family is a separate step; nothing in this folder has been reviewed, adapted, or cleared for shipping as-is.",
+ "kit": "2d-adventure",
+ "source": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\2d-adventure",
+ "files": 45,
+ "lines": 4562,
+ "skipped": 15,
+ "takenAt": "2026-08-26T21:25:46+00:00",
+ "manifest": [
+  {
+   "path": ".vscode/extensions.json",
+   "bytes": 298,
+   "lines": 12
+  },
+  {
+   "path": ".vscode/settings.json",
+   "bytes": 1323,
+   "lines": 59
+  },
+  {
+   "path": ".vscode/tasks.json",
+   "bytes": 2724,
+   "lines": 94
+  },
+  {
+   "path": "aftman.toml",
+   "bytes": 413,
+   "lines": 11
+  },
+  {
+   "path": "moonwave.toml",
+   "bytes": 587,
+   "lines": 25
+  },
+  {
+   "path": "rojo-projects/audio.project.json",
+   "bytes": 1310,
+   "lines": 78
+  },
+  {
+   "path": "rojo-projects/defaultTests.project.json",
+   "bytes": 1058,
+   "lines": 61
+  },
+  {
+   "path": "rojo-projects/demo.project.json",
+   "bytes": 2492,
+   "lines": 159
+  },
+  {
+   "path": "rojo-projects/library.project.json",
+   "bytes": 111,
+   "lines": 9
+  },
+  {
+   "path": "rojo-projects/multi-games.project.json",
+   "bytes": 1473,
+   "lines": 90
+  },
+  {
+   "path": "rojo-projects/testCalc.project.json",
+   "bytes": 1067,
+   "lines": 61
+  },
+  {
+   "path": "rojo-projects/TestMovableObjects.project.json",
+   "bytes": 1030,
+   "lines": 58
+  },
+  {
+   "path": "rojo-projects/testPhysic.project.json",
+   "bytes": 1069,
+   "lines": 61
+  },
+  {
+   "path": "selene.toml",
+   "bytes": 54,
+   "lines": 5
+  },
+  {
+   "path": "src/AnimatedObject.lua",
+   "bytes": 2563,
+   "lines": 104
+  },
+  {
+   "path": "src/AnimatedObject2d.lua",
+   "bytes": 1939,
+   "lines": 77
+  },
+  {
+   "path": "src/Animations/Animation.luau",
+   "bytes": 1339,
+   "lines": 77
+  },
+  {
+   "path": "src/Animations/AnimationController.luau",
+   "bytes": 5594,
+   "lines": 256
+  },
+  {
+   "path": "src/Audio/Audio2dObject.luau",
+   "bytes": 2024,
+   "lines": 99
+  },
+  {
+   "path": "src/Audio/AudioEmitter.luau",
+   "bytes": 1467,
+   "lines": 66
+  },
+  {
+   "path": "src/Audio/AudioListener.luau",
+   "bytes": 1466,
+   "lines": 66
+  },
+  {
+   "path": "src/Audio/init.luau",
+   "bytes": 427,
+   "lines": 28
+  },
+  {
+   "path": "src/base2d.luau",
+   "bytes": 925,
+   "lines": 59
+  },
+  {
+   "path": "src/BaseCharacter.lua",
+   "bytes": 4568,
+   "lines": 225
+  },
+  {
+   "path": "src/Calc.luau",
+   "bytes": 7125,
+   "lines": 250
+  },
+  {
+   "path": "src/camera2d.lua",
+   "bytes": 358,
+   "lines": 25
+  },
+  {
+   "path": "src/Character.lua",
+   "bytes": 4274,
+   "lines": 197
+  },
+  {
+   "path": "src/config.luau",
+   "bytes": 604,
+   "lines": 43
+  },
+  {
+   "path": "src/Control.luau",
+   "bytes": 9524,
+   "lines": 435
+  },
+  {
+   "path": "src/ControlClass.lua",
+   "bytes": 542,
+   "lines": 24
+  },
+  {
+   "path": "src/ControlType.lua",
+   "bytes": 261,
+   "lines": 19
+  },
+  {
+   "path": "src/defaultControls.lua",
+   "bytes": 420,
+   "lines": 21
+  },
+  {
+   "path": "src/ExImage.lua",
+   "bytes": 1789,
+   "lines": 105
+  },
+  {
+   "path": "src/game.lua",
+   "bytes": 4003,
+   "lines": 197
+  },
+  {
+   "path": "src/gifInfo.lua",
+   "bytes": 821,
+   "lines": 48
+  },
+  {
+   "path": "src/init.lua",
+   "bytes": 1408,
+   "lines": 47
+  },
+  {
+   "path": "src/init.meta.json",
+   "bytes": 42,
+   "lines": 4
+  },
+  {
+   "path": "src/map.lua",
+   "bytes": 6922,
+   "lines": 313
+  },
+  {
+   "path": "src/Object2d.lua",
+   "bytes": 2302,
+   "lines": 113
+  },
+  {
+   "path": "src/physic.luau",
+   "bytes": 882,
+   "lines": 43
+  },
+  {
+   "path": "src/PhysicController.luau",
+   "bytes": 1497,
+   "lines": 63
+  },
+  {
+   "path": "src/physicObject.lua",
+   "bytes": 15843,
+   "lines": 652
+  },
+  {
+   "path": "src/player.lua",
+   "bytes": 2052,
+   "lines": 82
+  },
+  {
+   "path": "stylua.toml",
+   "bytes": 58,
+   "lines": 4
+  },
+  {
+   "path": "wally.toml",
+   "bytes": 767,
+   "lines": 37
+  }
+ ]
+}

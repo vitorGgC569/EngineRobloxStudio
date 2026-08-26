@@ -1,0 +1,29 @@
+{
+	"name": "@rbxts/quickzone",
+	"version": "1.4.7",
+	"description": "A high-performance, physics-free spatial query library for Roblox. Maintain 60 FPS with 1M+ zones.",
+	"main": "src/init.lua",
+	"keywords": [
+		"zone",
+		"quickzone"
+	],
+	"author": "ldgerrits",
+	"repository": {
+		"type": "git",
+		"url": "git+https://github.com/LDGerrits/QuickZone.git"
+	},
+	"license": "MIT",
+	"types": "src/index.d.ts",
+	"files": [
+		"src",
+		"!**/*.tsbuildinfo"
+	],
+	"publishConfig": {
+		"access": "public"
+	},
+	"devDependencies": {
+		"@rbxts/compiler-types": "^2.1.0-types.1",
+		"@rbxts/types": "^1.0.664",
+		"typescript": "^4.9.5"
+	}
+}

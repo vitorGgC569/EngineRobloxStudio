@@ -1,0 +1,1875 @@
+--[[
+    SquadHud — City-of-Heroes-style right-side squad strip (Feature 10 HUD, slice 3).
+
+    A persistent vertical strip of cards, one per equipped pet in PositionNumber order
+    (stable, so players keep a preferred arrangement). Each card shows the pet's name,
+    a state badge (Healthy/Strained/Critical/Recharging/Ready), a health bar, and a
+    recharge countdown when it's out of the fight.
+
+    Selection drives "assist" targeting (the CoH elegance): click a card OR the pet in
+    the world to select that slot. Ally/support actions act on the selected pet; an
+    enemy/debuff power would act on the enemy that pet is targeting (shown as the assist
+    target). v1 wires Recall + Summon (Squad_Recall/Squad_Summon); Heal/Buff are stubbed
+    until the player-power system is online.
+
+    Reads slot state straight off the workspace pet attributes (no server UI feed):
+    PetType / Variant / Power / CombatDamageTaken / CombatDowned / CooldownUntil /
+    PositionNumber / TargetID. Pure visualisation + the two slot remotes.
+]]
+
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+local UserInputService = game:GetService("UserInputService")
+
+local PetEndurance = require(ReplicatedStorage.Shared.Game.PetEndurance)
+local Signals = require(ReplicatedStorage.Shared.Network.Signals)
+local TeamFollow = require(script.Parent.TeamFollowController)
+local POWER_ICONS = require(ReplicatedStorage:WaitForChild("Configs"):WaitForChild("power_icons"))
+local PET_ROLES = require(ReplicatedStorage.Configs:WaitForChild("pet_roles"))
+local PETS = require(ReplicatedStorage.Configs:WaitForChild("pets"))
+
+-- Card name = the pet's DISPLAY name (configs/pets.lua), NOT the PetType key ("dragon" not the key),
+-- and the VARIANT is shown by COLOURING the word (gold / rainbow) instead of a "(golden)" suffix —
+-- saves a lot of width. Falls back to a capitalised key if a pet has no display_name.
+-- Blue (left) -> red (right). Starts COOL on purpose: a warm/gold start read as the golden
+-- variant (Jason), so the rainbow now opens blue and only reaches red/orange at the far right.
+local RAINBOW_NAME = ColorSequence.new({
+    ColorSequenceKeypoint.new(0.0, Color3.fromRGB(80, 170, 255)), -- blue
+    ColorSequenceKeypoint.new(0.3, Color3.fromRGB(95, 225, 220)), -- cyan
+    ColorSequenceKeypoint.new(0.55, Color3.fromRGB(120, 235, 110)), -- green
+    ColorSequenceKeypoint.new(0.8, Color3.fromRGB(255, 150, 70)), -- orange
+    ColorSequenceKeypoint.new(1.0, Color3.fromRGB(255, 70, 70)), -- red
+})
+local GOLD_NAME = Color3.fromRGB(255, 215, 0)
+local WHITE_NAME = Color3.fromRGB(255, 255, 255)
+
+local function petDisplayName(key)
+    local def = PETS.pets and PETS.pets[key]
+    if def and type(def.display_name) == "string" then
+        return def.display_name
+    end
+    return (tostring(key):gsub("^%l", string.upper)) -- fallback: capitalise the key
+end
+
+-- Set the card name to `displayName`, coloured by variant (golden = solid gold, rainbow = gradient,
+-- basic = white). The rainbow gradient is a child the label keeps/drops as the variant changes.
+-- A HUGE pet reads in ALL CAPS (Jason: mark hugeness without lengthening the name).
+local function applyVariantName(label, displayName, variant, huge)
+    label.Text = huge and string.upper(displayName) or displayName
+    local grad = label:FindFirstChild("VariantGrad")
+    if variant == "rainbow" then
+        label.TextColor3 = WHITE_NAME -- gradient tints the white base
+        if not grad then
+            grad = Instance.new("UIGradient")
+            grad.Name = "VariantGrad"
+            grad.Parent = label
+        end
+        grad.Color = RAINBOW_NAME
+    else
+        if grad then
+            grad:Destroy()
+        end
+        label.TextColor3 = (variant == "golden") and GOLD_NAME or WHITE_NAME
+    end
+end
+local PetBadge = require(script.Parent.Parent.UI.PetBadge)
+local PetTargeting = require(ReplicatedStorage.Shared.Game.PetTargeting) -- damage scope → role-badge ring
+local PetAbilityRuntime = require(ReplicatedStorage.Shared.Game.PetAbilityRuntime)
+local PetThumbnailResolver = require(ReplicatedStorage.Shared.UI.PetThumbnailResolver)
+local HudCard = require(script.Parent.Parent.UI.HudCard)
+local StatusBadges = require(script.Parent.Parent.UI.StatusBadges)
+
+local thumbnailRegistry = {}
+pcall(function()
+    thumbnailRegistry = require(ReplicatedStorage.Configs:WaitForChild("pet_thumbnail_assets"))
+end)
+
+-- Compact cards prefer the same cheap uploaded art as inventory. A few exclusive/creator pets do
+-- not have a flat registry entry yet, but BootOrchestrator still bakes their ViewportFrame under
+-- Assets.Images.Pets. Clone that fallback only for those exceptional visible squad cards.
+local function cloneBakedPetThumbnail(petType, variant, huge)
+    local ok, viewport = pcall(function()
+        local assets = ReplicatedStorage:FindFirstChild("Assets")
+        local images = assets and assets:FindFirstChild("Images")
+        local pets = images and images:FindFirstChild("Pets")
+        local typeFolder = pets and pets:FindFirstChild(petType)
+        if not typeFolder then
+            return nil
+        end
+        local resolved = (huge and typeFolder:FindFirstChild(variant .. "__huge"))
+            or typeFolder:FindFirstChild(variant)
+        return resolved and resolved:IsA("ViewportFrame") and resolved:Clone() or nil
+    end)
+    return ok and viewport or nil
+end
+
+local SquadHud = {}
+
+local localPlayer = Players.LocalPlayer
+
+-- Resolve a pet's archetype/role chip: PetRole attribute -> by_type[PetType] -> default.
+-- Returns { glyph, icon, color (Color3) }, cached per role id.
+local ROLE_CACHE = {}
+local function roleFor(pet)
+    local id = pet:GetAttribute("PetRole")
+        or (PET_ROLES.by_type and PET_ROLES.by_type[pet:GetAttribute("PetType")])
+        or PET_ROLES.default
+    local cached = ROLE_CACHE[id]
+    if cached then
+        return cached
+    end
+    local def = (PET_ROLES.roles and PET_ROLES.roles[id]) or {}
+    local c = def.color or { 90, 95, 110 }
+    cached = {
+        glyph = def.glyph or "?",
+        icon = def.icon or "",
+        color = Color3.fromRGB(c[1] or 90, c[2] or 95, c[3] or 110),
+    }
+    ROLE_CACHE[id] = cached
+    return cached
+end
+
+local function attackScopeFor(pet, roleId)
+    local petType = pet:GetAttribute("PetType")
+    local petDef = PETS.pets and PETS.pets[petType]
+    return PetTargeting.displayAttackScope(petDef, roleId, PET_ROLES, {
+        explicit = pet:GetAttribute("AttackTargeting"),
+        huge = pet:GetAttribute("Huge") == true,
+        hasAreaProc = PetAbilityRuntime.hasAreaDamage(
+            PETS,
+            petType,
+            pet:GetAttribute("PetVariant") or pet:GetAttribute("Variant") or "basic"
+        ),
+    })
+end
+
+local STATE_COLOR = {
+    Healthy = Color3.fromRGB(90, 210, 110),
+    Strained = Color3.fromRGB(225, 200, 70),
+    Critical = Color3.fromRGB(225, 90, 70),
+    Recharging = Color3.fromRGB(120, 130, 150),
+    Ready = Color3.fromRGB(95, 170, 235),
+    Empty = Color3.fromRGB(70, 70, 80),
+}
+local SLOT_BAR_COLOR = Color3.fromRGB(235, 150, 70) -- the SLOT timer (thin bar) when a pet is downed
+local SHIELD_BAR_COLOR = Color3.fromRGB(95, 170, 235) -- the shield-pool thin bar when alive
+
+-- Card chrome (frame/chip/health bar), the colour palette, and the green→red health curve all
+-- live in HudCard, shared with the enemy strip so the two HUDs stay pixel-identical.
+local formatTime = HudCard.formatTime
+local healthColor = HudCard.healthColor
+
+local function petsFolder()
+    local pp = Workspace:FindFirstChild("PlayerPets")
+    return pp and pp:FindFirstChild(localPlayer.Name)
+end
+
+local function petPower(pet)
+    local nv = pet:FindFirstChild("Power")
+    local p = (nv and tonumber(nv.Value)) or pet:GetAttribute("EffectivePower") or 1
+    return (p and p >= 1) and p or 1
+end
+
+local function petSlot(pet)
+    local pn = pet:FindFirstChild("PositionNumber")
+    return pn and pn.Value or 0
+end
+
+-- The model a pet is currently attacking/mining: its TargetID resolves to an enemy (or crystal) by
+-- matching that id to the target's BreakableID child — the same id space the server assigns. Scans
+-- only the relevant folder (Enemies vs Breakables) via TargetType. nil when the pet has no target.
+local function resolveTargetModel(pet)
+    local tid = pet:FindFirstChild("TargetID")
+    if not tid or tid.Value == 0 then
+        return nil
+    end
+    local id = tid.Value
+    local game = Workspace:FindFirstChild("Game")
+    if not game then
+        return nil
+    end
+    local tt = pet:FindFirstChild("TargetType")
+    local isEnemy = tt and tostring(tt.Value) == "Enemy"
+    if isEnemy then
+        local enemies = game:FindFirstChild("Enemies")
+        if enemies then
+            for _, m in ipairs(enemies:GetChildren()) do
+                local bid = m:FindFirstChild("BreakableID")
+                if bid and bid.Value == id then
+                    return m
+                end
+            end
+        end
+    else
+        local breakables = game:FindFirstChild("Breakables")
+        if breakables then
+            for _, m in ipairs(breakables:GetDescendants()) do
+                if m:IsA("Model") then
+                    local bid = m:FindFirstChild("BreakableID")
+                    if bid and bid.Value == id then
+                        return m
+                    end
+                end
+            end
+        end
+    end
+    return nil
+end
+
+-- Resolve the live state the HUD renders for one pet.
+local function readSlot(pet, factor, thresholds, noResummon)
+    local power = petPower(pet)
+    local damage = pet:GetAttribute("CombatDamageTaken") or 0
+    local downed = pet:GetAttribute("CombatDowned") == true
+    local cdRemaining = 0
+    local slotRemaining = 0
+    local state
+    local gauntletLock = downed and noResummon == true
+    if downed then
+        if gauntletLock then
+            -- Range / Training Ground: the down lasts the run. Backend still stamps the
+            -- overworld 60s / 5min lockout; the HUD must not count it down to Ready.
+            state = "Down"
+        else
+            cdRemaining = math.max(0, (pet:GetAttribute("CooldownUntil") or 0) - os.time())
+            slotRemaining = math.max(0, (pet:GetAttribute("SlotLockUntil") or 0) - os.time())
+            state = cdRemaining > 0 and "Recharging" or "Ready"
+        end
+    else
+        state = PetEndurance.state(damage, power, factor, thresholds)
+    end
+    local maxEnd = PetEndurance.maxEndurance(power, factor)
+    local shield = pet:GetAttribute("CombatShield") or 0
+    return {
+        slot = petSlot(pet),
+        name = tostring(pet:GetAttribute("PetType") or pet.Name),
+        variant = tostring(pet:GetAttribute("Variant") or "basic"),
+        healthFraction = PetEndurance.healthFraction(damage, power, factor),
+        -- Shield (absorption pool) as a fraction of the pet's endurance ceiling, for the
+        -- thin secondary bar. Capped at 1 so a big shield just fills it.
+        shieldFraction = maxEnd > 0 and math.clamp(shield / maxEnd, 0, 1) or 0,
+        downed = downed,
+        state = state,
+        cdRemaining = cdRemaining,
+        -- #179 down-lockout: the SLOT's own (shorter) timer + whether this pet is a unique special
+        -- (so the recovery bar scales to the 5-min pet lockout, not the 1-min slot).
+        slotRemaining = slotRemaining,
+        special = pet:GetAttribute("LockoutSpecial") == true,
+        gauntletLock = gauntletLock,
+    }
+end
+
+-- Badge descriptors live in the SHARED StatusEffectsRegistry (#244 S4) and render through
+-- StatusBadges.resolve("pet", ...) — one vocabulary for every surface, plus the generic
+-- PowerBadges pass so new server-stamped powers appear here with no edits.
+
+function SquadHud.start()
+    local config = require(ReplicatedStorage:WaitForChild("Configs"):WaitForChild("combat"))
+    local squadCfg = require(ReplicatedStorage.Configs:WaitForChild("squad"))
+    local lockoutDur = {
+        -- the EXACT special pet's recovery (5 min); a stack pet rides the slot timer
+        petSpecial = (squadCfg.down_lockout and squadCfg.down_lockout.pet_lockout_seconds) or 300,
+        slot = (squadCfg.slot_recovery and squadCfg.slot_recovery.down_cooldown_seconds) or 60,
+    }
+    local factor = config.pet_down_threshold_factor or 1
+    local thresholds = config.degradation or { strained_at = 0.6, critical_at = 0.3 }
+    local badgeCfg = config.status_badges or {}
+    local blinkLead = badgeCfg.blink_lead_seconds or 5
+    local blinkPeriod = badgeCfg.blink_period_seconds or 0.5
+
+    local gui = Instance.new("ScreenGui")
+    gui.Name = "SquadHud"
+    gui.ResetOnSpawn = false
+    gui.ZIndexBehavior = Enum.ZIndexBehavior.Sibling
+    gui.IgnoreGuiInset = true
+    gui.Parent = localPlayer:WaitForChild("PlayerGui")
+
+    -- Right-edge container, vertically centred.
+    local root = Instance.new("Frame")
+    root.Name = "Strip"
+    root.AnchorPoint = Vector2.new(1, 0.5)
+    root.Position = UDim2.new(1, -8, 0.5, 0)
+    root.Size = UDim2.fromOffset(186, 10)
+    root.AutomaticSize = Enum.AutomaticSize.Y
+    root.BackgroundTransparency = 1
+    root.Parent = gui
+    -- pixel-designed strip: shrink on small viewports (anchored right-center, stays docked)
+    require(script.Parent.Parent.UI.UIViewportScale).attach(root)
+    local function applyDisplayClass()
+        root.Position = UDim2.new(
+            1,
+            localPlayer:GetAttribute("DisplayClass") == "ten_foot" and -48 or -8,
+            0.5,
+            0
+        )
+    end
+    localPlayer:GetAttributeChangedSignal("DisplayClass"):Connect(applyDisplayClass)
+    applyDisplayClass()
+    local layout = Instance.new("UIListLayout")
+    layout.FillDirection = Enum.FillDirection.Vertical
+    layout.SortOrder = Enum.SortOrder.LayoutOrder
+    layout.HorizontalAlignment = Enum.HorizontalAlignment.Right
+    layout.Padding = UDim.new(0, 4)
+    layout.Parent = root
+
+    -- Compact mobile squad: a quiet circular player/count handle which reveals the equipped pets
+    -- around it while held. This radial wheel keeps the team readable without spending a permanent
+    -- vertical strip of the playfield. It is a SECOND presentation of the same live slot state;
+    -- classic named cards remain untouched for desktop and explicit Classic mode.
+    local compactRoot = Instance.new("Frame")
+    compactRoot.Name = "CompactStrip"
+    compactRoot.AnchorPoint = Vector2.new(1, 0.5)
+    compactRoot.Position = UDim2.new(1, -7, 0.5, 0)
+    compactRoot.Size = UDim2.fromOffset(220, 200)
+    compactRoot.BackgroundTransparency = 1
+    compactRoot.ClipsDescendants = false
+    compactRoot.Visible = false
+    compactRoot.Parent = gui
+    require(script.Parent.Parent.UI.UIViewportScale).attach(compactRoot, { min = 0.78 })
+
+    local compactHeader = Instance.new("TextButton")
+    compactHeader.Name = "TeamHandle"
+    compactHeader.AnchorPoint = Vector2.new(0.5, 0.5)
+    compactHeader.Position = UDim2.fromScale(0.5, 0.5)
+    compactHeader.Size = UDim2.fromOffset(58, 58)
+    compactHeader.BackgroundColor3 = Color3.fromRGB(28, 30, 40)
+    compactHeader.BackgroundTransparency = 0.08
+    compactHeader.BorderSizePixel = 0
+    compactHeader.AutoButtonColor = false
+    compactHeader.Text = ""
+    compactHeader.Active = true
+    compactHeader.ZIndex = 12
+    compactHeader.Parent = compactRoot
+    local compactHeaderCorner = Instance.new("UICorner")
+    compactHeaderCorner.CornerRadius = UDim.new(1, 0)
+    compactHeaderCorner.Parent = compactHeader
+    local compactHeaderStroke = Instance.new("UIStroke")
+    compactHeaderStroke.Color = Color3.fromRGB(95, 170, 235)
+    compactHeaderStroke.Thickness = 2
+    compactHeaderStroke.Transparency = 0.15
+    compactHeaderStroke.Parent = compactHeader
+    local compactAvatar = Instance.new("ImageLabel")
+    compactAvatar.Name = "Avatar"
+    compactAvatar.AnchorPoint = Vector2.new(0.5, 0.5)
+    compactAvatar.Position = UDim2.new(0.5, 0, 0.5, -5)
+    compactAvatar.Size = UDim2.fromOffset(42, 42)
+    compactAvatar.BackgroundTransparency = 1
+    compactAvatar.Image = "rbxthumb://type=AvatarHeadShot&id="
+        .. tostring(localPlayer.UserId)
+        .. "&w=150&h=150"
+    compactAvatar.ZIndex = 13
+    compactAvatar.Parent = compactHeader
+    local compactAvatarCorner = Instance.new("UICorner")
+    compactAvatarCorner.CornerRadius = UDim.new(1, 0)
+    compactAvatarCorner.Parent = compactAvatar
+    local compactCount = Instance.new("TextLabel")
+    compactCount.Name = "Count"
+    compactCount.BackgroundTransparency = 1
+    compactCount.AnchorPoint = Vector2.new(0.5, 1)
+    compactCount.Position = UDim2.new(0.5, 0, 1, -1)
+    compactCount.Size = UDim2.fromOffset(48, 18)
+    compactCount.Font = Enum.Font.GothamBold
+    compactCount.TextSize = 14
+    compactCount.TextColor3 = Color3.fromRGB(235, 240, 255)
+    compactCount.TextStrokeColor3 = Color3.fromRGB(12, 15, 25)
+    compactCount.TextStrokeTransparency = 0.15
+    compactCount.Text = "0/0"
+    compactCount.ZIndex = 14
+    compactCount.Parent = compactHeader
+
+    local compactList = Instance.new("Frame")
+    compactList.Name = "HeldPetWheel"
+    compactList.Position = UDim2.fromScale(0, 0)
+    compactList.Size = UDim2.fromScale(1, 1)
+    compactList.BackgroundTransparency = 1
+    compactList.ClipsDescendants = false
+    compactList.Visible = false
+    compactList.Parent = compactRoot
+
+    local compactCards = {}
+    local compactEmptyCards = {}
+    local function layoutCompactCards()
+        local ordered = {}
+        for slot, card in pairs(compactCards) do
+            table.insert(ordered, { slot = slot, card = card })
+        end
+        for slot, card in pairs(compactEmptyCards) do
+            table.insert(ordered, { slot = slot, card = card })
+        end
+        table.sort(ordered, function(a, b)
+            return a.slot < b.slot
+        end)
+        local count = #ordered
+        -- Six early-game pets retain one large, quiet ring. Seven through twelve use two staggered
+        -- six-position rings: the outer pets sit in the angular gaps between the inner pets. This
+        -- keeps the level-50 maximum (10 + extra-pet pass) legible and leaves room for one future
+        -- slot without collapsing the portraits or their status arcs into a crowded clock face.
+        local twoRings = count > 6
+        local scale = twoRings and 0.84 or 1
+        local innerRadius = twoRings and 60 or 62
+        local outerRadius = 86
+        -- Eleven is the shipped maximum (10 level slots + the extra-pet entitlement). Leave the
+        -- unoccupied twelfth position at 3 o'clock, then let that empty space absorb a small
+        -- rightward shift. A full twelve-pet wheel stays centred so its real rightmost node remains
+        -- inside the safe area.
+        local elevenOuterSlots = { 0, 2, 3, 4, 5 }
+        local centerXOffset = count == 11 and 32 or 0
+        compactHeader.Position = UDim2.new(0.5, centerXOffset, 0.5, 0)
+        for index, entry in ipairs(ordered) do
+            local ringIndex = twoRings and ((index - 1) % 6) or (index - 1)
+            local ringCount = twoRings and 6 or math.max(1, count)
+            local isOuter = twoRings and index > 6
+            if count == 11 and isOuter then
+                ringIndex = elevenOuterSlots[index - 6]
+            end
+            local stagger = isOuter and (math.pi / 6) or 0
+            local angle = -math.pi / 2 + stagger + (ringIndex / ringCount) * math.pi * 2
+            local radius = isOuter and outerRadius or innerRadius
+            entry.card.frame.Position = UDim2.new(
+                0.5,
+                centerXOffset + math.cos(angle) * radius,
+                0.5,
+                math.sin(angle) * radius
+            )
+            entry.card.scale.Scale = scale
+        end
+    end
+    local compactManuallyExpanded = false
+    local compactNeedsAttention = false
+    local compactAttentionDismissed = false
+    local function refreshPresentationVisibility()
+        local mode = localPlayer:GetAttribute("SquadDisplayMode") or "classic"
+        local expanded = compactManuallyExpanded
+            or (compactNeedsAttention and not compactAttentionDismissed)
+        root.Visible = mode == "classic" or (mode == "bar" and expanded)
+        compactRoot.Visible = mode ~= "classic"
+        compactHeader.Visible = mode == "circle" or (mode == "bar" and not expanded)
+        compactList.Visible = mode == "circle" and expanded
+        if mode == "bar" and not expanded then
+            compactHeader.Position = UDim2.fromScale(0.5, 0.5)
+        end
+    end
+
+    localPlayer:GetAttributeChangedSignal("SquadDisplayMode"):Connect(refreshPresentationVisibility)
+    localPlayer:GetAttributeChangedSignal("InCombat"):Connect(function()
+        if localPlayer:GetAttribute("InCombat") == true then
+            compactNeedsAttention = true
+        end
+        refreshPresentationVisibility()
+    end)
+    refreshPresentationVisibility()
+
+    local selectedSlot = nil
+    -- TEAM scope sentinel: selecting the top-of-strip TEAM header sets selectedSlot to this and tells
+    -- the server CombatBuffTarget = -1, so a single_pet power (shield/heal/buff) lands on the WHOLE
+    -- squad. Matches PowerService._targetPets/_tauntHolders' -1 handling. (Forward-declared so
+    -- setSelected — defined above the header build — can refresh the header's highlight.)
+    local TEAM_SEL = -1
+    local teamCard -- { frame, stroke }; the header card, built below
+    local function refreshTeamHighlight()
+        if teamCard then
+            HudCard.applyHighlight(teamCard, (selectedSlot == TEAM_SEL) and "select" or nil)
+        end
+    end
+    local assistTargetBid = nil -- the enemy BreakableID the squad is directed to focus (Z / click)
+    local cards = {} -- slot -> { frame, refs... }
+    local worldHighlight = Instance.new("Highlight")
+    worldHighlight.Name = "SquadSelectHighlight"
+    worldHighlight.FillTransparency = 0.6
+    worldHighlight.OutlineColor = Color3.fromRGB(95, 170, 235)
+    worldHighlight.Enabled = false
+    worldHighlight.Parent = gui
+
+    -- The selected pet's TARGET (what it's attacking/mining) — a warmer amber outline, distinct from
+    -- the blue pet selection, so "this pet → that enemy" reads at a glance. Follows the live target.
+    local targetHighlight = Instance.new("Highlight")
+    targetHighlight.Name = "SquadTargetHighlight"
+    targetHighlight.FillTransparency = 0.75
+    targetHighlight.FillColor = Color3.fromRGB(255, 180, 70)
+    targetHighlight.OutlineColor = Color3.fromRGB(255, 160, 40)
+    targetHighlight.DepthMode = Enum.HighlightDepthMode.AlwaysOnTop
+    targetHighlight.Enabled = false
+    targetHighlight.Parent = gui
+
+    -- TEAMMATE selection (docs/TEAMING.md TM4): picking a teammate's card makes THEM the
+    -- cast-through target (CombatBuffTargetPlayer server-side). Mutually exclusive with a
+    -- pet/TEAM pick — forward-declared so setSelected can clear it. Cards built further down.
+    local selectedMate = nil
+    local selectedMateSlot = nil -- a SPECIFIC teammate pet (PositionNumber); nil = whole player
+    local refreshMateHighlights = nil
+    -- flat pet -> card map for the shared expiry-blink engine (mate pet cards blink like own)
+    local matePetBlink = {}
+
+    local function setSelected(slot)
+        selectedSlot = slot
+        selectedMate = nil -- picking a pet/TEAM scope drops the teammate pick
+        selectedMateSlot = nil
+        if refreshMateHighlights then
+            refreshMateHighlights()
+        end
+        -- Tell the server which pet is selected, so single-target buffs (aegis / ironclad) land on
+        -- it. The slot IS the pet's PositionNumber, which the server matches in _targetPets.
+        -- (No playerName field ⇒ the server also clears CombatBuffTargetPlayer.)
+        pcall(function()
+            Signals.Combat_SelectPetTarget:FireServer({ slot = slot or 0 })
+        end)
+        -- world highlight follows the selected pet
+        worldHighlight.Adornee = nil
+        worldHighlight.Enabled = false
+        local folder = petsFolder()
+        if folder then
+            for _, pet in ipairs(folder:GetChildren()) do
+                if pet:IsA("Model") and petSlot(pet) == slot then
+                    worldHighlight.Adornee = pet
+                    worldHighlight.Enabled = not pet:GetAttribute("CombatDowned")
+                end
+            end
+        end
+        -- keep the TEAM header lit only while team scope is the active pick (else a single pet is)
+        refreshTeamHighlight()
+    end
+
+    -- Compact squad presentations stay open after a tap so individual pets remain selectable.
+    -- A second tap closes them. If combat/damage auto-opened the roster, closing it suppresses that
+    -- attention request until the squad returns to a calm/full-health state.
+    compactHeader.Activated:Connect(function()
+        local expanded = compactManuallyExpanded
+            or (compactNeedsAttention and not compactAttentionDismissed)
+        if expanded then
+            compactManuallyExpanded = false
+            compactAttentionDismissed = compactNeedsAttention
+        else
+            compactManuallyExpanded = true
+            compactAttentionDismissed = false
+        end
+        refreshPresentationVisibility()
+    end)
+
+    -- Overlapping tangent segments make a visually continuous active arc. Empty segments are
+    -- hidden; a subtle circular stroke supplies the track, avoiding the dotted-line appearance.
+    local COMPACT_SEGMENTS = 24
+    local function makeSegmentRing(parent, radius, thickness, length, zindex)
+        local segments = {}
+        for i = 1, COMPACT_SEGMENTS do
+            local angle = ((i - 1) / COMPACT_SEGMENTS) * math.pi * 2 - math.pi / 2
+            local segment = Instance.new("Frame")
+            segment.Name = "Segment_" .. i
+            segment.AnchorPoint = Vector2.new(0.5, 0.5)
+            segment.Position =
+                UDim2.new(0.5, math.cos(angle) * radius, 0.5, math.sin(angle) * radius)
+            segment.Size = UDim2.fromOffset(length, thickness)
+            segment.Rotation = math.deg(angle) + 90
+            segment.BackgroundColor3 = Color3.fromRGB(48, 50, 60)
+            segment.BorderSizePixel = 0
+            segment.ZIndex = zindex
+            segment.Parent = parent
+            segments[i] = segment
+        end
+        return segments
+    end
+
+    local function paintSegmentRing(segments, fraction, color, hidden)
+        local active = math.ceil(math.clamp(fraction or 0, 0, 1) * #segments - 0.001)
+        for i, segment in ipairs(segments) do
+            segment.Visible = not hidden and i <= active
+            segment.BackgroundColor3 = color
+            segment.BackgroundTransparency = 0
+        end
+    end
+
+    local function makeCompactCard(slot)
+        local frame = Instance.new("TextButton")
+        frame.Name = "Pet_" .. slot
+        frame.AnchorPoint = Vector2.new(0.5, 0.5)
+        frame.Size = UDim2.fromOffset(48, 48)
+        frame.BackgroundColor3 = Color3.fromRGB(24, 26, 34)
+        frame.BackgroundTransparency = 0.08
+        frame.BorderSizePixel = 0
+        frame.AutoButtonColor = false
+        frame.Text = ""
+        frame.ClipsDescendants = false
+        frame.Parent = compactList
+        local scale = Instance.new("UIScale")
+        scale.Name = "PetScale"
+        scale.Parent = frame
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(1, 0)
+        corner.Parent = frame
+        local stroke = Instance.new("UIStroke")
+        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        stroke.Color = HudCard.STROKE_IDLE
+        stroke.Thickness = 1.5
+        stroke.Transparency = 0.2
+        stroke.Parent = frame
+
+        local portrait = Instance.new("Frame")
+        portrait.Name = "Portrait"
+        portrait.AnchorPoint = Vector2.new(0.5, 0.5)
+        portrait.Position = UDim2.fromScale(0.5, 0.5)
+        portrait.Size = UDim2.fromOffset(36, 36)
+        portrait.BackgroundColor3 = Color3.fromRGB(15, 17, 24)
+        portrait.BackgroundTransparency = 0.05
+        portrait.BorderSizePixel = 0
+        portrait.ZIndex = 2
+        portrait.Parent = frame
+        local portraitCorner = Instance.new("UICorner")
+        portraitCorner.CornerRadius = UDim.new(1, 0)
+        portraitCorner.Parent = portrait
+
+        local placeholder = Instance.new("TextLabel")
+        placeholder.Name = "ThumbnailFallback"
+        placeholder.Size = UDim2.fromScale(0.72, 0.72)
+        placeholder.AnchorPoint = Vector2.new(0.5, 0.5)
+        placeholder.Position = UDim2.fromScale(0.5, 0.5)
+        placeholder.BackgroundTransparency = 1
+        placeholder.Font = Enum.Font.GothamBold
+        placeholder.Text = "🐾"
+        placeholder.TextScaled = true
+        placeholder.TextColor3 = Color3.fromRGB(215, 225, 240)
+        placeholder.ZIndex = 2
+        placeholder.Visible = false
+        placeholder.Parent = portrait
+
+        local image = Instance.new("ImageLabel")
+        image.Name = "Thumbnail"
+        image.Size = UDim2.fromScale(1, 1)
+        image.BackgroundTransparency = 1
+        image.BorderSizePixel = 0
+        image.ScaleType = Enum.ScaleType.Fit
+        image.ZIndex = 3
+        image.Parent = portrait
+        local enduranceTrack = Instance.new("UIStroke")
+        enduranceTrack.Name = "EnduranceTrack"
+        enduranceTrack.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        enduranceTrack.Color = Color3.fromRGB(47, 50, 60)
+        enduranceTrack.Thickness = 3
+        enduranceTrack.Transparency = 0.15
+        enduranceTrack.Parent = portrait
+
+        -- Inner endurance ring and thinner outer shield ring. The active arcs hug the pet portrait;
+        -- the outer ring disappears completely when no shield is present.
+        local enduranceRing = makeSegmentRing(frame, 19, 3, 7, 4)
+        local shieldRing = makeSegmentRing(frame, 23, 2, 7, 3)
+
+        local badgeHost = Instance.new("Frame")
+        badgeHost.Name = "RoleBadge"
+        badgeHost.AnchorPoint = Vector2.new(0, 1)
+        badgeHost.Position = UDim2.new(0, -1, 1, 1)
+        badgeHost.Size = UDim2.fromOffset(19, 19)
+        badgeHost.BackgroundTransparency = 1
+        badgeHost.ZIndex = 8
+        badgeHost.Parent = frame
+        local badge = PetBadge.create(badgeHost, { zIndex = 8 })
+
+        frame.Activated:Connect(function()
+            setSelected(slot)
+        end)
+        return {
+            frame = frame,
+            scale = scale,
+            stroke = stroke,
+            portrait = portrait,
+            image = image,
+            placeholder = placeholder,
+            viewport = nil,
+            enduranceRing = enduranceRing,
+            shieldRing = shieldRing,
+            badge = badge,
+            petType = nil,
+            variant = nil,
+            huge = nil,
+        }
+    end
+
+    local function makeCompactEmptyCard(slot)
+        local frame = Instance.new("Frame")
+        frame.Name = "EmptyPet_" .. slot
+        frame.AnchorPoint = Vector2.new(0.5, 0.5)
+        frame.Size = UDim2.fromOffset(48, 48)
+        frame.BackgroundColor3 = Color3.fromRGB(24, 26, 34)
+        frame.BackgroundTransparency = 0.18
+        frame.BorderSizePixel = 0
+        frame.ClipsDescendants = false
+        frame.Parent = compactList
+        local scale = Instance.new("UIScale")
+        scale.Name = "PetScale"
+        scale.Parent = frame
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(1, 0)
+        corner.Parent = frame
+        local stroke = Instance.new("UIStroke")
+        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        stroke.Color = Color3.fromRGB(110, 116, 138)
+        stroke.Thickness = 2
+        stroke.Transparency = 0.18
+        stroke.Parent = frame
+        return { frame = frame, scale = scale }
+    end
+
+    -- Keep the target highlight on whatever the SELECTED pet is currently attacking/mining. Polled
+    -- (~6 Hz) rather than per-frame — the pet's target only changes occasionally, and resolving it
+    -- scans a folder. Clears when nothing is selected or the selected pet has no target.
+    task.spawn(function()
+        while gui.Parent do
+            task.wait(0.15)
+            local foe
+            -- gated by the "Target Highlight" setting (on by default; toggled in SettingsPanel)
+            if selectedSlot and localPlayer:GetAttribute("TargetHighlightOn") ~= false then
+                local folder = petsFolder()
+                if folder then
+                    for _, pet in ipairs(folder:GetChildren()) do
+                        if pet:IsA("Model") and petSlot(pet) == selectedSlot then
+                            if not pet:GetAttribute("CombatDowned") then
+                                foe = resolveTargetModel(pet)
+                            end
+                            break
+                        end
+                    end
+                end
+            end
+            if foe and foe.Parent then
+                targetHighlight.Adornee = foe
+                targetHighlight.Enabled = true
+            else
+                targetHighlight.Adornee = nil
+                targetHighlight.Enabled = false
+            end
+        end
+    end)
+
+    -- Build one card (returns refs for live updates). The chrome (frame/chip/health bar/status
+    -- row) comes from the shared HudCard builder; the squad card then adds its pet-only extras:
+    -- the thin shield bar, the admin kill button, and the summon/select click.
+    local function makeCard(slot)
+        local card = HudCard.createCard(root, { name = "Slot_" .. slot, layoutOrder = slot })
+        local frame = card.frame
+        local nameLbl, noteLbl, fill = card.name, card.note, card.fill
+        local roleChip, roleGlyph, roleIcon, roleRing =
+            card.roleChip, card.roleGlyph, card.roleIcon, card.roleRing
+        local stroke, status = card.stroke, card.status
+
+        -- SPREAD MARKER (contagion): a small glyph on the role badge when the deployed pet's burn
+        -- spreads — so the HUD reads AoE-contagion apart from plain AoE, matching the inventory card.
+        -- Built hidden; the update loop sets its element-tinted image + visibility from the live pet.
+        local spreadMarker = Instance.new("ImageLabel")
+        spreadMarker.Name = "SpreadMarker"
+        spreadMarker.AnchorPoint = Vector2.new(1, 0)
+        spreadMarker.Position = UDim2.fromScale(1.05, -0.05)
+        spreadMarker.Size = UDim2.fromScale(0.5, 0.5)
+        spreadMarker.BackgroundTransparency = 1
+        spreadMarker.ScaleType = Enum.ScaleType.Fit
+        spreadMarker.Visible = false
+        spreadMarker.ZIndex = (roleIcon and roleIcon.ZIndex or 1) + 2
+        spreadMarker.Parent = roleChip
+        local spreadAspect = Instance.new("UIAspectRatioConstraint")
+        spreadAspect.AspectRatio = 1
+        spreadAspect.Parent = spreadMarker
+
+        -- Thin secondary bar = shield absorption pool (blue), CoH endurance-bar style.
+        -- Hidden when the pet has no shield; rounded (pill) corners.
+        local shieldBg = Instance.new("Frame")
+        shieldBg.Name = "ShieldBg"
+        shieldBg.Position = UDim2.fromOffset(40, 31)
+        shieldBg.Size = UDim2.new(1, -48, 0, 4)
+        shieldBg.BackgroundColor3 = Color3.fromRGB(12, 13, 18)
+        shieldBg.BorderSizePixel = 0
+        shieldBg.ClipsDescendants = true
+        shieldBg.Visible = false
+        shieldBg.Parent = frame
+        local shieldCorner = Instance.new("UICorner")
+        shieldCorner.CornerRadius = UDim.new(1, 0)
+        shieldCorner.Parent = shieldBg
+        local shieldFill = Instance.new("Frame")
+        shieldFill.Name = "ShieldFill"
+        shieldFill.Size = UDim2.fromScale(0, 1)
+        shieldFill.BackgroundColor3 = Color3.fromRGB(95, 170, 235)
+        shieldFill.BorderSizePixel = 0
+        shieldFill.Parent = shieldBg
+        local shieldFillCorner = Instance.new("UICorner")
+        shieldFillCorner.CornerRadius = UDim.new(1, 0)
+        shieldFillCorner.Parent = shieldFill
+
+        -- Admin-only ✕ KILL button (top-right): force THIS slot's pet down so the lockout / Spirit
+        -- Form fires with no enemies — fast testing. Shown only while admin mode is ON (the same
+        -- AdminOverlaysOn toggle that reveals the dev overlays).
+        local killBtn = Instance.new("TextButton")
+        killBtn.Name = "AdminKill"
+        killBtn.Size = UDim2.fromOffset(20, 20)
+        killBtn.AnchorPoint = Vector2.new(1, 0)
+        killBtn.Position = UDim2.new(1, -2, 0, 2)
+        killBtn.BackgroundColor3 = Color3.fromRGB(185, 45, 45)
+        killBtn.Text = "X" -- (was "✕"; the glyph tofu-boxes in Gotham)
+        killBtn.Font = Enum.Font.GothamBold
+        killBtn.TextSize = 13
+        killBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+        killBtn.ZIndex = 10
+        killBtn.Visible = localPlayer:GetAttribute("AdminOverlaysOn") == true
+        local killCorner = Instance.new("UICorner")
+        killCorner.CornerRadius = UDim.new(1, 0)
+        killCorner.Parent = killBtn
+        killBtn.Parent = frame
+        killBtn.Activated:Connect(function()
+            Signals.Squad_AdminKill:FireServer({ slot = slot })
+        end)
+        localPlayer:GetAttributeChangedSignal("AdminOverlaysOn"):Connect(function()
+            killBtn.Visible = localPlayer:GetAttribute("AdminOverlaysOn") == true
+        end)
+
+        frame.Activated:Connect(function()
+            -- Overworld: a downed pet whose cooldown has elapsed shows "Summon".
+            -- Gauntlets never become summon-ready (slot stays Down for the run).
+            local c = cards[slot]
+            if c and c.summonReady then
+                Signals.Squad_Summon:FireServer({ slot = slot })
+            else
+                setSelected(slot)
+            end
+        end)
+
+        return {
+            frame = frame,
+            stroke = stroke,
+            name = nameLbl,
+            note = noteLbl,
+            fill = fill,
+            shieldBg = shieldBg,
+            shieldFill = shieldFill,
+            roleChip = roleChip,
+            roleGlyph = roleGlyph,
+            roleIcon = roleIcon,
+            roleRing = roleRing,
+            spreadMarker = spreadMarker,
+            status = status,
+            badges = {},
+        }
+    end
+
+    local emptyCards = {}
+    local function makeEmptyCard(slot)
+        local card = HudCard.createCard(root, {
+            name = "EmptySlot_" .. slot,
+            layoutOrder = slot,
+        })
+        card.roleChip.BackgroundColor3 = Color3.fromRGB(48, 51, 64)
+        card.roleGlyph.Text = ""
+        card.roleGlyph.TextColor3 = Color3.fromRGB(170, 176, 196)
+        card.roleIcon.Visible = false
+        card.roleRing.Visible = false
+        card.fill.Size = UDim2.fromScale(0, 1)
+        card.fill.BackgroundColor3 = Color3.fromRGB(48, 51, 64)
+        card.name.Text = "Empty pet slot"
+        card.name.TextColor3 = Color3.fromRGB(170, 176, 196)
+        card.note.Text = tostring(slot)
+        card.note.TextColor3 = Color3.fromRGB(125, 132, 154)
+        card.frame.Active = false
+        return card
+    end
+
+    -- TEAM HEADER (Jason): a player-icon card pinned to the TOP of the squad strip. Selecting it puts
+    -- power targeting in TEAM scope — a single_pet buff/shield/heal then lands on the WHOLE squad, and
+    -- it clears any single-pet pick (the reachable "select everyone" state we were missing). This is
+    -- the seed of the future multiplayer roster: each teamed player becomes a header like this with
+    -- their pets grouped beneath. Styled to match HudCard chrome (same bg / corner / stroke).
+    do
+        local frame = Instance.new("TextButton")
+        frame.Name = "TeamHeader"
+        frame.AutoButtonColor = false
+        frame.Text = ""
+        frame.Size = UDim2.fromOffset(186, 34)
+        frame.BackgroundColor3 = Color3.fromRGB(28, 30, 40)
+        frame.BackgroundTransparency = 0.1
+        frame.BorderSizePixel = 0
+        frame.LayoutOrder = -1 -- above every pet card (pet slots are >= 1)
+        frame.Parent = root
+        local corner = Instance.new("UICorner")
+        corner.CornerRadius = UDim.new(0, 6)
+        corner.Parent = frame
+        local stroke = Instance.new("UIStroke")
+        stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+        stroke.Color = HudCard.STROKE_IDLE
+        stroke.Thickness = 1.5
+        stroke.Transparency = 0.4
+        stroke.Parent = frame
+        -- circular player HEADSHOT on the inner edge, poking off like the pet role chip. rbxthumb is a
+        -- lazily-resolved content URL — no async thumbnail call.
+        local avatarChip = Instance.new("TextButton")
+        avatarChip.Name = "Avatar"
+        avatarChip.AnchorPoint = Vector2.new(HudCard.BADGE_OVERHANG, 0.5)
+        avatarChip.Position = UDim2.new(0, 0, 0.5, 0)
+        avatarChip.Size = UDim2.new(1, 0, 1, 0)
+        avatarChip.BackgroundColor3 = Color3.fromRGB(55, 110, 190)
+        avatarChip.BorderSizePixel = 0
+        avatarChip.AutoButtonColor = false
+        avatarChip.Text = ""
+        avatarChip.Parent = frame
+        local avAspect = Instance.new("UIAspectRatioConstraint")
+        avAspect.AspectRatio = 1
+        avAspect.AspectType = Enum.AspectType.FitWithinMaxSize
+        avAspect.Parent = avatarChip
+        local avCorner = Instance.new("UICorner")
+        avCorner.CornerRadius = UDim.new(1, 0) -- circle
+        avCorner.Parent = avatarChip
+        local headshot = Instance.new("ImageLabel")
+        headshot.Name = "Headshot"
+        headshot.BackgroundTransparency = 1
+        headshot.AnchorPoint = Vector2.new(0.5, 0.5)
+        headshot.Position = UDim2.fromScale(0.5, 0.5)
+        headshot.Size = UDim2.fromScale(1, 1)
+        headshot.Image = "rbxthumb://type=AvatarHeadShot&id="
+            .. tostring(localPlayer.UserId)
+            .. "&w=150&h=150"
+        headshot.Parent = avatarChip
+        local hsCorner = Instance.new("UICorner")
+        hsCorner.CornerRadius = UDim.new(1, 0)
+        hsCorner.Parent = headshot
+        avatarChip.Activated:Connect(function()
+            if localPlayer:GetAttribute("SquadDisplayMode") == "bar" then
+                compactManuallyExpanded = false
+                compactAttentionDismissed = compactNeedsAttention
+                refreshPresentationVisibility()
+            else
+                -- Preserve the classic header's TEAM-scope target when the portrait is tapped.
+                setSelected(selectedSlot == TEAM_SEL and nil or TEAM_SEL)
+            end
+        end)
+        local lbl = Instance.new("TextLabel")
+        lbl.Name = "Label"
+        lbl.BackgroundTransparency = 1
+        lbl.Position = UDim2.fromOffset(40, 0)
+        lbl.Size = UDim2.new(1, -48, 1, 0)
+        lbl.Font = Enum.Font.GothamBold
+        lbl.TextSize = 14
+        lbl.TextXAlignment = Enum.TextXAlignment.Left
+        lbl.TextColor3 = Color3.fromRGB(235, 240, 255)
+        lbl.Text = "MY TEAM"
+        lbl.Parent = frame
+        -- ➕ on the header's right edge opens the Team panel (invite/roster — docs/TEAMING.md TM4).
+        -- A child button consumes its own click, so the card's squad-scope toggle is untouched.
+        local teamBtn = Instance.new("TextButton")
+        teamBtn.Name = "TeamMenu"
+        teamBtn.AnchorPoint = Vector2.new(1, 0.5)
+        teamBtn.Position = UDim2.new(1, -5, 0.5, 0)
+        teamBtn.Size = UDim2.new(0.75, 0, 0.75, 0) -- relative to the header card
+        teamBtn.BackgroundColor3 = Color3.fromRGB(46, 120, 90)
+        teamBtn.BackgroundTransparency = 0.15
+        teamBtn.Text = "➕"
+        teamBtn.TextSize = 14
+        teamBtn.Font = Enum.Font.GothamBold
+        teamBtn.TextColor3 = Color3.fromRGB(235, 240, 255)
+        teamBtn.Parent = frame
+        local tbAspect = Instance.new("UIAspectRatioConstraint")
+        tbAspect.AspectRatio = 1
+        tbAspect.Parent = teamBtn
+        local tbCorner = Instance.new("UICorner")
+        tbCorner.CornerRadius = UDim.new(1, 0)
+        tbCorner.Parent = teamBtn
+        teamBtn.Activated:Connect(function()
+            local mm = _G.MenuManager
+            if mm then
+                mm:OpenPanel("Team", "slide_in_right")
+            end
+        end)
+        teamCard = { frame = frame, stroke = stroke }
+        frame.Activated:Connect(function()
+            -- toggle: pick TEAM scope, or if it's already the pick, clear back to no selection
+            setSelected(selectedSlot == TEAM_SEL and nil or TEAM_SEL)
+        end)
+        refreshTeamHighlight()
+    end
+
+    -- TEAMMATE cards (docs/TEAMING.md TM4): one header-style card per teamed player, below the
+    -- pet cards, rendered purely from replicated state (TeamMembers csv + the mate's pets'
+    -- CombatDamageTaken/CombatDowned attributes, which replicate globally). The bar is the
+    -- AGGREGATE endurance across their squad (downed pets count as empty); the sub-label counts
+    -- downs. Clicking selects the PLAYER as the cast-through target — a heal cast then lands on
+    -- their neediest pet (server-side TeamCast pick).
+    do
+        local mateCards = {} -- name -> { frame, stroke, fill, sub }
+
+        refreshMateHighlights = function()
+            for name, card in pairs(mateCards) do
+                -- header lights for a whole-player pick; a specific pet card lights instead
+                -- when that pet is the pick
+                HudCard.applyHighlight(
+                    card,
+                    (selectedMate == name and not selectedMateSlot) and "select" or nil
+                )
+                if card.followBtn then -- following = the chip lights green (state, not memory)
+                    local active = TeamFollow.following() == name
+                    card.followBtn.BackgroundColor3 = active and Color3.fromRGB(60, 130, 70)
+                        or Color3.fromRGB(45, 48, 62)
+                    card.followBtn.TextColor3 = active and Color3.fromRGB(235, 255, 235)
+                        or Color3.fromRGB(190, 196, 212)
+                end
+                for pet, pc in pairs(card.petCards) do
+                    HudCard.applyHighlight(
+                        pc,
+                        (selectedMate == name and selectedMateSlot == petSlot(pet)) and "select"
+                            or nil
+                    )
+                end
+            end
+        end
+
+        -- Prettify a CurrentArea id for the card: "Hell_1_Lava" -> "Hell 1 Lava",
+        -- "grass" -> "Earth" (frozen persisted id vs. the player-facing biome name).
+        local ORIGIN_LABEL = { grass = "Earth" }
+        local function areaLabel(id)
+            if type(id) ~= "string" or id == "" then
+                return nil
+            end
+            local words = {}
+            for w in id:gmatch("[^_]+") do
+                words[#words + 1] = ORIGIN_LABEL[w:lower()] or (w:sub(1, 1):upper() .. w:sub(2))
+            end
+            return table.concat(words, " ")
+        end
+
+        local function matePets(name)
+            local pp = Workspace:FindFirstChild("PlayerPets")
+            local folder = pp and pp:FindFirstChild(name)
+            local sum, n, downs = 0, 0, 0
+            if folder then
+                for _, pet in ipairs(folder:GetChildren()) do
+                    if pet:IsA("Model") then
+                        n += 1
+                        if pet:GetAttribute("CombatDowned") == true then
+                            downs += 1
+                        else
+                            sum += PetEndurance.healthFraction(
+                                pet:GetAttribute("CombatDamageTaken") or 0,
+                                petPower(pet),
+                                factor
+                            )
+                        end
+                    end
+                end
+            end
+            return (n > 0 and sum / n or 1), downs, n
+        end
+
+        local function makeMateCard(name, order)
+            local frame = Instance.new("TextButton")
+            frame.Name = "Mate_" .. name
+            frame.AutoButtonColor = false
+            frame.Text = ""
+            frame.Size = UDim2.fromOffset(186, 40)
+            frame.BackgroundColor3 = Color3.fromRGB(28, 30, 40)
+            frame.BackgroundTransparency = 0.1
+            frame.BorderSizePixel = 0
+            frame.LayoutOrder = 1000 + order -- below every pet card
+            frame.Parent = root
+            local mCorner = Instance.new("UICorner")
+            mCorner.CornerRadius = UDim.new(0, 6)
+            mCorner.Parent = frame
+            local stroke = Instance.new("UIStroke")
+            stroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+            stroke.Color = HudCard.STROKE_IDLE
+            stroke.Thickness = 1.5
+            stroke.Transparency = 0.4
+            stroke.Parent = frame
+            -- circular headshot poking off the inner edge, matching the MY TEAM header
+            local mate = Players:FindFirstChild(name)
+            local avatarChip = Instance.new("Frame")
+            avatarChip.Name = "Avatar"
+            avatarChip.AnchorPoint = Vector2.new(HudCard.BADGE_OVERHANG, 0.5)
+            avatarChip.Position = UDim2.new(0, 0, 0.5, 0)
+            avatarChip.Size = UDim2.new(1, 0, 1, 0)
+            avatarChip.BackgroundColor3 = Color3.fromRGB(120, 80, 160)
+            avatarChip.BorderSizePixel = 0
+            avatarChip.Parent = frame
+            local avAspect = Instance.new("UIAspectRatioConstraint")
+            avAspect.AspectRatio = 1
+            avAspect.AspectType = Enum.AspectType.FitWithinMaxSize
+            avAspect.Parent = avatarChip
+            local avCorner = Instance.new("UICorner")
+            avCorner.CornerRadius = UDim.new(1, 0)
+            avCorner.Parent = avatarChip
+            local headshot = Instance.new("ImageLabel")
+            headshot.BackgroundTransparency = 1
+            headshot.AnchorPoint = Vector2.new(0.5, 0.5)
+            headshot.Position = UDim2.fromScale(0.5, 0.5)
+            headshot.Size = UDim2.fromScale(1, 1)
+            headshot.Image = mate
+                    and ("rbxthumb://type=AvatarHeadShot&id=" .. mate.UserId .. "&w=150&h=150")
+                or ""
+            headshot.Parent = avatarChip
+            local hsCorner = Instance.new("UICorner")
+            hsCorner.CornerRadius = UDim.new(1, 0)
+            hsCorner.Parent = headshot
+            local lbl = Instance.new("TextLabel")
+            lbl.Name = "Label"
+            lbl.BackgroundTransparency = 1
+            lbl.Position = UDim2.fromOffset(40, 2)
+            lbl.Size = UDim2.new(1, -72, 0, 16) -- leave the right edge to the follow chip
+            lbl.Font = Enum.Font.GothamBold
+            lbl.TextSize = 13
+            lbl.TextXAlignment = Enum.TextXAlignment.Left
+            lbl.TextTruncate = Enum.TextTruncate.AtEnd
+            lbl.TextColor3 = Color3.fromRGB(235, 240, 255)
+            lbl.Text = name
+            lbl.Parent = frame
+            local sub = Instance.new("TextLabel")
+            sub.Name = "Sub"
+            sub.BackgroundTransparency = 1
+            sub.Position = UDim2.fromOffset(40, 17)
+            sub.Size = UDim2.new(1, -72, 0, 12)
+            sub.Font = Enum.Font.Gotham
+            sub.TextSize = 10
+            sub.TextXAlignment = Enum.TextXAlignment.Left
+            sub.TextColor3 = Color3.fromRGB(190, 196, 212)
+            sub.Text = ""
+            sub.Parent = frame
+            -- aggregate endurance bar along the bottom (same palette as pet cards)
+            local barBg = Instance.new("Frame")
+            barBg.Name = "BarBg"
+            barBg.Position = UDim2.new(0, 40, 1, -8)
+            barBg.Size = UDim2.new(1, -48, 0, 5)
+            barBg.BackgroundColor3 = Color3.fromRGB(18, 20, 28)
+            barBg.BorderSizePixel = 0
+            barBg.Parent = frame
+            local bbCorner = Instance.new("UICorner")
+            bbCorner.CornerRadius = UDim.new(1, 0)
+            bbCorner.Parent = barBg
+            local fill = Instance.new("Frame")
+            fill.Name = "Fill"
+            fill.Size = UDim2.fromScale(1, 1)
+            fill.BackgroundColor3 = healthColor(1)
+            fill.BorderSizePixel = 0
+            fill.Parent = barBg
+            local fCorner = Instance.new("UICorner")
+            fCorner.CornerRadius = UDim.new(1, 0)
+            fCorner.Parent = fill
+
+            -- FOLLOW chip (Jason: any member follows any teammate; "F wouldn't work for
+            -- mobile") — the toggle is a real button on the card so touch is first-class;
+            -- F with the teammate selected is the keyboard shortcut to the same state.
+            local followBtn = Instance.new("TextButton")
+            followBtn.Name = "Follow"
+            followBtn.AnchorPoint = Vector2.new(1, 0.5)
+            followBtn.Position = UDim2.new(1, -4, 0.5, 0)
+            followBtn.Size = UDim2.fromOffset(24, 24)
+            followBtn.BackgroundColor3 = Color3.fromRGB(45, 48, 62)
+            followBtn.BackgroundTransparency = 0.2
+            followBtn.BorderSizePixel = 0
+            followBtn.Font = Enum.Font.GothamBold
+            followBtn.TextSize = 12
+            followBtn.Text = "👣"
+            followBtn.TextColor3 = Color3.fromRGB(190, 196, 212)
+            followBtn.Parent = frame
+            local fbCorner = Instance.new("UICorner")
+            fbCorner.CornerRadius = UDim.new(1, 0)
+            fbCorner.Parent = followBtn
+            followBtn.Activated:Connect(function()
+                TeamFollow.toggle(name)
+            end)
+
+            frame.Activated:Connect(function()
+                local wasPicked = selectedMate == name
+                setSelected(nil) -- clears pet/TEAM pick + selectedMate; server clears both attrs
+                if not wasPicked then
+                    selectedMate = name
+                    pcall(function()
+                        Signals.Combat_SelectPetTarget:FireServer({ slot = 0, playerName = name })
+                    end)
+                end
+                refreshMateHighlights()
+            end)
+
+            return {
+                frame = frame,
+                stroke = stroke,
+                fill = fill,
+                sub = sub,
+                followBtn = followBtn,
+                petCards = {},
+            }
+        end
+
+        -- EXPANDED roster (Jason: "by a team of two we should just see all pets"): a DUO always
+        -- shows the teammate's full pet list under their header card — both squads on the rail,
+        -- each under its owner. Larger teams stay collapsed to the aggregate header and expand
+        -- while that teammate is the SELECTED cast-through target (click to peek). Cards are the
+        -- shared HudCard chrome, slightly narrower so they read as indented under the header.
+        local function syncMatePets(name, card, order, expanded)
+            local pp = Workspace:FindFirstChild("PlayerPets")
+            local folder = pp and pp:FindFirstChild(name)
+            local present = {}
+            if expanded and folder then
+                local i = 0
+                for _, pet in ipairs(folder:GetChildren()) do
+                    if pet:IsA("Model") then
+                        i += 1
+                        present[pet] = true
+                        local pc = card.petCards[pet]
+                        if not pc then
+                            pc = HudCard.createCard(root, {
+                                name = "MatePet_" .. name .. "_" .. i,
+                                width = 170,
+                                height = 36,
+                            })
+                            -- thin SHIELD bar (blue), same construction as own cards — so the
+                            -- caster SEES their bastion/aegis land on a teammate's pet (Jason:
+                            -- "it works, the HUD just doesn't show it")
+                            local shieldBg = Instance.new("Frame")
+                            shieldBg.Name = "ShieldBg"
+                            shieldBg.Position = UDim2.fromOffset(40, 29)
+                            shieldBg.Size = UDim2.new(1, -48, 0, 4)
+                            shieldBg.BackgroundColor3 = Color3.fromRGB(12, 13, 18)
+                            shieldBg.BorderSizePixel = 0
+                            shieldBg.ClipsDescendants = true
+                            shieldBg.Visible = false
+                            shieldBg.Parent = pc.frame
+                            local sbCorner = Instance.new("UICorner")
+                            sbCorner.CornerRadius = UDim.new(1, 0)
+                            sbCorner.Parent = shieldBg
+                            local shieldFill = Instance.new("Frame")
+                            shieldFill.Name = "ShieldFill"
+                            shieldFill.Size = UDim2.fromScale(0, 1)
+                            shieldFill.BackgroundColor3 = SHIELD_BAR_COLOR
+                            shieldFill.BorderSizePixel = 0
+                            shieldFill.Parent = shieldBg
+                            local sfCorner = Instance.new("UICorner")
+                            sfCorner.CornerRadius = UDim.new(1, 0)
+                            sfCorner.Parent = shieldFill
+                            pc.shieldBg, pc.shieldFill = shieldBg, shieldFill
+                            card.petCards[pet] = pc
+                            matePetBlink[pet] = pc
+                            -- click = select THIS teammate pet as the cast-through target
+                            -- (slot + playerName → server stamps CombatBuffTarget +
+                            -- CombatBuffTargetPlayer; a single-pet heal/shield lands on it)
+                            pc.frame.Activated:Connect(function()
+                                local slot = petSlot(pet)
+                                local wasPicked = selectedMate == name and selectedMateSlot == slot
+                                setSelected(nil) -- clears every pick, client + server
+                                if not wasPicked then
+                                    selectedMate = name
+                                    selectedMateSlot = slot
+                                    pcall(function()
+                                        Signals.Combat_SelectPetTarget:FireServer({
+                                            slot = slot,
+                                            playerName = name,
+                                        })
+                                    end)
+                                end
+                                refreshMateHighlights()
+                            end)
+                            refreshMateHighlights() -- new card: pick up any live selection
+                        end
+                        pc.frame.LayoutOrder = 1000 + order * 20 + i
+                        local downed = pet:GetAttribute("CombatDowned") == true
+                        local frac = downed and 0
+                            or PetEndurance.healthFraction(
+                                pet:GetAttribute("CombatDamageTaken") or 0,
+                                petPower(pet),
+                                factor
+                            )
+                        applyVariantName(
+                            pc.name,
+                            petDisplayName(tostring(pet:GetAttribute("PetType") or pet.Name)),
+                            tostring(pet:GetAttribute("Variant") or "basic"),
+                            pet:GetAttribute("Huge") == true
+                        )
+                        pc.fill.Size = UDim2.fromScale(math.clamp(frac, 0, 1), 1)
+                        pc.fill.BackgroundColor3 = healthColor(frac)
+                        pc.note.Text = downed and "DOWN" or ""
+                        -- same element-disc + targeting-ring badge as the player's own cards
+                        local roleId = pet:GetAttribute("PetRole")
+                            or (PET_ROLES.by_type and PET_ROLES.by_type[pet:GetAttribute("PetType")])
+                            or PET_ROLES.default
+                        local element = PetBadge.elementForPetType(pet:GetAttribute("PetType"))
+                        local atkScope = attackScopeFor(pet, roleId)
+                        local hasBadge = PetBadge.apply(pc.roleIcon, pc.roleRing, element, roleId, {
+                            ring = POWER_ICONS.targeting_ring[atkScope],
+                        })
+                        local role = roleFor(pet)
+                        pc.roleChip.BackgroundColor3 = role.color
+                        pc.roleChip.BackgroundTransparency = hasBadge and 1 or 0
+                        pc.roleGlyph.Visible = not hasBadge
+                        pc.roleGlyph.Text = role.glyph
+                        -- shield pool bar + status badges, mirrored from own cards (every
+                        -- attribute replicates globally). Badges resolve against the pet's
+                        -- OWNER — player-level buff channels live on them, not the caster.
+                        local maxEnd = PetEndurance.maxEndurance(petPower(pet), factor)
+                        local shieldF = maxEnd > 0
+                                and math.clamp(
+                                    (pet:GetAttribute("CombatShield") or 0) / maxEnd,
+                                    0,
+                                    1
+                                )
+                            or 0
+                        pc.shieldBg.Visible = not downed and shieldF > 0
+                        pc.shieldFill.Size = UDim2.fromScale(shieldF, 1)
+                        local owner = Players:FindFirstChild(name)
+                        StatusBadges.update(
+                            pc,
+                            StatusBadges.resolve(
+                                "pet",
+                                { pet = pet, player = owner or localPlayer },
+                                os.time()
+                            ),
+                            blinkLead
+                        )
+                    end
+                end
+            end
+            for pet, pc in pairs(card.petCards) do
+                if not present[pet] then
+                    pc.frame:Destroy()
+                    card.petCards[pet] = nil
+                    matePetBlink[pet] = nil
+                end
+            end
+        end
+
+        task.spawn(function()
+            while gui.Parent do
+                local want = {} -- name -> order
+                local teamSize = 0 -- members INCLUDING self (2 = duo -> always expanded)
+                local members = localPlayer:GetAttribute("TeamMembers")
+                if type(members) == "string" and members ~= "" then
+                    local order = 0
+                    for name in members:gmatch("[^,]+") do
+                        teamSize += 1
+                        if name ~= localPlayer.Name then
+                            order += 1
+                            want[name] = order
+                        end
+                    end
+                end
+                for name, card in pairs(mateCards) do
+                    if not want[name] then
+                        for pet, pc in pairs(card.petCards) do
+                            pc.frame:Destroy()
+                            matePetBlink[pet] = nil
+                        end
+                        card.frame:Destroy()
+                        mateCards[name] = nil
+                        if selectedMate == name then -- teammate left: drop the stale pick
+                            selectedMate = nil
+                        end
+                    end
+                end
+                for name, order in pairs(want) do
+                    local card = mateCards[name]
+                    if not card then
+                        card = makeMateCard(name, order)
+                        mateCards[name] = card
+                        refreshMateHighlights()
+                    end
+                    card.frame.LayoutOrder = 1000 + order * 20
+                    local frac, downs, pets = matePets(name)
+                    card.fill.Size = UDim2.fromScale(math.clamp(frac, 0, 1), 1)
+                    card.fill.BackgroundColor3 = healthColor(frac)
+                    -- WHERE they are (Jason QoL): CurrentArea is the server-authoritative
+                    -- replicated SSOT ("Hell_1_Lava" / "grass"), prettified per-viewer.
+                    local mate = Players:FindFirstChild(name)
+                    local loc = areaLabel(mate and mate:GetAttribute("CurrentArea"))
+                    local stats = downs > 0 and ("%d pets · %d DOWN"):format(pets, downs)
+                        or ("%d pets"):format(pets)
+                    card.sub.Text = loc and (stats .. " · " .. loc) or stats
+                    card.sub.TextColor3 = downs > 0 and Color3.fromRGB(240, 120, 110)
+                        or Color3.fromRGB(190, 196, 212)
+                    syncMatePets(name, card, order, teamSize == 2 or selectedMate == name)
+                end
+                task.wait(0.25)
+            end
+        end)
+    end
+
+    -- (Removed the per-slot Recall/Summon/Heal/Buff action row — squad control now
+    -- lives on the bottom hotbar. Card selection still drives assist-target + cycle.)
+
+    -- World click: clicking a pet selects its slot; clicking an ENEMY directs the squad
+    -- to focus it (assist target). Clicking empty space clears the assist.
+    local function enemiesFolder()
+        local g = Workspace:FindFirstChild("Game")
+        return g and g:FindFirstChild("Enemies")
+    end
+    local mouse = localPlayer:GetMouse()
+    mouse.Button1Down:Connect(function()
+        local target = mouse.Target
+        local model = target and target:FindFirstAncestorWhichIsA("Model")
+        local pets = petsFolder()
+        if model and pets and model:IsDescendantOf(pets) then
+            setSelected(petSlot(model))
+            return
+        end
+        -- ANY other player's pet is selectable too (Jason: "if you can select it you should
+        -- be able to affect it" — CoH drive-by support, no team required). Resolve the pet
+        -- model (the child of the owner's folder) and select it as the cast-through target.
+        local pp = Workspace:FindFirstChild("PlayerPets")
+        if model and pp and model:IsDescendantOf(pp) then
+            local pet = model
+            while pet.Parent and pet.Parent.Parent and pet.Parent.Parent ~= pp do
+                pet = pet.Parent
+            end
+            local ownerName = pet.Parent and pet.Parent.Name
+            if ownerName and ownerName ~= localPlayer.Name then
+                setSelected(nil) -- clears own-pet/TEAM pick + both attrs server-side
+                selectedMate = ownerName
+                selectedMateSlot = petSlot(pet)
+                pcall(function()
+                    Signals.Combat_SelectPetTarget:FireServer({
+                        slot = petSlot(pet),
+                        playerName = ownerName,
+                    })
+                end)
+                if refreshMateHighlights then
+                    refreshMateHighlights()
+                end
+                worldHighlight.Adornee = pet
+                worldHighlight.Enabled = not pet:GetAttribute("CombatDowned")
+                return
+            end
+        end
+        local enemies = enemiesFolder()
+        if model and enemies and model:IsDescendantOf(enemies) then
+            local bid = model:FindFirstChild("BreakableID")
+            assistTargetBid = bid and bid.Value or nil
+            Signals.Combat_SetAssist:FireServer({ targetId = bid and bid.Value or 0 })
+        elseif not model then
+            assistTargetBid = nil
+            Signals.Combat_SetAssist:FireServer({ targetId = 0 }) -- clicked empty -> clear
+        end
+    end)
+
+    -- Keyboard cycle (default Tab, config-assignable; hold Shift to go backward).
+    local controls = require(ReplicatedStorage.Configs:WaitForChild("controls"))
+    local cycleName = (controls.keybinds and controls.keybinds.squad_cycle) or "Tab"
+    local okKey, cycleKey = pcall(function()
+        return Enum.KeyCode[cycleName]
+    end)
+    if not okKey or not cycleKey then
+        cycleKey = Enum.KeyCode.Tab
+    end
+
+    local function orderedSlots()
+        local slots = {}
+        local folder = petsFolder()
+        if folder then
+            for _, pet in ipairs(folder:GetChildren()) do
+                if pet:IsA("Model") and pet.PrimaryPart then
+                    slots[#slots + 1] = petSlot(pet)
+                end
+            end
+        end
+        table.sort(slots)
+        return slots
+    end
+
+    local function cycle(dir)
+        local slots = orderedSlots()
+        -- fold the TEAM header in as the last cycle stop (Jason): pet1 → … → petN → TEAM → pet1, so
+        -- Tab reaches team scope on desktop too. (Even with no pets, TEAM is a reachable stop.)
+        slots[#slots + 1] = TEAM_SEL
+        local idx
+        for i, s in ipairs(slots) do
+            if s == selectedSlot then
+                idx = i
+                break
+            end
+        end
+        if not idx then
+            idx = dir > 0 and 1 or #slots
+        else
+            idx = ((idx - 1 + dir) % #slots) + 1
+        end
+        setSelected(slots[idx])
+    end
+
+    -- Enemy assist cycle (Z): step the assist target through nearby enemies (and, if
+    -- configured, mining targets), directing the squad to focus one. Mirrors the Q cycle.
+    local enemyCycleName = (controls.keybinds and controls.keybinds.enemy_cycle) or "Z"
+    local okE, enemyCycleKey = pcall(function()
+        return Enum.KeyCode[enemyCycleName]
+    end)
+    if not okE or not enemyCycleKey then
+        enemyCycleKey = Enum.KeyCode.Z
+    end
+    local ecCfg = controls.enemy_cycle or {}
+    local cycleRange = ecCfg.range or 80
+    local includeMining = ecCfg.include_mining == true
+
+    local function orderedEnemies()
+        local out = {}
+        local char = localPlayer.Character
+        local hrp = char and char:FindFirstChild("HumanoidRootPart")
+        if not hrp then
+            return out
+        end
+        local function add(m)
+            if m and m:IsA("Model") and m.PrimaryPart and (m:GetAttribute("HP") or 0) > 0 then
+                local bid = m:FindFirstChild("BreakableID")
+                if bid then
+                    local d = (m.PrimaryPart.Position - hrp.Position).Magnitude
+                    if d <= cycleRange then
+                        out[#out + 1] = { bid = bid.Value, dist = d }
+                    end
+                end
+            end
+        end
+        local enemies = enemiesFolder()
+        if enemies then
+            for _, m in ipairs(enemies:GetChildren()) do
+                add(m)
+            end
+        end
+        if includeMining then
+            local g = Workspace:FindFirstChild("Game")
+            local breakables = g and g:FindFirstChild("Breakables")
+            if breakables then
+                for _, d in ipairs(breakables:GetDescendants()) do
+                    if d.Name == "BreakableID" and d:IsA("NumberValue") then
+                        add(d.Parent)
+                    end
+                end
+            end
+        end
+        table.sort(out, function(a, b)
+            return a.dist < b.dist
+        end)
+        return out
+    end
+
+    local function cycleEnemy(dir)
+        local list = orderedEnemies()
+        if #list == 0 then
+            assistTargetBid = nil
+            Signals.Combat_SetAssist:FireServer({ targetId = 0 })
+            return
+        end
+        local idx
+        for i, e in ipairs(list) do
+            if e.bid == assistTargetBid then
+                idx = i
+                break
+            end
+        end
+        if not idx then
+            idx = (dir > 0) and 1 or #list
+        else
+            idx = ((idx - 1 + dir) % #list) + 1
+        end
+        assistTargetBid = list[idx].bid
+        Signals.Combat_SetAssist:FireServer({ targetId = assistTargetBid })
+    end
+
+    UserInputService.InputBegan:Connect(function(input, gameProcessed)
+        if gameProcessed then
+            return -- don't cycle while typing in a TextBox, etc.
+        end
+        local reverse = UserInputService:IsKeyDown(Enum.KeyCode.LeftShift)
+            or UserInputService:IsKeyDown(Enum.KeyCode.RightShift)
+        if input.KeyCode == cycleKey then
+            cycle(reverse and -1 or 1)
+        elseif input.KeyCode == enemyCycleKey then
+            cycleEnemy(reverse and -1 or 1)
+        elseif input.KeyCode == Enum.KeyCode.F and selectedMate then
+            -- keyboard shortcut for the mate-card follow chip: F follows the selected teammate
+            TeamFollow.toggle(selectedMate)
+        end
+    end)
+
+    -- follow state changes from anywhere (chip, F, auto-cancel on input/portal-gate) re-tint
+    TeamFollow.onChanged(function()
+        if refreshMateHighlights then
+            refreshMateHighlights()
+        end
+    end)
+
+    -- Reconcile + refresh the strip.
+    local accum = 0
+    RunService.RenderStepped:Connect(function(dt)
+        accum += dt
+        if accum < 0.2 then
+            return
+        end
+        accum = 0
+        local folder = petsFolder()
+        local present = {}
+        local petCount = 0
+        local needsAttention = localPlayer:GetAttribute("InCombat") == true
+        if folder then
+            for _, pet in ipairs(folder:GetChildren()) do
+                if pet:IsA("Model") and pet.PrimaryPart then
+                    local s = readSlot(
+                        pet,
+                        factor,
+                        thresholds,
+                        localPlayer:GetAttribute("GauntletNoRevives") == true
+                    )
+                    needsAttention = needsAttention or s.downed or s.healthFraction < 0.999
+                    petCount += 1
+                    present[s.slot] = true
+                    if emptyCards[s.slot] then
+                        emptyCards[s.slot].frame:Destroy()
+                        emptyCards[s.slot] = nil
+                    end
+                    if compactEmptyCards[s.slot] then
+                        compactEmptyCards[s.slot].frame:Destroy()
+                        compactEmptyCards[s.slot] = nil
+                    end
+                    local card = cards[s.slot]
+                    if not card then
+                        card = makeCard(s.slot)
+                        cards[s.slot] = card
+                    end
+                    applyVariantName(
+                        card.name,
+                        petDisplayName(s.name),
+                        s.variant,
+                        pet:GetAttribute("Huge") == true
+                    )
+                    -- Archetype/role badge: element DISC + tinted aura RING (the universal
+                    -- PetBadge). Element from the pet's origin; role from PetRole/by_type. Falls
+                    -- back to the coloured letter glyph when that (element, role) has no disc art.
+                    local role = roleFor(pet)
+                    local roleId = pet:GetAttribute("PetRole")
+                        or (PET_ROLES.by_type and PET_ROLES.by_type[pet:GetAttribute("PetType")])
+                        or PET_ROLES.default
+                    local element = PetBadge.elementForPetType(pet:GetAttribute("PetType"))
+                    -- DAMAGE-targeting ring: the archetype badge wears the ring for how its attack
+                    -- hits (PetTargeting.attackScope → power_icons.targeting_ring). Per-pet override
+                    -- via the AttackTargeting attribute, else the role default. SSOT with the card.
+                    local atkScope = attackScopeFor(pet, roleId)
+                    local hasBadge = PetBadge.apply(
+                        card.roleIcon,
+                        card.roleRing,
+                        element,
+                        roleId,
+                        { ring = POWER_ICONS.targeting_ring[atkScope] }
+                    )
+                    card.roleChip.BackgroundColor3 = role.color
+                    card.roleChip.BackgroundTransparency = hasBadge and 1 or 0
+                    card.roleGlyph.Visible = not hasBadge
+                    card.roleGlyph.Text = role.glyph
+                    -- spread marker: contagious burn (DotSpreadMax stamped at spawn, or the legacy
+                    -- "contagion" scope) wears a contagion glyph over the geometry ring. SSOT with the
+                    -- combat loop (it arms spread from the same DotSpreadMax) and the inventory card.
+                    if card.spreadMarker then
+                        local contagious = hasBadge
+                            and PetTargeting.isContagious(
+                                nil,
+                                ((tonumber(pet:GetAttribute("DotSpreadMax")) or 0) > 0)
+                                        and "contagion"
+                                    or pet:GetAttribute("AttackTargeting")
+                            )
+                        local disc = contagious
+                            and POWER_ICONS.discFor
+                            and POWER_ICONS.discFor(element, "contagion")
+                        if disc then
+                            card.spreadMarker.Image = disc
+                            card.spreadMarker.Visible = true
+                        else
+                            card.spreadMarker.Visible = false
+                        end
+                    end
+                    if s.downed then
+                        if s.gauntletLock then
+                            card.fill.Size = UDim2.fromScale(1, 1)
+                            card.fill.BackgroundColor3 = STATE_COLOR.Recharging
+                            card.note.Text = "Down"
+                            card.summonReady = false
+                        else
+                            -- TWO BARS (down-lockout). Main = THIS pet's recovery (drains as it heals; a
+                            -- unique special scales to the 5-min lockout, a stack to the 1-min slot). The
+                            -- thin bar below = the SLOT's 1-min timer, so you can see when to re-summon
+                            -- this pet vs. when the slot frees for a different / stack pet.
+                            local petTotal = (s.special and lockoutDur.petSpecial)
+                                or lockoutDur.slot
+                            local petFrac = (petTotal > 0 and s.cdRemaining > 0)
+                                    and math.clamp(s.cdRemaining / petTotal, 0, 1)
+                                or (s.cdRemaining > 0 and 1 or 0)
+                            card.fill.Size = UDim2.fromScale(s.cdRemaining > 0 and petFrac or 1, 1)
+                            card.fill.BackgroundColor3 = s.cdRemaining > 0
+                                    and STATE_COLOR.Recharging
+                                or STATE_COLOR.Ready
+                            card.note.Text = s.cdRemaining > 0 and formatTime(s.cdRemaining)
+                                or "Summon"
+                            card.summonReady = s.cdRemaining <= 0
+                        end
+                    else
+                        -- Health fill drains + recolours green->yellow->red.
+                        card.fill.Size = UDim2.fromScale(math.clamp(s.healthFraction, 0, 1), 1)
+                        card.fill.BackgroundColor3 = healthColor(s.healthFraction)
+                        card.note.Text = ""
+                        card.summonReady = false
+                    end
+                    -- Thin secondary bar: the SLOT timer (orange) when downed, else the shield pool (blue).
+                    if s.downed then
+                        if s.gauntletLock then
+                            card.shieldBg.Visible = false
+                        else
+                            local slotFrac = lockoutDur.slot > 0
+                                    and math.clamp(s.slotRemaining / lockoutDur.slot, 0, 1)
+                                or 0
+                            card.shieldBg.Visible = s.slotRemaining > 0
+                            card.shieldFill.Size = UDim2.fromScale(slotFrac, 1)
+                            card.shieldFill.BackgroundColor3 = SLOT_BAR_COLOR
+                        end
+                    else
+                        local shieldF = s.shieldFraction or 0
+                        card.shieldBg.Visible = shieldF > 0
+                        card.shieldFill.Size = UDim2.fromScale(shieldF, 1)
+                        card.shieldFill.BackgroundColor3 = SHIELD_BAR_COLOR
+                    end
+
+                    local compactCard = compactCards[s.slot]
+                    if not compactCard then
+                        compactCard = makeCompactCard(s.slot)
+                        compactCards[s.slot] = compactCard
+                        layoutCompactCards()
+                    end
+                    local huge = pet:GetAttribute("Huge") == true
+                    if
+                        compactCard.petType ~= s.name
+                        or compactCard.variant ~= s.variant
+                        or compactCard.huge ~= huge
+                    then
+                        if compactCard.viewport then
+                            compactCard.viewport:Destroy()
+                            compactCard.viewport = nil
+                        end
+                        local thumbnail =
+                            PetThumbnailResolver.resolve(thumbnailRegistry, s.name, s.variant, huge)
+                        compactCard.image.Image = thumbnail or ""
+                        compactCard.image.Visible = thumbnail ~= nil
+                        compactCard.placeholder.Visible = false
+                        if not thumbnail then
+                            local viewport = cloneBakedPetThumbnail(s.name, s.variant, huge)
+                            if viewport then
+                                viewport.Name = "ThumbnailViewport"
+                                viewport.Size = UDim2.fromScale(1, 1)
+                                viewport.Position = UDim2.fromScale(0, 0)
+                                viewport.BackgroundTransparency = 1
+                                viewport.ZIndex = 3
+                                viewport.Parent = compactCard.portrait
+                                compactCard.viewport = viewport
+                            else
+                                compactCard.placeholder.Visible = true
+                            end
+                        end
+                        compactCard.petType = s.name
+                        compactCard.variant = s.variant
+                        compactCard.huge = huge
+                    end
+                    PetBadge.apply(
+                        compactCard.badge.disc,
+                        compactCard.badge.ring,
+                        element,
+                        roleId,
+                        { ring = POWER_ICONS.targeting_ring[atkScope] }
+                    )
+                    if s.downed then
+                        if s.gauntletLock then
+                            paintSegmentRing(
+                                compactCard.enduranceRing,
+                                0,
+                                STATE_COLOR.Recharging,
+                                false
+                            )
+                            paintSegmentRing(compactCard.shieldRing, 0, SHIELD_BAR_COLOR, true)
+                        else
+                            local petTotal = (s.special and lockoutDur.petSpecial)
+                                or lockoutDur.slot
+                            local recovery = petTotal > 0
+                                    and math.clamp(1 - (s.cdRemaining / petTotal), 0, 1)
+                                or 0
+                            paintSegmentRing(
+                                compactCard.enduranceRing,
+                                recovery,
+                                STATE_COLOR.Recharging,
+                                false
+                            )
+                            paintSegmentRing(compactCard.shieldRing, 0, SHIELD_BAR_COLOR, true)
+                        end
+                    else
+                        paintSegmentRing(
+                            compactCard.enduranceRing,
+                            s.healthFraction,
+                            healthColor(s.healthFraction),
+                            false
+                        )
+                        paintSegmentRing(
+                            compactCard.shieldRing,
+                            s.shieldFraction,
+                            SHIELD_BAR_COLOR,
+                            (s.shieldFraction or 0) <= 0
+                        )
+                    end
+                    -- Selection = an OUTLINE only (the gems-pill look): the dark bar stays dark, just
+                    -- the stroke pops to bright blue. No background colour change (that swamped it).
+                    HudCard.applyHighlight(card, (selectedSlot == s.slot) and "select" or nil)
+                    HudCard.applyHighlight(
+                        compactCard,
+                        (selectedSlot == s.slot) and "select" or nil
+                    )
+                    StatusBadges.update(
+                        card,
+                        StatusBadges.resolve("pet", { pet = pet, player = localPlayer }, os.time()),
+                        blinkLead
+                    )
+                end
+            end
+        end
+        -- drop cards for unequipped slots
+        for slot, card in pairs(cards) do
+            if not present[slot] then
+                card.frame:Destroy()
+                cards[slot] = nil
+            end
+        end
+        for slot, card in pairs(compactCards) do
+            if not present[slot] then
+                card.frame:Destroy()
+                compactCards[slot] = nil
+            end
+        end
+        local configuredCapacity = tonumber(localPlayer:GetAttribute("PetEquipSlots")) or petCount
+        local petCapacity = math.max(petCount, math.floor(configuredCapacity))
+        for slot, card in pairs(emptyCards) do
+            if slot > petCapacity or present[slot] then
+                card.frame:Destroy()
+                emptyCards[slot] = nil
+            end
+        end
+        for slot, card in pairs(compactEmptyCards) do
+            if slot > petCapacity or present[slot] then
+                card.frame:Destroy()
+                compactEmptyCards[slot] = nil
+            end
+        end
+        for slot = 1, petCapacity do
+            if not present[slot] then
+                if not emptyCards[slot] then
+                    emptyCards[slot] = makeEmptyCard(slot)
+                end
+                if not compactEmptyCards[slot] then
+                    compactEmptyCards[slot] = makeCompactEmptyCard(slot)
+                end
+            end
+        end
+        layoutCompactCards()
+        compactNeedsAttention = needsAttention
+        if not compactNeedsAttention then
+            compactAttentionDismissed = false
+        end
+        refreshPresentationVisibility()
+        compactCount.Text = string.format("%d/%d", petCount, petCapacity)
+        -- keep the world highlight tracking the selected pet's downed visibility
+        if selectedSlot and worldHighlight.Adornee then
+            worldHighlight.Enabled = not worldHighlight.Adornee:GetAttribute("CombatDowned")
+        end
+    end)
+
+    -- Expiry blink: runs every frame (not the 0.2s reconcile) so the flash is smooth (shared engine).
+    RunService.RenderStepped:Connect(function()
+        StatusBadges.applyBlink(cards, blinkPeriod)
+        StatusBadges.applyBlink(matePetBlink, blinkPeriod) -- teammate pet cards blink too
+    end)
+end
+
+return SquadHud

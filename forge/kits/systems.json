@@ -1,0 +1,3212 @@
+{
+ "$comment": "Which salvaged project already solved which system, and where the file is. Written by `forge kit systems`. Evidence is the file name, the identifiers in the source, and enough of both to be an implementation rather than a mention. It does not judge quality -- reading it is the next step.",
+ "systems": {
+  "daily reward": [
+   {
+    "kit": "infected",
+    "path": "src/shared/DailyReward.luau",
+    "lines": 71,
+    "named": true,
+    "signals": 3
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/DailyService.lua",
+    "lines": 100,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/DailyStreak.lua",
+    "lines": 61,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerScriptService/DailyRewards.server.lua",
+    "lines": 396,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/UI/Menus/DailyPanel.lua",
+    "lines": 355,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/DailyRewardZoneService.lua",
+    "lines": 280,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/StarterGui/GUI/DailyGift/DailyGift.lua",
+    "lines": 219,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "configs/daily.lua",
+    "lines": 31,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "infected",
+    "path": "src/client/UI/Daily.luau",
+    "lines": 147,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "infected",
+    "path": "src/server/Services/RetentionService.luau",
+    "lines": 310,
+    "named": false,
+    "signals": 3
+   },
+   {
+    "kit": "infected",
+    "path": "src/server/Services/DataService.luau",
+    "lines": 125,
+    "named": false,
+    "signals": 2
+   }
+  ],
+  "timed reward": [
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/RetentionService.lua",
+    "lines": 883,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/RetentionLogic.lua",
+    "lines": 650,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "infected",
+    "path": "src/server/Services/RetentionService.luau",
+    "lines": 310,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/RangeLoadoutSession.lua",
+    "lines": 273,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/retention.lua",
+    "lines": 137,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/EggIdleAnimator.lua",
+    "lines": 99,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/RetentionContext.lua",
+    "lines": 66,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/FarmTargetRetention.lua",
+    "lines": 47,
+    "named": true,
+    "signals": 0
+   }
+  ],
+  "gacha / hatch": [
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/EggService.lua",
+    "lines": 1883,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Services/EggPetPreviewService.lua",
+    "lines": 1342,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Services/EggHatchingService.lua",
+    "lines": 3083,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Services/EggInteractionService.lua",
+    "lines": 2528,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Services/EggCurrentTargetService.lua",
+    "lines": 671,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Services/EggSpawner.lua",
+    "lines": 336,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/hatch_progression.luau",
+    "lines": 329,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Services/EggWorldQuery.lua",
+    "lines": 305,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerScriptService/Main/MysteryBox.server.lua",
+    "lines": 235,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/studio/stamp_authored_egg_stands.luau",
+    "lines": 234,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/test_egg_hatching_commands.lua",
+    "lines": 181,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/test_egg_speeds.lua",
+    "lines": 100,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/HoverboardController.lua",
+    "lines": 1354,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/PetFollowController.lua",
+    "lines": 1247,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "brickblast",
+    "path": "src/client/ui/HUDController.luau",
+    "lines": 1134,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/TutorialController.lua",
+    "lines": 952,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/CombatAuraController.lua",
+    "lines": 686,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/LevelUpController.lua",
+    "lines": 594,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/egg_system.lua",
+    "lines": 546,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/StarterPetController.lua",
+    "lines": 494,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/SummonService.lua",
+    "lines": 454,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/EggStandPlacement.server.lua",
+    "lines": 427,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "infected",
+    "path": "src/client/Controllers/CombatController.luau",
+    "lines": 409,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/AdminController.lua",
+    "lines": 360,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/FoundersChoiceController.lua",
+    "lines": 309,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/TrialEggRewardService.lua",
+    "lines": 300,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/TeamFollowController.lua",
+    "lines": 292,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "bocchi",
+    "path": "src/ServerScriptService/Controllers/ButtonController.luau",
+    "lines": 290,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/AreaMusicController.lua",
+    "lines": 285,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "2d-adventure",
+    "path": "src/Animations/AnimationController.luau",
+    "lines": 256,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "infected",
+    "path": "src/client/Controllers/CameraController.luau",
+    "lines": 226,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "brickblast",
+    "path": "src/client/ui/NotificationController.luau",
+    "lines": 212,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/HatchEntitlementService.lua",
+    "lines": 212,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "brickblast",
+    "path": "src/client/ui/MenuController.luau",
+    "lines": 207,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "bocchi",
+    "path": "src/ServerScriptService/Controllers/GenerationController.luau",
+    "lines": 184,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Effects/EggHatchFX.lua",
+    "lines": 181,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/BuffAuraController.lua",
+    "lines": 177,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/client/Components/common/ScrollingFrame.lua",
+    "lines": 174,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/egg_hatching.lua",
+    "lines": 172,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/TrialEggRewardLadder.lua",
+    "lines": 163,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "bocchi",
+    "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/BalanceController.luau",
+    "lines": 157,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/HatchTiming.lua",
+    "lines": 136,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/HatchGridLayout.lua",
+    "lines": 127,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/CombatTextController.lua",
+    "lines": 125,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerStorage/DiamondCrate/ResearchCrateScript.server.lua",
+    "lines": 115,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerScriptService/EggScript.server.lua",
+    "lines": 111,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "bocchi",
+    "path": "src/ServerScriptService/Controllers/DataController.luau",
+    "lines": 107,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerStorage/ExecutiveCrate/ResearchCrateScript.server.lua",
+    "lines": 102,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/EggIdleAnimator.lua",
+    "lines": 99,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "bocchi",
+    "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/MusicController.luau",
+    "lines": 98,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerStorage/GoldenCrate/ResearchCrateScript.server.lua",
+    "lines": 97,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/HallEggStand.lua",
+    "lines": 93,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerStorage/CrystalCrate/ResearchCrateScript.server.lua",
+    "lines": 86,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "bocchi",
+    "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/TooltipController.luau",
+    "lines": 83,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerStorage/LuckyCrate/ResearchCrateScript.server.lua",
+    "lines": 81,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "bocchi",
+    "path": "src/ServerScriptService/Controllers/LeaderboardController.luau",
+    "lines": 79,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerStorage/ResearchCrate/ResearchCrateScript.server.lua",
+    "lines": 78,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "bocchi",
+    "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/ButtonInteractionController.luau",
+    "lines": 75,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "bocchi",
+    "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/HotkeysController.luau",
+    "lines": 75,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerStorage/GiantCrate/ResearchCrateScript.server.lua",
+    "lines": 72,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerStorage/GiftCrate/ResearchCrateScript.server.lua",
+    "lines": 65,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "brickblast",
+    "path": "src/client/ui/SoundController.luau",
+    "lines": 64,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "2d-adventure",
+    "path": "src/PhysicController.luau",
+    "lines": 63,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/LeaderboardController.lua",
+    "lines": 59,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "infected",
+    "path": "src/shared/CrateRoll.luau",
+    "lines": 59,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerStorage/DarkCrate/ResearchCrateScript.server.lua",
+    "lines": 48,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerStorage/ShadowCrate/ResearchCrateScript.server.lua",
+    "lines": 47,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerStorage/Gift/ResearchCrateScript.server.lua",
+    "lines": 45,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerStorage/MegaPumpkin/ResearchCrateScript.server.lua",
+    "lines": 45,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "bocchi",
+    "path": "src/ServerScriptService/Controllers/AreaController.luau",
+    "lines": 44,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "bocchi",
+    "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/MessageController.luau",
+    "lines": 44,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "bocchi",
+    "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/CubeController.luau",
+    "lines": 43,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/EggHatchFront.lua",
+    "lines": 42,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerStorage/CrateItems.lua",
+    "lines": 42,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/EggStandResolver.lua",
+    "lines": 41,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "bocchi",
+    "path": "src/ServerScriptService/Controllers/CurrencyController.luau",
+    "lines": 38,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/CombatRoll.lua",
+    "lines": 36,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "maze-world",
+    "path": "plugin/src/Components/FitScrollingFrame.lua",
+    "lines": 35,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/EggHatchVisual.lua",
+    "lines": 32,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/pets.lua",
+    "lines": 8853,
+    "named": false,
+    "signals": 4
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/UI/Menus/InventoryPanel.lua",
+    "lines": 9557,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/GameAPIService.lua",
+    "lines": 3059,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/StudioSmokeTestService.lua",
+    "lines": 2618,
+    "named": false,
+    "signals": 2
+   }
+  ],
+  "tycoon economy": [
+   {
+    "kit": "minershaven",
+    "path": "src/StarterGui/GUI/Tycoon.lua",
+    "lines": 196,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerScriptService/Main/MPSCalc.server.lua",
+    "lines": 76,
+    "named": true,
+    "signals": 0
+   }
+  ],
+  "plot allocation": [
+   {
+    "kit": "halo",
+    "path": "src/Client/UI/BaseUI.lua",
+    "lines": 3662,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerScriptService/IslandManager.server.lua",
+    "lines": 300,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "2d-adventure",
+    "path": "src/BaseCharacter.lua",
+    "lines": 225,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerScriptService/GameAnalytics/lockbox/util/base64.lua",
+    "lines": 160,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/serverStorage/GameAnalytics/HttpApi/HashLib/Base64.lua",
+    "lines": 134,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/shared/engine/common/base64.luau",
+    "lines": 111,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "2d-adventure",
+    "path": "src/base2d.luau",
+    "lines": 59,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/ClaimLogic.lua",
+    "lines": 44,
+    "named": true,
+    "signals": 0
+   }
+  ],
+  "rebirth / prestige": [
+   {
+    "kit": "minershaven",
+    "path": "src/ServerScriptService/Main/RebirthHandler.server.lua",
+    "lines": 481,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/server/modepresets.luau",
+    "lines": 293,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerScriptService/Sacrifice.server.lua",
+    "lines": 292,
+    "named": true,
+    "signals": 0
+   }
+  ],
+  "pet / companion": [
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/PetFollowService.lua",
+    "lines": 1441,
+    "named": true,
+    "signals": 3
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/PetHandler.server.lua",
+    "lines": 1970,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/PetFollowController.lua",
+    "lines": 1247,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "configs/pet_follow.lua",
+    "lines": 636,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "configs/pet_roles.lua",
+    "lines": 529,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PetFormation.lua",
+    "lines": 412,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "configs/pets.lua",
+    "lines": 8853,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Inventory/PetMigrationV5.lua",
+    "lines": 227,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PetPower.lua",
+    "lines": 177,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PetAttackMotion.lua",
+    "lines": 157,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/PetEquipmentBridge.lua",
+    "lines": 154,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/PetAnimator.lua",
+    "lines": 153,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/PetSyncDiag.lua",
+    "lines": 151,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/PetAbilityService.lua",
+    "lines": 148,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PetPowerView.lua",
+    "lines": 143,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PetMeander.lua",
+    "lines": 129,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PetEndurance.lua",
+    "lines": 114,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "configs/pet_power.lua",
+    "lines": 69,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PetAbility.lua",
+    "lines": 59,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Services/EggPetPreviewService.lua",
+    "lines": 1342,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Inventory/PetInventoryView.lua",
+    "lines": 616,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/pet_thumbnail_assets.lua",
+    "lines": 523,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/StarterPetController.lua",
+    "lines": 494,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/PetProgressionService.lua",
+    "lines": 411,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/PetIndexService.lua",
+    "lines": 399,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/UI/PetBadge.lua",
+    "lines": 388,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/gen_pet_catalog.luau",
+    "lines": 361,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/PetGrantService.lua",
+    "lines": 346,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/TeamFollowController.lua",
+    "lines": 292,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PetLockout.lua",
+    "lines": 288,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/StarterPetService.lua",
+    "lines": 243,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/backfill_pet_origins.luau",
+    "lines": 210,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PetAbilityRuntime.lua",
+    "lines": 204,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/PetSerialService.lua",
+    "lines": 199,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/analyze_pet_origins.luau",
+    "lines": 198,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Services/PetVariantVisuals.lua",
+    "lines": 184,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/common/Pet.lua",
+    "lines": 172,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Inventory/BestPetSelector.lua",
+    "lines": 166,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/PetEnduranceBar.lua",
+    "lines": 164,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Inventory/PetCompaction.lua",
+    "lines": 161,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/UI/PetCardStyle.lua",
+    "lines": 154,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/delete_all_pets.lua",
+    "lines": 129,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PetTargeting.lua",
+    "lines": 121,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/common/PetManager.lua",
+    "lines": 99,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/PetRevive.lua",
+    "lines": 91,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Inventory/PetEquipMigration.lua",
+    "lines": 87,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/StarterPetChoice.lua",
+    "lines": 81,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/pet_progression.lua",
+    "lines": 80,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/PetCompatibilityService.server.lua",
+    "lines": 80,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/TradePetSort.lua",
+    "lines": 66,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Services/PetRuntimeBridge.lua",
+    "lines": 65,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/PetCharacterAttachments.server.lua",
+    "lines": 64,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PetAnimState.lua",
+    "lines": 62,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/starter_pets.lua",
+    "lines": 60,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PetSurvivability.lua",
+    "lines": 51,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/delete_all_pets_command.lua",
+    "lines": 44,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/pet_index.lua",
+    "lines": 40,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PetCombat.lua",
+    "lines": 37,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PetEnchantView.lua",
+    "lines": 37,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PetElement.lua",
+    "lines": 33,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Inventory/PetProjectionPolicy.lua",
+    "lines": 32,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PetEquipCapacity.lua",
+    "lines": 29,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/PetTransferService.lua",
+    "lines": 26,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/UI/PetThumbnailResolver.lua",
+    "lines": 25,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/network.lua",
+    "lines": 2124,
+    "named": false,
+    "signals": 3
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/UI/Menus/InventoryPanel.lua",
+    "lines": 9557,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/EnemyService.lua",
+    "lines": 6782,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/StudioSmokeTestService.lua",
+    "lines": 2618,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/SettingsService.lua",
+    "lines": 1036,
+    "named": false,
+    "signals": 2
+   }
+  ],
+  "weapon / firing": [
+   {
+    "kit": "infected",
+    "path": "src/server/Services/WeaponVisuals.luau",
+    "lines": 106,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "infected",
+    "path": "src/server/Services/CombatService.luau",
+    "lines": 581,
+    "named": false,
+    "signals": 3
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/client/init.client.luau",
+    "lines": 2714,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/client/qwclient.luau",
+    "lines": 2655,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "infected",
+    "path": "src/server/Services/BotService.luau",
+    "lines": 1301,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/client/render/avatarlayer.luau",
+    "lines": 569,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "infected",
+    "path": "src/client/Controllers/CombatController.luau",
+    "lines": 409,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "infected",
+    "path": "src/shared/GameConfig.luau",
+    "lines": 322,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "robloquake",
+    "path": "tools/verify_punchangle_qw.luau",
+    "lines": 48,
+    "named": false,
+    "signals": 2
+   }
+  ],
+  "holding / equip": [
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/HotbarBar.lua",
+    "lines": 1762,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/AdminToolsService.lua",
+    "lines": 1237,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/HotbarService.lua",
+    "lines": 551,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "brickblast",
+    "path": "src/shared/game/DeveloperTools.luau",
+    "lines": 353,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/RangeLoadoutSession.lua",
+    "lines": 273,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/HotbarLogic.lua",
+    "lines": 270,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "brickblast",
+    "path": "src/shared/game/DeveloperToolsTests.luau",
+    "lines": 187,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/HotbarFlank.lua",
+    "lines": 161,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/PetEquipmentBridge.lua",
+    "lines": 154,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/hotbar.lua",
+    "lines": 109,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/HotbarSize.lua",
+    "lines": 109,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/client/Components/EquipStatusCell.lua",
+    "lines": 90,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Inventory/PetEquipMigration.lua",
+    "lines": 87,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "bocchi",
+    "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/TooltipController.luau",
+    "lines": 83,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/server/loadout.luau",
+    "lines": 61,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/HotbarKeyboard.lua",
+    "lines": 55,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Libraries/Matter/debugger/widgets/tooltip.luau",
+    "lines": 52,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/ConsoleHotbar.lua",
+    "lines": 40,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PetEquipCapacity.lua",
+    "lines": 29,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/common/thunks/equipPlayer.lua",
+    "lines": 29,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "fighting-game",
+    "path": "game/StarterPlayer/StarterCharacterScripts/Animate.client.lua",
+    "lines": 603,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/server/avatarrigs.luau",
+    "lines": 189,
+    "named": false,
+    "signals": 2
+   }
+  ],
+  "character animation": [
+   {
+    "kit": "fighting-game",
+    "path": "game/StarterPlayer/StarterCharacterScripts/Animate.client.lua",
+    "lines": 603,
+    "named": true,
+    "signals": 3
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/PetAnimator.lua",
+    "lines": 153,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/fix_anim_axes_swap.luau",
+    "lines": 114,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/EggIdleAnimator.lua",
+    "lines": 99,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "tools/rigging/build_keyframes.luau",
+    "lines": 83,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/fix_anim_axes_mirror.luau",
+    "lines": 81,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PetAnimState.lua",
+    "lines": 62,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/fix_anim_axes.luau",
+    "lines": 54,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "2d-adventure",
+    "path": "src/Animations/AnimationController.luau",
+    "lines": 256,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/animations.lua",
+    "lines": 140,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/Gait.lua",
+    "lines": 125,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "2d-adventure",
+    "path": "src/AnimatedObject.lua",
+    "lines": 104,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/AttackAnim.lua",
+    "lines": 81,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "2d-adventure",
+    "path": "src/AnimatedObject2d.lua",
+    "lines": 77,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "2d-adventure",
+    "path": "src/Animations/Animation.luau",
+    "lines": 77,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/HoverboardController.lua",
+    "lines": 1354,
+    "named": false,
+    "signals": 3
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/client/render/avatarrender.luau",
+    "lines": 601,
+    "named": false,
+    "signals": 3
+   },
+   {
+    "kit": "infected",
+    "path": "src/server/Services/BotService.luau",
+    "lines": 1301,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "infected",
+    "path": "src/server/Bots/Rig.luau",
+    "lines": 251,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "fighting-game",
+    "path": "game/ServerStorage/HitHandler/init.lua",
+    "lines": 191,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/server/avatarrigs.luau",
+    "lines": 189,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "infected",
+    "path": "src/server/Services/EmoteService.luau",
+    "lines": 130,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "bocchi",
+    "path": "src/Workspace/Buttons/B9/Hitbox/Script.server.luau",
+    "lines": 82,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "fighting-game",
+    "path": "game/ServerScriptService/block.server.lua",
+    "lines": 52,
+    "named": false,
+    "signals": 2
+   }
+  ],
+  "sprint / stamina": [],
+  "quest / mission": [
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/QuestService.lua",
+    "lines": 570,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "configs/quests.lua",
+    "lines": 1074,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/QuestChain.lua",
+    "lines": 63,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/QuestReward.lua",
+    "lines": 44,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/MissionInstanceService.lua",
+    "lines": 3811,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/missions.lua",
+    "lines": 1212,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/QuestTrackerStyle.lua",
+    "lines": 750,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/UI/Menus/QuestPanel.lua",
+    "lines": 680,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/MissionMap.lua",
+    "lines": 404,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/MissionSchema.lua",
+    "lines": 356,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Worldgen/MissionDecor.lua",
+    "lines": 232,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/MissionAtmosphere.lua",
+    "lines": 212,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Worldgen/MissionPopulation.lua",
+    "lines": 183,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "infected",
+    "path": "src/shared/Quests.luau",
+    "lines": 174,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "infected",
+    "path": "src/client/UI/Quests.luau",
+    "lines": 169,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/World/MissionStamper.lua",
+    "lines": 134,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/MissionStreamGuard.lua",
+    "lines": 120,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/studio/stamp_mission_graybox.luau",
+    "lines": 82,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/studio/dump_mission_decor_live.luau",
+    "lines": 74,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/MissionRankScale.lua",
+    "lines": 72,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Worldgen/MissionSeed.lua",
+    "lines": 71,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/MissionGatePrompt.lua",
+    "lines": 56,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/QuestDisplayState.lua",
+    "lines": 56,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/QuestActivation.lua",
+    "lines": 39,
+    "named": true,
+    "signals": 0
+   }
+  ],
+  "trade": [
+   {
+    "kit": "halo",
+    "path": "src/Client/UI/Menus/TradePanel.lua",
+    "lines": 1986,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/TradeService.lua",
+    "lines": 1185,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/TradeLogic.lua",
+    "lines": 141,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/TradeDeliveryTransaction.lua",
+    "lines": 70,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/TradePetSort.lua",
+    "lines": 66,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/trade.lua",
+    "lines": 59,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/TradeReveal.lua",
+    "lines": 58,
+    "named": true,
+    "signals": 0
+   }
+  ],
+  "leaderboard": [
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/LeaderboardService.lua",
+    "lines": 746,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/leaderboards.lua",
+    "lines": 448,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/LeaderboardBoardService.lua",
+    "lines": 374,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/LeaderboardAwardService.lua",
+    "lines": 300,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/studio/install_origin_leaderboards.luau",
+    "lines": 212,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/LeaderboardScoring.lua",
+    "lines": 159,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/common/Leaderboards.lua",
+    "lines": 154,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/LeaderboardWindowAward.lua",
+    "lines": 133,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "infected",
+    "path": "src/server/Services/LeaderboardService.luau",
+    "lines": 127,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "infected",
+    "path": "src/client/UI/Leaderboard.luau",
+    "lines": 118,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/client/Components/LeaderboardsConnect.lua",
+    "lines": 83,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/client/leaderboardui.luau",
+    "lines": 80,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "bocchi",
+    "path": "src/ServerScriptService/Controllers/LeaderboardController.luau",
+    "lines": 79,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerScriptService/Main/LinkedLeaderboard.server.lua",
+    "lines": 67,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/LeaderboardController.lua",
+    "lines": 59,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/LeaderboardStatus.lua",
+    "lines": 47,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/common/commonReducers/leaderboards.lua",
+    "lines": 25,
+    "named": true,
+    "signals": 0
+   }
+  ],
+  "monetization": [
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/MonetizationService.lua",
+    "lines": 1200,
+    "named": true,
+    "signals": 3
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/common/DeveloperProducts.lua",
+    "lines": 107,
+    "named": true,
+    "signals": 3
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/shared/shopcatalog.luau",
+    "lines": 156,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/server/shop.luau",
+    "lines": 119,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/common/GamePasses.lua",
+    "lines": 86,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "infected",
+    "path": "src/server/Services/MonetizationService.luau",
+    "lines": 79,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/UI/Menus/ShopPanel.lua",
+    "lines": 999,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/server/statstore.luau",
+    "lines": 758,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "brickblast",
+    "path": "src/client/ui/ShopPanel.luau",
+    "lines": 722,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/UI/Menus/HoverboardShopPanel.lua",
+    "lines": 719,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/UI/Menus/RewardShopPanel.lua",
+    "lines": 639,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "configs/monetization.lua",
+    "lines": 539,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/client/Components/ShopItem.lua",
+    "lines": 235,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/client/shopclient.luau",
+    "lines": 126,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "infected",
+    "path": "src/server/Vendor/ProfileStore.luau",
+    "lines": 2152,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/StarterGui/GUI/Shop/Shop.lua",
+    "lines": 868,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/EnhancementShopService.lua",
+    "lines": 526,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/UI/Menus/PotionShopPanel.lua",
+    "lines": 473,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/generate_monetization.lua",
+    "lines": 464,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/PotionShopService.lua",
+    "lines": 316,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/HoverboardShopService.lua",
+    "lines": 315,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "infected",
+    "path": "src/client/UI/Shop.luau",
+    "lines": 295,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/server/prefstore.luau",
+    "lines": 258,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/common/GameDatastore.lua",
+    "lines": 198,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/client/Components/Shop.lua",
+    "lines": 178,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/client/Components/InventoryAndShopButtons.lua",
+    "lines": 174,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PotionShopLogic.lua",
+    "lines": 169,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/ShopWorldPrompt.lua",
+    "lines": 148,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/MonetizationCatalog.lua",
+    "lines": 117,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/serverStorage/GameAnalytics/Store.lua",
+    "lines": 117,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/ShopService.lua",
+    "lines": 113,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/ShopPurchaseTransaction.lua",
+    "lines": 61,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/ShopLogic.lua",
+    "lines": 48,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/shop.lua",
+    "lines": 36,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "brickblast",
+    "path": "src/server/services/GameServer.server.luau",
+    "lines": 3611,
+    "named": false,
+    "signals": 3
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/EconomyService.lua",
+    "lines": 1656,
+    "named": false,
+    "signals": 3
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/serverStorage/GameAnalytics/init.lua",
+    "lines": 946,
+    "named": false,
+    "signals": 3
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerScriptService/VirtualStore/init.server.lua",
+    "lines": 584,
+    "named": false,
+    "signals": 3
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/StarterGui/GUI/Placement.lua",
+    "lines": 1856,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/server/main.lua",
+    "lines": 603,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/StarterGui/GUI/Premium/Premium.lua",
+    "lines": 251,
+    "named": false,
+    "signals": 2
+   }
+  ],
+  "save / persistence": [
+   {
+    "kit": "infected",
+    "path": "src/server/Vendor/ProfileStore.luau",
+    "lines": 2152,
+    "named": true,
+    "signals": 5
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/DataService.lua",
+    "lines": 2954,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "brickblast",
+    "path": "src/shared/game/ProfilePersistence.luau",
+    "lines": 198,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "infected",
+    "path": "src/server/Services/DataService.luau",
+    "lines": 125,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "brickblast",
+    "path": "src/shared/game/ProfilePersistenceTests.luau",
+    "lines": 313,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/debug_player_profile.lua",
+    "lines": 141,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "bocchi",
+    "path": "src/ServerScriptService/Controllers/DataController.luau",
+    "lines": 107,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerScriptService/PlayerDataGuardian/DataLib.lua",
+    "lines": 245,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/shared/engine/server/savegame.luau",
+    "lines": 239,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "fighting-game",
+    "path": "game/ServerStorage/ClassData.lua",
+    "lines": 217,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/Chat/ChatModules/ExtraDataInitializer.lua",
+    "lines": 202,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/common/GameDatastore.lua",
+    "lines": 198,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/admin_cleanup_my_profile.lua",
+    "lines": 89,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "brickblast",
+    "path": "src/server/services/GameServer.server.luau",
+    "lines": 3611,
+    "named": false,
+    "signals": 5
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/RetentionService.lua",
+    "lines": 883,
+    "named": false,
+    "signals": 4
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/server/statstore.luau",
+    "lines": 758,
+    "named": false,
+    "signals": 4
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerScriptService/InventoryPersistance/init.server.lua",
+    "lines": 579,
+    "named": false,
+    "signals": 3
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerScriptService/IslandManager.server.lua",
+    "lines": 300,
+    "named": false,
+    "signals": 3
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/server/prefstore.luau",
+    "lines": 258,
+    "named": false,
+    "signals": 3
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/OpsAlert.lua",
+    "lines": 115,
+    "named": false,
+    "signals": 3
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerScriptService/PlayerDataGuardian/init.server.lua",
+    "lines": 1346,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/LeaderboardService.lua",
+    "lines": 746,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerScriptService/Main/TwitterCode.server.lua",
+    "lines": 469,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/server/onboarding.luau",
+    "lines": 319,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "configs/challenge_runs.lua",
+    "lines": 300,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/PetSerialService.lua",
+    "lines": 199,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/common/Leaderboards.lua",
+    "lines": 154,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/serverStorage/GameAnalytics/Store.lua",
+    "lines": 117,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerScriptService/Saving.lua",
+    "lines": 94,
+    "named": false,
+    "signals": 2
+   }
+  ],
+  "tutorial": [
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/TutorialController.lua",
+    "lines": 952,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/TutorialService.lua",
+    "lines": 443,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/StarterGui/GUI/Tutorial.lua",
+    "lines": 1693,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/TutorialFlow.lua",
+    "lines": 189,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerScriptService/TutorialStepListener.server.lua",
+    "lines": 103,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/server/onboarding.luau",
+    "lines": 319,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/StarterGui/GUI/Tutorial/tutorialFrame.lua",
+    "lines": 251,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/tutorial.lua",
+    "lines": 236,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "infected",
+    "path": "src/client/UI/Tutorial.luau",
+    "lines": 184,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/TutorialLocalization.lua",
+    "lines": 146,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/TutorialLanguageState.lua",
+    "lines": 129,
+    "named": true,
+    "signals": 0
+   }
+  ],
+  "party / group": [
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/SquadHud.lua",
+    "lines": 1876,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/UI/Menus/TeamPanel.lua",
+    "lines": 738,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/PartyService.lua",
+    "lines": 515,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/TeamFollowController.lua",
+    "lines": 292,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/RealmAllianceService.lua",
+    "lines": 263,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/PartyMath.lua",
+    "lines": 138,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/AllianceBanner.lua",
+    "lines": 117,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/ActiveSquadService.lua",
+    "lines": 117,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/teaming.lua",
+    "lines": 113,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/SquadDiversity.lua",
+    "lines": 100,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/TeamCast.lua",
+    "lines": 83,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/AllianceRules.lua",
+    "lines": 72,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/ActiveSquad.lua",
+    "lines": 69,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/UI/Menus/TeamPanelLayout.lua",
+    "lines": 58,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/SquadDisplayState.lua",
+    "lines": 56,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/client/render/teamcolors.luau",
+    "lines": 52,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/squad.lua",
+    "lines": 50,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/party.lua",
+    "lines": 43,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/squad_diversity.lua",
+    "lines": 39,
+    "named": true,
+    "signals": 0
+   }
+  ],
+  "inventory": [
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/InventoryService.lua",
+    "lines": 2911,
+    "named": true,
+    "signals": 4
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/UI/Menus/InventoryPanel.lua",
+    "lines": 9557,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "configs/inventory.lua",
+    "lines": 755,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/debug_inventory_service.lua",
+    "lines": 89,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/client/clientReducers/inventory.lua",
+    "lines": 25,
+    "named": true,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Inventory/PetInventoryView.lua",
+    "lines": 616,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/StarterGui/GUI/Inventory/Frame/Inventory.lua",
+    "lines": 605,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/common/objects/InventoryObjects.lua",
+    "lines": 378,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/verify_inventory_phase1.lua",
+    "lines": 181,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/client/Components/InventoryAndShopButtons.lua",
+    "lines": 174,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/manual_inventory_cleanup.lua",
+    "lines": 98,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/UI/Menus/InventoryDraftView.lua",
+    "lines": 82,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/InventoryCategories.lua",
+    "lines": 41,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/EconomyService.lua",
+    "lines": 1656,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "minershaven",
+    "path": "src/ServerScriptService/Main/init.server.lua",
+    "lines": 1380,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/EnchantService.lua",
+    "lines": 1374,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/TradeService.lua",
+    "lines": 1185,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/EnhancementService.lua",
+    "lines": 604,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/server/main.lua",
+    "lines": 603,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/GiftService.lua",
+    "lines": 526,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/PotionService.lua",
+    "lines": 479,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/MeetCreatorService.lua",
+    "lines": 474,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/FutureCallService.lua",
+    "lines": 423,
+    "named": false,
+    "signals": 2
+   },
+   {
+    "kit": "maze-world",
+    "path": "src/server/serverReducers/playerInventories.lua",
+    "lines": 48,
+    "named": false,
+    "signals": 2
+   }
+  ],
+  "world / map loading": [
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/WorldTravelMenu.lua",
+    "lines": 344,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/ZoneTrackerService.lua",
+    "lines": 301,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/WorldTravelService.lua",
+    "lines": 155,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/WorldTravelLogic.lua",
+    "lines": 114,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/ZoneResolver.lua",
+    "lines": 112,
+    "named": true,
+    "signals": 1
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/ZoneService.lua",
+    "lines": 1567,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "quickzone",
+    "path": "src/Classes/Zone.luau",
+    "lines": 1247,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Libraries/Matter/World.luau",
+    "lines": 1153,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/WorldBindingService.lua",
+    "lines": 1073,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/studio/wire_hall_of_worlds.luau",
+    "lines": 941,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/shared/engine/server/world.luau",
+    "lines": 804,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Libraries/Matter/World.spec.luau",
+    "lines": 797,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/shared/engine/qw/qwworld.luau",
+    "lines": 792,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/client/render/worldmesh.luau",
+    "lines": 690,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "infected",
+    "path": "src/server/Services/MapService.luau",
+    "lines": 496,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "quickzone",
+    "path": "src/Classes/Zones.luau",
+    "lines": 407,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/MissionMap.lua",
+    "lines": 404,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/hall_of_worlds.lua",
+    "lines": 376,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/HallOfWorldsLogic.lua",
+    "lines": 355,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Utils/ProductIdMapper.lua",
+    "lines": 344,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "2d-adventure",
+    "path": "src/map.lua",
+    "lines": 313,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Services/EggWorldQuery.lua",
+    "lines": 305,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/studio/create_reference_map.luau",
+    "lines": 287,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Server/Services/DailyRewardZoneService.lua",
+    "lines": 280,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Libraries/Matter/debugger/widgets/worldInspect.luau",
+    "lines": 231,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/ZoneUnlockPrompt.lua",
+    "lines": 215,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Client/Systems/ShopWorldPrompt.lua",
+    "lines": 148,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "scripts/studio/audit_authored_map_candidates.luau",
+    "lines": 137,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/WorldContext.lua",
+    "lines": 96,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "infected",
+    "path": "src/client/UI/MapVote.luau",
+    "lines": 80,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "bocchi",
+    "path": "src/StarterPlayer/StarterPlayerScripts/WindController/WindShake/Octree/OctreeRegionUtils.luau",
+    "lines": 74,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/client/keymap.luau",
+    "lines": 72,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Game/ZoneSchema.lua",
+    "lines": 62,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "src/Shared/Libraries/Matter/debugger/hookWorld.luau",
+    "lines": 59,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "halo",
+    "path": "configs/zone_tracker.lua",
+    "lines": 55,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "robloquake",
+    "path": "src/server/assetchunks.luau",
+    "lines": 42,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "quickzone",
+    "path": "examples/Server/Observers/SafeZone.luau",
+    "lines": 36,
+    "named": true,
+    "signals": 0
+   },
+   {
+    "kit": "quickzone",
+    "path": "examples/Common/Zones.luau",
+    "lines": 28,
+    "named": true,
+    "signals": 0
+   }
+  ]
+ },
+ "summary": {
+  "character animation": 24,
+  "daily reward": 11,
+  "gacha / hatch": 83,
+  "holding / equip": 22,
+  "inventory": 24,
+  "leaderboard": 17,
+  "monetization": 41,
+  "party / group": 19,
+  "pet / companion": 69,
+  "plot allocation": 8,
+  "quest / mission": 24,
+  "rebirth / prestige": 3,
+  "save / persistence": 29,
+  "sprint / stamina": 0,
+  "timed reward": 8,
+  "trade": 7,
+  "tutorial": 11,
+  "tycoon economy": 2,
+  "weapon / firing": 9,
+  "world / map loading": 38
+ },
+ "missing": [
+  "sprint / stamina"
+ ]
+}

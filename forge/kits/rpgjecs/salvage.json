@@ -1,0 +1,161 @@
+{
+ "$comment": "Unmodified source copied from a licensed project, kept whole so the relationships between modules survive. Generalising anything here into a Forge family is a separate step; nothing in this folder has been reviewed, adapted, or cleared for shipping as-is.",
+ "kit": "rpgjecs",
+ "source": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\RPGJECS",
+ "files": 30,
+ "lines": 1865,
+ "skipped": 116,
+ "takenAt": "2026-08-26T21:25:46+00:00",
+ "manifest": [
+  {
+   "path": "aftman.toml",
+   "bytes": 42,
+   "lines": 2
+  },
+  {
+   "path": "default.project.json",
+   "bytes": 558,
+   "lines": 29
+  },
+  {
+   "path": "rokit.toml",
+   "bytes": 259,
+   "lines": 7
+  },
+  {
+   "path": "selene.toml",
+   "bytes": 12,
+   "lines": 1
+  },
+  {
+   "path": "src/jecs.luau",
+   "bytes": 111,
+   "lines": 2
+  },
+  {
+   "path": "src/ServerScriptService/main.server.luau",
+   "bytes": 178,
+   "lines": 5
+  },
+  {
+   "path": "src/ServerScriptService/systems/mob_avoid.luau",
+   "bytes": 2919,
+   "lines": 98
+  },
+  {
+   "path": "src/ServerScriptService/systems/mob_brain.luau",
+   "bytes": 8519,
+   "lines": 285
+  },
+  {
+   "path": "src/ServerScriptService/systems/mob_move.luau",
+   "bytes": 4055,
+   "lines": 141
+  },
+  {
+   "path": "src/ServerScriptService/systems/players.luau",
+   "bytes": 959,
+   "lines": 38
+  },
+  {
+   "path": "src/ServerScriptService/systems/SpawnMob.luau",
+   "bytes": 4871,
+   "lines": 181
+  },
+  {
+   "path": "src/StarterGui/ScreenGui/init.meta.json",
+   "bytes": 92,
+   "lines": 7
+  },
+  {
+   "path": "src/StarterGui/ScreenGui/MobCount/init.meta.json",
+   "bytes": 606,
+   "lines": 24
+  },
+  {
+   "path": "src/StarterGui/ScreenGui/MobCount/LocalScript.client.luau",
+   "bytes": 219,
+   "lines": 8
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/main.client.luau",
+   "bytes": 178,
+   "lines": 5
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/Sky.client.luau",
+   "bytes": 461,
+   "lines": 17
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/systems/MobDebug.luau",
+   "bytes": 5789,
+   "lines": 205
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/systems/move.luau",
+   "bytes": 3139,
+   "lines": 111
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/systems/syncMobs.luau",
+   "bytes": 1898,
+   "lines": 77
+  },
+  {
+   "path": "src/std/bt.luau",
+   "bytes": 630,
+   "lines": 41
+  },
+  {
+   "path": "src/std/collect.luau",
+   "bytes": 1933,
+   "lines": 68
+  },
+  {
+   "path": "src/std/components.luau",
+   "bytes": 2700,
+   "lines": 88
+  },
+  {
+   "path": "src/std/interval.luau",
+   "bytes": 272,
+   "lines": 19
+  },
+  {
+   "path": "src/std/mailbox.luau",
+   "bytes": 1160,
+   "lines": 55
+  },
+  {
+   "path": "src/std/phases.luau",
+   "bytes": 4170,
+   "lines": 103
+  },
+  {
+   "path": "src/std/ref.luau",
+   "bytes": 555,
+   "lines": 27
+  },
+  {
+   "path": "src/std/scheduler.luau",
+   "bytes": 4261,
+   "lines": 172
+  },
+  {
+   "path": "src/std/start.luau",
+   "bytes": 1032,
+   "lines": 35
+  },
+  {
+   "path": "src/std/world.luau",
+   "bytes": 185,
+   "lines": 5
+  },
+  {
+   "path": "wally.toml",
+   "bytes": 207,
+   "lines": 9
+  }
+ ]
+}

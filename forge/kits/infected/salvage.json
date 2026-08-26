@@ -1,0 +1,391 @@
+{
+ "$comment": "Unmodified source copied from a licensed project, kept whole so the relationships between modules survive. Generalising anything here into a Forge family is a separate step; nothing in this folder has been reviewed, adapted, or cleared for shipping as-is.",
+ "kit": "infected",
+ "source": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\roblox-infected",
+ "files": 76,
+ "lines": 15681,
+ "skipped": 31,
+ "takenAt": "2026-08-26T21:25:45+00:00",
+ "manifest": [
+  {
+   "path": "default.project.json",
+   "bytes": 1711,
+   "lines": 85
+  },
+  {
+   "path": "rokit.toml",
+   "bytes": 452,
+   "lines": 13
+  },
+  {
+   "path": "selene.toml",
+   "bytes": 151,
+   "lines": 7
+  },
+  {
+   "path": "src/client/Controllers/CameraController.luau",
+   "bytes": 8028,
+   "lines": 226
+  },
+  {
+   "path": "src/client/Controllers/CombatController.luau",
+   "bytes": 14188,
+   "lines": 409
+  },
+  {
+   "path": "src/client/init.client.luau",
+   "bytes": 2041,
+   "lines": 62
+  },
+  {
+   "path": "src/client/UI/Ability.luau",
+   "bytes": 3034,
+   "lines": 104
+  },
+  {
+   "path": "src/client/UI/Crosshair.luau",
+   "bytes": 3553,
+   "lines": 112
+  },
+  {
+   "path": "src/client/UI/Daily.luau",
+   "bytes": 4417,
+   "lines": 147
+  },
+  {
+   "path": "src/client/UI/Effects.luau",
+   "bytes": 5152,
+   "lines": 181
+  },
+  {
+   "path": "src/client/UI/EmoteWheel.luau",
+   "bytes": 3134,
+   "lines": 115
+  },
+  {
+   "path": "src/client/UI/HUD.luau",
+   "bytes": 6297,
+   "lines": 218
+  },
+  {
+   "path": "src/client/UI/Juice.luau",
+   "bytes": 10939,
+   "lines": 303
+  },
+  {
+   "path": "src/client/UI/Leaderboard.luau",
+   "bytes": 3352,
+   "lines": 118
+  },
+  {
+   "path": "src/client/UI/MapVote.luau",
+   "bytes": 2329,
+   "lines": 80
+  },
+  {
+   "path": "src/client/UI/MenuState.luau",
+   "bytes": 1678,
+   "lines": 58
+  },
+  {
+   "path": "src/client/UI/Modifiers.luau",
+   "bytes": 3528,
+   "lines": 116
+  },
+  {
+   "path": "src/client/UI/Nametags.luau",
+   "bytes": 2859,
+   "lines": 92
+  },
+  {
+   "path": "src/client/UI/Pings.luau",
+   "bytes": 1344,
+   "lines": 46
+  },
+  {
+   "path": "src/client/UI/Quests.luau",
+   "bytes": 4963,
+   "lines": 169
+  },
+  {
+   "path": "src/client/UI/RevealScreen.luau",
+   "bytes": 3964,
+   "lines": 138
+  },
+  {
+   "path": "src/client/UI/RoleCard.luau",
+   "bytes": 2516,
+   "lines": 92
+  },
+  {
+   "path": "src/client/UI/Season.luau",
+   "bytes": 5485,
+   "lines": 175
+  },
+  {
+   "path": "src/client/UI/Settings.luau",
+   "bytes": 8637,
+   "lines": 273
+  },
+  {
+   "path": "src/client/UI/Shop.luau",
+   "bytes": 8989,
+   "lines": 295
+  },
+  {
+   "path": "src/client/UI/Social.luau",
+   "bytes": 1216,
+   "lines": 45
+  },
+  {
+   "path": "src/client/UI/Sounds.luau",
+   "bytes": 4829,
+   "lines": 158
+  },
+  {
+   "path": "src/client/UI/Theme.luau",
+   "bytes": 5079,
+   "lines": 152
+  },
+  {
+   "path": "src/client/UI/Touch.luau",
+   "bytes": 2649,
+   "lines": 91
+  },
+  {
+   "path": "src/client/UI/Tutorial.luau",
+   "bytes": 5503,
+   "lines": 184
+  },
+  {
+   "path": "src/server/Bots/Rig.luau",
+   "bytes": 7044,
+   "lines": 251
+  },
+  {
+   "path": "src/server/init.server.luau",
+   "bytes": 12802,
+   "lines": 367
+  },
+  {
+   "path": "src/server/Maps/Facility.luau",
+   "bytes": 11136,
+   "lines": 306
+  },
+  {
+   "path": "src/server/Maps/Kit.luau",
+   "bytes": 14565,
+   "lines": 496
+  },
+  {
+   "path": "src/server/Maps/Mall.luau",
+   "bytes": 10904,
+   "lines": 292
+  },
+  {
+   "path": "src/server/Maps/Suburbia.luau",
+   "bytes": 15119,
+   "lines": 377
+  },
+  {
+   "path": "src/server/Services/AnalyticsService.luau",
+   "bytes": 1976,
+   "lines": 59
+  },
+  {
+   "path": "src/server/Services/AntiCheatService.luau",
+   "bytes": 5576,
+   "lines": 164
+  },
+  {
+   "path": "src/server/Services/BotService.luau",
+   "bytes": 43698,
+   "lines": 1301
+  },
+  {
+   "path": "src/server/Services/CombatService.luau",
+   "bytes": 19774,
+   "lines": 581
+  },
+  {
+   "path": "src/server/Services/DataService.luau",
+   "bytes": 4041,
+   "lines": 125
+  },
+  {
+   "path": "src/server/Services/EconomyService.luau",
+   "bytes": 10788,
+   "lines": 336
+  },
+  {
+   "path": "src/server/Services/EmoteService.luau",
+   "bytes": 3843,
+   "lines": 130
+  },
+  {
+   "path": "src/server/Services/EndgameService.luau",
+   "bytes": 3143,
+   "lines": 106
+  },
+  {
+   "path": "src/server/Services/LeaderboardService.luau",
+   "bytes": 3482,
+   "lines": 127
+  },
+  {
+   "path": "src/server/Services/LiveConfigService.luau",
+   "bytes": 2243,
+   "lines": 71
+  },
+  {
+   "path": "src/server/Services/MapService.luau",
+   "bytes": 16190,
+   "lines": 496
+  },
+  {
+   "path": "src/server/Services/MonetizationService.luau",
+   "bytes": 2590,
+   "lines": 79
+  },
+  {
+   "path": "src/server/Services/RetentionService.luau",
+   "bytes": 9663,
+   "lines": 310
+  },
+  {
+   "path": "src/server/Services/RoleService.luau",
+   "bytes": 23005,
+   "lines": 674
+  },
+  {
+   "path": "src/server/Services/RoundService.luau",
+   "bytes": 3665,
+   "lines": 121
+  },
+  {
+   "path": "src/server/Services/WeaponVisuals.luau",
+   "bytes": 3336,
+   "lines": 106
+  },
+  {
+   "path": "src/server/StudioSmokeTest.luau",
+   "bytes": 3110,
+   "lines": 80
+  },
+  {
+   "path": "src/server/Vendor/ProfileStore.luau",
+   "bytes": 66784,
+   "lines": 2152
+  },
+  {
+   "path": "src/shared/AntiCheatMath.luau",
+   "bytes": 1286,
+   "lines": 34
+  },
+  {
+   "path": "src/shared/Ballistics.luau",
+   "bytes": 5333,
+   "lines": 171
+  },
+  {
+   "path": "src/shared/BotBrain.luau",
+   "bytes": 6095,
+   "lines": 172
+  },
+  {
+   "path": "src/shared/BotVision.luau",
+   "bytes": 2556,
+   "lines": 67
+  },
+  {
+   "path": "src/shared/CrateRoll.luau",
+   "bytes": 1673,
+   "lines": 59
+  },
+  {
+   "path": "src/shared/DailyReward.luau",
+   "bytes": 2701,
+   "lines": 71
+  },
+  {
+   "path": "src/shared/Emotes.luau",
+   "bytes": 2082,
+   "lines": 59
+  },
+  {
+   "path": "src/shared/GameConfig.luau",
+   "bytes": 12159,
+   "lines": 322
+  },
+  {
+   "path": "src/shared/Keybinds.luau",
+   "bytes": 1996,
+   "lines": 63
+  },
+  {
+   "path": "src/shared/LevelMath.luau",
+   "bytes": 1931,
+   "lines": 60
+  },
+  {
+   "path": "src/shared/LiveConfig.luau",
+   "bytes": 3525,
+   "lines": 97
+  },
+  {
+   "path": "src/shared/PatientZero.luau",
+   "bytes": 1075,
+   "lines": 37
+  },
+  {
+   "path": "src/shared/Quests.luau",
+   "bytes": 4001,
+   "lines": 174
+  },
+  {
+   "path": "src/shared/Remotes.luau",
+   "bytes": 7745,
+   "lines": 227
+  },
+  {
+   "path": "src/shared/Rewards.luau",
+   "bytes": 1235,
+   "lines": 43
+  },
+  {
+   "path": "src/shared/RoundMachine.luau",
+   "bytes": 6450,
+   "lines": 175
+  },
+  {
+   "path": "src/shared/SeasonPass.luau",
+   "bytes": 2057,
+   "lines": 66
+  },
+  {
+   "path": "src/shared/SkinCatalog.luau",
+   "bytes": 5041,
+   "lines": 259
+  },
+  {
+   "path": "src/shared/Titles.luau",
+   "bytes": 1304,
+   "lines": 41
+  },
+  {
+   "path": "src/shared/Validators.luau",
+   "bytes": 2467,
+   "lines": 98
+  },
+  {
+   "path": "stylua.toml",
+   "bytes": 59,
+   "lines": 4
+  },
+  {
+   "path": "wally.toml",
+   "bytes": 218,
+   "lines": 11
+  }
+ ]
+}

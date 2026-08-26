@@ -1,0 +1,92 @@
+{
+  "name": "BlockBlastBattle",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Shared": {
+        "$className": "Folder",
+        "game": {
+          "$path": "src/shared/game"
+        }
+      }
+    },
+    "ServerScriptService": {
+      "Server": {
+        "$className": "Folder",
+        "services": {
+          "$path": "src/server/services"
+        },
+        "world": {
+          "$path": "src/server/world"
+        }
+      }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "Client": {
+          "$className": "Folder",
+          "ui": {
+            "$path": "src/client/ui"
+          }
+        }
+      }
+    },
+    "Workspace": {
+      "BootstrapHubSafetyFloor": {
+        "$className": "Part",
+        "$properties": {
+          "Anchored": true,
+          "CanCollide": true,
+          "CanQuery": true,
+          "CanTouch": false,
+          "Color": [
+            0.2823529541492462,
+            0.8235294222831726,
+            0.46666666865348816
+          ],
+          "Material": "Grass",
+          "Position": [
+            0.0,
+            0.0,
+            22.0
+          ],
+          "Size": [
+            96.0,
+            1.0,
+            96.0
+          ],
+          "Transparency": 0.0
+        }
+      },
+      "BootstrapHubSpawn": {
+        "$className": "SpawnLocation",
+        "$properties": {
+          "Anchored": true,
+          "CanCollide": true,
+          "CanQuery": true,
+          "CanTouch": false,
+          "Color": [
+            0.250980406999588,
+            0.6117647290229797,
+            1.0
+          ],
+          "Duration": 0.0,
+          "Enabled": true,
+          "Material": "Neon",
+          "Neutral": true,
+          "Position": [
+            0.0,
+            2.25,
+            22.0
+          ],
+          "Size": [
+            15.0,
+            1.0,
+            15.0
+          ],
+          "Transparency": 0.0
+        }
+      }
+    }
+  }
+}

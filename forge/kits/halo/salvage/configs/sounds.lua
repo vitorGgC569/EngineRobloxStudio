@@ -1,0 +1,403 @@
+-- Centralized sound catalog
+-- Sounds are preloaded into ReplicatedStorage.Assets.Sounds by AssetPreloadService
+
+return {
+    -- Named sounds
+    egg_hatch_pop = {
+        -- betterpop.wav (Jason's improved egg-open pop), group-uploaded via scripts/upload_audio.js.
+        id = "rbxassetid://114572398311789",
+        volume = 0.8,
+        playback_speed = 1.0,
+    },
+
+    egg_roll_snare = {
+        -- BetterSnare.wav (Jason's improved egg-rattle snare roll), group-uploaded.
+        id = "rbxassetid://112745556256821",
+        volume = 0.78, -- 0.6 +30% (Jason: louder egg-hatch snare)
+        playback_speed = 1.0,
+    },
+
+    enchant_thunder = {
+        id = "rbxassetid://71266985896124",
+        volume = 0.9,
+        playback_speed = 0.85,
+    },
+
+    -- Slotting an enhancement into a power slot — ELECZap "Anime-style lightning" (ElevenLabs),
+    -- group-uploaded via scripts/upload_audio.js. Wired to the enhancement_slotted event.
+    enhancement_slot_zap = {
+        id = "rbxassetid://112202092041303",
+        volume = 0.3, -- ElevenLabs zaps run hot; lowered (Jason). Tune here.
+        playback_speed = 1.0,
+        bus = "effects", -- rides the SFX slider (the "ui" bus is a binary on/off that ignores it)
+    },
+
+    -- Soft positional buzz for Hall arch lightning. The client throttles this
+    -- 0.48-second clip independently from the much faster visual bolt cadence.
+    arch_lightning_buzz = {
+        id = "rbxassetid://80802960194213",
+        volume = 0.55,
+        playback_speed = 1.0,
+        duration_seconds = 0.48,
+        bus = "effects",
+    },
+
+    -- Add more named sounds here as needed
+
+    -- Short celebratory stinger (non-looping) — kept for moments that still share one
+    -- generic cheer (achievements, fusion, rare hatch, etc.). Tier A celebrations
+    -- below got their OWN clips so quest/daily/trade/discovery/unlock no longer
+    -- all sound identical. Uploaded via scripts/upload_audio.js.
+    celebratory_jingle = {
+        id = "rbxassetid://118066342271463",
+        volume = 0.18, -- halved twice (Jason: 0.7 -> 0.35 "still too loud" -> 0.18) — this
+        -- field IS the per-sound base level; events can still scale it per-use
+        -- via sound = { key, volume } in configs/game_events.lua
+        playback_speed = 1.0,
+        bus = "effects", -- was "ui": the UI bus is a binary toggle, so level-up/area-
+        -- unlock/achievement jingles IGNORED the SFX slider (Jason: "really loud...
+        -- not on the sound bus"). effects = rides the slider like everything else.
+    },
+
+    -- Tier A celebration variety (2026-07-15): distinct stingers so win-moments
+    -- don't all share celebratory_jingle. Group-uploaded; moderation may delay first play.
+    quest_complete_chime = {
+        id = "rbxassetid://78517299741673",
+        volume = 0.45,
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+    daily_claim_chime = {
+        id = "rbxassetid://81984404553482",
+        volume = 0.4,
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+    trade_complete_chime = {
+        id = "rbxassetid://88088676952931",
+        volume = 0.4,
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+    discovery_fanfare = {
+        id = "rbxassetid://79125886915267",
+        volume = 0.45,
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+    unlock_gate_sting = {
+        id = "rbxassetid://85279429076401",
+        volume = 0.45,
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+
+    -- LEVEL-UP theme ("An Epic Modern-day Video Game", instrumental) — the full 7.5s level-up
+    -- fanfare. `duration_seconds` is the SSOT for the song length so the level-up ANIMATION can
+    -- time itself to the track (LevelUpController reads it). Uploaded via scripts/upload_audio.js
+    -- (assets/audio/sfx/level_up_epic.mp3 -> id below). New uploads moderate before they play.
+    level_up_epic = {
+        id = "rbxassetid://71208785111265",
+        volume = 0.5, -- starting point; tune like the jingle if it's hot
+        playback_speed = 1.0,
+        duration_seconds = 7.5, -- track length; the level-up animation runs to this
+        bus = "effects", -- rides the SFX slider (same reasoning as celebratory_jingle above)
+    },
+
+    -- Ice CONTROL: giant crystals forming / cracking as the world freezes (Jason) — played
+    -- positionally at an enemy the instant a HOLD lands on it (EnemyService:_auraHold). The same
+    -- track also skins ice shields (power_fx sounds.shield.ice). Server-created -> everyone hears it.
+    freeze_hold = {
+        id = "rbxassetid://93258219658109",
+        volume = 0.5,
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+
+    -- DAZE (parked): action-lock CC sound, sibling of the hold/freeze (AggroLeash header). The daze
+    -- power/effect isn't built yet — when it lands, play this positionally on the dazed target the
+    -- same way _auraHold plays freeze_hold. Uploaded + ready.
+    daze_hit = {
+        id = "rbxassetid://94200687927271",
+        volume = 0.5,
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+
+    -- PARKED (Jason: "very good whoosh with loud impact, not sure where to use this"). Uploaded +
+    -- recorded; pick a slot later — best fits a heavy AoE/slam power impact or a big cast.
+    boom_swoosh = {
+        id = "rbxassetid://88708868978364",
+        volume = 0.5,
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+
+    -- Fireworks for a SECRET / EXCLUSIVE hatch (Jason: "keep it, it's fun"). Personal (hatching
+    -- stays owner-only). NOTE: ~15s track; trim if it feels long.
+    hatch_fireworks = {
+        id = "rbxassetid://135447759304480",
+        volume = 0.5,
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+
+    -- POWER DOWN — the CoH "detoggle": you ran out of endurance (focus) so your always-on toggles
+    -- drop. Played on the toggle_crash game event (PowerService:_detoggleAll). Group-owned upload.
+    power_down = {
+        id = "rbxassetid://95513836690825",
+        volume = 0.8,
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+
+    -- FLUB — the generic "that cast just didn't work" buzzer. NOT a cast cue: it plays ONLY when a
+    -- power genuinely can't fire (e.g. Taunt with no tank deployed and no pet selected). Reusable
+    -- anywhere a cast is impossible. Source file was quiet, so volume is cranked. Group-owned upload.
+    flub = {
+        id = "rbxassetid://118307585251245",
+        volume = 3.0,
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+
+    -- HUGE hatch — the showstopper (Jason: first huge in the game was ~100 hrs across 4 accounts,
+    -- "should be celebratory like a lot"). Its OWN, bigger fireworks track; louder than the secret
+    -- fireworks so a huge is unmistakably rarer. Group-owned upload (scripts/audio_ids.json).
+    -- New audio → moderation; plays once approved.
+    huge_fireworks = {
+        id = "rbxassetid://139307085793979",
+        volume = 0.7,
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+
+    -- PARKED (Jason): "A Large Fire Igniting With A Whoosh" — was the fire crit, but the whoosh
+    -- "didn't fit" a hard crit; boom_swoosh took that slot. Freed for a LESS impactful, sustained
+    -- moment — Jason: "might be better for like a root or hold or something." Best next slot: the
+    -- ROOT family (PowerService RootedUntil) — play it positionally on the rooted target the way
+    -- _auraHold plays freeze_hold. Uploaded + ready; not yet wired (confirm root vs hold first).
+    root_whoosh = {
+        id = "rbxassetid://125336332308951",
+        volume = 0.5,
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+
+    -- COIN GAIN (Jason): "throwing coins" — played on the client whenever a HUD currency counter
+    -- ticks UP (BaseUI currency-update path). Personal UI sound on the effects bus. Debounced by
+    -- coin_collect_min_gap so a farming burst doesn't machine-gun the clip.
+    coin_collect = {
+        id = "rbxassetid://133263123825856",
+        volume = 0.5,
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+    coin_collect_min_gap = 0.12, -- min seconds between coin-gain sounds (anti-spam during farming)
+
+    -- Rising "power up" sting (uploaded SFX) — pet revive and similar comeback moments.
+    -- Buff-cast SFX moved to buff_generic_rise so this stays revive/pickup-flavored.
+    power_up_stronger = {
+        id = "rbxassetid://105379088796995",
+        volume = 0.6,
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+
+    -- Soft ascending buff swell (Tier C) — power_fx buff/neutral only; not a celebration.
+    buff_generic_rise = {
+        id = "rbxassetid://128135089698297",
+        volume = 0.55,
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+
+    -- Sparkly cartoon spell cast (uploaded SFX) — kept for cast/neutral power SFX.
+    -- Enchant reveal uses enchant_reveal_sparkle so the two moments no longer share a clip.
+    cartoony_spell_cast = {
+        id = "rbxassetid://140394538590179",
+        volume = 0.6,
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+
+    -- Enchant station / reroll reveal (Tier C).
+    enchant_reveal_sparkle = {
+        id = "rbxassetid://121764787956164",
+        volume = 0.55,
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+
+    -- Low heavy thud (uploaded SFX) — grass power impact flavor (power_fx).
+    -- Pet-down uses pet_down_thud so downs no longer share this clip.
+    deep_earthen_impact = {
+        id = "rbxassetid://90412394528626",
+        volume = 0.35,
+        playback_speed = 0.9,
+        bus = "effects",
+    },
+
+    -- Somber pet-down thud (Tier C) — quieter body-fall, no debris trail.
+    pet_down_thud = {
+        id = "rbxassetid://74319961707223",
+        volume = 0.4,
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+
+    -- Mission crate break (group-owned upload; scripts/audio_ids.json crate_smash).
+    -- Authored onto MissionCrate mesh as bigBreakSound so the death handler plays it
+    -- positionally. Catalog key keeps the id out of MissionInstanceService.
+    crate_smash = {
+        id = "rbxassetid://119529368267127",
+        volume = 0.4, -- playtest: raw 0.8 was blasting
+        playback_speed = 1.0,
+        bus = "effects",
+    },
+
+    -- LOOPING AREA MUSIC. AreaMusicController plays the track for the player's CURRENT area, looped,
+    -- on the "music" SoundGroup bus (so the Music volume slider controls it), crossfading on area
+    -- change. New uploads play once Roblox moderation approves them.
+    music = {
+        awe = { id = "rbxassetid://137816344186500", volume = 0.45 }, -- LoopingAweMusic (now Desert)
+        spa = { id = "rbxassetid://102792461632018", volume = 0.45 }, -- gentle spa loop (Spawn/Grass, Jason)
+        viking_drum = { id = "rbxassetid://92543861599965", volume = 0.45 }, -- VikingDrumLooping
+        epic_drum = { id = "rbxassetid://131000740431597", volume = 0.45 }, -- DrumEpicLooping
+        arctic_hunt = { id = "rbxassetid://99187284116833", volume = 0.45 }, -- Arctic Hunt (Ice, Jason)
+        desert_hunt = { id = "rbxassetid://103598343626981", volume = 0.45 }, -- Desert Hunt (Desert, Jason)
+        -- COMBAT loops (~30s drum instrumentals, Jason). Chosen at RANDOM from combat_music below
+        -- whenever the player is InCombat; same looping "music" bus as the area tracks.
+        combat_1 = { id = "rbxassetid://94019382405359", volume = 0.5 },
+        combat_2 = { id = "rbxassetid://80895188313881", volume = 0.5 },
+        combat_3 = { id = "rbxassetid://84419590288422", volume = 0.5 },
+
+        -- SUNO BATCH 1 (Jason, 2026-07-14): per-origin realm music + realm
+        -- combat + overworld upgrades. Group-owned; sources in
+        -- assets/audio/music, ids in scripts/audio_ids.json.
+        -- Heaven beds (5 tracks over 8 zones — reuse marked in area_music):
+        weightless_hymn = { id = "rbxassetid://118688691362106", volume = 0.45 },
+        weightless_hymn_b = { id = "rbxassetid://81205928806024", volume = 0.45 },
+        weightless_cathedral = { id = "rbxassetid://75109769631505", volume = 0.45 },
+        weightless_cathedral_b = { id = "rbxassetid://88149956989980", volume = 0.45 },
+        golden_horizon = { id = "rbxassetid://127208188484337", volume = 0.45 },
+        -- Hell beds (6 tracks over 8 zones):
+        ember_menace_a = { id = "rbxassetid://99754348564589", volume = 0.45 },
+        ember_menace_b = { id = "rbxassetid://132106343488603", volume = 0.45 },
+        ember_menace_c = { id = "rbxassetid://140308622440055", volume = 0.45 },
+        ember_menace_d = { id = "rbxassetid://107886863616166", volume = 0.45 },
+        iron_gates_a = { id = "rbxassetid://91517043316329", volume = 0.45 },
+        iron_gates_b = { id = "rbxassetid://93100824732439", volume = 0.45 },
+        -- Realm combat (join combat_music_by_realm pools below). The original
+        -- hell_combat_a upload (105132281703189) was rejected by Roblox moderation
+        -- and must not be restored to the runtime catalog.
+        hell_combat_b = { id = "rbxassetid://112291597299425", volume = 0.5 },
+        heaven_combat_a = { id = "rbxassetid://83644271705531", volume = 0.5 },
+        -- Overworld upgrades (Grass and Lava get their OWN tracks; spa is
+        -- Spawn-only again, epic_drum freed):
+        grass_meadow = { id = "rbxassetid://94616693136617", volume = 0.45 },
+        grass_meadow_b = { id = "rbxassetid://81662834219225", volume = 0.45 },
+        lava_homeworld = { id = "rbxassetid://98758407703765", volume = 0.45 },
+        lava_homeworld_b = { id = "rbxassetid://83378441893244", volume = 0.45 },
+        -- Batch 1 closer (2026-07-14, "Lava Heaven" — Jason: "pretty good,
+        -- I'm happy with it"): the final owed slot, holy light over magma.
+        heaven_lava_choir = { id = "rbxassetid://85744161788059", volume = 0.45 },
+        -- Egyptian heaven sands (2026-07-14 audition: "both really good...
+        -- I would definitely go with the new ones" — one per layer; they
+        -- displace golden_horizon + grass_meadow_b to the spare shelf):
+        heaven_sands_a = { id = "rbxassetid://116298138591304", volume = 0.45 },
+        heaven_sands_b = { id = "rbxassetid://98035120998310", volume = 0.45 },
+        -- Hell Grass / swamp trial bed (Jason 2026-07-15 "Swamp Static" — way better than spa):
+        swamp_static = { id = "rbxassetid://111140016293110", volume = 0.45 },
+    },
+
+    -- COMBAT MUSIC: while the local player is InCombat (server-set Player attribute), AreaMusicController
+    -- crossfades from the area track to a RANDOM key in this list; when combat ends it crossfades back
+    -- to the area track after combat_music_exit_delay seconds (the delay rides out brief aggro flicker so
+    -- the music doesn't restart). Grow this array freely — selection is uniform-random over its length.
+    combat_music = { "combat_1", "combat_2", "combat_3" },
+    combat_music_exit_delay = 3.0,
+
+    -- REALM-FLAVORED COMBAT (Jason 2026-07-14): while fighting, the pool is
+    -- picked by WHERE you are — Heaven_* zones + heaven missions draw from
+    -- `heaven`, Hell_* + hell missions from `hell`, everywhere else falls
+    -- back to combat_music above. Grow the arrays freely.
+    -- (heaven pool auditioned 2026-07-14 and CUT — Jason: "I don't like
+    -- the heaven combat, set it back to default." Heaven fights use the
+    -- default combat_music trio; heaven_combat_a stays uploaded if ever
+    -- wanted back.)
+    combat_music_by_realm = {
+        hell = { "hell_combat_b", "iron_gates_b", "combat_1" },
+    },
+
+    -- THE PROLOGUE's battle pool (Jason: "we're in a battle and we didn't have battle
+    -- music"): the generic combat_1 sat in the hell pool and could win the random pick,
+    -- reading as not-battle under the cold open. The prologue draws ONLY the dedicated
+    -- hell tracks. iron_gates_b replaces the rejected hell_combat_a upload.
+    prologue_combat_music = { "hell_combat_b", "iron_gates_b" },
+
+    -- SAFETY NET: if an area track's ASSET fails to load (still moderating at publish time, or taken
+    -- down by Roblox after approval), AreaMusicController swaps to this track so the area is never
+    -- silent. Must be a long-stable, guaranteed-approved key in `music` (awe = the original hub theme,
+    -- now otherwise unassigned). `default` above only covers UNKNOWN AREAS; this covers DEAD ASSETS.
+    music_fallback = "awe",
+
+    -- Which looping track plays in each AREA (edit freely — falls back to `default`). Only 3 tracks
+    -- so far, so some areas share; add more tracks + remap for fully distinct per-area music.
+    area_music = {
+        default = "awe",
+        -- HOMEWORLD (Jason: "we have distinct music for all the homeworlds
+        -- already" — batch 1 goes to the REALMS instead):
+        Spawn = "spa", -- calm hub (gentle spa loop)
+        Grass = "spa", -- gentle starter biome (shared with Spawn by design)
+        Desert = "desert_hunt", -- Desert Hunt (Jason: better than the old track)
+        Ice = "arctic_hunt", -- harsh cold (Arctic Hunt)
+        Lava = "epic_drum", -- intense endgame
+
+        -- REALM ZONES (Jason: "we need different music for every one of
+        -- them" — 4 origins x 2 layers x 2 realms). Placement verdicts
+        -- 2026-07-14: grass meadows too bright for hell -> heaven; lava
+        -- homeworld tracks dark enough for hell layers 1+2. Both realms 8/8 distinct
+        -- (batch-1 closer 'Lava Heaven' filled the last heaven slot).
+        Heaven_1_Grass = "weightless_hymn",
+        Heaven_1_Ice = "weightless_hymn_b",
+        Heaven_1_Desert = "heaven_sands_a", -- Egyptian choir-over-sand
+        Heaven_1_Lava = "weightless_cathedral",
+        Heaven_2_Grass = "grass_meadow", -- bright pastoral suits the grove
+        Heaven_2_Ice = "weightless_cathedral_b", -- vast + glacial
+        Heaven_2_Desert = "heaven_sands_b", -- the deeper sand twin
+        Heaven_2_Lava = "heaven_lava_choir", -- Lava Heaven (batch-1 closer)
+        Hell_1_Lava = "lava_homeworld", -- smoldering, dark (Jason: hell L1)
+        Hell_1_Ice = "ember_menace_b",
+        Hell_1_Desert = "ember_menace_c",
+        Hell_1_Grass = "ember_menace_d",
+        Hell_2_Lava = "iron_gates_a",
+        Hell_2_Ice = "iron_gates_b",
+        Hell_2_Desert = "ember_menace_a",
+        Hell_2_Grass = "lava_homeworld_b", -- (Jason: hell L2)
+
+        -- MISSION pseudo-areas (ZoneTracker publishes mission_<MissionArea>
+        -- while InMission). Door trials: mission_hell / mission_heaven.
+        -- Element trials keep MissionArea = grass/lava/... for biome RPS +
+        -- drops, but AreaMusicController prefers mission_<realm>_<element>
+        -- when CurrentRealm is hell/heaven (so Hell Grass ≠ Spawn spa).
+        mission_hell = "iron_gates_a",
+        mission_heaven = "weightless_cathedral_b",
+        mission_earth = "awe",
+        -- Neutral / unflavored element fallbacks (door-less element maps,
+        -- or realm missing): no longer map grass→spa (that was the bug).
+        mission_lava = "epic_drum",
+        mission_ice = "arctic_hunt",
+        mission_grass = "grass_meadow",
+        mission_desert = "desert_hunt",
+        -- Realm-flavored element trials (mirror the matching Hell_*/Heaven_* beds):
+        mission_hell_grass = "swamp_static", -- Swamp Static (Jason 2026-07-15)
+        mission_hell_lava = "lava_homeworld",
+        mission_hell_ice = "ember_menace_b",
+        mission_hell_desert = "ember_menace_c",
+        mission_heaven_grass = "grass_meadow",
+        mission_heaven_lava = "heaven_lava_choir",
+        mission_heaven_ice = "weightless_hymn_b",
+        mission_heaven_desert = "heaven_sands_a",
+    },
+}

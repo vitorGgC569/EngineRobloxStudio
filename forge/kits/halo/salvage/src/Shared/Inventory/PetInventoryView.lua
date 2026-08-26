@@ -1,0 +1,615 @@
+--[[
+    PetInventoryView — the single pure projection authority for pet inventory.
+
+    SEPARATION OF CONCERNS:
+      OWNERSHIP lives in `Inventory.pets.items`. Two entry shapes, keyed differently:
+        COMMON STACK (fungible) — keyed by "id:variant":
+          items["bear:basic"] = { id, variant, quantity = N, obtained_at }
+          One entry per kind regardless of count → O(distinct kinds) storage.
+        SPECIAL (unique per instance) — keyed by uid:
+          items[uid] = { uid, id, variant, obtained_at, level, huge, serial, ... }
+
+      EQUIP lives SEPARATELY in `Equipped.pets` — a slot → reference restore/preference
+      layer, NOT part of ownership:
+          Equipped.pets["slot_1"] = "<uid>"            (a special)
+          Equipped.pets["slot_2"] = "stack|id:variant" (one copy of a common; several slots
+                                                         may reference the same kind)
+
+    THE SAFETY RULE: `Equipped` is a SOFT, VALIDATED reference, never trusted blindly. The
+    live equipped set = `Equipped ∩ inventory` (resolveEquipped): a slot is live only if its
+    pet is still owned, and a common kind can be equipped at most `quantity` times. A dangling
+    ref (traded/deleted pet, or a crash before teardown) is simply IGNORED and swept lazily —
+    so it can never become a phantom, and equip/unequip never touches ownership (no dup/loss).
+
+    PURE: no Roblox APIs, no os.time, no globals. Server + client require the same code.
+
+    API:
+      isStackEntry(entry, key?)                  -> boolean (common stack vs special)
+      isSpecial(record, capability)              -> boolean
+      stackKey(record, config, capability)       -> string (display grouping key)
+      normalize(items)                           -> items (pure-ownership canonical fixups)
+      parseRef(ref)                              -> { kind="special"|"stack", uid?|stackKey? }
+      resolveEquipped(items, equipped, maxSlots) -> slotMap {[n]=desc}, equippedByKey {key=n}
+      buildEquipped(items, refs, maxSlots, opts?) -> validated slot refs + commit summary
+          opts.lockedSlots skips recovering slots; opts.previous pins a locked
+          slot's current occupant so a draft cannot slide a fresh pet into it.
+      fillEmptySlots(items, equipped, refs, maxSlots) -> equipped + fill-only summary
+      hasUnequipped(items, equipped, maxSlots)   -> boolean
+      groups(items, config, capability, equippedByKey?) ->
+            { {key,total,equippedCount,unequippedCount,isSpecial,sampleRecord,uids} }
+      usedSlots(items, config, capability)       -> integer
+      categoryCounts(items, config, capability)  -> { display, total }
+      isLevelable(record, capability)            -> boolean
+      isEnchantable(record, capability)          -> boolean
+]]
+
+local PetInventoryView = {}
+
+local DEFAULT_STACK_FIELDS = { "id", "variant" }
+
+-- A common stack is keyed by exactly "id:variant"; a special by its uid (no ":"). With the
+-- key we classify robustly even if a legacy special carries a vestigial quantity=1; without
+-- it we fall back to the self-describing form (stack = quantity + no uid).
+local function isStackEntry(entry, key)
+    if type(entry) ~= "table" then
+        return false
+    end
+    if key ~= nil then
+        -- A stack's storage key starts with "id:variant"; Storage v2 appends the
+        -- enchant component ("id:variant:<effect-or-empty>"). Accept BOTH the legacy
+        -- 2-field key (pre-migration data passing through) and the 3-field form.
+        -- uid record keys never contain ":" (GenerateUID format), so no collision.
+        local base = tostring(entry.id) .. ":" .. tostring(entry.variant or "basic")
+        if key == base then
+            return true
+        end
+        return string.sub(tostring(key), 1, #base + 1) == (base .. ":")
+    end
+    return type(entry.quantity) == "number" and entry.uid == nil
+end
+PetInventoryView.isStackEntry = isStackEntry
+
+-- Split on "|" without relying on Roblox's string.split.
+local function splitPipe(value)
+    local out = {}
+    for part in string.gmatch(value, "([^|]+)") do
+        out[#out + 1] = part
+    end
+    return out
+end
+
+function PetInventoryView.isSpecial(record, capability)
+    if type(record) ~= "table" then
+        return false
+    end
+    capability = capability or {}
+    if capability.allowAll == true then
+        return true
+    end
+    if record.huge == true then
+        return true
+    end
+    if record.unique == true then
+        return true
+    end
+    local rarity = record.rarity_id or record.variant
+    local special = capability.specialRarities
+    return special ~= nil and rarity ~= nil and special[rarity] == true
+end
+
+-- The HUGE GUARD: a record that must NEVER be removed by a pet RESET (huges/exclusives/uniques).
+-- Belt-and-suspenders — protected if it's a structural per-uid special (has a uid, not a quantity
+-- stack) OR isSpecial says so (huge flag / special rarity). Only pure COMMON stacks fall through.
+function PetInventoryView.isProtectedFromReset(record, capability)
+    if type(record) ~= "table" then
+        return false
+    end
+    if record.uid ~= nil and record.quantity == nil then
+        return true -- self-describing unique instance (a special / huge)
+    end
+    return PetInventoryView.isSpecial(record, capability)
+end
+
+-- Reset filter: drop COMMON stacks, ALWAYS keep protected (huge/special) records. Pure. Returns
+-- (keptItems, removedCount). Used by Admin reset so a huge can never be wiped.
+function PetInventoryView.keepProtected(items, capability)
+    local kept, removed = {}, 0
+    for k, rec in pairs(items or {}) do
+        if PetInventoryView.isProtectedFromReset(rec, capability) then
+            kept[k] = rec
+        else
+            removed = removed + 1
+        end
+    end
+    return kept, removed
+end
+
+-- Display grouping key. Specials key uniquely by uid; commons by the configured fields.
+function PetInventoryView.stackKey(record, config, capability)
+    if capability ~= nil and PetInventoryView.isSpecial(record, capability) then
+        return "uid:" .. tostring(record.uid)
+    end
+    local fields = (config and config.stack_key_fields) or DEFAULT_STACK_FIELDS
+    local parts = {}
+    for _, field in ipairs(fields) do
+        parts[#parts + 1] = tostring(record[field] ~= nil and record[field] or "")
+    end
+    return table.concat(parts, ":")
+end
+
+-- Decode an Equipped.pets slot value into a reference.
+function PetInventoryView.parseRef(ref)
+    if type(ref) ~= "string" or ref == "" then
+        return nil
+    end
+    local parts = splitPipe(ref)
+    if parts[1] == "stack" and parts[2] then
+        return { kind = "stack", stackKey = parts[2] }
+    end
+    if parts[1] == "special" and parts[2] then
+        return { kind = "special", uid = parts[2] }
+    end
+    return { kind = "special", uid = ref } -- bare uid
+end
+
+-- Idempotent canonical fixups. Records hold ONLY ownership now (equip lives in Equipped.pets).
+function PetInventoryView.normalize(items)
+    items = items or {}
+    for key, entry in pairs(items) do
+        if type(entry) == "table" then
+            if isStackEntry(entry, key) then
+                entry.quantity = math.max(0, math.floor(tonumber(entry.quantity) or 0))
+                entry.variant = entry.variant or "basic"
+                entry.uid = nil
+            else
+                if entry.uid ~= key then
+                    entry.uid = key
+                end
+                entry.quantity = nil
+            end
+            entry._kind = nil
+            entry.equipped_slot = nil
+            entry.equipped_slots = nil
+        end
+    end
+    return items
+end
+
+-- Resolve the live equipped set: `Equipped ∩ inventory`, validated. A slot is live only if its
+-- pet is still owned (special uid present; common stack present), each special claims one slot,
+-- and a common kind is capped at its `quantity`. Slots outside [1..maxSlots] are ignored.
+-- Returns slotMap {[slot] = {slot, kind, uid?|stackKey?, id, variant}} and equippedByKey
+-- {groupKey = count} (groupKey = "uid:<uid>" for specials, "id:variant" for commons).
+function PetInventoryView.resolveEquipped(items, equipped, maxSlots)
+    maxSlots = tonumber(maxSlots) or 0
+    items = items or {}
+
+    local slots = {}
+    for slotName, ref in pairs(equipped or {}) do
+        local n = tonumber(tostring(slotName):match("^slot_(%d+)$"))
+        if n and n >= 1 and n <= maxSlots and ref ~= nil and ref ~= "" then
+            slots[#slots + 1] = { n = n, ref = ref }
+        end
+    end
+    table.sort(slots, function(a, b)
+        return a.n < b.n
+    end)
+
+    local slotMap, equippedByKey = {}, {}
+    local claimedUid, commonClaimed = {}, {}
+    for _, slot in ipairs(slots) do
+        local desc = PetInventoryView.parseRef(slot.ref)
+        if desc and desc.kind == "special" then
+            local rec = items[desc.uid]
+            if rec and not isStackEntry(rec, desc.uid) and not claimedUid[desc.uid] then
+                claimedUid[desc.uid] = true
+                slotMap[slot.n] = {
+                    slot = slot.n,
+                    kind = "special",
+                    uid = desc.uid,
+                    id = rec.id,
+                    variant = rec.variant,
+                }
+                local gk = "uid:" .. desc.uid
+                equippedByKey[gk] = (equippedByKey[gk] or 0) + 1
+            end
+        elseif desc and desc.kind == "stack" then
+            local stack = items[desc.stackKey]
+            if stack and isStackEntry(stack, desc.stackKey) then
+                local used = commonClaimed[desc.stackKey] or 0
+                local qty = math.max(0, math.floor(tonumber(stack.quantity) or 0))
+                if used < qty then
+                    commonClaimed[desc.stackKey] = used + 1
+                    slotMap[slot.n] = {
+                        slot = slot.n,
+                        kind = "stack",
+                        stackKey = desc.stackKey,
+                        id = stack.id,
+                        variant = stack.variant or "basic",
+                    }
+                    equippedByKey[desc.stackKey] = (equippedByKey[desc.stackKey] or 0) + 1
+                end
+            end
+        end
+    end
+    return slotMap, equippedByKey
+end
+
+-- Validate an ordered squad draft against ownership and build the exact Equipped.pets map that may
+-- be committed atomically. An empty refs array is intentionally valid: players may deploy no pets.
+-- Invalid, duplicate, over-owned, and over-cap references are rejected instead of becoming phantom
+-- slots. PURE so the full-clear path and its edge cases stay headless-tested.
+local function slotKey(n)
+    return "slot_" .. n
+end
+
+local function slotIsLocked(lockedSlots, n)
+    if type(lockedSlots) ~= "table" then
+        return false
+    end
+    return lockedSlots[n] == true or lockedSlots[slotKey(n)] == true
+end
+
+local function refsMatch(ref, previous)
+    local a = PetInventoryView.parseRef(ref)
+    local b = PetInventoryView.parseRef(previous)
+    if not (a and b) or a.kind ~= b.kind then
+        return false
+    end
+    if a.kind == "special" then
+        return a.uid == b.uid
+    end
+    return a.stackKey == b.stackKey
+end
+
+function PetInventoryView.buildEquipped(items, refs, maxSlots, opts)
+    items = items or {}
+    refs = type(refs) == "table" and refs or {}
+    maxSlots = math.max(0, math.floor(tonumber(maxSlots) or 0))
+    opts = type(opts) == "table" and opts or {}
+    local lockedSlots = opts.lockedSlots
+    local previous = type(opts.previous) == "table" and opts.previous or {}
+
+    local equipped = {}
+    local usedUid, usedStack = {}, {}
+    local accepted, rejected = 0, 0
+    local consumed = {}
+
+    local function takeSpecial(uid)
+        local rec = items[uid]
+        if rec and not isStackEntry(rec, uid) and not usedUid[uid] then
+            usedUid[uid] = true
+            return uid
+        end
+        return nil
+    end
+
+    local function takeStack(stackKey)
+        local rec = items[stackKey]
+        local used = usedStack[stackKey] or 0
+        local owned = rec
+                and isStackEntry(rec, stackKey)
+                and math.max(0, math.floor(tonumber(rec.quantity) or 0))
+            or 0
+        if used < owned then
+            usedStack[stackKey] = used + 1
+            return "stack|" .. stackKey
+        end
+        return nil
+    end
+
+    local function takeRef(ref)
+        local desc = PetInventoryView.parseRef(ref)
+        if desc and desc.kind == "special" then
+            return takeSpecial(desc.uid)
+        elseif desc and desc.kind == "stack" then
+            return takeStack(desc.stackKey)
+        end
+        return nil
+    end
+
+    -- A recovering slot cannot take a new pet. If the draft still lists the
+    -- occupant that went down there, keep it pinned so packing cannot slide
+    -- a fresh pet into the red slot.
+    for n = 1, maxSlots do
+        if slotIsLocked(lockedSlots, n) then
+            local prev = previous[slotKey(n)]
+            if prev then
+                for i, ref in ipairs(refs) do
+                    if not consumed[i] and refsMatch(ref, prev) then
+                        local placed = takeRef(ref)
+                        if placed then
+                            equipped[slotKey(n)] = placed
+                            consumed[i] = true
+                            accepted += 1
+                        end
+                        break
+                    end
+                end
+            end
+        end
+    end
+
+    local nextOpen = 1
+    local function peekUnlockedSlot()
+        local n = nextOpen
+        while n <= maxSlots and (slotIsLocked(lockedSlots, n) or equipped[slotKey(n)]) do
+            n += 1
+        end
+        if n > maxSlots then
+            return nil
+        end
+        return n
+    end
+
+    for i, ref in ipairs(refs) do
+        if not consumed[i] then
+            local slot = peekUnlockedSlot()
+            if not slot then
+                local reservedEmpty = false
+                for n = 1, maxSlots do
+                    if slotIsLocked(lockedSlots, n) and equipped[slotKey(n)] == nil then
+                        reservedEmpty = true
+                        break
+                    end
+                end
+                if reservedEmpty then
+                    break
+                end
+                rejected += 1
+            else
+                local placed = takeRef(ref)
+                if placed then
+                    equipped[slotKey(slot)] = placed
+                    nextOpen = slot + 1
+                    accepted += 1
+                else
+                    rejected += 1
+                end
+            end
+        end
+    end
+
+    return equipped,
+        {
+            accepted = accepted,
+            rejected = rejected,
+            requested = #refs,
+            maxSlots = maxSlots,
+        }
+end
+
+-- Tutorial hatch assist: add newly hatched pets to the first genuinely empty slots without
+-- displacing or compacting the player's existing squad. `refs` are in hatch-result order, so a
+-- multi-hatch produces the same deterministic squad order the reveal showed. Invalid/auto-deleted
+-- results are ignored; stack copies are capped by owned quantity and specials remain unique.
+function PetInventoryView.fillEmptySlots(items, equipped, refs, maxSlots, lockedSlots)
+    items = items or {}
+    refs = type(refs) == "table" and refs or {}
+    maxSlots = math.max(0, math.floor(tonumber(maxSlots) or 0))
+
+    local slotMap, equippedByKey = PetInventoryView.resolveEquipped(items, equipped, maxSlots)
+    local result = {}
+    local occupied = 0
+    for slot = 1, maxSlots do
+        local desc = slotMap[slot]
+        if desc then
+            occupied += 1
+            result["slot_" .. slot] = desc.kind == "stack" and ("stack|" .. desc.stackKey)
+                or desc.uid
+        end
+    end
+
+    local added, rejected = 0, 0
+    local addedRefs = {}
+    for _, ref in ipairs(refs) do
+        local emptySlot
+        for slot = 1, maxSlots do
+            if result["slot_" .. slot] == nil and not slotIsLocked(lockedSlots, slot) then
+                emptySlot = slot
+                break
+            end
+        end
+        if not emptySlot then
+            break
+        end
+
+        -- GrantPet returns a raw storage key for common stacks and a raw uid for specials. Accept
+        -- those raw stack keys here in addition to the equipped-layer `stack|...` representation.
+        local desc = PetInventoryView.parseRef(ref)
+        if desc and desc.kind == "special" then
+            local raw = tostring(desc.uid)
+            local rawRecord = items[raw]
+            if rawRecord and isStackEntry(rawRecord, raw) then
+                desc = { kind = "stack", stackKey = raw }
+            end
+        end
+
+        local acceptedRef, key
+        if desc and desc.kind == "special" then
+            local rec = items[desc.uid]
+            key = "uid:" .. tostring(desc.uid)
+            if rec and not isStackEntry(rec, desc.uid) and (equippedByKey[key] or 0) == 0 then
+                acceptedRef = desc.uid
+            end
+        elseif desc and desc.kind == "stack" then
+            local rec = items[desc.stackKey]
+            key = desc.stackKey
+            local owned = rec
+                    and isStackEntry(rec, desc.stackKey)
+                    and math.max(0, math.floor(tonumber(rec.quantity) or 0))
+                or 0
+            if (equippedByKey[key] or 0) < owned then
+                acceptedRef = "stack|" .. desc.stackKey
+            end
+        end
+
+        if acceptedRef then
+            result["slot_" .. emptySlot] = acceptedRef
+            equippedByKey[key] = (equippedByKey[key] or 0) + 1
+            added += 1
+            addedRefs[#addedRefs + 1] = ref
+        else
+            rejected += 1
+        end
+    end
+
+    return result,
+        {
+            added = added,
+            rejected = rejected,
+            before = occupied,
+            total = occupied + added,
+            maxSlots = maxSlots,
+            addedRefs = addedRefs,
+        }
+end
+
+-- True when at least one owned pet copy is not represented in the validated active squad.
+-- This powers tutorial copy only; it does not rank pets or imply that an alternative is stronger.
+function PetInventoryView.hasUnequipped(items, equipped, maxSlots)
+    items = items or {}
+    local _, equippedByKey = PetInventoryView.resolveEquipped(items, equipped, maxSlots)
+    for key, record in pairs(items) do
+        if type(record) == "table" then
+            if isStackEntry(record, key) then
+                local owned = math.max(0, math.floor(tonumber(record.quantity) or 0))
+                if owned > (equippedByKey[key] or 0) then
+                    return true
+                end
+            else
+                local uid = tostring(record.uid or key)
+                if (equippedByKey["uid:" .. uid] or 0) == 0 then
+                    return true
+                end
+            end
+        end
+    end
+    return false
+end
+
+-- Ordered display groups (deterministic by obtained_at then key). Ownership only; pass
+-- `equippedByKey` (from resolveEquipped) to overlay equipped/unequipped counts.
+function PetInventoryView.groups(items, config, capability, equippedByKey)
+    local entries = {}
+    for key, entry in pairs(items or {}) do
+        if type(entry) == "table" then
+            entries[#entries + 1] = { key = key, entry = entry }
+        end
+    end
+    table.sort(entries, function(a, b)
+        local ao = tonumber(a.entry.obtained_at) or 0
+        local bo = tonumber(b.entry.obtained_at) or 0
+        if ao ~= bo then
+            return ao < bo
+        end
+        return tostring(a.key) < tostring(b.key)
+    end)
+
+    local order, byKey = {}, {}
+    for _, item in ipairs(entries) do
+        local entry, key = item.entry, item.key
+        local gkey = PetInventoryView.stackKey(entry, config, capability)
+        local group = byKey[gkey]
+        if not group then
+            group = {
+                key = gkey,
+                total = 0,
+                equippedCount = 0,
+                unequippedCount = 0,
+                isSpecial = capability ~= nil and PetInventoryView.isSpecial(entry, capability)
+                    or false,
+                sampleRecord = entry,
+                uids = {},
+            }
+            byKey[gkey] = group
+            order[#order + 1] = group
+        end
+        if isStackEntry(entry, key) then
+            group.total += math.max(0, math.floor(tonumber(entry.quantity) or 0))
+        else
+            group.total += 1
+            group.uids[#group.uids + 1] = entry.uid or key
+        end
+    end
+
+    for _, group in ipairs(order) do
+        local equipped = equippedByKey and equippedByKey[group.key] or 0
+        if equipped > group.total then
+            equipped = group.total
+        end
+        group.equippedCount = equipped
+        group.unequippedCount = group.total - equipped
+    end
+    return order
+end
+
+-- One slot per common kind + per special.
+function PetInventoryView.usedSlots(items, config, capability)
+    -- STORAGE V2: stacks are SELF-BOUNDING (a kind exists once; the catalog is their
+    -- cap), so when stacks_count_toward_limit == false only UNIQUE records (specials)
+    -- consume slots. Legacy non-special uid records (pre-migration mythics) are free too.
+    if config and config.stacks_count_toward_limit == false then
+        local n = 0
+        for key, entry in pairs(items or {}) do
+            if
+                type(entry) == "table"
+                and not isStackEntry(entry, key)
+                and PetInventoryView.isSpecial(entry, capability)
+            then
+                n += 1
+            end
+        end
+        return n
+    end
+    if not config or config.count_stacks_as_single ~= false then
+        return #PetInventoryView.groups(items, config, capability)
+    end
+    local n = 0
+    for key, entry in pairs(items or {}) do
+        if isStackEntry(entry, key) then
+            n += math.max(0, math.floor(tonumber(entry.quantity) or 0))
+        elseif type(entry) == "table" then
+            n += 1
+        end
+    end
+    return n
+end
+
+function PetInventoryView.categoryCounts(items, config, capability)
+    local total = 0
+    for key, entry in pairs(items or {}) do
+        if isStackEntry(entry, key) then
+            total += math.max(0, math.floor(tonumber(entry.quantity) or 0))
+        elseif type(entry) == "table" then
+            total += 1
+        end
+    end
+    return {
+        display = #PetInventoryView.groups(items, config, capability),
+        total = total,
+    }
+end
+
+-- The replicated client stack quantity is the UNEQUIPPED count, while draft editing happens before
+-- the live Equipped slots change. Reconstruct total ownership from both projections, then subtract
+-- the working draft. This keeps a fully-deployed one-copy stack available in the inventory grid as
+-- soon as its draft slot is removed (0 unequipped + 1 live - 0 drafted = 1).
+function PetInventoryView.draftRemaining(unequippedCount, liveEquippedCount, draftedCount)
+    local unequipped = math.max(0, math.floor(tonumber(unequippedCount) or 0))
+    local live = math.max(0, math.floor(tonumber(liveEquippedCount) or 0))
+    local drafted = math.max(0, math.floor(tonumber(draftedCount) or 0))
+    local owned = unequipped + live
+    return math.max(0, owned - drafted), owned
+end
+
+-- Config-driven capability checks (replacing the deleted `_kind == "special"` guard).
+function PetInventoryView.isLevelable(record, capability)
+    return PetInventoryView.isSpecial(record, capability)
+end
+
+function PetInventoryView.isEnchantable(record, capability)
+    return PetInventoryView.isSpecial(record, capability)
+end
+
+return PetInventoryView

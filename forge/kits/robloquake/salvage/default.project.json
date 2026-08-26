@@ -1,0 +1,66 @@
+{
+  "name": "robloquake",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedFirst": {
+      "$className": "ReplicatedFirst",
+      "LoadingScreen": {
+        "$path": "src/loadingscreen"
+      }
+    },
+    "ReplicatedStorage": {
+      "Shared": {
+        "$path": "src/shared"
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "$properties": {
+        "ScreenOrientation": "LandscapeSensor"
+      }
+    },
+    "ServerScriptService": {
+      "Server": {
+        "$path": "src/server"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$properties": {
+        "LoadCharacterAppearance": false,
+        "CharacterWalkSpeed": 0
+      },
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": {
+          "$path": "src/client"
+        }
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Brightness": 0,
+        "GlobalShadows": false,
+        "Ambient": [
+          1,
+          1,
+          1
+        ],
+        "OutdoorAmbient": [
+          1,
+          1,
+          1
+        ],
+        "EnvironmentDiffuseScale": 0,
+        "EnvironmentSpecularScale": 0
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "Gravity": 0
+      }
+    }
+  }
+}

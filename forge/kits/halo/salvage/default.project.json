@@ -1,0 +1,62 @@
+{
+  "name": "HaloAndHorns",
+  "servePort": 34872,
+  "globIgnorePaths": [
+    "Packages/**/*.project.json"
+  ],
+  "tree": {
+    "$className": "DataModel",
+    "Workspace": {
+      "$ignoreUnknownInstances": true,
+      "$properties": {
+        "FallenPartsDestroyHeight": -50000,
+        "ModelStreamingBehavior": "Improved",
+        "StreamingIntegrityMode": "PauseOutsideLoadedArea",
+        "StreamingMinRadius": 1024,
+        "StreamingTargetRadius": 1536
+      }
+    },
+    "ServerScriptService": {
+      "Server": {
+        "$path": "src/Server"
+      }
+    },
+    "ReplicatedStorage": {
+      "Assets": {
+        "$className": "Folder",
+        "$ignoreUnknownInstances": true,
+        "Models": {
+          "$path": "assets/place/Models.rbxm"
+        }
+      },
+      "Shared": {
+        "$path": "src/Shared"
+      },
+      "Packages": {
+        "$path": "Packages"
+      },
+      "Tests": {
+        "$path": "tests"
+      },
+      "Configs": {
+        "$path": "configs"
+      },
+      "PlaceAssets": {
+        "$path": "assets/place/PlaceAssets"
+      },
+      "MissionProps": {
+        "$path": "assets/place/MissionProps.rbxm"
+      }
+    },
+    "StarterPlayer": {
+      "StarterPlayerScripts": {
+        "Client": {
+          "$path": "src/Client"
+        }
+      }
+    },
+    "ReplicatedFirst": {
+      "$path": "src/ReplicatedFirst"
+    }
+  }
+}

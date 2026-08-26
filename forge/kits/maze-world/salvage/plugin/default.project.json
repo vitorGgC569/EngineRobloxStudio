@@ -1,0 +1,50 @@
+{
+    "name": "MazeGenerator",
+    "tree": {
+        "$className": "DataModel",
+        "HttpService": {
+            "$className": "HttpService",
+            "$properties": {
+                "HttpEnabled": true
+            }
+        },
+
+        "ServerStorage": {
+            "$className": "ServerStorage",
+
+            "MazeGeneratorPlugin": {
+                "$className": "Folder",
+                "Plugin": {
+                    "$path": "src"
+                },
+                "Log": {
+                    "$path": "log"
+                },
+                "Fmt": {
+                    "$path": "fmt"
+                },
+                "Models": {
+                    "$path": "../models"
+                },
+                "Roact": {
+                    "$path": "../modules/roact/src"
+                },
+                "RoactRodux": {
+                    "$path": "../modules/roact-rodux/src"
+                },
+                "Rodux": {
+                    "$path": "../modules/rodux/src"
+                },
+                "M": {
+                    "$path": "../modules/moses/moses_min.lua"
+                },
+                "Promise": {
+                    "$path": "../modules/promise2/lib"
+                },
+                "t": {
+                    "$path": "../modules/t/lib"
+                }
+            }
+        }
+    }
+}

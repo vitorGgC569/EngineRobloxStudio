@@ -1,0 +1,316 @@
+{
+ "$comment": "Unmodified source copied from a licensed project, kept whole so the relationships between modules survive. Generalising anything here into a Forge family is a separate step; nothing in this folder has been reviewed, adapted, or cleared for shipping as-is.",
+ "kit": "brickblast",
+ "source": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\brickblast-roblox",
+ "files": 61,
+ "lines": 26154,
+ "skipped": 0,
+ "takenAt": "2026-08-26T21:25:46+00:00",
+ "manifest": [
+  {
+   "path": ".vscode/extensions.json",
+   "bytes": 147,
+   "lines": 9
+  },
+  {
+   "path": ".vscode/settings.json",
+   "bytes": 842,
+   "lines": 36
+  },
+  {
+   "path": ".vscode/tasks.json",
+   "bytes": 2552,
+   "lines": 113
+  },
+  {
+   "path": "assets/ui/bubblegum-production/manifest.json",
+   "bytes": 3348,
+   "lines": 123
+  },
+  {
+   "path": "default.project.json",
+   "bytes": 1940,
+   "lines": 92
+  },
+  {
+   "path": "rokit.toml",
+   "bytes": 240,
+   "lines": 8
+  },
+  {
+   "path": "scripts/check-local-registers.luau",
+   "bytes": 3169,
+   "lines": 99
+  },
+  {
+   "path": "scripts/run-tests.luau",
+   "bytes": 4310,
+   "lines": 146
+  },
+  {
+   "path": "selene.toml",
+   "bytes": 15,
+   "lines": 2
+  },
+  {
+   "path": "src/client/ui/ArcadeUI.luau",
+   "bytes": 25788,
+   "lines": 856
+  },
+  {
+   "path": "src/client/ui/BlockBlastClient.client.luau",
+   "bytes": 155817,
+   "lines": 4743
+  },
+  {
+   "path": "src/client/ui/BubblegumAssets.luau",
+   "bytes": 5167,
+   "lines": 193
+  },
+  {
+   "path": "src/client/ui/CosmeticPanel.luau",
+   "bytes": 13757,
+   "lines": 435
+  },
+  {
+   "path": "src/client/ui/DeveloperPanel.luau",
+   "bytes": 15812,
+   "lines": 510
+  },
+  {
+   "path": "src/client/ui/HomePanel.luau",
+   "bytes": 22622,
+   "lines": 673
+  },
+  {
+   "path": "src/client/ui/HUDController.luau",
+   "bytes": 33916,
+   "lines": 1134
+  },
+  {
+   "path": "src/client/ui/MenuController.luau",
+   "bytes": 5687,
+   "lines": 207
+  },
+  {
+   "path": "src/client/ui/ModeSelectPanel.luau",
+   "bytes": 10734,
+   "lines": 373
+  },
+  {
+   "path": "src/client/ui/NotificationController.luau",
+   "bytes": 5505,
+   "lines": 212
+  },
+  {
+   "path": "src/client/ui/ResultPanel.luau",
+   "bytes": 9190,
+   "lines": 265
+  },
+  {
+   "path": "src/client/ui/ShopPanel.luau",
+   "bytes": 22224,
+   "lines": 722
+  },
+  {
+   "path": "src/client/ui/SoundController.luau",
+   "bytes": 1845,
+   "lines": 64
+  },
+  {
+   "path": "src/client/ui/StoryPanel.luau",
+   "bytes": 8202,
+   "lines": 288
+  },
+  {
+   "path": "src/client/ui/UIAssets.luau",
+   "bytes": 1235,
+   "lines": 52
+  },
+  {
+   "path": "src/client/ui/UITheme.luau",
+   "bytes": 8229,
+   "lines": 280
+  },
+  {
+   "path": "src/server/services/GameServer.server.luau",
+   "bytes": 103609,
+   "lines": 3611
+  },
+  {
+   "path": "src/server/services/TelemetryReporter.luau",
+   "bytes": 6273,
+   "lines": 199
+  },
+  {
+   "path": "src/server/world/HubBuilder.luau",
+   "bytes": 67773,
+   "lines": 2660
+  },
+  {
+   "path": "src/shared/game/Achievements.luau",
+   "bytes": 5818,
+   "lines": 280
+  },
+  {
+   "path": "src/shared/game/AchievementsTests.luau",
+   "bytes": 5720,
+   "lines": 166
+  },
+  {
+   "path": "src/shared/game/Blocks.luau",
+   "bytes": 6841,
+   "lines": 314
+  },
+  {
+   "path": "src/shared/game/Config.luau",
+   "bytes": 16035,
+   "lines": 629
+  },
+  {
+   "path": "src/shared/game/CosmeticProgressionTests.luau",
+   "bytes": 2971,
+   "lines": 99
+  },
+  {
+   "path": "src/shared/game/DeveloperTools.luau",
+   "bytes": 9573,
+   "lines": 353
+  },
+  {
+   "path": "src/shared/game/DeveloperToolsTests.luau",
+   "bytes": 5763,
+   "lines": 187
+  },
+  {
+   "path": "src/shared/game/ExperienceConfig.luau",
+   "bytes": 1056,
+   "lines": 49
+  },
+  {
+   "path": "src/shared/game/GameplayRules.luau",
+   "bytes": 3530,
+   "lines": 103
+  },
+  {
+   "path": "src/shared/game/GameplayRulesTests.luau",
+   "bytes": 7183,
+   "lines": 183
+  },
+  {
+   "path": "src/shared/game/Grid.luau",
+   "bytes": 2393,
+   "lines": 139
+  },
+  {
+   "path": "src/shared/game/HandGenerator.luau",
+   "bytes": 17338,
+   "lines": 596
+  },
+  {
+   "path": "src/shared/game/HandGeneratorTests.luau",
+   "bytes": 14052,
+   "lines": 460
+  },
+  {
+   "path": "src/shared/game/ProfilePersistence.luau",
+   "bytes": 7034,
+   "lines": 198
+  },
+  {
+   "path": "src/shared/game/ProfilePersistenceTests.luau",
+   "bytes": 11116,
+   "lines": 313
+  },
+  {
+   "path": "src/shared/game/SimulationHarness.luau",
+   "bytes": 6983,
+   "lines": 272
+  },
+  {
+   "path": "src/shared/game/SimulationHarnessTests.luau",
+   "bytes": 3885,
+   "lines": 134
+  },
+  {
+   "path": "src/shared/game/SoloLayout.luau",
+   "bytes": 13223,
+   "lines": 359
+  },
+  {
+   "path": "src/shared/game/SoloLayoutTests.luau",
+   "bytes": 14810,
+   "lines": 435
+  },
+  {
+   "path": "src/shared/game/StageProgression.luau",
+   "bytes": 3510,
+   "lines": 134
+  },
+  {
+   "path": "src/shared/game/StageProgressionTests.luau",
+   "bytes": 5495,
+   "lines": 185
+  },
+  {
+   "path": "src/shared/game/StageVisuals.luau",
+   "bytes": 5896,
+   "lines": 195
+  },
+  {
+   "path": "src/shared/game/StageVisualsTests.luau",
+   "bytes": 6044,
+   "lines": 189
+  },
+  {
+   "path": "src/shared/game/Telemetry.luau",
+   "bytes": 5403,
+   "lines": 185
+  },
+  {
+   "path": "src/shared/game/TelemetryTests.luau",
+   "bytes": 8551,
+   "lines": 223
+  },
+  {
+   "path": "src/shared/game/UIControlRules.luau",
+   "bytes": 7955,
+   "lines": 279
+  },
+  {
+   "path": "src/shared/game/UIControlRulesTests.luau",
+   "bytes": 8796,
+   "lines": 271
+  },
+  {
+   "path": "src/shared/game/VisualQuality.luau",
+   "bytes": 2456,
+   "lines": 78
+  },
+  {
+   "path": "src/shared/game/VisualQualityTests.luau",
+   "bytes": 3131,
+   "lines": 117
+  },
+  {
+   "path": "src/shared/game/VisualTokens.luau",
+   "bytes": 16048,
+   "lines": 446
+  },
+  {
+   "path": "src/shared/game/VisualTokensTests.luau",
+   "bytes": 15559,
+   "lines": 463
+  },
+  {
+   "path": "stylua.toml",
+   "bytes": 140,
+   "lines": 7
+  },
+  {
+   "path": "wally.toml",
+   "bytes": 151,
+   "lines": 8
+  }
+ ]
+}

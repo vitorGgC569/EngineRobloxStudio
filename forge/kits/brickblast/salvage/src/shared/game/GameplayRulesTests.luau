@@ -1,0 +1,182 @@
+local GameplayRules = require(script.Parent.GameplayRules)
+
+local GameplayRulesTests = {}
+
+local function assertCondition(condition, message)
+	if not condition then
+		error(message, 2)
+	end
+end
+
+local tests = {}
+
+tests.comboBonusForStreakMatchesFormula = function()
+	assertCondition(GameplayRules.comboBonusForStreak(0) == 0, "streak 0 should have no bonus")
+	assertCondition(GameplayRules.comboBonusForStreak(1) == 0, "streak 1 should have no bonus")
+	assertCondition(
+		GameplayRules.comboBonusForStreak(2) == 25,
+		"streak 2 should give one bonus unit"
+	)
+	assertCondition(
+		GameplayRules.comboBonusForStreak(5) == 100,
+		"streak 5 should give four bonus units"
+	)
+end
+
+tests.scoreForPlacementMatchesFormula = function()
+	local scoreDelta, comboBonus = GameplayRules.scoreForPlacement(4, 0, 1)
+	assertCondition(scoreDelta == 40, "four placed cells with no clear should score 40")
+	assertCondition(comboBonus == 0, "no combo bonus without a streak above 1")
+
+	local multiLineBonus
+	scoreDelta, comboBonus, multiLineBonus = GameplayRules.scoreForPlacement(4, 2, 3)
+	assertCondition(comboBonus == 50, "streak 3 should give two bonus units")
+	assertCondition(multiLineBonus == 25, "clearing two lines at once should add one bonus unit")
+	assertCondition(
+		scoreDelta == 315,
+		"cells + lines + combo bonus + multi-line bonus should sum to 315"
+	)
+end
+
+tests.comboStreakAdvancesOnAClearAndResetsWithout = function()
+	assertCondition(GameplayRules.updateComboStreak(0, 1) == 1, "A first clear starts the streak")
+	assertCondition(GameplayRules.updateComboStreak(1, 1) == 2, "A second clear advances it")
+	assertCondition(GameplayRules.updateComboStreak(4, 3) == 5, "Multi-line clears advance by one")
+	assertCondition(GameplayRules.updateComboStreak(5, 0) == 0, "Clearing nothing resets it")
+	assertCondition(GameplayRules.updateComboStreak(0, 0) == 0, "Staying at zero is stable")
+end
+
+tests.comboStreakToleratesUnusableInput = function()
+	assertCondition(GameplayRules.updateComboStreak(nil, 1) == 1, "A missing streak starts at zero")
+	assertCondition(GameplayRules.updateComboStreak("3", 1) == 1, "A string streak is not trusted")
+	assertCondition(GameplayRules.updateComboStreak(0 / 0, 1) == 1, "NaN is not trusted")
+	assertCondition(GameplayRules.updateComboStreak(-4, 1) == 1, "A negative streak floors at zero")
+	assertCondition(
+		GameplayRules.updateComboStreak(2.7, 1) == 3,
+		"A fractional streak floors first"
+	)
+	assertCondition(GameplayRules.updateComboStreak(3, nil) == 0, "A missing clear count resets")
+	assertCondition(GameplayRules.updateComboStreak(3, -1) == 0, "A negative clear count resets")
+end
+
+tests.comboStreakFeedsItsOwnBonus = function()
+	-- The transition and the bonus formula have to agree about what a streak
+	-- means, which is the reason for keeping them in the same module.
+	local streak = 0
+	local total = 0
+	for _ = 1, 3 do
+		streak = GameplayRules.updateComboStreak(streak, 1)
+		total += GameplayRules.comboBonusForStreak(streak)
+	end
+
+	assertCondition(streak == 3, "Three consecutive clears reach streak three")
+	assertCondition(total == 25 + 50, "Bonuses accumulate as 0 + 25 + 50 across the streak")
+
+	streak = GameplayRules.updateComboStreak(streak, 0)
+	assertCondition(
+		GameplayRules.comboBonusForStreak(streak) == 0,
+		"A broken streak earns no bonus"
+	)
+end
+
+tests.multiLineBonusOnlyAppliesToSimultaneousClears = function()
+	assertCondition(GameplayRules.multiLineBonusForClear(0) == 0, "no clear earns no bonus")
+	assertCondition(GameplayRules.multiLineBonusForClear(1) == 0, "a single line earns no bonus")
+	assertCondition(GameplayRules.multiLineBonusForClear(2) == 25, "two lines earn one bonus unit")
+	assertCondition(
+		GameplayRules.multiLineBonusForClear(3) == 75,
+		"three lines earn three bonus units"
+	)
+	assertCondition(GameplayRules.multiLineBonusForClear(nil) == 0, "a missing count earns nothing")
+	assertCondition(GameplayRules.multiLineBonusForClear(-4) == 0, "a negative count earns nothing")
+end
+
+tests.simultaneousClearsScoreAtLeastSequentialOnes = function()
+	-- The regression this guards: clearing n lines in one placement used to
+	-- score less than clearing them one at a time, because only the sequential
+	-- route collected combo bonuses. Cells placed are held at zero so the
+	-- comparison isolates the clear itself.
+	for lines = 2, 6 do
+		local simultaneous = GameplayRules.scoreForPlacement(0, lines, 1)
+
+		local sequential = 0
+		for streak = 1, lines do
+			sequential += GameplayRules.scoreForPlacement(0, 1, streak)
+		end
+
+		assertCondition(
+			simultaneous >= sequential,
+			`clearing {lines} lines at once should score at least as much as {lines} single clears`
+		)
+	end
+end
+
+tests.assistanceRestoreAmountTracksIndividualTriggers = function()
+	local amount, triggers =
+		GameplayRules.assistanceRestoreAmount(0, { stagesAdvanced = 2, perfectClear = false })
+	assertCondition(amount == 2, "two stages advanced should restore two units")
+	assertCondition(triggers.stageAdvanced == true, "stage advance trigger should be flagged")
+	assertCondition(
+		triggers.comboMilestone == false,
+		"combo milestone should not fire without a streak"
+	)
+	assertCondition(triggers.perfectClear == false, "perfect clear should not fire when false")
+
+	amount, triggers =
+		GameplayRules.assistanceRestoreAmount(3, { stagesAdvanced = 0, perfectClear = false })
+	assertCondition(amount == 1, "hitting the combo milestone should restore one unit")
+	assertCondition(triggers.comboMilestone == true, "combo milestone trigger should be flagged")
+
+	amount, triggers =
+		GameplayRules.assistanceRestoreAmount(0, { stagesAdvanced = 0, perfectClear = true })
+	assertCondition(amount == 2, "a perfect clear should restore two units")
+	assertCondition(triggers.perfectClear == true, "perfect clear trigger should be flagged")
+
+	amount, triggers =
+		GameplayRules.assistanceRestoreAmount(3, { stagesAdvanced = 1, perfectClear = true })
+	assertCondition(amount == 4, "all three triggers together should sum to four")
+	assertCondition(
+		triggers.stageAdvanced and triggers.comboMilestone and triggers.perfectClear,
+		"all three triggers should be flagged together"
+	)
+
+	amount, triggers = GameplayRules.assistanceRestoreAmount(1, nil)
+	assertCondition(amount == 0, "no triggers should restore nothing")
+	assertCondition(
+		not triggers.stageAdvanced and not triggers.comboMilestone and not triggers.perfectClear,
+		"no triggers should be flagged"
+	)
+end
+
+tests.describeAssistanceTriggersJoinsReasons = function()
+	local description = GameplayRules.describeAssistanceTriggers({
+		stageAdvanced = true,
+		comboMilestone = true,
+		perfectClear = true,
+	})
+	assertCondition(
+		description == "stage advanced, combo milestone, perfect clear",
+		"description should join all active triggers in order"
+	)
+
+	description = GameplayRules.describeAssistanceTriggers({
+		stageAdvanced = false,
+		comboMilestone = false,
+		perfectClear = false,
+	})
+	assertCondition(description == "none", "description should report none when nothing triggered")
+end
+
+function GameplayRulesTests.run()
+	local results = {}
+
+	for name, test in tests do
+		test()
+		table.insert(results, name)
+	end
+
+	table.sort(results)
+	return results
+end
+
+return GameplayRulesTests

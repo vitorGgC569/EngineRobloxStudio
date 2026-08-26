@@ -1,0 +1,57 @@
+classOrder = [
+	"QuickZone",
+	"Zone",
+	"Observer",
+	"Group"
+]
+
+title = "QuickZone"
+gitRepoUrl = "https://github.com/LDgerrits/QuickZone"
+
+gitSourceBranch = "main"
+changelog = false
+
+[home]
+enabled = true
+includeReadme = false
+
+[[home.features]]
+title = "Endless Scale"
+description = "The number of zones has zero impact on performance. Maintain 60 FPS even with over a million zones in your game."
+
+[[home.features]]
+title = "Track Anything"
+description = "Track Players, BaseParts, Models, Attachments, Bones, Cameras, or even custom tables. If it has a position, QuickZone can track it."
+
+[[home.features]]
+title = "Budgeted Scheduler"
+description = "Set a hard frame budget (e.g., 1ms) to completely eliminate lag spikes. Workloads are smeared across frames to maintain a flat, predictable performance profile."
+
+[[home.features]]
+title = "Shape Support"
+description = "Built-in for Blocks, Balls, Cylinders, Wedges and CornerWedges without relying on physics collision meshes."
+
+[[home.features]]
+title = "Declarative Lifecycles"
+description = "Replace event-based logic with the observe pattern for declarative logic. There is no need to manually track `onEnter` and `onExit` states."
+
+[[home.features]]
+title = "Decoupled Architecture"
+description = "Separate where tracking happens (Zones) from who is being tracked (Groups) and how the system responds (Observers). Bind complex behaviors to groups of entities with zero boilerplate."
+
+[[home.features]]
+title = "ECS-Ready"
+description = "Built-in support for zero-allocation iterators and deterministic manual stepping, making it a perfect fit for ECS architectures and data-oriented workflows."
+
+[[home.features]]
+title = "Zero-Allocation Runtime"
+description = "By utilizing contiguous arrays and object pooling, QuickZone produces virtually zero GC pressure to avoid memory-related stutters."
+
+[[home.features]]
+title = "Dynamic Zones"
+description = "Use moving zones at very little cost. QuickZone maintains separate Static and Dynamic LBVHs for maximum efficiency."
+
+organizationName = "LDGerrits"
+projectName = "QuickZone"
+url = "https://LDGerrits.github.io"
+baseUrl = "/QuickZone/"

@@ -1,0 +1,1655 @@
+--[[
+    EconomyService - Handles all economy-related operations
+    
+    Features:
+    - Secure currency transactions
+    - Item purchasing with validation
+    - Transaction history and logging
+    - Economy balancing and analytics
+    - Gift/reward systems
+    
+    Usage:
+    EconomyService:PurchaseItem(player, "wooden_sword")
+    EconomyService:GiftCurrency(player, "coins", 100, "daily_reward")
+    EconomyService:CanAffordItem(player, "iron_sword")
+]]
+
+local Players = game:GetService("Players")
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local Workspace = game:GetService("Workspace")
+
+local fireGameEvent = require(ReplicatedStorage.Shared.Network.FireGameEvent)
+local CurrencyTransaction = require(ReplicatedStorage.Shared.Game.CurrencyTransaction)
+local PetEndurance = require(ReplicatedStorage.Shared.Game.PetEndurance)
+local ResSickness = require(ReplicatedStorage.Shared.Game.ResSickness)
+local CombatApplication = require(script.Parent.Parent.CombatApplication)
+local MarketplaceService = game:GetService("MarketplaceService")
+
+local Libraries = ReplicatedStorage.Shared.Libraries
+local Signal = require(Libraries.Signal)
+
+local EconomyService = {}
+EconomyService.__index = EconomyService
+
+function EconomyService:Init()
+    -- Get dependencies with validation
+    self._logger = self._modules.Logger
+    self._dataService = self._modules.DataService
+    -- NetworkConfig removed - using Signals instead
+    self._configLoader = self._modules.ConfigLoader
+    self._playerEffectsService = self._modules.PlayerEffectsService
+    self._globalEffectsService = self._modules.GlobalEffectsService
+    self._adminService = self._modules.AdminService
+    self._inventoryService = nil
+    self._statsService = self._modules.StatsService
+    self._modifierService = self._modules.ModifierService
+    self._economyConfig = self:_loadEconomyConfig()
+    self._combatConfig = self._configLoader:LoadConfig("combat")
+    -- Backward-compatibility alias so existing effect code can reuse old variable names
+    self._rateLimitService = self._playerEffectsService
+
+    -- Validate critical dependencies
+    if not self._logger then
+        error("EconomyService: Logger dependency missing - check ModuleLoader configuration")
+    end
+
+    if not self._dataService then
+        self._logger:Error("CRITICAL: DataService dependency missing")
+        error("EconomyService: DataService dependency missing - check ModuleLoader configuration")
+    end
+
+    -- NetworkConfig validation removed - using Signals instead
+
+    if not self._configLoader then
+        self._logger:Error("CRITICAL: ConfigLoader dependency missing")
+        error("EconomyService: ConfigLoader dependency missing - check ModuleLoader configuration")
+    end
+
+    -- RateLimitService is optional for backward compatibility, but warn if missing
+    if not self._rateLimitService then
+        self._logger:Error(
+            "CRITICAL: RateLimitService dependency missing - rate limiting features disabled",
+            {
+                suggestion = "Check ModuleLoader configuration and RateLimitService loading",
+            }
+        )
+        -- Don't error, but make it very visible that this is wrong
+    else
+        self._logger:Info("EconomyService: RateLimitService dependency loaded successfully")
+    end
+
+    -- Create signals for economy events
+    self.CurrencyChanged = Signal.new()
+    self.ItemPurchased = Signal.new()
+    self.TransactionCompleted = Signal.new()
+
+    -- Transaction history
+    self.TransactionHistory = {}
+
+    -- Set up networking
+    self:_setupNetworking()
+    -- Set up Net signals
+    self:_setupNetSignals()
+
+    -- Set up monetization
+    self:_setupMonetization()
+
+    self._logger:Info("EconomyService initialized")
+end
+
+function EconomyService:SetInventoryService(inventoryService)
+    self._inventoryService = inventoryService
+end
+
+function EconomyService:BindPeerServices(services)
+    self._futureCallService = services and services.FutureCallService
+    self._hotbarService = services and services.HotbarService
+end
+
+function EconomyService:ResolveRewardAmount(baseAmount, context)
+    local amount = tonumber(baseAmount) or 0
+    if not self._modifierService or not self._modifierService.Resolve then
+        return amount,
+            {
+                base = amount,
+                final = amount,
+                stages = {},
+            }
+    end
+
+    context = type(context) == "table" and table.clone(context) or {}
+    context.service = context.service or "EconomyService"
+
+    local resolvedAmount, breakdown = self._modifierService:Resolve(amount, context)
+    return math.max(0, math.floor(resolvedAmount)), breakdown
+end
+
+function EconomyService:_setupNetworking()
+    -- legacy bridge setup kept for backwards compatibility
+    self._signals = require(game:GetService("ReplicatedStorage").Shared.Network.Signals)
+    self._economyBridge = { Fire = function() end }
+end
+
+-- New Net signal setup using sleitnick/Net
+function EconomyService:_setupNetSignals()
+    local ReplicatedStorage = game:GetService("ReplicatedStorage")
+    local Signals = require(ReplicatedStorage.Shared.Network.Signals)
+    self._signals = Signals
+
+    Signals.ShopItemsRequest.OnServerEvent:Connect(function(player)
+        self:GetShopItems(player)
+    end)
+
+    Signals.ConsumeItem.OnServerEvent:Connect(function(player, data)
+        if type(data) == "table" and data.bucket == "consumables" then
+            self:UseItem(player, data)
+        end
+    end)
+
+    -- Purchase item from client
+    Signals.PurchaseItem.OnServerEvent:Connect(function(player, data)
+        local ok, msg = self:PurchaseItem(player, data)
+        -- return result to client
+        Signals.PurchaseResult:FireClient(player, { success = ok, message = msg })
+    end)
+
+    Signals.SellItem.OnServerEvent:Connect(function(player, data)
+        local ok, msg = self:SellItem(player, data)
+        Signals.PurchaseResult:FireClient(player, { success = ok, message = msg })
+    end)
+
+    Signals.ConvertCurrency.OnServerEvent:Connect(function(player, data)
+        local ok, msg = self:ConvertCurrency(player, data)
+        Signals.PurchaseResult:FireClient(player, { success = ok, message = msg })
+    end)
+
+    -- Adjust currency (+/-)
+    Signals.AdjustCurrency.OnServerEvent:Connect(function(player, data)
+        if type(data) ~= "table" then
+            return
+        end
+
+        local actionName = data.reset and "setCurrency" or "adjustCurrency"
+        if self._adminService and self._adminService.ValidateAdminAction then
+            local authorized, reason =
+                self._adminService:ValidateAdminAction(player, actionName, data, "client")
+            if not authorized then
+                self:_sendError(player, reason or "Not authorized")
+                return
+            end
+        end
+
+        if data.reset then
+            -- Reset all currencies for player
+            local currencies = self._dataService:GetCurrencies(player)
+            for curr, value in pairs(currencies) do
+                if value > 0 then
+                    self:RemoveCurrency(player, curr, value, "admin_reset")
+                end
+            end
+            return
+        end
+        local currency = data.currency
+        local amount = data.amount
+        if not currency or not amount then
+            return
+        end
+        if amount >= 0 then
+            self:AddCurrency(player, currency, amount, "admin_adjust")
+        else
+            self:RemoveCurrency(player, currency, -amount, "admin_adjust")
+        end
+    end)
+end
+
+function EconomyService:_loadEconomyConfig()
+    local ok, result = pcall(function()
+        return self._configLoader:LoadConfig("economy")
+    end)
+
+    if ok and result then
+        return result
+    end
+
+    return {
+        currency_exchange = {
+            enabled = false,
+            conversions = {},
+        },
+    }
+end
+
+-- legacy networking code moved to _setupLegacyBridge
+--[[ LEGACY ECONOMY BRIDGE kept for backward compatibility
+    -- Get the auto-configured Economy bridge from NetworkConfig
+    self._economyBridge = self._networkConfig:GetBridge("Economy")
+    
+    if not self._economyBridge then
+        self._logger:Error("Economy bridge not found - check network.lua configuration")
+        return
+    end
+    
+    self._logger:Debug("Economy networking ready", {bridge = "Economy"})
+--]]
+-- End of DebugExpose legacy block
+
+function EconomyService:_setupMonetization()
+    -- Handle developer product purchases
+    MarketplaceService.ProcessReceipt = function(receiptInfo)
+        return self:ProcessDeveloperProductPurchase(receiptInfo)
+    end
+
+    -- Handle game pass purchases
+    MarketplaceService.PromptGamePassPurchaseFinished:Connect(
+        function(player, gamePassId, wasPurchased)
+            if wasPurchased then
+                self:ProcessGamePassPurchase(player, gamePassId)
+            end
+        end
+    )
+end
+
+-- Currency Management
+function EconomyService:GetCurrency(player, currencyType)
+    return self._dataService:GetCurrency(player, currencyType)
+end
+
+function EconomyService:SetCurrency(player, currencyType, amount, reason)
+    if not self._dataService:IsDataLoaded(player) then
+        return false
+    end
+    local oldAmount = self:GetCurrency(player, currencyType)
+    local success =
+        self._dataService:SetCurrency(player, currencyType, amount, reason or "economy_set")
+    if not success then
+        return false
+    end
+    local newAmount = self:GetCurrency(player, currencyType)
+    pcall(function()
+        self:_logTransaction(player, {
+            type = "currency_set",
+            currency = currencyType,
+            amount = newAmount,
+            reason = reason or "economy_set",
+            timestamp = os.time(),
+        })
+    end)
+    pcall(function()
+        self.CurrencyChanged:Fire(player, currencyType, newAmount, oldAmount)
+    end)
+    pcall(function()
+        require(game:GetService("ReplicatedStorage").Shared.Network.Signals).CurrencyUpdate:FireClient(
+            player,
+            { currency = currencyType, amount = newAmount, change = newAmount - oldAmount }
+        )
+    end)
+    return true
+end
+
+function EconomyService:Transact(player, options)
+    options = options or {}
+    local reason = options.reason or "economy_transaction"
+    local result = CurrencyTransaction.execute({
+        debits = options.debits,
+        credits = options.credits,
+        canDebit = function(currency, amount)
+            return self:CanAfford(player, currency, amount)
+        end,
+        debit = function(currency, amount)
+            return self:RemoveCurrency(player, currency, amount, reason .. "_debit")
+        end,
+        credit = function(currency, amount)
+            return self:AddCurrency(player, currency, amount, reason .. "_credit")
+        end,
+        reverseDebit = function(currency, amount)
+            return self:AddCurrency(player, currency, amount, reason .. "_refund")
+        end,
+        reverseCredit = function(currency, amount)
+            return self:RemoveCurrency(player, currency, amount, reason .. "_revoke")
+        end,
+        commit = options.commit,
+    })
+    if result.ok then
+        pcall(function()
+            self:_logTransaction(player, {
+                type = "currency_transaction",
+                debits = options.debits or {},
+                credits = options.credits or {},
+                reason = reason,
+                timestamp = os.time(),
+            })
+        end)
+        pcall(function()
+            self.TransactionCompleted:Fire(player, result, reason)
+        end)
+    end
+    return result
+end
+
+-- Earning streams that honor the VIP "coins" profile multiplier (VIPs EARN
+-- faster). Deliberately narrow: farming income only — fixed grants, trades,
+-- shop buybacks, and gems must never inflate (gem economy doctrine).
+local VIP_EARN_REASON_PREFIXES = { "breakable", "combat_loot", "mining" }
+
+local function isVipEarnReason(reason)
+    for _, prefix in ipairs(VIP_EARN_REASON_PREFIXES) do
+        if string.sub(tostring(reason or ""), 1, #prefix) == prefix then
+            return true
+        end
+    end
+    return false
+end
+
+function EconomyService:AddCurrency(player, currencyType, amount, reason)
+    if not self._dataService:IsDataLoaded(player) then
+        return false
+    end
+
+    -- VIP pass coin rate (monetization.lua benefits.multipliers.coins): was
+    -- WRITTEN by the pass grant but never read until the 2026-07-16 gamepass
+    -- audit. Coins-only, earn-reasons-only.
+    if currencyType == "coins" and (tonumber(amount) or 0) > 0 and isVipEarnReason(reason) then
+        local mult = tonumber(self._dataService:GetMultiplier(player, "coins")) or 1
+        if mult ~= 1 then
+            amount = math.floor(amount * mult + 0.5)
+        end
+    end
+
+    local oldAmount = self:GetCurrency(player, currencyType)
+    local success = self._dataService:AddCurrency(player, currencyType, amount, reason or "unknown")
+
+    if success then
+        local newAmount = self:GetCurrency(player, currencyType)
+        if self._statsService and amount > 0 then
+            local counterId = currencyType .. "_earned_lifetime"
+            pcall(function()
+                self._statsService:Increment(player, counterId, amount)
+            end)
+        end
+
+        pcall(function()
+            self:_logTransaction(player, {
+                type = "currency_add",
+                currency = currencyType,
+                amount = amount,
+                reason = reason or "unknown",
+                timestamp = os.time(),
+            })
+        end)
+
+        pcall(function()
+            self.CurrencyChanged:Fire(player, currencyType, newAmount, oldAmount)
+        end)
+
+        pcall(function()
+            require(game:GetService("ReplicatedStorage").Shared.Network.Signals).CurrencyUpdate:FireClient(
+                player,
+                {
+                    currency = currencyType,
+                    amount = newAmount,
+                    change = amount,
+                }
+            )
+        end)
+
+        self._logger:Debug("Currency added", {
+            player = player.Name,
+            currency = currencyType,
+            amount = amount,
+            newTotal = newAmount,
+            reason = reason,
+        })
+
+        return true
+    end
+
+    return false
+end
+
+function EconomyService:RemoveCurrency(player, currencyType, amount, reason)
+    self._logger:Debug(
+        "RemoveCurrency called",
+        { player = player.Name, currencyType = currencyType, amount = amount, reason = reason }
+    )
+
+    if not self._dataService:CanAfford(player, currencyType, amount) then
+        self._logger:Debug(
+            "CanAfford check failed",
+            { currencyType = currencyType, amount = amount }
+        )
+        return false
+    end
+
+    self._logger:Debug("CanAfford check passed, getting old amount")
+    local oldAmount = self:GetCurrency(player, currencyType)
+    self._logger:Debug("Old amount retrieved", { oldAmount = oldAmount })
+
+    self._logger:Debug("Calling DataService:RemoveCurrency")
+    local success =
+        self._dataService:RemoveCurrency(player, currencyType, amount, reason or "unknown")
+    self._logger:Debug("DataService:RemoveCurrency returned", { success = success })
+
+    if success then
+        local newAmount = self:GetCurrency(player, currencyType)
+
+        -- Log transaction
+        self:_logTransaction(player, {
+            type = "currency_remove",
+            currency = currencyType,
+            amount = amount,
+            reason = reason or "unknown",
+            timestamp = os.time(),
+        })
+
+        -- Fire events (with error handling)
+        local signalSuccess, signalError = pcall(function()
+            self.CurrencyChanged:Fire(player, currencyType, newAmount, oldAmount)
+        end)
+
+        if not signalSuccess then
+            self._logger:Error("Error firing CurrencyChanged signal", { error = signalError })
+        end
+
+        -- Sync to client (with error handling)
+        local bridgeSuccess, bridgeError = pcall(function()
+            require(game:GetService("ReplicatedStorage").Shared.Network.Signals).CurrencyUpdate:FireClient(
+                player,
+                {
+                    currency = currencyType,
+                    amount = newAmount,
+                    change = -amount,
+                }
+            )
+        end)
+
+        if not bridgeSuccess then
+            self._logger:Error("Error firing CurrencyUpdate", { error = bridgeError })
+        end
+
+        return true
+    end
+
+    return false
+end
+
+function EconomyService:CanAfford(player, currencyType, amount)
+    return self._dataService:CanAfford(player, currencyType, amount)
+end
+
+function EconomyService:ConvertCurrency(player, data)
+    if not self._dataService:IsDataLoaded(player) then
+        self:_sendError(player, "Data not loaded")
+        return false, "Data not loaded"
+    end
+
+    local exchangeConfig = self._economyConfig and self._economyConfig.currency_exchange
+    if not exchangeConfig or exchangeConfig.enabled ~= true then
+        self:_sendError(player, "Currency exchange is disabled")
+        return false, "Currency exchange is disabled"
+    end
+
+    data = type(data) == "table" and data or {}
+    local conversionId = data.conversionId or exchangeConfig.default_conversion
+    local conversion = exchangeConfig.conversions and exchangeConfig.conversions[conversionId]
+    if not conversion then
+        self:_sendError(player, "Unknown currency exchange")
+        return false, "Unknown currency exchange"
+    end
+
+    local batches = tonumber(data.batches) or 1
+    batches = math.floor(batches)
+    local maxBatches = tonumber(conversion.max_batches_per_request) or 1
+    batches = math.clamp(batches, 1, math.max(1, maxBatches))
+
+    local fromAmount = (tonumber(conversion.from_amount) or 0) * batches
+    local toAmount = (tonumber(conversion.to_amount) or 0) * batches
+    if fromAmount <= 0 or toAmount <= 0 or not conversion.from or not conversion.to then
+        self:_sendError(player, "Currency exchange is misconfigured")
+        return false, "Currency exchange is misconfigured"
+    end
+
+    if not self:CanAfford(player, conversion.from, fromAmount) then
+        local message = string.format("Need %d %s to exchange", fromAmount, conversion.from)
+        self:_sendError(player, message)
+        return false, message
+    end
+
+    local removed = self:RemoveCurrency(player, conversion.from, fromAmount, "currency_exchange")
+    if not removed then
+        self:_sendError(player, "Exchange failed")
+        return false, "Exchange failed"
+    end
+
+    local added = self:AddCurrency(player, conversion.to, toAmount, "currency_exchange")
+    if not added then
+        self:AddCurrency(player, conversion.from, fromAmount, "currency_exchange_refund")
+        self:_sendError(player, "Exchange failed")
+        return false, "Exchange failed"
+    end
+
+    local message = string.format(
+        "Exchanged %d %s for %d %s",
+        fromAmount,
+        conversion.from,
+        toAmount,
+        conversion.to
+    )
+    self._logger:Info("Currency exchange completed", {
+        player = player.Name,
+        conversionId = conversionId,
+        from = conversion.from,
+        fromAmount = fromAmount,
+        to = conversion.to,
+        toAmount = toAmount,
+    })
+
+    return true, message
+end
+
+function EconomyService:_resolveConsumable(player, itemId, requestedUid)
+    local inventory = self._inventoryService
+    local bucket = inventory and inventory:GetInventory(player, "consumables")
+    if not (bucket and type(bucket.items) == "table") then
+        return nil, nil
+    end
+
+    if type(requestedUid) == "string" then
+        local requested = bucket.items[requestedUid]
+        if requested and requested.id == itemId and (tonumber(requested.quantity) or 1) > 0 then
+            return requestedUid, requested
+        end
+    end
+
+    -- Folder mirrors can transiently lag a stack merge. Resolve by authored id as a safe fallback;
+    -- the authoritative bucket still decides whether anything is consumed.
+    for uid, record in pairs(bucket.items) do
+        if record.id == itemId and (tonumber(record.quantity) or 1) > 0 then
+            return uid, record
+        end
+    end
+    return nil, nil
+end
+
+function EconomyService:_squadHealTargets(player)
+    local root = Workspace:FindFirstChild("PlayerPets")
+    local folder = root and root:FindFirstChild(player.Name)
+    local targets = {}
+    for _, pet in ipairs((folder and folder:GetChildren()) or {}) do
+        if
+            pet:IsA("Model")
+            and pet:GetAttribute("CombatDowned") ~= true
+            and (tonumber(pet:GetAttribute("CombatDamageTaken")) or 0) > 0
+        then
+            table.insert(targets, pet)
+        end
+    end
+    return targets
+end
+
+function EconomyService:_applySquadHealthPotion(player, fraction, targets)
+    local factor = tonumber(self._combatConfig and self._combatConfig.pet_down_threshold_factor)
+        or 1
+    local healedPets = 0
+    local healedTotal = 0
+    for _, pet in ipairs(targets or self:_squadHealTargets(player)) do
+        if pet.Parent and pet:GetAttribute("CombatDowned") ~= true then
+            local powerValue = pet:FindFirstChild("Power")
+            local power = (powerValue and tonumber(powerValue.Value))
+                or tonumber(pet:GetAttribute("Power"))
+                or 0
+            local result = CombatApplication.ApplyPowerHeal(
+                pet,
+                PetEndurance.fractionalHeal(power, factor, fraction),
+                {
+                    resource = "pet_endurance",
+                    minimumTaken = ResSickness.floorFor(pet:GetAttributes(), os.time()),
+                    fxSeconds = 3,
+                    sourcePlayer = player,
+                    kind = "health_potion",
+                }
+            )
+            if (result.amount or 0) > 0 then
+                healedPets += 1
+                healedTotal += result.amount
+            end
+        end
+    end
+    return healedPets, healedTotal
+end
+
+-- Use an item from inventory (for consumables with effects)
+function EconomyService:UseItem(player, data)
+    local itemId = data.itemId
+    if not itemId then
+        self:_sendError(player, "No item specified")
+        return false
+    end
+
+    if not self._dataService:IsDataLoaded(player) then
+        self:_sendError(player, "Data not loaded")
+        return false
+    end
+
+    local itemUid = self:_resolveConsumable(player, itemId, data.itemUid)
+    if not itemUid then
+        self:_sendError(player, "Item not found in inventory")
+        return false
+    end
+
+    -- Get item configuration
+    local itemConfig = self._configLoader:GetItem(itemId)
+    if not itemConfig then
+        self:_sendError(player, "Item configuration not found")
+        return false
+    end
+
+    -- Check if item is consumable
+    if not itemConfig.consumable then
+        self:_sendError(player, "Item is not consumable")
+        return false
+    end
+
+    -- Future Call performs validation and only consumes after its NPC summon
+    -- succeeds. Delegating before generic removal preserves that transaction.
+    if itemConfig.activation == "future_call" then
+        local futureCall = self._futureCallService
+        if not (futureCall and futureCall.Use) then
+            self:_sendError(player, "Future Call is unavailable")
+            return false
+        end
+        local result = futureCall:Use(player, itemId)
+        if not result.ok then
+            self:_sendError(player, tostring(result.reason or "Future Call failed"))
+        end
+        return result.ok == true
+    end
+
+    local squadHealFraction =
+        tonumber(itemConfig.effects and itemConfig.effects.squad_health_restore_fraction)
+    local squadTargets
+    if squadHealFraction and squadHealFraction > 0 then
+        squadTargets = self:_squadHealTargets(player)
+        if #squadTargets == 0 then
+            self:_sendError(player, "All deployed pets are already healthy")
+            return false
+        end
+    end
+
+    -- InventoryService is the structured inventory authority. The old flat DataService path could
+    -- never see modern consumable stacks, which made Health Potions appear usable but do nothing.
+    if not self._inventoryService:RemoveItem(player, "consumables", itemUid, 1) then
+        self:_sendError(player, "Failed to consume item")
+        return false
+    end
+
+    -- Apply item effects
+    if itemConfig.effects then
+        if squadHealFraction and squadHealFraction > 0 then
+            local healedPets, healedTotal =
+                self:_applySquadHealthPotion(player, squadHealFraction, squadTargets)
+            fireGameEvent(player, "health_potion_used", {
+                itemId = itemId,
+                targetScope = "pets",
+                healedPets = healedPets,
+                healedTotal = healedTotal,
+                fraction = squadHealFraction,
+            })
+        elseif itemConfig.effects.rate_effect then
+            if not self:_applyItemEffect(player, itemConfig) then
+                -- Never eat a paid/earned token when its configured runtime
+                -- effect is unavailable. Recreate the single consumed unit in
+                -- the same stackable authority and leave the player retryable.
+                self._inventoryService:AddItem(player, "consumables", {
+                    id = itemId,
+                    quantity = 1,
+                    obtained_at = os.time(),
+                    source = "effect_apply_refund",
+                })
+                self:_sendError(player, "Boost could not start; token restored")
+                if self._hotbarService and self._hotbarService.PushState then
+                    self._hotbarService:PushState(player)
+                end
+                return false
+            end
+            local feedback = itemConfig.use_feedback or {}
+            fireGameEvent(player, "consumable_used", {
+                itemId = itemId,
+                targetScope = feedback.target_scope,
+                destinationAttr = feedback.destination_attr,
+            })
+        elseif itemConfig.effects.global_effect then
+            self:_applyGlobalEffect(player, itemConfig)
+        elseif itemConfig.effects.special_effect then
+            self:_applySpecialEffect(player, itemConfig)
+        end
+    end
+
+    self._logger:Info("Item used", {
+        player = player.Name,
+        itemId = itemId,
+        effects = itemConfig.effects,
+    })
+
+    if self._hotbarService and self._hotbarService.PushState then
+        self._hotbarService:PushState(player)
+    end
+
+    return true
+end
+
+-- Item Management
+function EconomyService:PurchaseItem(player, data)
+    -- Extract itemId from data
+    local itemId = data.itemId
+    if not itemId then
+        self:_sendError(player, "No item specified")
+        return false
+    end
+
+    if not self._dataService:IsDataLoaded(player) then
+        self:_sendError(player, "Data not loaded")
+        return false
+    end
+
+    -- Get item configuration
+    local itemConfig = self._configLoader:GetItem(itemId)
+    if not itemConfig then
+        self:_sendError(player, "Item not found")
+        return false
+    end
+
+    -- Check if player can afford it
+    local price = itemConfig.price
+
+    if not self:CanAfford(player, price.currency, price.amount) then
+        self:_sendError(player, "Insufficient funds")
+        return false
+    end
+
+    -- Check level requirement
+    if itemConfig.level_requirement then
+        local playerLevel = self._dataService:GetStat(player, "Level") or 1
+        if playerLevel < itemConfig.level_requirement then
+            self:_sendError(player, "Level requirement not met")
+            return false
+        end
+    end
+
+    -- Remove currency
+    local currencySuccess =
+        self:RemoveCurrency(player, price.currency, price.amount, "item_purchase")
+
+    if not currencySuccess then
+        self:_sendError(player, "Purchase failed")
+        return false
+    end
+
+    -- Add item to inventory using new InventoryService
+    self._logger:Info("💰 PURCHASE - Adding item to new inventory system", {
+        player = player.Name,
+        itemId = itemId,
+        itemConfig = itemConfig,
+    })
+
+    -- Determine which bucket this item belongs to based on configuration
+    local bucketName = self:_determineItemBucket(itemConfig)
+    if not bucketName then
+        self._logger:Error("💰 PURCHASE - Could not determine bucket for item", {
+            itemId = itemId,
+            itemConfig = itemConfig,
+        })
+        -- Refund
+        self:AddCurrency(player, price.currency, price.amount, "purchase_refund_no_bucket")
+        self:_sendError(player, "Item configuration error")
+        return false
+    end
+
+    -- Create item data for inventory
+    local itemData = {
+        id = itemId,
+        obtained_at = os.time(),
+    }
+
+    -- Determine bucket configuration (used to infer storage type)
+    local bucketConfig = nil
+    if self._inventoryService and self._inventoryService._inventoryConfig then
+        bucketConfig = self._inventoryService._inventoryConfig.buckets[bucketName]
+    end
+
+    -- Add quantity for stackable items (either explicitly marked stackable or bucket is stackable)
+    if itemConfig.stackable or (bucketConfig and bucketConfig.storage_type == "stackable") then
+        itemData.quantity = 1
+    end
+
+    -- Add any additional properties from the item config
+    if itemConfig.level then
+        itemData.level = itemConfig.level
+    end
+    if itemConfig.rarity then
+        itemData.rarity = itemConfig.rarity
+    end
+
+    local inventoryCallSuccess, inventoryResult = pcall(function()
+        return self._inventoryService:AddItem(player, bucketName, itemData)
+    end)
+
+    if not inventoryCallSuccess then
+        self._logger:Error("💰 PURCHASE - Error during inventory addition", {
+            error = inventoryResult,
+            itemId = itemId,
+            bucketName = bucketName,
+            player = player.Name,
+        })
+        -- Refund if inventory add failed due to error
+        self:AddCurrency(player, price.currency, price.amount, "purchase_refund_error")
+        self:_sendError(player, "Inventory error")
+        return false
+    end
+
+    if not inventoryResult then
+        self._logger:Warn("💰 PURCHASE - Inventory addition failed (no space)", {
+            itemId = itemId,
+            bucketName = bucketName,
+            player = player.Name,
+        })
+        -- Refund if inventory add failed
+        self:AddCurrency(player, price.currency, price.amount, "purchase_refund")
+        self:_sendError(player, "Inventory full")
+        return false
+    end
+
+    self._logger:Info("💰 PURCHASE - Item successfully added to inventory", {
+        player = player.Name,
+        itemId = itemId,
+        uid = inventoryResult,
+        bucketName = bucketName,
+    })
+
+    -- Log transaction
+    self:_logTransaction(player, {
+        type = "item_purchase",
+        itemId = itemId,
+        price = price,
+        timestamp = os.time(),
+    })
+
+    -- Fire events (with error handling)
+    local itemPurchasedResult, itemPurchasedError = pcall(function()
+        self.ItemPurchased:Fire(player, itemId, price)
+    end)
+
+    if not itemPurchasedResult then
+        self._logger:Error(
+            "Error firing ItemPurchased signal",
+            { error = itemPurchasedError, itemId = itemId }
+        )
+    end
+
+    -- Send success to client (with error handling)
+    local purchaseSuccessResult, purchaseSuccessError = pcall(function()
+        self._signals.PurchaseSuccess:FireClient(player, {
+            itemId = itemId,
+            price = price,
+        })
+    end)
+    fireGameEvent(player, "purchase_success", { item = itemId }) -- config-driven juice (toast stays)
+
+    if not purchaseSuccessResult then
+        self._logger:Error(
+            "Error sending PurchaseSuccess",
+            { error = purchaseSuccessError, itemId = itemId }
+        )
+    end
+
+    -- Check if item has rate limit effects and apply them
+    if itemConfig.effects and itemConfig.effects.rate_effect and itemConfig.consumable then
+        self:_applyItemEffect(player, itemConfig)
+    end
+
+    self._logger:Info("Item purchased", {
+        player = player.Name,
+        itemId = itemId,
+        price = price,
+    })
+
+    return true
+end
+
+function EconomyService:SellItem(player, data)
+    self._logger:Debug("SellItem called", { player = player.Name, data = data })
+
+    -- Wrap in pcall to catch any errors
+    local success, result = pcall(function()
+        self._logger:Debug("SellItem - checking data loaded")
+        local dataLoaded = self._dataService:IsDataLoaded(player)
+        self._logger:Debug("SellItem - data loaded result", { dataLoaded = dataLoaded })
+
+        if not dataLoaded then
+            self._logger:Debug("SellItem failed - data not loaded")
+            self:_sendError(player, "Data not loaded")
+            return false
+        end
+
+        self._logger:Debug("SellItem - data check passed")
+        return true
+    end)
+
+    if not success then
+        self._logger:Error("SellItem error in data check", { error = result, player = player.Name })
+        self:_sendError(player, "Internal error during data check")
+        return false
+    end
+
+    if not result then
+        return false
+    end
+
+    local itemId = data.itemId
+    local quantity = data.quantity or 1
+
+    self._logger:Debug("SellItem processing", { itemId = itemId, quantity = quantity })
+
+    -- Check current inventory first
+    local inventory = self._dataService:GetInventory(player)
+    self._logger:Debug("SellItem current inventory", { inventory = inventory })
+
+    -- Check if player has the item
+    local itemCount = self._dataService:GetItemCount(player, itemId)
+    self._logger:Debug(
+        "SellItem item count check",
+        { itemId = itemId, itemCount = itemCount, needed = quantity }
+    )
+
+    local hasItem = self._dataService:HasItem(player, itemId, quantity)
+    self._logger:Debug(
+        "SellItem HasItem result",
+        { hasItem = hasItem, itemId = itemId, quantity = quantity }
+    )
+
+    if not hasItem then
+        self._logger:Debug("SellItem failed - item not found in inventory")
+        self:_sendError(player, "Item not found in inventory")
+        return false
+    end
+
+    -- Get item configuration
+    local itemConfig = self._configLoader:GetItem(itemId)
+    self._logger:Debug("SellItem item config", { itemConfig = itemConfig })
+
+    if not itemConfig or not itemConfig.price then
+        self._logger:Debug("SellItem failed - item cannot be sold", { itemConfig = itemConfig })
+        self:_sendError(player, "Item cannot be sold")
+        return false
+    end
+
+    -- Calculate sell price (typically 50% of buy price)
+    local sellPrice = math.floor(itemConfig.price.amount * 0.5)
+    local totalSellPrice = sellPrice * quantity
+
+    self._logger:Debug(
+        "SellItem price calculation",
+        { sellPrice = sellPrice, totalSellPrice = totalSellPrice }
+    )
+
+    -- Remove items from inventory
+    local success = self._dataService:RemoveFromInventory(player, itemId, quantity)
+    self._logger:Debug("SellItem inventory removal", { success = success })
+
+    if not success then
+        self._logger:Debug("SellItem failed - could not remove from inventory")
+        self:_sendError(player, "Failed to remove item")
+        return false
+    end
+
+    -- Add currency
+    self._logger:Debug(
+        "SellItem adding currency",
+        { currency = itemConfig.price.currency, amount = totalSellPrice }
+    )
+    self:AddCurrency(player, itemConfig.price.currency, totalSellPrice, "item_sale")
+
+    -- Send success to client (with error handling)
+    local sellSuccessResult, sellSuccessError = pcall(function()
+        self._signals.SellSuccess:FireClient(player, {
+            itemId = itemId,
+            quantity = quantity,
+            totalPrice = totalSellPrice,
+        })
+    end)
+    fireGameEvent(player, "sell_success", { item = itemId, total = totalSellPrice })
+
+    if not sellSuccessResult then
+        self._logger:Error(
+            "Error sending SellSuccess",
+            { error = sellSuccessError, itemId = itemId }
+        )
+    end
+
+    self._logger:Info("Item sold", {
+        player = player.Name,
+        itemId = itemId,
+        quantity = quantity,
+        totalPrice = totalSellPrice,
+    })
+
+    return true
+end
+
+function EconomyService:CanAffordItem(player, itemId)
+    local itemConfig = self._configLoader:GetItem(itemId)
+    if not itemConfig or not itemConfig.price then
+        return false
+    end
+
+    return self:CanAfford(player, itemConfig.price.currency, itemConfig.price.amount)
+end
+
+-- Shop Management
+function EconomyService:GetShopItems(player, data)
+    self._logger:Debug("GetShopItems called", { player = player.Name })
+    self:SendShopItems(player)
+end
+
+function EconomyService:SendShopItems(player)
+    self._logger:Debug("SendShopItems called", { player = player.Name })
+
+    local items = self._configLoader:LoadConfig("items")
+    self._logger:Debug("SendShopItems loaded items", { itemCount = #items, items = items })
+
+    local shopItems = {}
+
+    for _, item in ipairs(items) do
+        self._logger:Debug("SendShopItems processing item", { item = item })
+        if item.price then -- Only include purchasable items
+            local canAfford = self:CanAffordItem(player, item.id)
+            local shopItem = {
+                id = item.id,
+                name = item.name,
+                type = item.type,
+                rarity = item.rarity,
+                price = item.price,
+                level_requirement = item.level_requirement,
+                canAfford = canAfford,
+            }
+            table.insert(shopItems, shopItem)
+            self._logger:Debug("SendShopItems added item to shop", { shopItem = shopItem })
+        else
+            self._logger:Debug("SendShopItems skipping item (no price)", { item = item })
+        end
+    end
+
+    self._logger:Debug(
+        "SendShopItems sending items",
+        { shopItemCount = #shopItems, shopItems = shopItems }
+    )
+
+    if not self._economyBridge then
+        self._logger:Error("SendShopItems: No economy bridge available")
+        return
+    end
+
+    local success, error = pcall(function()
+        self._signals.ShopItems:FireClient(player, { items = shopItems })
+    end)
+
+    if success then
+        self._logger:Debug("SendShopItems completed successfully")
+    else
+        self._logger:Error("SendShopItems failed", { error = error })
+    end
+end
+
+function EconomyService:GetPlayerDebugInfo(player, data)
+    self._logger:Debug("GetPlayerDebugInfo called", { player = player.Name })
+
+    local inventory = self._dataService:GetInventory(player)
+    local currencies = {
+        coins = self._dataService:GetCurrency(player, "coins"),
+        gems = self._dataService:GetCurrency(player, "gems"),
+    }
+
+    self._logger:Info("🔍 PLAYER DEBUG INFO", {
+        player = player.Name,
+        inventory = inventory,
+        currencies = currencies,
+        dataLoaded = self._dataService:IsDataLoaded(player),
+    })
+
+    -- Send to client
+    self._signals.PlayerDebugInfo:FireClient(player, {
+        inventory = inventory,
+        currencies = currencies,
+    })
+end
+
+function EconomyService:GiveTestItem(player, data)
+    self._logger:Debug("GiveTestItem called", { player = player.Name })
+
+    if not self._dataService:IsDataLoaded(player) then
+        self:_sendError(player, "Data not loaded")
+        return false
+    end
+
+    -- Give the player a test item and some coins for testing
+    local success = self._dataService:AddToInventory(player, "test_item", 1)
+    if success then
+        self._logger:Info("Test item given", { player = player.Name })
+
+        -- Also give some coins if they have 0
+        local currentCoins = self._dataService:GetCurrency(player, "coins")
+        if currentCoins == 0 then
+            self:AddCurrency(player, "coins", 100, "test_setup")
+            self._logger:Info("Test coins given", { player = player.Name })
+        end
+
+        self._signals.GiveItemSuccess:FireClient(player, {
+            itemId = "test_item",
+            message = "Test item and coins given for testing!",
+        })
+    else
+        self:_sendError(player, "Failed to give test item")
+    end
+end
+
+-- Monetization
+function EconomyService:ProcessDeveloperProductPurchase(receiptInfo)
+    local player = Players:GetPlayerByUserId(receiptInfo.PlayerId)
+    if not player then
+        return Enum.ProductPurchaseDecision.NotProcessedYet
+    end
+
+    -- Get product configuration
+    local productConfig = self._configLoader:GetProduct(tostring(receiptInfo.ProductId))
+    if not productConfig then
+        self._logger:Warn("Unknown product purchased", {
+            productId = receiptInfo.ProductId,
+            player = player.Name,
+        })
+        return Enum.ProductPurchaseDecision.NotProcessedYet
+    end
+
+    -- Grant rewards
+    local success = self:_grantProductRewards(player, productConfig)
+
+    if success then
+        self._logger:Info("Developer product processed", {
+            player = player.Name,
+            productId = receiptInfo.ProductId,
+            receiptId = receiptInfo.PurchaseId,
+        })
+        return Enum.ProductPurchaseDecision.PurchaseGranted
+    else
+        return Enum.ProductPurchaseDecision.NotProcessedYet
+    end
+end
+
+function EconomyService:ProcessGamePassPurchase(player, gamePassId)
+    local passConfig = self._configLoader:GetGamePass(tostring(gamePassId))
+    if not passConfig then
+        self._logger:Warn("Unknown game pass purchased", {
+            gamePassId = gamePassId,
+            player = player.Name,
+        })
+        return
+    end
+
+    -- Mark pass as owned and grant benefits
+    self:_grantGamePassBenefits(player, passConfig)
+
+    self._logger:Info("Game pass processed", {
+        player = player.Name,
+        gamePassId = gamePassId,
+    })
+end
+
+function EconomyService:_grantProductRewards(player, productConfig)
+    local rewards = productConfig.rewards
+
+    -- Grant currencies
+    for currency, amount in pairs(rewards) do
+        if type(amount) == "number" then
+            self:AddCurrency(player, currency, amount, "robux_purchase")
+        end
+    end
+
+    -- Grant items
+    if rewards.items then
+        for _, itemId in ipairs(rewards.items) do
+            self._dataService:AddToInventory(player, itemId, 1)
+        end
+    end
+
+    return true
+end
+
+function EconomyService:_grantGamePassBenefits(player, passConfig)
+    -- Game pass benefits are typically handled by other systems
+    -- This just logs the purchase for now
+
+    self:_logTransaction(player, {
+        type = "game_pass_purchase",
+        passId = passConfig.id,
+        benefits = passConfig.benefits,
+        timestamp = os.time(),
+    })
+end
+
+-- Gift System
+function EconomyService:GiftCurrency(player, currencyType, amount, reason)
+    return self:AddCurrency(player, currencyType, amount, reason or "gift")
+end
+
+function EconomyService:GiftItem(player, itemId, quantity, reason)
+    if self._dataService:AddToInventory(player, itemId, quantity or 1) then
+        self:_logTransaction(player, {
+            type = "item_gift",
+            itemId = itemId,
+            quantity = quantity or 1,
+            reason = reason or "gift",
+            timestamp = os.time(),
+        })
+        return true
+    end
+    return false
+end
+
+-- Utility Functions
+function EconomyService:_logTransaction(player, transaction)
+    if not self.TransactionHistory[player] then
+        self.TransactionHistory[player] = {}
+    end
+
+    table.insert(self.TransactionHistory[player], transaction)
+
+    -- Keep only last 100 transactions per player
+    local history = self.TransactionHistory[player]
+    if #history > 100 then
+        table.remove(history, 1)
+    end
+end
+
+function EconomyService:_sendError(player, message)
+    self._logger:Info("Economy error occurred", { player = player.Name, message = message })
+
+    if not self._economyBridge then
+        self._logger:Error("_sendError: No economy bridge available")
+        return
+    end
+
+    local success, error = pcall(function()
+        fireGameEvent(player, "economy_error", { message = message }) -- reactions config-optional
+        self._signals.EconomyError:FireClient(player, {
+            message = message,
+            timestamp = tick(),
+        })
+    end)
+
+    if not success then
+        self._logger:Error(
+            "Failed to send error message",
+            { error = error, player = player.Name, message = message }
+        )
+    end
+end
+
+function EconomyService:_applyItemEffect(player, itemConfig)
+    if not self._rateLimitService then
+        self._logger:Error("CRITICAL: Cannot apply item effects - RateLimitService not available", {
+            player = player.Name,
+            item = itemConfig.id,
+            effect = itemConfig.effects and itemConfig.effects.rate_effect,
+            solution = "Check RateLimitService loading and dependency injection",
+        })
+        return false
+    end
+
+    local effects = itemConfig.effects
+    if not effects or not effects.rate_effect then
+        return false
+    end
+
+    local duration = effects.duration or 300 -- Default 5 minutes
+    if duration == -1 then
+        duration = 86400 * 365 * 10 -- 10 years for "permanent" effects
+    end
+
+    local success = self._playerEffectsService:ApplyEffect(player, effects.rate_effect, duration)
+
+    if success then
+        self._logger:Info("Player effect applied", {
+            player = player.Name,
+            effect = effects.rate_effect,
+            duration = duration,
+            item = itemConfig.id,
+        })
+    end
+
+    return success
+end
+
+function EconomyService:_applyGlobalEffect(player, itemConfig)
+    if not self._globalEffectsService then
+        self._logger:Error(
+            "CRITICAL: Cannot apply global effects - GlobalEffectsService not available",
+            {
+                player = player.Name,
+                item = itemConfig.id,
+                effect = itemConfig.effects.global_effect,
+            }
+        )
+        return false
+    end
+
+    local effects = itemConfig.effects
+    if not effects.global_effect then
+        return false
+    end
+
+    local duration = effects.duration or 3600 -- Default 1 hour
+    local reason = effects.reason
+        or string.format("Triggered by %s using %s", player.Name, itemConfig.name)
+
+    local success =
+        self._globalEffectsService:ApplyGlobalEffect(effects.global_effect, duration, reason)
+
+    if success then
+        self._logger:Info("Global effect applied", {
+            player = player.Name,
+            effect = effects.global_effect,
+            duration = duration,
+            reason = reason,
+            item = itemConfig.id,
+        })
+    end
+
+    return success
+end
+
+function EconomyService:_applySpecialEffect(player, itemConfig)
+    local effects = itemConfig.effects
+
+    self._logger:Info("_applySpecialEffect called", {
+        player = player.Name,
+        item = itemConfig.id,
+        specialEffect = effects.special_effect,
+    })
+
+    if effects.special_effect == "clear_all_effects" then
+        if not self._playerEffectsService then
+            self._logger:Error(
+                "CRITICAL: Cannot clear player effects - PlayerEffectsService not available",
+                {
+                    player = player.Name,
+                    item = itemConfig.id,
+                }
+            )
+            return false
+        end
+
+        self._logger:Info("Calling ClearAllEffects", {
+            player = player.Name,
+            item = itemConfig.id,
+        })
+
+        local effectsCleared = self._playerEffectsService:ClearAllEffects(player)
+
+        self._logger:Info("Special effect applied - player effects cleared", {
+            player = player.Name,
+            item = itemConfig.id,
+            effectsCleared = effectsCleared,
+        })
+
+        return true
+    elseif effects.special_effect == "clear_all_global_effects" then
+        if not self._globalEffectsService then
+            self._logger:Error(
+                "CRITICAL: Cannot clear global effects - GlobalEffectsService not available",
+                {
+                    player = player.Name,
+                    item = itemConfig.id,
+                }
+            )
+            return false
+        end
+
+        local effectsCleared = self._globalEffectsService:ClearAllGlobalEffects()
+
+        self._logger:Info("Special effect applied - global effects cleared", {
+            player = player.Name,
+            item = itemConfig.id,
+            effectsCleared = effectsCleared,
+        })
+
+        return true
+    end
+
+    return false
+end
+
+function EconomyService:GetActiveEffects(player, data)
+    self._logger:Debug("GetActiveEffects called", { player = player.Name })
+
+    if not self._rateLimitService then
+        self._logger:Error("RateLimitService not available for GetActiveEffects")
+        self:_sendError(player, "Effects service unavailable")
+        return
+    end
+
+    local activeEffects = self._rateLimitService:GetActiveEffects(player)
+
+    self._logger:Debug("Sending active effects", {
+        player = player.Name,
+        effectCount = next(activeEffects) and #activeEffects or 0,
+        effects = activeEffects,
+    })
+
+    -- Send to client
+    if self._economyBridge then
+        local success, error = pcall(function()
+            self._economyBridge:Fire(player, "ActiveEffects", { effects = activeEffects })
+        end)
+
+        if not success then
+            self._logger:Error(
+                "Failed to send active effects",
+                { error = error, player = player.Name }
+            )
+        end
+    end
+end
+
+-- Admin Panel Handlers
+function EconomyService:AdjustCurrency(player, data)
+    -- SECURITY: Validate admin authorization (supports target players)
+    if not self._adminService then
+        self._logger:Error("🚨 SECURITY: AdminService not available for authorization check")
+        return
+    end
+
+    local authorized, reason, targetPlayer =
+        self._adminService:ValidateAdminAction(player, "adjustCurrency", data, "client")
+    if not authorized then
+        self._logger:Warn("🚨 UNAUTHORIZED AdjustCurrency attempt blocked", {
+            admin = player.Name,
+            adminId = player.UserId,
+            reason = reason,
+            requestedCurrency = data.currency,
+            requestedAmount = data.amount,
+            targetUserId = data.targetPlayerId,
+        })
+        return
+    end
+
+    -- Determine target player (self if no target specified)
+    local target = targetPlayer or player
+
+    self._logger:Info("🔧 Admin: AdjustCurrency called", {
+        admin = player.Name,
+        target = target.Name,
+        currency = data.currency,
+        amount = data.amount,
+        isMultiPlayer = targetPlayer ~= nil,
+    })
+
+    local success = self:AddCurrency(target, data.currency, data.amount, "admin_adjustment")
+
+    if success then
+        self._logger:Info("🔧 Admin: Currency adjusted successfully", {
+            admin = player.Name,
+            target = target.Name,
+            currency = data.currency,
+            amount = data.amount,
+        })
+    else
+        self._logger:Error("🔧 Admin: Currency adjustment failed", {
+            admin = player.Name,
+            target = target.Name,
+            currency = data.currency,
+            amount = data.amount,
+        })
+    end
+end
+
+-- (Removed 2026-07-11: a legacy MonetizationNetworkBridge admin handler named
+-- SetCurrency(player, data) lived here and SHADOWED the real
+-- SetCurrency(player, currencyType, amount, reason) API above — the bridge is
+-- gone (audit network migration) but the shadow crashed every internal caller,
+-- caught by admin reset-to-beginning during the tutorial gauntlet.)
+
+function EconomyService:AdminPurchaseItem(player, data)
+    self._logger:Info("🔧 Admin: AdminPurchaseItem called", {
+        player = player.Name,
+        itemId = data.itemId,
+        cost = data.cost,
+        currency = data.currency,
+        fullData = data,
+    })
+
+    -- ❌ FIXED: PurchaseItem expects (player, data) not (player, itemId)
+    -- Create the proper data structure that PurchaseItem expects
+    local purchaseData = {
+        itemId = data.itemId,
+    }
+
+    self._logger:Info("🔧 Admin: Calling PurchaseItem with data", {
+        player = player.Name,
+        purchaseData = purchaseData,
+    })
+
+    -- Use the regular purchase flow with correct parameters
+    local success = self:PurchaseItem(player, purchaseData)
+
+    if success then
+        self._logger:Info("🔧 Admin: Item purchase successful", {
+            player = player.Name,
+            itemId = data.itemId,
+        })
+    else
+        self._logger:Error("🔧 Admin: Item purchase failed", {
+            player = player.Name,
+            itemId = data.itemId,
+        })
+    end
+end
+
+function EconomyService:ResetCurrencies(player, data)
+    self._logger:Info("🔧 Admin: ResetCurrencies called", { player = player.Name })
+
+    -- Reset to config defaults
+    local currenciesConfig = self._configLoader:LoadConfig("currencies")
+
+    for _, currency in ipairs(currenciesConfig) do
+        local defaultAmount = currency.defaultAmount or 0
+        self:SetCurrency(player, currency.id, defaultAmount, "test_setup")
+    end
+
+    self._logger:Info("🔧 Admin: All currencies reset to defaults", { player = player.Name })
+end
+
+function EconomyService:GetTransactionHistory(player)
+    return self.TransactionHistory[player] or {}
+end
+
+-- Helper method to determine which inventory bucket an item belongs to
+function EconomyService:_determineItemBucket(itemConfig)
+    -- Get inventory configuration to know what buckets are available
+    local inventoryConfig = self._configLoader:LoadConfig("inventory")
+    if not inventoryConfig or not inventoryConfig.enabled_buckets then
+        return nil
+    end
+
+    -- Determine bucket based on item properties
+    -- Priority order: explicit bucket, item type, fallback logic
+
+    -- 1. Check if item explicitly specifies a bucket
+    if
+        itemConfig.inventory_bucket and inventoryConfig.enabled_buckets[itemConfig.inventory_bucket]
+    then
+        return itemConfig.inventory_bucket
+    end
+
+    -- 2. Determine by item type/category
+    if itemConfig.type then
+        local typeMapping = {
+            consumable = "consumables",
+            potion = "consumables",
+            resource = "resources",
+            material = "resources",
+            pet = "pets",
+            weapon = "weapons",
+            tool = "tools",
+            cosmetic = "cosmetics",
+        }
+
+        local mappedBucket = typeMapping[itemConfig.type]
+        if mappedBucket and inventoryConfig.enabled_buckets[mappedBucket] then
+            return mappedBucket
+        end
+    end
+
+    -- 3. Fallback based on item ID patterns
+    local itemId = itemConfig.id
+    if itemId then
+        if itemId:find("potion") or itemId:find("boost") or itemId:find("scroll") then
+            if inventoryConfig.enabled_buckets.consumables then
+                return "consumables"
+            end
+        elseif
+            itemId:find("wood")
+            or itemId:find("stone")
+            or itemId:find("iron")
+            or itemId:find("gold")
+        then
+            if inventoryConfig.enabled_buckets.resources then
+                return "resources"
+            end
+        elseif itemId:find("sword") or itemId:find("pickaxe") or itemId:find("weapon") then
+            if inventoryConfig.enabled_buckets.weapons then
+                return "weapons"
+            end
+        end
+    end
+
+    -- 4. Final fallback - use consumables if available (most items are consumable)
+    if inventoryConfig.enabled_buckets.consumables then
+        return "consumables"
+    end
+
+    -- 5. Absolute fallback - use first available bucket
+    for bucketName, enabled in pairs(inventoryConfig.enabled_buckets) do
+        if enabled then
+            return bucketName
+        end
+    end
+
+    return nil
+end
+
+-- Cleanup when players leave
+Players.PlayerRemoving:Connect(function(player)
+    if EconomyService.TransactionHistory then
+        EconomyService.TransactionHistory[player] = nil
+    end
+end)
+
+return EconomyService

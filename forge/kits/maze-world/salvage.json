@@ -1,0 +1,991 @@
+{
+ "$comment": "Unmodified source copied from a licensed project, kept whole so the relationships between modules survive. Generalising anything here into a Forge family is a separate step; nothing in this folder has been reviewed, adapted, or cleared for shipping as-is.",
+ "kit": "maze-world",
+ "source": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\maze-world",
+ "files": 196,
+ "lines": 26628,
+ "skipped": 0,
+ "takenAt": "2026-08-26T21:25:45+00:00",
+ "manifest": [
+  {
+   "path": "default.project.json",
+   "bytes": 5282,
+   "lines": 166
+  },
+  {
+   "path": "defineGlobals.lua",
+   "bytes": 1159,
+   "lines": 66
+  },
+  {
+   "path": "foreman.toml",
+   "bytes": 242,
+   "lines": 7
+  },
+  {
+   "path": "get-models.lua",
+   "bytes": 834,
+   "lines": 20
+  },
+  {
+   "path": "package-lock.json",
+   "bytes": 1602,
+   "lines": 47
+  },
+  {
+   "path": "package.json",
+   "bytes": 238,
+   "lines": 11
+  },
+  {
+   "path": "plugin/build.project.json",
+   "bytes": 1014,
+   "lines": 41
+  },
+  {
+   "path": "plugin/default.project.json",
+   "bytes": 1396,
+   "lines": 51
+  },
+  {
+   "path": "plugin/fmt/init.lua",
+   "bytes": 6565,
+   "lines": 245
+  },
+  {
+   "path": "plugin/log/init.lua",
+   "bytes": 1177,
+   "lines": 56
+  },
+  {
+   "path": "plugin/log/init.spec.lua",
+   "bytes": 86,
+   "lines": 5
+  },
+  {
+   "path": "plugin/package.json",
+   "bytes": 177,
+   "lines": 10
+  },
+  {
+   "path": "plugin/script/mark-plugin-as-dev.lua",
+   "bytes": 215,
+   "lines": 9
+  },
+  {
+   "path": "plugin/src/Actions/SetSettings.lua",
+   "bytes": 94,
+   "lines": 6
+  },
+  {
+   "path": "plugin/src/Assets.lua",
+   "bytes": 610,
+   "lines": 31
+  },
+  {
+   "path": "plugin/src/Components/App.lua",
+   "bytes": 1287,
+   "lines": 49
+  },
+  {
+   "path": "plugin/src/Components/Checkbox.lua",
+   "bytes": 1010,
+   "lines": 40
+  },
+  {
+   "path": "plugin/src/Components/DropdownMenu.lua",
+   "bytes": 2856,
+   "lines": 127
+  },
+  {
+   "path": "plugin/src/Components/DropdownMenuItem.lua",
+   "bytes": 1105,
+   "lines": 49
+  },
+  {
+   "path": "plugin/src/Components/ErrorPanel.lua",
+   "bytes": 2018,
+   "lines": 69
+  },
+  {
+   "path": "plugin/src/Components/FitList.lua",
+   "bytes": 2161,
+   "lines": 80
+  },
+  {
+   "path": "plugin/src/Components/FitScrollingFrame.lua",
+   "bytes": 1031,
+   "lines": 35
+  },
+  {
+   "path": "plugin/src/Components/FitText.lua",
+   "bytes": 2295,
+   "lines": 82
+  },
+  {
+   "path": "plugin/src/Components/Footer.lua",
+   "bytes": 2417,
+   "lines": 85
+  },
+  {
+   "path": "plugin/src/Components/FormButton.lua",
+   "bytes": 1116,
+   "lines": 49
+  },
+  {
+   "path": "plugin/src/Components/FormTextInput.lua",
+   "bytes": 2104,
+   "lines": 77
+  },
+  {
+   "path": "plugin/src/Components/MaterialDetails.lua",
+   "bytes": 2359,
+   "lines": 98
+  },
+  {
+   "path": "plugin/src/Components/MaterialsDropdown.lua",
+   "bytes": 1077,
+   "lines": 44
+  },
+  {
+   "path": "plugin/src/Components/OptionsList.lua",
+   "bytes": 1752,
+   "lines": 71
+  },
+  {
+   "path": "plugin/src/Components/Panel.lua",
+   "bytes": 1020,
+   "lines": 44
+  },
+  {
+   "path": "plugin/src/Components/PluginSettings.lua",
+   "bytes": 2742,
+   "lines": 124
+  },
+  {
+   "path": "plugin/src/Components/RoundButton.lua",
+   "bytes": 1920,
+   "lines": 85
+  },
+  {
+   "path": "plugin/src/Components/SettingsForm.lua",
+   "bytes": 8507,
+   "lines": 275
+  },
+  {
+   "path": "plugin/src/Components/SettingsFormItem.lua",
+   "bytes": 1141,
+   "lines": 49
+  },
+  {
+   "path": "plugin/src/Components/Theme.lua",
+   "bytes": 2747,
+   "lines": 101
+  },
+  {
+   "path": "plugin/src/Components/UICorner.lua",
+   "bytes": 368,
+   "lines": 13
+  },
+  {
+   "path": "plugin/src/Components/UIPadding.lua",
+   "bytes": 556,
+   "lines": 26
+  },
+  {
+   "path": "plugin/src/Config.lua",
+   "bytes": 642,
+   "lines": 21
+  },
+  {
+   "path": "plugin/src/createSignal.lua",
+   "bytes": 1082,
+   "lines": 53
+  },
+  {
+   "path": "plugin/src/DevSettings.lua",
+   "bytes": 2816,
+   "lines": 139
+  },
+  {
+   "path": "plugin/src/Dictionary.lua",
+   "bytes": 543,
+   "lines": 33
+  },
+  {
+   "path": "plugin/src/Loader.server.lua",
+   "bytes": 4633,
+   "lines": 187
+  },
+  {
+   "path": "plugin/src/Main.lua",
+   "bytes": 3014,
+   "lines": 94
+  },
+  {
+   "path": "plugin/src/Maze/Maze.lua",
+   "bytes": 3339,
+   "lines": 174
+  },
+  {
+   "path": "plugin/src/Maze/MazeBacktrace.lua",
+   "bytes": 1087,
+   "lines": 39
+  },
+  {
+   "path": "plugin/src/Maze/MazeGenerator.lua",
+   "bytes": 11197,
+   "lines": 399
+  },
+  {
+   "path": "plugin/src/preloadAssets.lua",
+   "bytes": 650,
+   "lines": 29
+  },
+  {
+   "path": "plugin/src/Reducer/init.lua",
+   "bytes": 159,
+   "lines": 6
+  },
+  {
+   "path": "plugin/src/Reducer/settings.lua",
+   "bytes": 671,
+   "lines": 27
+  },
+  {
+   "path": "plugin/src/strict.lua",
+   "bytes": 709,
+   "lines": 24
+  },
+  {
+   "path": "plugin/src/Types.lua",
+   "bytes": 2377,
+   "lines": 99
+  },
+  {
+   "path": "plugin/src/Version.lua",
+   "bytes": 794,
+   "lines": 46
+  },
+  {
+   "path": "roblox.toml",
+   "bytes": 160803,
+   "lines": 8265
+  },
+  {
+   "path": "selene.toml",
+   "bytes": 14,
+   "lines": 1
+  },
+  {
+   "path": "src/client/ClientApi.lua",
+   "bytes": 1753,
+   "lines": 66
+  },
+  {
+   "path": "src/client/clientReducers/init.lua",
+   "bytes": 248,
+   "lines": 11
+  },
+  {
+   "path": "src/client/clientReducers/inventory.lua",
+   "bytes": 718,
+   "lines": 25
+  },
+  {
+   "path": "src/client/clientReducers/messages.lua",
+   "bytes": 1376,
+   "lines": 48
+  },
+  {
+   "path": "src/client/clientReducers/player.lua",
+   "bytes": 1696,
+   "lines": 54
+  },
+  {
+   "path": "src/client/Components/ApiProvider.lua",
+   "bytes": 1709,
+   "lines": 47
+  },
+  {
+   "path": "src/client/Components/ClockScreen.lua",
+   "bytes": 3316,
+   "lines": 115
+  },
+  {
+   "path": "src/client/Components/common/BillboardBuyButton.lua",
+   "bytes": 3525,
+   "lines": 123
+  },
+  {
+   "path": "src/client/Components/common/DynamicTable.lua",
+   "bytes": 1427,
+   "lines": 46
+  },
+  {
+   "path": "src/client/Components/common/Frame.lua",
+   "bytes": 4503,
+   "lines": 135
+  },
+  {
+   "path": "src/client/Components/common/IconButton.lua",
+   "bytes": 840,
+   "lines": 30
+  },
+  {
+   "path": "src/client/Components/common/ModelViewport.lua",
+   "bytes": 3363,
+   "lines": 125
+  },
+  {
+   "path": "src/client/Components/common/Notification.lua",
+   "bytes": 3230,
+   "lines": 118
+  },
+  {
+   "path": "src/client/Components/common/Notifications.lua",
+   "bytes": 2527,
+   "lines": 86
+  },
+  {
+   "path": "src/client/Components/common/RoundButton.lua",
+   "bytes": 2222,
+   "lines": 86
+  },
+  {
+   "path": "src/client/Components/common/ScrollingFrame.lua",
+   "bytes": 5625,
+   "lines": 174
+  },
+  {
+   "path": "src/client/Components/common/SurfaceBillboard.lua",
+   "bytes": 1086,
+   "lines": 40
+  },
+  {
+   "path": "src/client/Components/common/TextLabel.lua",
+   "bytes": 759,
+   "lines": 29
+  },
+  {
+   "path": "src/client/Components/common/TextList.lua",
+   "bytes": 1916,
+   "lines": 70
+  },
+  {
+   "path": "src/client/Components/common/TextListWithHeader.lua",
+   "bytes": 1526,
+   "lines": 51
+  },
+  {
+   "path": "src/client/Components/common/UICorner.lua",
+   "bytes": 486,
+   "lines": 16
+  },
+  {
+   "path": "src/client/Components/common/UIPadding.lua",
+   "bytes": 661,
+   "lines": 29
+  },
+  {
+   "path": "src/client/Components/common/YAxisBillboard.lua",
+   "bytes": 2833,
+   "lines": 97
+  },
+  {
+   "path": "src/client/Components/EquipStatusCell.lua",
+   "bytes": 2726,
+   "lines": 90
+  },
+  {
+   "path": "src/client/Components/FinishScreen.lua",
+   "bytes": 3801,
+   "lines": 136
+  },
+  {
+   "path": "src/client/Components/Game.lua",
+   "bytes": 2912,
+   "lines": 98
+  },
+  {
+   "path": "src/client/Components/InventoryAndShopButtons.lua",
+   "bytes": 4629,
+   "lines": 174
+  },
+  {
+   "path": "src/client/Components/LeaderboardsConnect.lua",
+   "bytes": 2923,
+   "lines": 83
+  },
+  {
+   "path": "src/client/Components/NameValueTableRow.lua",
+   "bytes": 1648,
+   "lines": 51
+  },
+  {
+   "path": "src/client/Components/PlayersPlayingTableRow.lua",
+   "bytes": 2539,
+   "lines": 93
+  },
+  {
+   "path": "src/client/Components/Room.lua",
+   "bytes": 7994,
+   "lines": 258
+  },
+  {
+   "path": "src/client/Components/RoomClockScreen.lua",
+   "bytes": 2775,
+   "lines": 87
+  },
+  {
+   "path": "src/client/Components/RoomLockScreen.lua",
+   "bytes": 3658,
+   "lines": 139
+  },
+  {
+   "path": "src/client/Components/Shop.lua",
+   "bytes": 5014,
+   "lines": 178
+  },
+  {
+   "path": "src/client/Components/ShopItem.lua",
+   "bytes": 6745,
+   "lines": 235
+  },
+  {
+   "path": "src/client/Components/Timer.lua",
+   "bytes": 1681,
+   "lines": 68
+  },
+  {
+   "path": "src/client/GameAnalyticsClient.client.lua",
+   "bytes": 840,
+   "lines": 28
+  },
+  {
+   "path": "src/client/getApiFromComponent.lua",
+   "bytes": 487,
+   "lines": 18
+  },
+  {
+   "path": "src/client/init.client.lua",
+   "bytes": 2452,
+   "lines": 95
+  },
+  {
+   "path": "src/client/main.lua",
+   "bytes": 4946,
+   "lines": 159
+  },
+  {
+   "path": "src/common/actions/inventory/addItemsToPlayerInventory.lua",
+   "bytes": 297,
+   "lines": 13
+  },
+  {
+   "path": "src/common/actions/inventory/initializePlayerInventory.lua",
+   "bytes": 194,
+   "lines": 10
+  },
+  {
+   "path": "src/common/actions/inventory/removeItemFromPlayerInventory.lua",
+   "bytes": 331,
+   "lines": 14
+  },
+  {
+   "path": "src/common/actions/leaderboards/addLeaderboardItems.lua",
+   "bytes": 221,
+   "lines": 11
+  },
+  {
+   "path": "src/common/actions/rooms/addPlayerFinishToRoom.lua",
+   "bytes": 334,
+   "lines": 14
+  },
+  {
+   "path": "src/common/actions/rooms/addPlayerToRoom.lua",
+   "bytes": 257,
+   "lines": 12
+  },
+  {
+   "path": "src/common/actions/rooms/addVoteToRoom.lua",
+   "bytes": 275,
+   "lines": 13
+  },
+  {
+   "path": "src/common/actions/rooms/playerDied.lua",
+   "bytes": 219,
+   "lines": 11
+  },
+  {
+   "path": "src/common/actions/rooms/removePlayerFromRoom.lua",
+   "bytes": 267,
+   "lines": 12
+  },
+  {
+   "path": "src/common/actions/rooms/resetRoom.lua",
+   "bytes": 115,
+   "lines": 8
+  },
+  {
+   "path": "src/common/actions/rooms/setRoomCountDown.lua",
+   "bytes": 274,
+   "lines": 11
+  },
+  {
+   "path": "src/common/actions/rooms/setRoomEndTime.lua",
+   "bytes": 156,
+   "lines": 9
+  },
+  {
+   "path": "src/common/actions/rooms/setRoomStartTime.lua",
+   "bytes": 252,
+   "lines": 11
+  },
+  {
+   "path": "src/common/actions/toClient/clientEquipped.lua",
+   "bytes": 230,
+   "lines": 12
+  },
+  {
+   "path": "src/common/actions/toClient/clientFinishGame.lua",
+   "bytes": 366,
+   "lines": 15
+  },
+  {
+   "path": "src/common/actions/toClient/clientReset.lua",
+   "bytes": 263,
+   "lines": 12
+  },
+  {
+   "path": "src/common/actions/toClient/clientSendNotification.lua",
+   "bytes": 325,
+   "lines": 14
+  },
+  {
+   "path": "src/common/actions/toClient/clientSetGhosting.lua",
+   "bytes": 275,
+   "lines": 12
+  },
+  {
+   "path": "src/common/actions/toClient/clientSetRoom.lua",
+   "bytes": 295,
+   "lines": 13
+  },
+  {
+   "path": "src/common/actions/toClient/clientSlotsCount.lua",
+   "bytes": 243,
+   "lines": 12
+  },
+  {
+   "path": "src/common/actions/toClient/clientStartGame.lua",
+   "bytes": 299,
+   "lines": 13
+  },
+  {
+   "path": "src/common/ApiSpec.lua",
+   "bytes": 2311,
+   "lines": 57
+  },
+  {
+   "path": "src/common/assets.lua",
+   "bytes": 577,
+   "lines": 18
+  },
+  {
+   "path": "src/common/AudioPlayer.lua",
+   "bytes": 1687,
+   "lines": 67
+  },
+  {
+   "path": "src/common/CollisionGroup.lua",
+   "bytes": 929,
+   "lines": 26
+  },
+  {
+   "path": "src/common/commonReducers/init.lua",
+   "bytes": 278,
+   "lines": 11
+  },
+  {
+   "path": "src/common/commonReducers/leaderboards.lua",
+   "bytes": 633,
+   "lines": 25
+  },
+  {
+   "path": "src/common/commonReducers/rooms.lua",
+   "bytes": 7562,
+   "lines": 226
+  },
+  {
+   "path": "src/common/commonReducers/shop.lua",
+   "bytes": 378,
+   "lines": 12
+  },
+  {
+   "path": "src/common/DeveloperProducts.lua",
+   "bytes": 3253,
+   "lines": 107
+  },
+  {
+   "path": "src/common/FallTriggerManager.lua",
+   "bytes": 1797,
+   "lines": 66
+  },
+  {
+   "path": "src/common/FlyScript.lua",
+   "bytes": 2290,
+   "lines": 86
+  },
+  {
+   "path": "src/common/GameDatastore.lua",
+   "bytes": 6380,
+   "lines": 198
+  },
+  {
+   "path": "src/common/GamePasses.lua",
+   "bytes": 2485,
+   "lines": 86
+  },
+  {
+   "path": "src/common/GhostAbility.lua",
+   "bytes": 1614,
+   "lines": 49
+  },
+  {
+   "path": "src/common/GlobalConfig.lua",
+   "bytes": 323,
+   "lines": 14
+  },
+  {
+   "path": "src/common/gui/LoadingScreen.lua",
+   "bytes": 2799,
+   "lines": 105
+  },
+  {
+   "path": "src/common/gui/RotateCamera.lua",
+   "bytes": 2077,
+   "lines": 74
+  },
+  {
+   "path": "src/common/Leaderboards.lua",
+   "bytes": 4441,
+   "lines": 154
+  },
+  {
+   "path": "src/common/LogicTriggerManager.lua",
+   "bytes": 2434,
+   "lines": 80
+  },
+  {
+   "path": "src/common/Maze.lua",
+   "bytes": 3339,
+   "lines": 174
+  },
+  {
+   "path": "src/common/MazeBacktrace.lua",
+   "bytes": 1087,
+   "lines": 39
+  },
+  {
+   "path": "src/common/MazeGenerator.lua",
+   "bytes": 11648,
+   "lines": 399
+  },
+  {
+   "path": "src/common/ModelManager.lua",
+   "bytes": 1916,
+   "lines": 63
+  },
+  {
+   "path": "src/common/objects/InventoryObjects.lua",
+   "bytes": 8533,
+   "lines": 378
+  },
+  {
+   "path": "src/common/objects/Item.lua",
+   "bytes": 363,
+   "lines": 19
+  },
+  {
+   "path": "src/common/Pet.lua",
+   "bytes": 4303,
+   "lines": 172
+  },
+  {
+   "path": "src/common/PetManager.lua",
+   "bytes": 2788,
+   "lines": 99
+  },
+  {
+   "path": "src/common/Player.lua",
+   "bytes": 431,
+   "lines": 12
+  },
+  {
+   "path": "src/common/Portal.lua",
+   "bytes": 1323,
+   "lines": 55
+  },
+  {
+   "path": "src/common/RoomManager.lua",
+   "bytes": 2728,
+   "lines": 92
+  },
+  {
+   "path": "src/common/RoomsConfig.lua",
+   "bytes": 113,
+   "lines": 7
+  },
+  {
+   "path": "src/common/SoundTriggerManager.lua",
+   "bytes": 1054,
+   "lines": 45
+  },
+  {
+   "path": "src/common/TagItem.lua",
+   "bytes": 2462,
+   "lines": 99
+  },
+  {
+   "path": "src/common/TagItemOnce.lua",
+   "bytes": 1604,
+   "lines": 68
+  },
+  {
+   "path": "src/common/Theme.lua",
+   "bytes": 73,
+   "lines": 3
+  },
+  {
+   "path": "src/common/thunks/connectPlayer.lua",
+   "bytes": 3747,
+   "lines": 107
+  },
+  {
+   "path": "src/common/thunks/equipPlayer.lua",
+   "bytes": 952,
+   "lines": 29
+  },
+  {
+   "path": "src/common/thunks/playerEnteredRoom.lua",
+   "bytes": 649,
+   "lines": 20
+  },
+  {
+   "path": "src/common/thunks/playerFinishedRoom.lua",
+   "bytes": 2506,
+   "lines": 74
+  },
+  {
+   "path": "src/common/thunks/startGame.lua",
+   "bytes": 5814,
+   "lines": 193
+  },
+  {
+   "path": "src/common/thunks/startInfiniteGame.lua",
+   "bytes": 1476,
+   "lines": 49
+  },
+  {
+   "path": "src/common/thunks/startRoomGameLoop.lua",
+   "bytes": 2114,
+   "lines": 74
+  },
+  {
+   "path": "src/common/Time.lua",
+   "bytes": 330,
+   "lines": 13
+  },
+  {
+   "path": "src/common/TouchItem.lua",
+   "bytes": 2012,
+   "lines": 70
+  },
+  {
+   "path": "src/common/Transporter.lua",
+   "bytes": 2668,
+   "lines": 91
+  },
+  {
+   "path": "src/common/Typer.lua",
+   "bytes": 4995,
+   "lines": 220
+  },
+  {
+   "path": "src/common/utils/Dict.lua",
+   "bytes": 1122,
+   "lines": 43
+  },
+  {
+   "path": "src/common/utils/Logger.lua",
+   "bytes": 1570,
+   "lines": 71
+  },
+  {
+   "path": "src/common/utils/None.lua",
+   "bytes": 286,
+   "lines": 11
+  },
+  {
+   "path": "src/common/utils/PlayerUtils.lua",
+   "bytes": 2034,
+   "lines": 78
+  },
+  {
+   "path": "src/common/utils/Postie.lua",
+   "bytes": 7026,
+   "lines": 214
+  },
+  {
+   "path": "src/common/utils/Print.lua",
+   "bytes": 1036,
+   "lines": 37
+  },
+  {
+   "path": "src/common/utils/StringUtils.lua",
+   "bytes": 132,
+   "lines": 6
+  },
+  {
+   "path": "src/common/utils/SupportLibrary.lua",
+   "bytes": 19190,
+   "lines": 769
+  },
+  {
+   "path": "src/HotReloadClient.lua",
+   "bytes": 959,
+   "lines": 33
+  },
+  {
+   "path": "src/HotReloadServer.lua",
+   "bytes": 2048,
+   "lines": 79
+  },
+  {
+   "path": "src/server/GameAnalyticsServerInit.server.lua",
+   "bytes": 684,
+   "lines": 27
+  },
+  {
+   "path": "src/server/init.server.lua",
+   "bytes": 1783,
+   "lines": 64
+  },
+  {
+   "path": "src/server/main.lua",
+   "bytes": 19906,
+   "lines": 603
+  },
+  {
+   "path": "src/server/networkMiddleware.lua",
+   "bytes": 569,
+   "lines": 20
+  },
+  {
+   "path": "src/server/ServerApi.lua",
+   "bytes": 1832,
+   "lines": 77
+  },
+  {
+   "path": "src/server/serverReducers/init.lua",
+   "bytes": 248,
+   "lines": 11
+  },
+  {
+   "path": "src/server/serverReducers/playerInventories.lua",
+   "bytes": 1334,
+   "lines": 48
+  },
+  {
+   "path": "src/serverStorage/GameAnalytics/Events.lua",
+   "bytes": 15501,
+   "lines": 503
+  },
+  {
+   "path": "src/serverStorage/GameAnalytics/GAErrorSeverity.lua",
+   "bytes": 384,
+   "lines": 18
+  },
+  {
+   "path": "src/serverStorage/GameAnalytics/GAProgressionStatus.lua",
+   "bytes": 342,
+   "lines": 16
+  },
+  {
+   "path": "src/serverStorage/GameAnalytics/GAResourceFlowType.lua",
+   "bytes": 319,
+   "lines": 15
+  },
+  {
+   "path": "src/serverStorage/GameAnalytics/HttpApi/HashLib/Base64.lua",
+   "bytes": 3008,
+   "lines": 134
+  },
+  {
+   "path": "src/serverStorage/GameAnalytics/HttpApi/HashLib/init.lua",
+   "bytes": 54268,
+   "lines": 1347
+  },
+  {
+   "path": "src/serverStorage/GameAnalytics/HttpApi/init.lua",
+   "bytes": 7619,
+   "lines": 261
+  },
+  {
+   "path": "src/serverStorage/GameAnalytics/init.lua",
+   "bytes": 26470,
+   "lines": 946
+  },
+  {
+   "path": "src/serverStorage/GameAnalytics/Logger.lua",
+   "bytes": 2864,
+   "lines": 97
+  },
+  {
+   "path": "src/serverStorage/GameAnalytics/State.lua",
+   "bytes": 9850,
+   "lines": 270
+  },
+  {
+   "path": "src/serverStorage/GameAnalytics/Store.lua",
+   "bytes": 2538,
+   "lines": 117
+  },
+  {
+   "path": "src/serverStorage/GameAnalytics/Threading.lua",
+   "bytes": 2305,
+   "lines": 123
+  },
+  {
+   "path": "src/serverStorage/GameAnalytics/Utilities.lua",
+   "bytes": 334,
+   "lines": 22
+  },
+  {
+   "path": "src/serverStorage/GameAnalytics/Validation.lua",
+   "bytes": 14450,
+   "lines": 432
+  },
+  {
+   "path": "src/serverStorage/GameAnalytics/Version.lua",
+   "bytes": 64,
+   "lines": 6
+  },
+  {
+   "path": "src/StarterCharacterScripts/Health.server.lua",
+   "bytes": 40,
+   "lines": 1
+  },
+  {
+   "path": "tarmac-manifest.toml",
+   "bytes": 1383,
+   "lines": 45
+  },
+  {
+   "path": "tarmac.toml",
+   "bytes": 537,
+   "lines": 17
+  }
+ ]
+}

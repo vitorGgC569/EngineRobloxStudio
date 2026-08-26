@@ -1,0 +1,224 @@
+--!strict
+
+-- services
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local TweenService = game:GetService("TweenService")
+
+--
+
+local stdlib = require(ReplicatedStorage.Packages.stdlib)
+local Calc = require(script.Parent.Calc)
+local ExImage = require(script.Parent.ExImage)
+local Object2d = require(script.Parent.Object2d)
+local physicObject = require(script.Parent.physicObject)
+
+--[=[
+	Base character.
+
+	inherited from PhysicObject
+
+	@class BaseCharacter2d
+]=]
+local BaseCharacter2d = setmetatable({}, {
+	__index = Object2d,
+})
+
+--[=[
+	@type CharacterSpeed {X: number, Y: number, Calculated: Vector2?}
+	@within BaseCharacter2d
+]=]
+export type CharacterSpeed = {
+	X: number,
+	Y: number,
+	Calculated: Vector2?,
+}
+
+--[[
+	Базовый класс персонажа
+]]
+export type BaseCharacter2dStruct = {
+	--[=[
+		Скорость ходьбы
+	]=]
+	WalkSpeed: CharacterSpeed,
+
+	Move: RBXScriptSignal,
+
+	MoveEvent: BindableEvent,
+} & physicObject.PhysicObjectStruct
+
+--[[
+
+]]
+export type BaseCharacter2d =
+	BaseCharacter2dStruct
+	& typeof(BaseCharacter2d)
+	& Object2d.Object2d
+
+--[[
+	Destroy player
+]]
+function BaseCharacter2d.Destroy(self: BaseCharacter2d)
+	self.MoveEvent:Destroy()
+	Object2d.Destroy(self)
+end
+
+--[=[
+	@param X number
+	@param Y number
+	@param RelativeObject ExImage?
+	@param cooldownTime number?
+	@return Tween?
+
+	@method GetMoveTween
+	@within BaseCharacter2d
+]=]
+function BaseCharacter2d.GetMoveTween(
+	self: BaseCharacter2d,
+	X: number,
+	Y: number,
+	RelativeObject: ExImage.ExImage,
+	cooldownTime: number?
+): Tween?
+	local tween
+
+	if self.WalkSpeed.Calculated then
+		local instance = RelativeObject.ImageInstance
+
+		tween = TweenService:Create(instance, TweenInfo.new(cooldownTime), {
+			["Position"] = UDim2.new(
+				instance.Position.X.Scale,
+				instance.Position.X.Offset - (X * self.WalkSpeed.Calculated.X),
+				instance.Position.Y.Scale,
+				instance.Position.Y.Offset + (Y * self.WalkSpeed.Calculated.Y)
+			),
+		})
+
+		stdlib.events
+			.AnyEvent({ tween.Completed, tween.Destroying }).Event
+			:Connect(function(a0: Enum.PlaybackState)
+				self.AnchorPosition = self:GetCoordinates()
+			end)
+	else
+		warn("self.WalkSpeed not been calculated")
+	end
+
+	return tween
+end
+
+--[=[
+
+]=]
+function BaseCharacter2d.NormalizeXY(X: number, Y: number): (number, number)
+	-- Привидение значений X и Y к [-1; 1]
+	if not (X == 0 and Y == 0) then -- because 0/0 is NaN
+		local a = math.atan(Y / X)
+
+		local function sign(n: number): number
+			local r = math.sign(n)
+
+			if r == 0 then
+				r = 1
+			end
+
+			return r
+		end
+
+		return math.cos(a) * X * -1, math.sin(a) * sign(X) * math.abs(Y) * -1
+	else
+		return 0, 0
+	end
+end
+
+--[=[
+	@param X number
+	@param Y number
+	@param RelativeObject ExImage
+	@param collideTime number?
+
+	@return Tween?
+
+	@method WalkMoveRaw
+	@within BaseCharacter2d
+]=]
+function BaseCharacter2d.WalkMoveRaw(
+	self: BaseCharacter2d,
+	X: number,
+	Y: number,
+	RelativeObject: ExImage.ExImage?,
+	cooldownTime: number?
+): Tween?
+	if not RelativeObject then
+		RelativeObject = self.Image
+	end
+
+	local t
+	if RelativeObject then
+		t = self:GetMoveTween(X, Y, RelativeObject, cooldownTime)
+	end
+
+	if t then
+		self.MoveEvent:Fire()
+	end
+
+	return t
+end
+
+--[=[
+	@param X number
+	@param Y number
+	@param RelativeObject ExImage
+	@param collideTime number?
+
+	@method WalkMove
+	@within BaseCharacter2d
+]=]
+function BaseCharacter2d.WalkMove(
+	self: BaseCharacter2d,
+	X: number,
+	Y: number,
+	RelativeObject: ExImage.ExImage?,
+	cooldownTime: number?
+): Tween?
+	X, Y = self.NormalizeXY(X, Y)
+
+	return self:WalkMoveRaw(X, Y, RelativeObject, cooldownTime)
+end
+
+function BaseCharacter2d.WalkTo(self: BaseCharacter2d, pos: Vector2)
+	local t =
+		self:WalkMove(pos.X, pos.Y, { ImageInstance = self.physicImage }, 0.1)
+
+	if t then
+		t:Play()
+	else
+		warn("Tween not been created")
+	end
+end
+
+--[=[
+	BaseCharacter2d constructor
+]=]
+function BaseCharacter2d.new(
+	WalkSpeed: CharacterSpeed,
+	Size: Vector3
+): BaseCharacter2d
+	local PlayerFrame = ExImage.new("")
+	PlayerFrame.ImageInstance.BackgroundTransparency = 1
+
+	local self = physicObject.new(PlayerFrame, true, true, false)
+
+	self.WalkSpeed = WalkSpeed
+	self.MoveEvent = Instance.new("BindableEvent")
+	self.Move = self.MoveEvent.Event
+	self.Size = Size
+
+	setmetatable(self, {
+		__index = BaseCharacter2d,
+	})
+
+	return self
+end
+
+return BaseCharacter2d

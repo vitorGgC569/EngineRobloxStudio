@@ -835,6 +835,102 @@ def fetch_asset(asset_id: int, destination: Path, *, name: str | None = None,
     }
 
 
+# =============================== code salvage ===============================
+#: Directories that are somebody else's dependency tree rather than the
+#: project's own thinking, and tests that only make sense beside the harness
+#: they were written for.
+SALVAGE_SKIP = ("packages", "_index", "node_modules", ".git", "roblox_packages",
+                "devpackages", "dist", "build", "out")
+
+#: Suffixes worth taking. Code and the tables that configure it -- a system
+#: without its config is a system nobody can see the shape of.
+SALVAGE_SUFFIXES = (".lua", ".luau", ".json", ".toml")
+
+#: Nothing above this is a module; it is generated or vendored.
+SALVAGE_MAX_BYTES = 400_000
+
+
+def salvage(source: Path, name: str, include_tests: bool = False) -> dict[str, Any]:
+    """Copy a project's source wholesale, structure intact, provenance recorded.
+
+    Why wholesale, and why unmodified
+    ---------------------------------
+
+    Every mining pass before this one took what it recognised: small libraries
+    with obvious seams, and art out of places. It walked straight past the
+    thing worth the most -- the system layer of a finished commercial game.
+    HaloAndHorns holds 1,233 modules and 87,000 lines, of which the earlier
+    pass took 278 files of audio, mesh and image and **not one line of logic**:
+    no gacha, no daily streak, no retention ladder, no combat maths, no pet
+    following.
+
+    The reason is that recognising a system takes reading it, and reading 1,233
+    modules to decide what to copy is the same work as copying them and reading
+    afterwards -- except the second order keeps the option open.
+
+    So this copies first and understands later. What lands here is unmodified
+    third-party source under the licence the operator holds, kept whole so the
+    relationships between modules survive: a `PetFollowService` without
+    `PetFormation`, `PetMeander` and `configs/pet_follow.lua` beside it is a
+    file, not a system.
+
+    Generalising into `Forge` families is the separate, deliberate step that
+    follows, and it is the step where copyright and design both get decided.
+    """
+    if not source.is_dir():
+        raise KitError(f"{source} is not a directory")
+
+    destination = KITS / name / "salvage"
+    destination.mkdir(parents=True, exist_ok=True)
+
+    taken: list[dict[str, Any]] = []
+    skipped = 0
+
+    for path in sorted(source.rglob("*")):
+        if not path.is_file() or path.suffix.lower() not in SALVAGE_SUFFIXES:
+            continue
+
+        lowered = [part.lower() for part in path.relative_to(source).parts]
+        if any(part in SALVAGE_SKIP for part in lowered):
+            skipped += 1
+            continue
+        if not include_tests and any(
+                part in ("test", "tests", "spec", "specs", "__tests__") for part in lowered):
+            skipped += 1
+            continue
+        if path.stat().st_size > SALVAGE_MAX_BYTES:
+            skipped += 1
+            continue
+
+        relative = path.relative_to(source)
+        target = destination / relative
+        target.parent.mkdir(parents=True, exist_ok=True)
+        shutil.copy2(path, target)
+        taken.append({
+            "path": str(relative).replace("\\", "/"),
+            "bytes": path.stat().st_size,
+            "lines": path.read_text(encoding="utf-8", errors="replace").count(chr(10)) + 1,
+        })
+
+    manifest = {
+        "$comment": (
+            "Unmodified source copied from a licensed project, kept whole so the "
+            "relationships between modules survive. Generalising anything here into a "
+            "Forge family is a separate step; nothing in this folder has been reviewed, "
+            "adapted, or cleared for shipping as-is."),
+        "kit": name,
+        "source": str(source),
+        "files": len(taken),
+        "lines": sum(f["lines"] for f in taken),
+        "skipped": skipped,
+        "takenAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
+        "manifest": taken,
+    }
+    (KITS / name / "salvage.json").write_text(
+        json.dumps(manifest, indent=1, ensure_ascii=False) + chr(10), encoding="utf-8")
+    return manifest
+
+
 def installed() -> list[dict[str, Any]]:
     """Every kit in the repository."""
     if not KITS.exists():

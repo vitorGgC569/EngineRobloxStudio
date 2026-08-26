@@ -1,0 +1,511 @@
+{
+ "$comment": "Unmodified source copied from a licensed project, kept whole so the relationships between modules survive. Generalising anything here into a Forge family is a separate step; nothing in this folder has been reviewed, adapted, or cleared for shipping as-is.",
+ "kit": "fighting-game",
+ "source": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\Fighting-game",
+ "files": 100,
+ "lines": 9951,
+ "skipped": 0,
+ "takenAt": "2026-08-26T21:25:44+00:00",
+ "manifest": [
+  {
+   "path": "game/ReplicatedFirst/Preload.client.lua",
+   "bytes": 435,
+   "lines": 14
+  },
+  {
+   "path": "game/ReplicatedStorage/GUIs/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "game/ReplicatedStorage/GUIs/ScreenGui/Effects/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "game/ReplicatedStorage/GUIs/ScreenGui/Effects/Slow/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "game/ReplicatedStorage/GUIs/ScreenGui/Effects/Slow/LocalScript.client.lua",
+   "bytes": 351,
+   "lines": 7
+  },
+  {
+   "path": "game/ReplicatedStorage/GUIs/ScreenGui/init.meta.json",
+   "bytes": 67,
+   "lines": 4
+  },
+  {
+   "path": "game/ReplicatedStorage/MoveInfo.lua",
+   "bytes": 8736,
+   "lines": 114
+  },
+  {
+   "path": "game/ServerScriptService/block.server.lua",
+   "bytes": 1574,
+   "lines": 52
+  },
+  {
+   "path": "game/ServerScriptService/Classes/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "game/ServerScriptService/Classes/Kungfu.server.lua",
+   "bytes": 17677,
+   "lines": 488
+  },
+  {
+   "path": "game/ServerScriptService/Classes/Medic.server.lua",
+   "bytes": 21151,
+   "lines": 574
+  },
+  {
+   "path": "game/ServerScriptService/Classes/Savage.server.lua",
+   "bytes": 16959,
+   "lines": 496
+  },
+  {
+   "path": "game/ServerScriptService/Classes/Sheriff.server.lua",
+   "bytes": 18588,
+   "lines": 514
+  },
+  {
+   "path": "game/ServerScriptService/Classes/SwordDude.server.lua",
+   "bytes": 16448,
+   "lines": 465
+  },
+  {
+   "path": "game/ServerScriptService/Misc/effects/Frame/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "game/ServerScriptService/Misc/effects/Frame/Script.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "game/ServerScriptService/Misc/effects/Frame/Script.server.lua",
+   "bytes": 2072,
+   "lines": 57
+  },
+  {
+   "path": "game/ServerScriptService/Misc/effects/init.meta.json",
+   "bytes": 70,
+   "lines": 4
+  },
+  {
+   "path": "game/ServerScriptService/Misc/init.server.lua",
+   "bytes": 3639,
+   "lines": 101
+  },
+  {
+   "path": "game/ServerStorage/ClassData.lua",
+   "bytes": 8312,
+   "lines": 217
+  },
+  {
+   "path": "game/ServerStorage/effects.lua",
+   "bytes": 6448,
+   "lines": 190
+  },
+  {
+   "path": "game/ServerStorage/hitbox/init.lua",
+   "bytes": 323,
+   "lines": 17
+  },
+  {
+   "path": "game/ServerStorage/hitbox/MuchachoHitbox/DictDiff.lua",
+   "bytes": 304,
+   "lines": 21
+  },
+  {
+   "path": "game/ServerStorage/hitbox/MuchachoHitbox/GoodSignal.lua",
+   "bytes": 6729,
+   "lines": 181
+  },
+  {
+   "path": "game/ServerStorage/hitbox/MuchachoHitbox/init.lua",
+   "bytes": 12827,
+   "lines": 451
+  },
+  {
+   "path": "game/ServerStorage/HitHandler/init.lua",
+   "bytes": 7551,
+   "lines": 191
+  },
+  {
+   "path": "game/ServerStorage/HitHandler/StunHandler.lua",
+   "bytes": 3296,
+   "lines": 122
+  },
+  {
+   "path": "game/ServerStorage/Misc.lua",
+   "bytes": 4352,
+   "lines": 122
+  },
+  {
+   "path": "game/ServerStorage/Misc.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "game/ServerStorage/zombies/Blocking Zombie/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "game/ServerStorage/zombies/Blocking Zombie/ModuleScripts/init.meta.json",
+   "bytes": 71,
+   "lines": 4
+  },
+  {
+   "path": "game/ServerStorage/zombies/Blocking Zombie/ModuleScripts/ROBLOX_AIUtilities.lua",
+   "bytes": 3570,
+   "lines": 106
+  },
+  {
+   "path": "game/ServerStorage/zombies/Blocking Zombie/ModuleScripts/ROBLOX_DestroyService.lua",
+   "bytes": 1117,
+   "lines": 43
+  },
+  {
+   "path": "game/ServerStorage/zombies/Blocking Zombie/ModuleScripts/ROBLOX_HumanoidList.lua",
+   "bytes": 563,
+   "lines": 30
+  },
+  {
+   "path": "game/ServerStorage/zombies/Blocking Zombie/ModuleScripts/ROBLOX_PathfindingLibrary.lua",
+   "bytes": 3174,
+   "lines": 89
+  },
+  {
+   "path": "game/ServerStorage/zombies/Blocking Zombie/ModuleScripts/ROBLOX_StateMachine.lua",
+   "bytes": 1680,
+   "lines": 70
+  },
+  {
+   "path": "game/ServerStorage/zombies/Blocking Zombie/ModuleScripts/ROBLOX_ZombieAI.lua",
+   "bytes": 13364,
+   "lines": 390
+  },
+  {
+   "path": "game/ServerStorage/zombies/Blocking Zombie/Script.server.lua",
+   "bytes": 1024,
+   "lines": 30
+  },
+  {
+   "path": "game/ServerStorage/zombies/Drooling Zombie/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "game/ServerStorage/zombies/Drooling Zombie/ModuleScripts/init.meta.json",
+   "bytes": 71,
+   "lines": 4
+  },
+  {
+   "path": "game/ServerStorage/zombies/Drooling Zombie/ModuleScripts/ROBLOX_AIUtilities.lua",
+   "bytes": 3570,
+   "lines": 106
+  },
+  {
+   "path": "game/ServerStorage/zombies/Drooling Zombie/ModuleScripts/ROBLOX_DestroyService.lua",
+   "bytes": 1117,
+   "lines": 43
+  },
+  {
+   "path": "game/ServerStorage/zombies/Drooling Zombie/ModuleScripts/ROBLOX_HumanoidList.lua",
+   "bytes": 563,
+   "lines": 30
+  },
+  {
+   "path": "game/ServerStorage/zombies/Drooling Zombie/ModuleScripts/ROBLOX_PathfindingLibrary.lua",
+   "bytes": 3174,
+   "lines": 89
+  },
+  {
+   "path": "game/ServerStorage/zombies/Drooling Zombie/ModuleScripts/ROBLOX_StateMachine.lua",
+   "bytes": 1680,
+   "lines": 70
+  },
+  {
+   "path": "game/ServerStorage/zombies/Drooling Zombie/ModuleScripts/ROBLOX_ZombieAI.lua",
+   "bytes": 13364,
+   "lines": 390
+  },
+  {
+   "path": "game/ServerStorage/zombies/Drooling Zombie/Script.server.lua",
+   "bytes": 340,
+   "lines": 12
+  },
+  {
+   "path": "game/ServerStorage/zombies/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Blocking Zombie/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Blocking Zombie/ModuleScripts/init.meta.json",
+   "bytes": 71,
+   "lines": 4
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Blocking Zombie/ModuleScripts/ROBLOX_AIUtilities.lua",
+   "bytes": 3570,
+   "lines": 106
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Blocking Zombie/ModuleScripts/ROBLOX_DestroyService.lua",
+   "bytes": 1117,
+   "lines": 43
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Blocking Zombie/ModuleScripts/ROBLOX_HumanoidList.lua",
+   "bytes": 563,
+   "lines": 30
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Blocking Zombie/ModuleScripts/ROBLOX_PathfindingLibrary.lua",
+   "bytes": 3174,
+   "lines": 89
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Blocking Zombie/ModuleScripts/ROBLOX_StateMachine.lua",
+   "bytes": 1680,
+   "lines": 70
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Blocking Zombie/ModuleScripts/ROBLOX_ZombieAI.lua",
+   "bytes": 13364,
+   "lines": 390
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Blocking Zombie/Regen.server.lua",
+   "bytes": 794,
+   "lines": 26
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Blocking Zombie/Script.server.lua",
+   "bytes": 1022,
+   "lines": 29
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Drooling Zombie/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Drooling Zombie/ModuleScripts/init.meta.json",
+   "bytes": 71,
+   "lines": 4
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Drooling Zombie/ModuleScripts/ROBLOX_AIUtilities.lua",
+   "bytes": 3570,
+   "lines": 106
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Drooling Zombie/ModuleScripts/ROBLOX_DestroyService.lua",
+   "bytes": 1117,
+   "lines": 43
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Drooling Zombie/ModuleScripts/ROBLOX_HumanoidList.lua",
+   "bytes": 563,
+   "lines": 30
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Drooling Zombie/ModuleScripts/ROBLOX_PathfindingLibrary.lua",
+   "bytes": 3174,
+   "lines": 89
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Drooling Zombie/ModuleScripts/ROBLOX_StateMachine.lua",
+   "bytes": 1680,
+   "lines": 70
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Drooling Zombie/ModuleScripts/ROBLOX_ZombieAI.lua",
+   "bytes": 13364,
+   "lines": 390
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Drooling Zombie/Regen.server.lua",
+   "bytes": 792,
+   "lines": 25
+  },
+  {
+   "path": "game/ServerStorage/zombies/Regen Drooling Zombie/Script.server.lua",
+   "bytes": 339,
+   "lines": 12
+  },
+  {
+   "path": "game/ServerStorage/zombies/Weak Blocking Zombie/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "game/ServerStorage/zombies/Weak Blocking Zombie/ModuleScripts/init.meta.json",
+   "bytes": 71,
+   "lines": 4
+  },
+  {
+   "path": "game/ServerStorage/zombies/Weak Blocking Zombie/ModuleScripts/ROBLOX_AIUtilities.lua",
+   "bytes": 3570,
+   "lines": 106
+  },
+  {
+   "path": "game/ServerStorage/zombies/Weak Blocking Zombie/ModuleScripts/ROBLOX_DestroyService.lua",
+   "bytes": 1117,
+   "lines": 43
+  },
+  {
+   "path": "game/ServerStorage/zombies/Weak Blocking Zombie/ModuleScripts/ROBLOX_HumanoidList.lua",
+   "bytes": 563,
+   "lines": 30
+  },
+  {
+   "path": "game/ServerStorage/zombies/Weak Blocking Zombie/ModuleScripts/ROBLOX_PathfindingLibrary.lua",
+   "bytes": 3174,
+   "lines": 89
+  },
+  {
+   "path": "game/ServerStorage/zombies/Weak Blocking Zombie/ModuleScripts/ROBLOX_StateMachine.lua",
+   "bytes": 1680,
+   "lines": 70
+  },
+  {
+   "path": "game/ServerStorage/zombies/Weak Blocking Zombie/ModuleScripts/ROBLOX_ZombieAI.lua",
+   "bytes": 13364,
+   "lines": 390
+  },
+  {
+   "path": "game/ServerStorage/zombies/Weak Blocking Zombie/Script.server.lua",
+   "bytes": 1022,
+   "lines": 29
+  },
+  {
+   "path": "game/ServerStorage/zombies/Weak Drooling Zombie/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "game/ServerStorage/zombies/Weak Drooling Zombie/ModuleScripts/init.meta.json",
+   "bytes": 71,
+   "lines": 4
+  },
+  {
+   "path": "game/ServerStorage/zombies/Weak Drooling Zombie/ModuleScripts/ROBLOX_AIUtilities.lua",
+   "bytes": 3570,
+   "lines": 106
+  },
+  {
+   "path": "game/ServerStorage/zombies/Weak Drooling Zombie/ModuleScripts/ROBLOX_DestroyService.lua",
+   "bytes": 1117,
+   "lines": 43
+  },
+  {
+   "path": "game/ServerStorage/zombies/Weak Drooling Zombie/ModuleScripts/ROBLOX_HumanoidList.lua",
+   "bytes": 563,
+   "lines": 30
+  },
+  {
+   "path": "game/ServerStorage/zombies/Weak Drooling Zombie/ModuleScripts/ROBLOX_PathfindingLibrary.lua",
+   "bytes": 3174,
+   "lines": 89
+  },
+  {
+   "path": "game/ServerStorage/zombies/Weak Drooling Zombie/ModuleScripts/ROBLOX_StateMachine.lua",
+   "bytes": 1680,
+   "lines": 70
+  },
+  {
+   "path": "game/ServerStorage/zombies/Weak Drooling Zombie/ModuleScripts/ROBLOX_ZombieAI.lua",
+   "bytes": 13364,
+   "lines": 390
+  },
+  {
+   "path": "game/ServerStorage/zombies/Weak Drooling Zombie/Script.server.lua",
+   "bytes": 339,
+   "lines": 12
+  },
+  {
+   "path": "game/StarterGui/Health/Effects/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "game/StarterGui/Health/Effects/LocalScript.client.lua",
+   "bytes": 2079,
+   "lines": 55
+  },
+  {
+   "path": "game/StarterGui/Health/Effects/LocalScript.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "game/StarterGui/Health/init.meta.json",
+   "bytes": 67,
+   "lines": 4
+  },
+  {
+   "path": "game/StarterGui/Health/Main/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "game/StarterGui/Health/Main/LocalScript.client.lua",
+   "bytes": 2473,
+   "lines": 58
+  },
+  {
+   "path": "game/StarterGui/Info/init.meta.json",
+   "bytes": 67,
+   "lines": 4
+  },
+  {
+   "path": "game/StarterGui/Info/Main/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "game/StarterGui/Info/Main/LocalScript.client.lua",
+   "bytes": 896,
+   "lines": 29
+  },
+  {
+   "path": "game/StarterGui/Medic/init.meta.json",
+   "bytes": 67,
+   "lines": 4
+  },
+  {
+   "path": "game/StarterGui/Medic/LocalScript.client.lua",
+   "bytes": 3694,
+   "lines": 90
+  },
+  {
+   "path": "game/StarterPlayer/StarterCharacterScripts/Animate.client.lua",
+   "bytes": 18544,
+   "lines": 603
+  },
+  {
+   "path": "game/StarterPlayer/StarterCharacterScripts/Animate.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "game/StarterPlayer/StarterCharacterScripts/Health.server.lua",
+   "bytes": 2483,
+   "lines": 66
+  }
+ ]
+}

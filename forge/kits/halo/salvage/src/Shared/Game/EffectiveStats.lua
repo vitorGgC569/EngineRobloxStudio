@@ -1,0 +1,301 @@
+--[[
+    EffectiveStats (pure) — THE per-axis buff source registry.
+
+    Jason's SSOT doctrine (2026-07-14, magnet-display drift): every derived
+    player stat has ONE formula, defined HERE and nowhere else. Three kinds of
+    consumer, all reading THIS module:
+
+      1. EffectiveStatsService (server) computes each axis and PUBLISHES it as
+         a player attribute (Eff_<Axis>); it also re-publishes when a timed
+         source expires.
+      2. Gameplay fold sites (BreakableSpawner coin/mining, PetFollowService
+         pet swings, PlayerProgressionService XP, PowerService recharge…)
+         build their stacks via sources()/multiplier() — sites with extra
+         per-entity or per-team terms APPEND to the shared list, so the
+         player-level portion can never drift from the published number.
+      3. UI (BuffStatsHud) displays the PUBLISHED attribute verbatim — no
+         formula client-side, ever.
+
+    Each axis entry:
+      attr     — the published attribute name (Eff_<x>)
+      watch    — every player attribute that can change the result (the
+                 publisher subscribes to these)
+      sources(get) — builds the BuffStack source list from an attribute
+                 getter `get(name) -> value`. Pure: no Roblox APIs.
+
+    Fraction conventions per source mirror the original fold sites exactly:
+    "*Buff" multiplier attrs contribute (v - 1); raw-fraction attrs (powers /
+    potions / enchant totals) contribute v directly.
+]]
+
+local BuffStack = require(script.Parent.BuffStack)
+
+local EffectiveStats = {}
+
+local function mult(get, name)
+    return (tonumber(get(name)) or 1) - 1
+end
+
+local function frac(get, name)
+    return tonumber(get(name)) or 0
+end
+
+EffectiveStats.AXES = {
+    pet_damage = {
+        attr = "Eff_Attack",
+        watch = {
+            "PetDamageBuff",
+            "PetDamageBuffUntil",
+            "PetTeamDamageBuff",
+            "PetTeamDamageBuffUntil",
+            "PetDamageBuffPotion",
+            "PetDamageBuffPotionUntil",
+            "OverheatDamageBuff",
+            "OverheatDamageBuffUntil",
+            "TitanTeamDamageBuff",
+            "EnchantPetDamage",
+            "EnchantRevision",
+        },
+        sources = function(get)
+            return {
+                { fraction = mult(get, "PetDamageBuff"), expiry = frac(get, "PetDamageBuffUntil") },
+                {
+                    fraction = mult(get, "PetTeamDamageBuff"),
+                    expiry = frac(get, "PetTeamDamageBuffUntil"),
+                },
+                {
+                    fraction = frac(get, "PetDamageBuffPotion"),
+                    expiry = frac(get, "PetDamageBuffPotionUntil"),
+                },
+                {
+                    fraction = frac(get, "OverheatDamageBuff"),
+                    expiry = frac(get, "OverheatDamageBuffUntil"),
+                },
+                -- PlayerEffectsService owns the session-time countdown and clears this attribute
+                -- at expiry, so this source intentionally has no wall-clock expiry field.
+                { fraction = frac(get, "TitanTeamDamageBuff") },
+            }
+        end,
+    },
+    coin_yield = {
+        attr = "Eff_Coin",
+        watch = {
+            "CoinYieldBuff",
+            "CoinYieldBuffUntil",
+            "CoinYieldPower",
+            "CoinYieldPowerUntil",
+            "CoinProductBuff",
+            "EnchantCoinBonus",
+            "EnchantRevision",
+        },
+        sources = function(get)
+            return {
+                { fraction = mult(get, "CoinYieldBuff"), expiry = frac(get, "CoinYieldBuffUntil") },
+                {
+                    fraction = frac(get, "CoinYieldPower"),
+                    expiry = frac(get, "CoinYieldPowerUntil"),
+                },
+                -- Paid Double Coins token. PlayerEffectsService owns its session-time clock.
+                { fraction = frac(get, "CoinProductBuff") },
+                -- NOTE: EnchantCoinBonus is NOT in this stack — it folds into
+                -- payouts via the breakable_reward MODIFIER PIPELINE. The
+                -- publisher composes pipeline x stack for Eff_Coin (it's in
+                -- `watch` purely as a republish trigger).
+            }
+        end,
+    },
+    mining = {
+        attr = "Eff_Mining",
+        watch = { "MiningBuff", "MiningBuffUntil" },
+        sources = function(get)
+            return {
+                { fraction = frac(get, "MiningBuff"), expiry = frac(get, "MiningBuffUntil") },
+            }
+        end,
+    },
+    luck = {
+        attr = "Eff_Luck",
+        watch = {
+            "LuckBuff",
+            "LuckBuffUntil",
+            "LuckBuffPotion",
+            "LuckBuffPotionUntil",
+            "HatchLuckBuff",
+            "HatchLuckBuffUntil",
+            "EnchantHatchLuck",
+            "EnchantRevision",
+        },
+        sources = function(get)
+            return {
+                { fraction = frac(get, "LuckBuff"), expiry = frac(get, "LuckBuffUntil") },
+                {
+                    fraction = frac(get, "LuckBuffPotion"),
+                    expiry = frac(get, "LuckBuffPotionUntil"),
+                },
+                {
+                    fraction = math.max(0, mult(get, "HatchLuckBuff")),
+                    expiry = frac(get, "HatchLuckBuffUntil"),
+                },
+            }
+        end,
+    },
+    move_speed = {
+        attr = "Eff_Speed",
+        watch = {
+            "MoveSpeedBuff",
+            "MoveSpeedBuffUntil",
+            "MoveSpeedBuffPotion",
+            "MoveSpeedBuffPotionUntil",
+            "MoveSpeedBuffPass",
+        },
+        sources = function(get)
+            return {
+                { fraction = frac(get, "MoveSpeedBuff"), expiry = frac(get, "MoveSpeedBuffUntil") },
+                {
+                    fraction = frac(get, "MoveSpeedBuffPotion"),
+                    expiry = frac(get, "MoveSpeedBuffPotionUntil"),
+                },
+                -- gamepass speed (VIP +0.25, Speed Boost +0.5): PERMANENT, no
+                -- expiry — MonetizationService sums owned passes at grant.
+                -- Was routed into PlayerEffectsService (a dead end nothing
+                -- reads) until the 2026-07-16 gamepass audit.
+                { fraction = frac(get, "MoveSpeedBuffPass") },
+            }
+        end,
+    },
+    recharge = {
+        attr = "Eff_Recharge",
+        watch = { "RechargeBuff", "RechargeBuffUntil", "RechargeAura", "RechargeAuraUntil" },
+        -- recharge is a CLAMPED FRACTION (cooldown reduction), not a BuffStack
+        -- multiplier — computed in fraction() below; sources kept for symmetry.
+        sources = function(get)
+            return {
+                { fraction = frac(get, "RechargeBuff"), expiry = frac(get, "RechargeBuffUntil") },
+            }
+        end,
+    },
+    pet_efficiency = {
+        attr = "Eff_Efficiency",
+        -- EnchantEfficiency is resolved through the ModifierService pipeline; it is watched here
+        -- so the publisher refreshes immediately when the equipped enchanted squad changes.
+        watch = { "EnchantEfficiency", "EnchantRevision" },
+        sources = function(_get)
+            return {}
+        end,
+    },
+    crystal_yield = {
+        attr = "Eff_Crystals",
+        -- Magnet and Home World are intentionally absent: Magnet changes physical collection
+        -- radius; Home World is a per-pet Home-biome resonance floor.
+        watch = { "EnchantCoinBonus", "EnchantRevision" },
+        sources = function(_get)
+            return {}
+        end,
+    },
+    xp = {
+        attr = "Eff_XP",
+        watch = {
+            "XpBuff",
+            "XpBuffUntil",
+            "PetXpAura",
+            "PetXpAuraUntil",
+            "XpProductBuff",
+        },
+        sources = function(get)
+            return {
+                { fraction = frac(get, "XpBuff"), expiry = frac(get, "XpBuffUntil") },
+                {
+                    fraction = math.max(0, mult(get, "PetXpAura")),
+                    expiry = frac(get, "PetXpAuraUntil"),
+                },
+                -- Paid Double XP token. PlayerEffectsService owns its session-time clock.
+                { fraction = frac(get, "XpProductBuff") },
+            }
+        end,
+    },
+    drop_rate = {
+        attr = "Eff_DropRate",
+        watch = { "DropRateBuff", "DropRateBuffUntil", "DropRateAura", "DropRateAuraUntil" },
+        sources = function(get)
+            return {
+                { fraction = frac(get, "DropRateBuff"), expiry = frac(get, "DropRateBuffUntil") },
+                {
+                    fraction = math.max(0, mult(get, "DropRateAura")),
+                    expiry = frac(get, "DropRateAuraUntil"),
+                },
+            }
+        end,
+    },
+    huge_luck = {
+        attr = "Eff_HugeLuck",
+        watch = { "HugeLuckBuff", "HugeLuckBuffUntil", "HugeLuckAura", "HugeLuckAuraUntil" },
+        sources = function(get)
+            return {
+                {
+                    fraction = math.max(0, mult(get, "HugeLuckBuff")),
+                    expiry = frac(get, "HugeLuckBuffUntil"),
+                },
+                {
+                    fraction = math.max(0, mult(get, "HugeLuckAura")),
+                    expiry = frac(get, "HugeLuckAuraUntil"),
+                },
+            }
+        end,
+    },
+}
+
+-- The recharge clamp mirrors PowerService's cooldown fold (RECHARGE_CLAMP).
+EffectiveStats.RECHARGE_CLAMP = 0.9
+
+-- Fold an axis for an attribute getter. `axisCfg` = configs/buffs.lua axes
+-- entry (caps); `extraSources` lets a fold site append per-entity/per-team
+-- terms (rage, empower, teammate shares) UNDER THE SAME CAP — the shared
+-- player-level portion stays identical to the published number's inputs.
+function EffectiveStats.multiplier(axisId, get, now, axisCfg, extraSources)
+    local def = EffectiveStats.AXES[axisId]
+    if not def then
+        return 1
+    end
+    local sources = def.sources(get)
+    for _, s in ipairs(extraSources or {}) do
+        sources[#sources + 1] = s
+    end
+    return BuffStack.multiplier(sources, now, axisCfg)
+end
+
+-- Recharge's clamped-fraction semantics (shown as -N% CD; folds as a
+-- cooldown divisor in PowerService).
+function EffectiveStats.rechargeFraction(get, now)
+    -- power buff + EMBER TEMPO aura (Ashwing): separate additive channels
+    -- summed under one clamp — mirrors (now OWNS) PowerService's fold. The
+    -- old HUD mirror missed the aura channel entirely (drift find 2026-07-14).
+    local total = 0
+    if (tonumber(get("RechargeBuffUntil")) or 0) > now then
+        total += math.max(tonumber(get("RechargeBuff")) or 0, 0)
+    end
+    if (tonumber(get("RechargeAuraUntil")) or 0) > now then
+        total += math.max(tonumber(get("RechargeAura")) or 0, 0)
+    end
+    return math.clamp(total, 0, EffectiveStats.RECHARGE_CLAMP)
+end
+
+-- Soonest FUTURE expiry across an axis's timed sources (for the publisher's
+-- re-publish scheduling). nil = nothing pending.
+function EffectiveStats.nextExpiry(axisId, get, now)
+    local def = EffectiveStats.AXES[axisId]
+    if not def then
+        return nil
+    end
+    local soonest
+    for _, name in ipairs(def.watch) do
+        if name:sub(-5) == "Until" then
+            local t = tonumber(get(name)) or 0
+            if t > now and (not soonest or t < soonest) then
+                soonest = t
+            end
+        end
+    end
+    return soonest
+end
+
+return EffectiveStats

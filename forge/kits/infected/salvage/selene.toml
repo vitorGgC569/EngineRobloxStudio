@@ -1,0 +1,6 @@
+std = "roblox"
+exclude = ["Packages/**", "src/server/Vendor/**"]
+
+[lints]
+global_usage = "allow"
+roblox_manual_fromscale_or_fromoffset = "allow"

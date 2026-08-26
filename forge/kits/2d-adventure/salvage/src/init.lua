@@ -1,0 +1,46 @@
+--!strict
+
+local Animation = require(script.Animations.Animation)
+local AudioEmitter = require(script.Audio.AudioEmitter)
+local AudioListener = require(script.Audio.AudioListener)
+local Calc = require(script.Calc)
+local Character = require(script.Character)
+local Game = require(script.game)
+local Object2d = require(script.Object2d)
+local Player2d = require(script.player)
+local PhysicObject = require(script.physicObject)
+local Map = require(script.map)
+local Camera2d = require(script.camera2d)
+local GifInfo = require(script.gifInfo)
+local ExImage = require(script.ExImage)
+local config = require(script.config)
+local physicObject = require(script.physicObject)
+
+local lib = {
+	Game = Game,
+	Object2d = Object2d,
+	Player2d = Player2d,
+	PhysicObject = PhysicObject,
+	Character2d = Character,
+	Map = Map,
+	Camera2d = Camera2d,
+	GifInfo = GifInfo,
+	ExImage = ExImage,
+	config = config,
+	AudioEmitter = AudioEmitter,
+	AudioListener = AudioListener,
+	Animation = Animation,
+	Calc = Calc
+}
+
+export type Game = Game.Game
+export type Object2d = Object2d.Object2d
+export type Player2d = Player2d.Player2d
+export type Map = Map.Map
+export type Camera2d = Camera2d.Camera2d
+export type ExImage = ExImage.ExImage
+export type Animation = Animation.Animation
+export type Character2d = Character.Character2d
+export type PhysicObject = physicObject.PhysicObject
+
+return lib

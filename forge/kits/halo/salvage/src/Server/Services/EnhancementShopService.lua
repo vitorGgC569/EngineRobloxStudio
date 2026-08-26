@@ -1,0 +1,525 @@
+--[[
+    EnhancementShopService — buy/sell enhancements for gems (configs/enhancements.lua `shop`).
+
+    BUY supports configured grades; SELL accepts any grade the player owns. Enhancements are STACKS keyed
+    by identity (enh_<type>_<origins>_L<level>), so:
+      • BUY routes through EnhancementService:Grant, which INCREMENTS the matching stack's quantity
+        (no duplicate uids).
+      • SELL decrements a stack by `quantity` via InventoryService:RemoveItem (deletes the stack at 0)
+        and refunds gems = per-unit sellPrice × quantity.
+
+    Pricing is the pure EnhancementPricing core; this service is the impure spend/grant boundary.
+    Bus commands: enhancement.shop.catalog / .buy / .sell / .upgrade_all_* (GameAPIService).
+]]
+
+local ReplicatedStorage = game:GetService("ReplicatedStorage")
+
+local EnhancementPricing = require(ReplicatedStorage.Shared.Game.EnhancementPricing)
+local Enhancements = require(ReplicatedStorage.Shared.Game.Enhancements)
+
+local BUCKET = "enhancements"
+local CURRENCY_FALLBACK = "gems"
+
+local EnhancementShopService = {}
+EnhancementShopService.__index = EnhancementShopService
+
+function EnhancementShopService:Init()
+    self._logger = self._modules and self._modules.Logger
+    self._configLoader = self._modules and self._modules.ConfigLoader
+    self._dataService = self._modules and self._modules.DataService
+    self._economyService = self._modules and self._modules.EconomyService
+    self._inventoryService = self._modules and self._modules.InventoryService
+    self._enhancementService = self._modules and self._modules.EnhancementService
+    self._config = self._configLoader and self._configLoader:LoadConfig("enhancements")
+end
+
+function EnhancementShopService:_shop()
+    return self._config and self._config.shop
+end
+
+-- Sorted list of enhancement type keys (stable catalog order).
+function EnhancementShopService:_typeKeys()
+    local keys = {}
+    for t in pairs((self._config and self._config.types) or {}) do
+        keys[#keys + 1] = t
+    end
+    table.sort(keys)
+    return keys
+end
+
+local function buyableSet(shop)
+    local set = {}
+    for _, g in ipairs((shop and shop.buyable_grades) or { "natural" }) do
+        set[g] = true
+    end
+    return set
+end
+
+-- The player's gameplay level (same source slotting uses — keeps the shown band always slottable).
+local function playerLevel(player)
+    return tonumber(player:GetAttribute("Level")) or 1
+end
+
+-- The buyable catalog: one slottable band × buyable grades × non-excluded types, + the player's balance.
+function EnhancementShopService:Catalog(player)
+    local shop = self:_shop()
+    if not (shop and shop.enabled) then
+        return { ok = false, reason = "shop_disabled" }
+    end
+    local currency = shop.currency or CURRENCY_FALLBACK
+    local cat = EnhancementPricing.catalog(playerLevel(player), self:_typeKeys(), shop)
+    return {
+        ok = true,
+        currency = currency,
+        balance = self._economyService:GetCurrency(player, currency),
+        band = cat.band,
+        offers = cat.offers,
+    }
+end
+
+function EnhancementShopService:_upgradeAllPlan(player)
+    local shop = self:_shop()
+    if not (shop and shop.enabled) then
+        return nil, "shop_disabled"
+    end
+    if shop.upgrade_all and shop.upgrade_all.enabled == false then
+        return nil, "upgrade_all_disabled"
+    end
+    local data = self._dataService and self._dataService:GetData(player)
+    if not data then
+        return nil, "data_not_loaded"
+    end
+    return EnhancementPricing.upgradeAllPlan(data.Slots or {}, playerLevel(player), shop), nil, data
+end
+
+-- Authoritative quote for the Power Choice footer. The client receives only summary data; the exact
+-- slot plan and signature stay server-side and are rebuilt at commit.
+function EnhancementShopService:UpgradeAllPreview(player)
+    local plan, reason = self:_upgradeAllPlan(player)
+    if not plan then
+        return { ok = false, reason = reason }
+    end
+    local shop = self:_shop()
+    local currency = shop.currency or CURRENCY_FALLBACK
+    local balance = self._economyService:GetCurrency(player, currency)
+    return {
+        ok = true,
+        currency = currency,
+        balance = balance,
+        affordable = plan.cost <= balance,
+        targetLevel = plan.targetLevel,
+        count = plan.count,
+        cost = plan.cost,
+        byGrade = plan.byGrade,
+    }
+end
+
+-- Upgrade every OUTGROWN slotted enhancement to the current shop band in one transaction. Only the
+-- `level` field changes; exact type, origins, and slot positions survive. A second plan is built
+-- inside the currency commit so a concurrent slot edit rejects the quote and refunds the debit.
+function EnhancementShopService:UpgradeAll(player, args)
+    args = args or {}
+    local plan, reason, data = self:_upgradeAllPlan(player)
+    if not plan then
+        return { ok = false, reason = reason }
+    end
+    if plan.count < 1 then
+        return {
+            ok = false,
+            reason = "nothing_to_upgrade",
+            targetLevel = plan.targetLevel,
+            count = 0,
+            cost = 0,
+        }
+    end
+
+    -- The confirmation is a quote, not a blank cheque. If anything changed while it was open,
+    -- return a fresh preview instead of silently charging a different total.
+    if
+        (args.expectedTargetLevel ~= nil and args.expectedTargetLevel ~= plan.targetLevel)
+        or (args.expectedCount ~= nil and args.expectedCount ~= plan.count)
+        or (args.expectedCost ~= nil and args.expectedCost ~= plan.cost)
+    then
+        local fresh = self:UpgradeAllPreview(player)
+        fresh.ok = false
+        fresh.reason = "quote_changed"
+        return fresh
+    end
+
+    local shop = self:_shop()
+    local currency = shop.currency or CURRENCY_FALLBACK
+    local transaction = self._economyService:Transact(player, {
+        debits = plan.cost > 0 and { [currency] = plan.cost } or {},
+        reason = "enhancement_upgrade_all",
+        commit = function()
+            local freshData = self._dataService:GetData(player)
+            if freshData ~= data then
+                return false
+            end
+            local freshPlan =
+                EnhancementPricing.upgradeAllPlan(freshData.Slots or {}, playerLevel(player), shop)
+            if freshPlan.signature ~= plan.signature then
+                return false
+            end
+            for _, change in ipairs(freshPlan.changes) do
+                -- The signature above proves the identity/from-level still matches. These are plain
+                -- profile-table writes, so there is no fallible inventory operation mid-transaction.
+                freshData.Slots[change.powerId][change.slotIndex].enh.level = change.toLevel
+            end
+            return true
+        end,
+    })
+    if not transaction.ok then
+        return {
+            ok = false,
+            reason = transaction.reason == "precondition_failed" and "insufficient_funds"
+                or transaction.reason == "commit_failed" and "quote_changed"
+                or transaction.reason,
+            currency = currency,
+            targetLevel = plan.targetLevel,
+            count = plan.count,
+            cost = plan.cost,
+            balance = self._economyService:GetCurrency(player, currency),
+        }
+    end
+
+    self._dataService:RequestSave(player, "enhancement_upgrade_all", { critical = true })
+    self._enhancementService:ReapplySlottedEffects(player)
+    return {
+        ok = true,
+        currency = currency,
+        targetLevel = plan.targetLevel,
+        upgraded = plan.count,
+        cost = plan.cost,
+        byGrade = plan.byGrade,
+        balance = self._economyService:GetCurrency(player, currency),
+    }
+end
+
+-- BUY one enhancement of `type` (grade defaults to natural). Snaps to the player's band level and
+-- stacks via Grant. Deducts gems first; refunds if the grant fails.
+function EnhancementShopService:Buy(player, args)
+    local shop = self:_shop()
+    if not (shop and shop.enabled) then
+        return { ok = false, reason = "shop_disabled" }
+    end
+    args = args or {}
+    local etype = args.type
+    local grade = args.grade or "natural"
+    if type(etype) ~= "string" or not (self._config.types and self._config.types[etype]) then
+        return { ok = false, reason = "invalid_type" }
+    end
+    if shop.exclude_types and shop.exclude_types[etype] then
+        return { ok = false, reason = "type_not_sold" }
+    end
+    if not buyableSet(shop)[grade] then
+        return { ok = false, reason = "grade_not_buyable" }
+    end
+
+    -- ORIGINS by grade (validated BEFORE spending): natural is origin-less; single/dual carry the
+    -- player's OWN origin so the bought enhancement is usable + slottable for them. No origin chosen
+    -- yet → single/dual can't be made usable, so refuse (no spend).
+    local origins = {}
+    if grade == "single" or grade == "dual" then
+        local arch = player:GetAttribute("Archetype")
+        if type(arch) ~= "string" or arch == "" then
+            return { ok = false, reason = "no_origin" }
+        end
+        if grade == "single" then
+            origins = { arch }
+        else
+            local other
+            for _, o in ipairs(self._config.origins or {}) do
+                if o ~= arch then
+                    other = o
+                    break
+                end
+            end
+            origins = other and { arch, other } or { arch }
+        end
+    end
+
+    local level = EnhancementPricing.bandFor(playerLevel(player), shop)
+    local price = EnhancementPricing.buyPrice(grade, level, shop)
+    local currency = shop.currency or CURRENCY_FALLBACK
+    if price <= 0 then
+        return { ok = false, reason = "no_price" }
+    end
+    if not self._economyService:CanAfford(player, currency, price) then
+        return { ok = false, reason = "insufficient_funds", needed = price }
+    end
+
+    local src = ("enh_buy:%s_L%d"):format(etype, level)
+    if not self._economyService:RemoveCurrency(player, currency, price, src) then
+        return { ok = false, reason = "spend_failed" }
+    end
+
+    local granted = self._enhancementService:Grant(player, {
+        type = etype,
+        origins = origins, -- {} natural, {arch} single, {arch,other} dual — usable by the buyer
+        level = level,
+    })
+    if not (granted and granted.ok) then
+        -- refund — the grant did not land
+        if not self._economyService:AddCurrency(player, currency, price, src .. ":refund") then
+            return { ok = false, reason = "rollback_failed", cause = "grant_failed" }
+        end
+        return { ok = false, reason = (granted and granted.reason) or "grant_failed" }
+    end
+
+    self._dataService:RequestSave(player, "enh_shop_buy", { critical = true })
+    return {
+        ok = true,
+        type = etype,
+        grade = grade,
+        level = level,
+        price = price,
+        uid = granted.uid,
+        name = granted.name,
+        balance = self._economyService:GetCurrency(player, currency),
+    }
+end
+
+-- SELL `quantity` (default 1) from a stack `uid`. Reads grade off the owned stack so single/dual buy
+-- back too; refunds gems = per-unit sellPrice × sold. Decrements the stack (deletes at 0).
+function EnhancementShopService:Sell(player, args)
+    local shop = self:_shop()
+    if not (shop and shop.enabled) then
+        return { ok = false, reason = "shop_disabled" }
+    end
+    args = args or {}
+    local uid = args.uid
+    if type(uid) ~= "string" or uid == "" then
+        return { ok = false, reason = "invalid_uid" }
+    end
+    local stack = self._inventoryService:GetItem(player, BUCKET, uid)
+    if not stack then
+        return { ok = false, reason = "not_owned" }
+    end
+
+    local have = math.max(0, math.floor(tonumber(stack.quantity) or 0))
+    local want = math.floor(tonumber(args.quantity) or 1)
+    if want < 1 then
+        want = 1
+    end
+    local qty = math.min(want, have)
+    if qty < 1 then
+        return { ok = false, reason = "none_to_sell" }
+    end
+
+    local grade = EnhancementPricing.gradeFromOrigins(stack.origins)
+    local level = tonumber(stack.level) or 1
+    local unit = EnhancementPricing.sellPrice(grade, level, shop)
+    local total = unit * qty
+    if total <= 0 then
+        return { ok = false, reason = "no_value" }
+    end
+
+    local currency = shop.currency or CURRENCY_FALLBACK
+    -- same atomic shape as SellJunk: BulkRemove is pure data mutation with rollback and a
+    -- POST-commit folder rebuild, so nothing fallible sits between the take and the pay
+    -- (RemoveItem rebuilt replication folders BETWEEN mutation and credit — the loss window)
+    local src = ("enh_sell:%s"):format(uid)
+    local ok, removedMap, _, failureReason = self._inventoryService:BulkRemove(
+        player,
+        BUCKET,
+        { { uid = uid, quantity = qty } },
+        {
+            commit = function()
+                return self._economyService:AddCurrency(player, currency, total, src)
+            end,
+            saveTag = "enh_shop_sell",
+        }
+    )
+    if not (ok and removedMap and removedMap[uid]) then
+        return {
+            ok = false,
+            reason = failureReason == "commit_failed" and "credit_failed_items_restored"
+                or "remove_failed",
+        }
+    end
+
+    return {
+        ok = true,
+        uid = uid,
+        grade = grade,
+        level = level,
+        sold = qty,
+        unit = unit,
+        gems = total,
+        remaining = have - qty,
+        balance = self._economyService:GetCurrency(player, currency),
+    }
+end
+
+-- The player's enhancement stacks as a flat array (for the sell panel + bulk junk sweep). uid = stack
+-- identity; carries type/origins/level/quantity for display + pricing.
+function EnhancementShopService:_stacks(player)
+    local inv = self._inventoryService:GetInventory(player, BUCKET)
+    local items = inv and inv.items
+    local stacks = {}
+    if type(items) == "table" then
+        for uid, rec in pairs(items) do
+            stacks[#stacks + 1] = {
+                uid = uid,
+                type = rec.type,
+                origins = rec.origins,
+                level = rec.level,
+                quantity = rec.quantity,
+            }
+        end
+    end
+    return stacks
+end
+
+-- The player's chosen origin (data.Archetype) — drives dual usability (a dual is slottable only if one
+-- of its origins is this). nil for pre-origin players (then every dual reads as wrong-origin junk).
+function EnhancementShopService:_archetype(player)
+    local data = self._dataService and self._dataService:GetData(player)
+    return data and data.Archetype
+end
+
+-- The owned enhancement stacks for the sell panel: per-stack sell price + flags (dead / usable / junk
+-- bucket) so the client can render + group without re-deriving the rules.
+function EnhancementShopService:ListOwned(player)
+    local shop = self:_shop()
+    if not (shop and shop.enabled) then
+        return { ok = false, reason = "shop_disabled" }
+    end
+    local archetype = self:_archetype(player)
+    local lvl = playerLevel(player)
+    local window = (shop.bulk and tonumber(shop.bulk.dead_window)) or 5
+    local currency = shop.currency or CURRENCY_FALLBACK
+    local items = {}
+    for _, s in ipairs(self:_stacks(player)) do
+        local grade = EnhancementPricing.gradeFromOrigins(s.origins)
+        local lev = tonumber(s.level) or 0
+        local dead = lev < (lvl - window)
+        local usable = Enhancements.usableBy({ origins = s.origins }, archetype)
+        local junk = (grade ~= "single")
+            and ((grade == "natural" and dead) or (grade == "dual" and (dead or not usable)))
+        items[#items + 1] = {
+            uid = s.uid,
+            type = s.type,
+            origins = s.origins or {},
+            level = lev,
+            quantity = math.max(0, math.floor(tonumber(s.quantity) or 0)),
+            grade = grade,
+            sellUnit = EnhancementPricing.sellPrice(grade, lev, shop),
+            dead = dead,
+            usable = usable,
+            junk = junk and true or false,
+        }
+    end
+    return {
+        ok = true,
+        currency = currency,
+        balance = self._economyService:GetCurrency(player, currency),
+        items = items,
+    }
+end
+
+-- Preview the bulk "Sell Junk" sweep WITHOUT selling — returns the two buckets (naturals always;
+-- duals = dead-or-wrong-origin, gated behind the client's "include duals" checkbox) so the UI can
+-- show totals live as the box is toggled.
+function EnhancementShopService:JunkPreview(player)
+    local shop = self:_shop()
+    if not (shop and shop.enabled) then
+        return { ok = false, reason = "shop_disabled" }
+    end
+    local plan = EnhancementPricing.junkSweep(
+        self:_stacks(player),
+        playerLevel(player),
+        shop,
+        { playerArchetype = self:_archetype(player) }
+    )
+    return {
+        ok = true,
+        currency = shop.currency or CURRENCY_FALLBACK,
+        naturals = { count = plan.naturals.count, gems = plan.naturals.gems },
+        duals = { count = plan.duals.count, gems = plan.duals.gems },
+    }
+end
+
+-- BULK sell: clear DEAD naturals (always) + the duals bucket when `includeDuals`. One pass, removes
+-- each stack fully, then credits the summed gems once. Singles never sold.
+function EnhancementShopService:SellJunk(player, args)
+    local shop = self:_shop()
+    if not (shop and shop.enabled) then
+        return { ok = false, reason = "shop_disabled" }
+    end
+    local includeDuals = args and args.includeDuals and true or false
+    local plan = EnhancementPricing.junkSweep(
+        self:_stacks(player),
+        playerLevel(player),
+        shop,
+        { playerArchetype = self:_archetype(player) }
+    )
+    local toSell = {}
+    for _, it in ipairs(plan.naturals.items) do
+        toSell[#toSell + 1] = it
+    end
+    if includeDuals then
+        for _, it in ipairs(plan.duals.items) do
+            toSell[#toSell + 1] = it
+        end
+    end
+    if #toSell == 0 then
+        return { ok = false, reason = "nothing_to_sell" }
+    end
+    -- ATOMIC TRANSACTION (Jason live-lost an ~80k batch 2026-07-07, then called the redesign:
+    -- "that should be an atomic transaction — it shouldn't even be able to fail"). The old loop
+    -- interleaved a FALLIBLE side effect into the mutation: every RemoveItem rebuilt the bucket
+    -- replication folders (Instance churn, O(N²) across a sweep) between data writes, so a
+    -- cosmetic hiccup could kill the sale halfway — items stripped, payment line never reached.
+    -- Now the entire sale is pure in-memory data: ONE BulkRemove (plain table writes, snapshot
+    -- rollback as insurance, replication deferred to a single post-commit rebuild) + ONE
+    -- AddCurrency (plain data). Nothing fallible sits between taking the items and paying for
+    -- them; the folder rebuild happens after the transaction and can't void it.
+    local currency = shop.currency or CURRENCY_FALLBACK
+    local entries, gemsByUid = {}, {}
+    for _, it in ipairs(toSell) do
+        entries[#entries + 1] = { uid = it.uid, quantity = it.quantity }
+        gemsByUid[it.uid] = it.gems
+    end
+    local okAll, removedMap, soldQty, failureReason =
+        self._inventoryService:BulkRemove(player, BUCKET, entries, {
+            commit = function(removed)
+                local committedGems = 0
+                for uid in pairs(removed) do
+                    committedGems += gemsByUid[uid] or 0
+                end
+                return committedGems <= 0
+                    or self._economyService:AddCurrency(
+                        player,
+                        currency,
+                        committedGems,
+                        "enh_sell_junk"
+                    )
+            end,
+            saveTag = "enh_shop_sell_junk",
+        })
+    if not okAll then
+        -- rolled back inside BulkRemove: the player still owns everything, nothing was paid
+        return {
+            ok = false,
+            reason = failureReason == "commit_failed" and "credit_failed_items_restored"
+                or "sweep_failed_nothing_taken",
+        }
+    end
+    local gems, soldStacks = 0, 0
+    for uid in pairs(removedMap) do
+        gems += gemsByUid[uid] or 0
+        soldStacks += 1
+    end
+    return {
+        ok = true,
+        sold = soldQty,
+        stacks = soldStacks,
+        gems = gems,
+        includedDuals = includeDuals,
+        balance = self._economyService:GetCurrency(player, currency),
+    }
+end
+
+return EnhancementShopService

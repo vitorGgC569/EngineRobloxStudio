@@ -1,0 +1,1441 @@
+{
+ "$comment": "Unmodified source copied from a licensed project, kept whole so the relationships between modules survive. Generalising anything here into a Forge family is a separate step; nothing in this folder has been reviewed, adapted, or cleared for shipping as-is.",
+ "kit": "bocchi",
+ "source": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\bocchi-upgrade-tree",
+ "files": 286,
+ "lines": 8462,
+ "skipped": 3,
+ "takenAt": "2026-08-26T21:25:46+00:00",
+ "manifest": [
+  {
+   "path": "default.project.json",
+   "bytes": 1318,
+   "lines": 40
+  },
+  {
+   "path": "rokit.toml",
+   "bytes": 296,
+   "lines": 9
+  },
+  {
+   "path": "src/ReplicatedStorage/Balance.luau",
+   "bytes": 5286,
+   "lines": 154
+  },
+  {
+   "path": "src/ReplicatedStorage/Bocculty.luau",
+   "bytes": 1047,
+   "lines": 18
+  },
+  {
+   "path": "src/ReplicatedStorage/BuyEffects/A.luau",
+   "bytes": 44,
+   "lines": 2
+  },
+  {
+   "path": "src/ReplicatedStorage/BuyEffects/Exist.luau",
+   "bytes": 41,
+   "lines": 2
+  },
+  {
+   "path": "src/ReplicatedStorage/BuyEffects/FelixTheA.luau",
+   "bytes": 440,
+   "lines": 15
+  },
+  {
+   "path": "src/ReplicatedStorage/BuyEffects/Friendliness.luau",
+   "bytes": 44,
+   "lines": 2
+  },
+  {
+   "path": "src/ReplicatedStorage/BuyEffects/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/ReplicatedStorage/BuyEffects/Negativity.luau",
+   "bytes": 50,
+   "lines": 2
+  },
+  {
+   "path": "src/ReplicatedStorage/BuyEffects/ReversedPeripherality.luau",
+   "bytes": 41,
+   "lines": 2
+  },
+  {
+   "path": "src/ReplicatedStorage/BuyEffects/TheFirstDifficulty.luau",
+   "bytes": 441,
+   "lines": 15
+  },
+  {
+   "path": "src/ReplicatedStorage/BuyEffects/TheLowerGap.luau",
+   "bytes": 50,
+   "lines": 2
+  },
+  {
+   "path": "src/ReplicatedStorage/BuyEffects/TrueEase.luau",
+   "bytes": 44,
+   "lines": 2
+  },
+  {
+   "path": "src/ReplicatedStorage/BuyEffects/Unimpossible.luau",
+   "bytes": 440,
+   "lines": 15
+  },
+  {
+   "path": "src/ReplicatedStorage/Cmdr/Commands/BuyButton.luau",
+   "bytes": 300,
+   "lines": 18
+  },
+  {
+   "path": "src/ReplicatedStorage/Cmdr/Commands/BuyButtonServer.luau",
+   "bytes": 438,
+   "lines": 9
+  },
+  {
+   "path": "src/ReplicatedStorage/Cmdr/Commands/Ecoset.luau",
+   "bytes": 510,
+   "lines": 23
+  },
+  {
+   "path": "src/ReplicatedStorage/Cmdr/Commands/EcosetServer.luau",
+   "bytes": 513,
+   "lines": 8
+  },
+  {
+   "path": "src/ReplicatedStorage/Cmdr/Commands/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/ReplicatedStorage/Cmdr/Commands/PrintData.luau",
+   "bytes": 133,
+   "lines": 8
+  },
+  {
+   "path": "src/ReplicatedStorage/Cmdr/Commands/PrintDataServer.luau",
+   "bytes": 320,
+   "lines": 6
+  },
+  {
+   "path": "src/ReplicatedStorage/Cmdr/Commands/Reset.luau",
+   "bytes": 140,
+   "lines": 9
+  },
+  {
+   "path": "src/ReplicatedStorage/Cmdr/Commands/ResetServer.luau",
+   "bytes": 326,
+   "lines": 7
+  },
+  {
+   "path": "src/ReplicatedStorage/Cmdr/Commands/Walkspeed.luau",
+   "bytes": 301,
+   "lines": 18
+  },
+  {
+   "path": "src/ReplicatedStorage/Cmdr/Commands/WalkspeedServer.luau",
+   "bytes": 126,
+   "lines": 3
+  },
+  {
+   "path": "src/ReplicatedStorage/Cmdr/Hooks/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/ReplicatedStorage/Cmdr/Hooks/ModuleScript.luau",
+   "bytes": 411,
+   "lines": 12
+  },
+  {
+   "path": "src/ReplicatedStorage/Cmdr/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/ReplicatedStorage/constants.luau",
+   "bytes": 587,
+   "lines": 18
+  },
+  {
+   "path": "src/ReplicatedStorage/Currency/init.luau",
+   "bytes": 665,
+   "lines": 36
+  },
+  {
+   "path": "src/ReplicatedStorage/Currency/Pages.luau",
+   "bytes": 36,
+   "lines": 5
+  },
+  {
+   "path": "src/ReplicatedStorage/Formula.luau",
+   "bytes": 2896,
+   "lines": 103
+  },
+  {
+   "path": "src/ReplicatedStorage/Packets.luau",
+   "bytes": 1602,
+   "lines": 59
+  },
+  {
+   "path": "src/ReplicatedStorage/Utils.luau",
+   "bytes": 546,
+   "lines": 22
+  },
+  {
+   "path": "src/ServerScriptService/Controllers/AreaController.luau",
+   "bytes": 1228,
+   "lines": 44
+  },
+  {
+   "path": "src/ServerScriptService/Controllers/ButtonController.luau",
+   "bytes": 9892,
+   "lines": 290
+  },
+  {
+   "path": "src/ServerScriptService/Controllers/CurrencyController.luau",
+   "bytes": 1350,
+   "lines": 38
+  },
+  {
+   "path": "src/ServerScriptService/Controllers/DataController.luau",
+   "bytes": 3718,
+   "lines": 107
+  },
+  {
+   "path": "src/ServerScriptService/Controllers/GenerationController.luau",
+   "bytes": 6044,
+   "lines": 184
+  },
+  {
+   "path": "src/ServerScriptService/Controllers/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/ServerScriptService/Controllers/LeaderboardController.luau",
+   "bytes": 3013,
+   "lines": 79
+  },
+  {
+   "path": "src/ServerScriptService/main.server.server.luau",
+   "bytes": 1075,
+   "lines": 39
+  },
+  {
+   "path": "src/ServerScriptService/README/devutils.server.luau",
+   "bytes": 607,
+   "lines": 28
+  },
+  {
+   "path": "src/ServerScriptService/README/init.server.luau",
+   "bytes": 436,
+   "lines": 14
+  },
+  {
+   "path": "src/ServerStorage/ServerPackages/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/ServerStorage/ServerPackages/profileservice.luau",
+   "bytes": 88,
+   "lines": 2
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/BalanceController.luau",
+   "bytes": 5939,
+   "lines": 157
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/ButtonInteractionController.luau",
+   "bytes": 2349,
+   "lines": 75
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/CubeController.luau",
+   "bytes": 1322,
+   "lines": 43
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/DetailsController.luau",
+   "bytes": 756,
+   "lines": 20
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/HotkeysController.luau",
+   "bytes": 2449,
+   "lines": 75
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/MessageController.luau",
+   "bytes": 1584,
+   "lines": 44
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/MusicController.luau",
+   "bytes": 2821,
+   "lines": 98
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/Controllers/TooltipController.luau",
+   "bytes": 2720,
+   "lines": 83
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/main.client.client.luau",
+   "bytes": 691,
+   "lines": 26
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/WindController/init.client.luau",
+   "bytes": 4520,
+   "lines": 139
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/WindController/WindLines.luau",
+   "bytes": 4389,
+   "lines": 155
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/WindController/WindShake/init.luau",
+   "bytes": 7984,
+   "lines": 316
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/WindController/WindShake/Octree/init.luau",
+   "bytes": 8612,
+   "lines": 276
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/WindController/WindShake/Octree/OctreeNode.luau",
+   "bytes": 4648,
+   "lines": 178
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/WindController/WindShake/Octree/OctreeRegionUtils.luau",
+   "bytes": 2608,
+   "lines": 74
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/WindController/WindShake/Settings.luau",
+   "bytes": 1762,
+   "lines": 51
+  },
+  {
+   "path": "src/Workspace/Bocchiria/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/BalloonDispenser/ClientObjectScript.luau",
+   "bytes": 4790,
+   "lines": 142
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/BalloonDispenser/ClientObjectScript.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/BalloonDispenser/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Beat Blocks/4x/ClientObjectScript.luau",
+   "bytes": 4416,
+   "lines": 158
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Beat Blocks/4x/ClientObjectScript.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Beat Blocks/4x/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Beat Blocks/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/BulletVelocityChanger/ClientObjectScript.luau",
+   "bytes": 2000,
+   "lines": 61
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/BulletVelocityChanger/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Buttons/ClientObjectScript.luau",
+   "bytes": 12901,
+   "lines": 347
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Buttons/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Conveyor/Attachment/Beam/ClientObjectScript.luau",
+   "bytes": 123,
+   "lines": 3
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Conveyor/Attachment/Beam/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Conveyor/Attachment/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Conveyor/ClientObjectScript.luau",
+   "bytes": 542,
+   "lines": 13
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Conveyor/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/DisappearingPlatform/ClientObjectScript.luau",
+   "bytes": 1567,
+   "lines": 47
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/DisappearingPlatform/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/DistanceAnchoringObjects (ONLY USE FOR ANTILAG)/ClientObjectScript.luau",
+   "bytes": 1439,
+   "lines": 51
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/DistanceAnchoringObjects (ONLY USE FOR ANTILAG)/ClientObjectScript.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/DistanceAnchoringObjects (ONLY USE FOR ANTILAG)/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/DistanceAnchoringObjects (ONLY USE FOR ANTILAG)/readme.server.luau",
+   "bytes": 477,
+   "lines": 13
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Elevator/ClientObjectScript.luau",
+   "bytes": 1836,
+   "lines": 34
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Elevator/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Falling Platform/End/ClientObjectScript.luau",
+   "bytes": 935,
+   "lines": 29
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Falling Platform/End/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Falling Platform/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Falling Platform/Platform/ClientObjectScript.luau",
+   "bytes": 1270,
+   "lines": 35
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Falling Platform/Platform/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Jump Boost Pad/ClientObjectScript.luau",
+   "bytes": 1525,
+   "lines": 45
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Jump Boost Pad/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Jump Booster/ClientObjectScript.luau",
+   "bytes": 1070,
+   "lines": 37
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Jump Booster/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Jump Remover/ClientObjectScript.luau",
+   "bytes": 196,
+   "lines": 8
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Jump Remover/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/JumpPad/ClientObjectScript.luau",
+   "bytes": 2761,
+   "lines": 84
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/JumpPad/ClientObjectScript.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/JumpPad/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Bloom Changer/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Bloom Changer/LightingConfiguration.luau",
+   "bytes": 229,
+   "lines": 10
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Bloom Reverter/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Bloom Reverter/LightingConfiguration.luau",
+   "bytes": 155,
+   "lines": 5
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Blur Changer/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Blur Changer/LightingConfiguration.luau",
+   "bytes": 181,
+   "lines": 8
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Blur Reverter/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Blur Reverter/LightingConfiguration.luau",
+   "bytes": 154,
+   "lines": 5
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/ClientObjectScript.luau",
+   "bytes": 1673,
+   "lines": 46
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Color Correction Changer/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Color Correction Changer/LightingConfiguration.luau",
+   "bytes": 295,
+   "lines": 11
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Color Correction Reverter/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Color Correction Reverter/LightingConfiguration.luau",
+   "bytes": 165,
+   "lines": 5
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Depth Changer/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Depth Changer/LightingConfiguration.luau",
+   "bytes": 290,
+   "lines": 11
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Depth Reverter/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Depth Reverter/LightingConfiguration.luau",
+   "bytes": 162,
+   "lines": 5
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Lighting Changer/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Lighting Changer/LightingConfiguration.luau",
+   "bytes": 408,
+   "lines": 15
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Lighting Reverter/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/LightingChangers/Lighting Reverter/LightingConfiguration.luau",
+   "bytes": 152,
+   "lines": 5
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Morpher/ClientObjectScript.luau",
+   "bytes": 7144,
+   "lines": 208
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Morpher/ClientObjectScript.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Morpher/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Move.server.luau",
+   "bytes": 59,
+   "lines": 1
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Moving Platform/ClientObjectScript.luau",
+   "bytes": 1108,
+   "lines": 25
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Moving Platform/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/MusicZoneEditors/ClientObjectScript.luau",
+   "bytes": 3480,
+   "lines": 98
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/MusicZoneEditors/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/MusicZoneEditors/README.server.luau",
+   "bytes": 492,
+   "lines": 13
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/PushboxColorChanger/ClientObjectScript.luau",
+   "bytes": 181,
+   "lines": 7
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/PushboxColorChanger/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/PushboxDestroyer/ClientObjectScript.luau",
+   "bytes": 338,
+   "lines": 11
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/PushboxDestroyer/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/PushboxSpawnButton/ClientObjectScript.luau",
+   "bytes": 2292,
+   "lines": 64
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/PushboxSpawnButton/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/PushingPlatformTrampoline/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/PushingPlatformTrampoline/Part/ClientObjectScript.luau",
+   "bytes": 1487,
+   "lines": 56
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/PushingPlatformTrampoline/Part/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Seat/ClientObjectScript.luau",
+   "bytes": 2519,
+   "lines": 80
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Seat/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Shoving Platform/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Shoving Platform/Part/ClientObjectScript.luau",
+   "bytes": 483,
+   "lines": 15
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Shoving Platform/Part/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/SoundPlayers/ClientObjectScript.luau",
+   "bytes": 2666,
+   "lines": 75
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/SoundPlayers/ClientObjectScript.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/SoundPlayers/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Speed Boost Pad/ClientObjectScript.luau",
+   "bytes": 1525,
+   "lines": 45
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Speed Boost Pad/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Speed Booster/ClientObjectScript.luau",
+   "bytes": 1075,
+   "lines": 37
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Speed Booster/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Speed Remover/ClientObjectScript.luau",
+   "bytes": 198,
+   "lines": 8
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Speed Remover/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Swing/ClientObjectScript.luau",
+   "bytes": 4856,
+   "lines": 143
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Swing/ClientObjectScript.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Swing/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/SwingDismounter/ClientObjectScript.luau",
+   "bytes": 603,
+   "lines": 18
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/SwingDismounter/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Teleporter/ClientObjectScript.luau",
+   "bytes": 2898,
+   "lines": 93
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Teleporter/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/TripPart/ClientObjectScript.luau",
+   "bytes": 687,
+   "lines": 19
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/TripPart/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Turret/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Turret/Turret/ClientObjectScript.luau",
+   "bytes": 3370,
+   "lines": 105
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Turret/Turret/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Zipline/ClientObjectScript.luau",
+   "bytes": 4350,
+   "lines": 113
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/ClientSidedObjects/Zipline/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/JToH Kit v5.5/README.server.luau",
+   "bytes": 7733,
+   "lines": 105
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/Model/ad/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/Model/ad/Script.server.luau",
+   "bytes": 647,
+   "lines": 18
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/Model/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/Ring beam/init.meta.json",
+   "bytes": 66,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Bocchiria/Map/Ring beam/Script.server.luau",
+   "bytes": 26,
+   "lines": 1
+  },
+  {
+   "path": "src/Workspace/Buttons/B1/Info.luau",
+   "bytes": 808,
+   "lines": 31
+  },
+  {
+   "path": "src/Workspace/Buttons/B1/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B10/Info/BOCCHIRIUM ORB OF BOCCHER/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B10/Info/BOCCHIRIUM ORB OF BOCCHER/Script.server.luau",
+   "bytes": 188,
+   "lines": 5
+  },
+  {
+   "path": "src/Workspace/Buttons/B10/Info/init.luau",
+   "bytes": 2203,
+   "lines": 73
+  },
+  {
+   "path": "src/Workspace/Buttons/B10/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B11/Info.luau",
+   "bytes": 1181,
+   "lines": 36
+  },
+  {
+   "path": "src/Workspace/Buttons/B11/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B12/Info.luau",
+   "bytes": 1098,
+   "lines": 34
+  },
+  {
+   "path": "src/Workspace/Buttons/B12/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B13/Info.luau",
+   "bytes": 1007,
+   "lines": 36
+  },
+  {
+   "path": "src/Workspace/Buttons/B13/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B14/Info.luau",
+   "bytes": 1052,
+   "lines": 36
+  },
+  {
+   "path": "src/Workspace/Buttons/B14/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B15/Info.luau",
+   "bytes": 1328,
+   "lines": 41
+  },
+  {
+   "path": "src/Workspace/Buttons/B15/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B16/Info.luau",
+   "bytes": 980,
+   "lines": 34
+  },
+  {
+   "path": "src/Workspace/Buttons/B16/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B17/Info.luau",
+   "bytes": 1010,
+   "lines": 36
+  },
+  {
+   "path": "src/Workspace/Buttons/B17/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B18/Info.luau",
+   "bytes": 1333,
+   "lines": 43
+  },
+  {
+   "path": "src/Workspace/Buttons/B18/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B19/Info.luau",
+   "bytes": 1093,
+   "lines": 39
+  },
+  {
+   "path": "src/Workspace/Buttons/B19/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B2/Info.luau",
+   "bytes": 707,
+   "lines": 29
+  },
+  {
+   "path": "src/Workspace/Buttons/B2/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B20/Info.luau",
+   "bytes": 1135,
+   "lines": 37
+  },
+  {
+   "path": "src/Workspace/Buttons/B20/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B21/Info.luau",
+   "bytes": 1013,
+   "lines": 35
+  },
+  {
+   "path": "src/Workspace/Buttons/B21/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B22/Button/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B22/Button/Script.server.luau",
+   "bytes": 1478,
+   "lines": 56
+  },
+  {
+   "path": "src/Workspace/Buttons/B22/Info.luau",
+   "bytes": 1279,
+   "lines": 42
+  },
+  {
+   "path": "src/Workspace/Buttons/B22/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B23/Button/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B23/Button/Script.server.luau",
+   "bytes": 1478,
+   "lines": 56
+  },
+  {
+   "path": "src/Workspace/Buttons/B23/Info.luau",
+   "bytes": 998,
+   "lines": 34
+  },
+  {
+   "path": "src/Workspace/Buttons/B23/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B24/Button/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B24/Button/Script.server.luau",
+   "bytes": 1478,
+   "lines": 56
+  },
+  {
+   "path": "src/Workspace/Buttons/B24/Info.luau",
+   "bytes": 915,
+   "lines": 34
+  },
+  {
+   "path": "src/Workspace/Buttons/B24/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B25/Button/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B25/Button/Script.server.luau",
+   "bytes": 1478,
+   "lines": 56
+  },
+  {
+   "path": "src/Workspace/Buttons/B25/Info.luau",
+   "bytes": 870,
+   "lines": 31
+  },
+  {
+   "path": "src/Workspace/Buttons/B25/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B26/Info.luau",
+   "bytes": 947,
+   "lines": 37
+  },
+  {
+   "path": "src/Workspace/Buttons/B26/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B27/Info.luau",
+   "bytes": 1374,
+   "lines": 43
+  },
+  {
+   "path": "src/Workspace/Buttons/B27/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B28/Info.luau",
+   "bytes": 1165,
+   "lines": 37
+  },
+  {
+   "path": "src/Workspace/Buttons/B28/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B29/Info.luau",
+   "bytes": 1050,
+   "lines": 37
+  },
+  {
+   "path": "src/Workspace/Buttons/B29/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B3/Info.luau",
+   "bytes": 717,
+   "lines": 29
+  },
+  {
+   "path": "src/Workspace/Buttons/B3/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B30/Info.luau",
+   "bytes": 1056,
+   "lines": 34
+  },
+  {
+   "path": "src/Workspace/Buttons/B30/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B31/Info.luau",
+   "bytes": 2374,
+   "lines": 75
+  },
+  {
+   "path": "src/Workspace/Buttons/B31/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B32/Cube/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B32/Cube/Script.server.luau",
+   "bytes": 330,
+   "lines": 8
+  },
+  {
+   "path": "src/Workspace/Buttons/B32/Info.luau",
+   "bytes": 991,
+   "lines": 38
+  },
+  {
+   "path": "src/Workspace/Buttons/B32/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B33/Info.luau",
+   "bytes": 1030,
+   "lines": 41
+  },
+  {
+   "path": "src/Workspace/Buttons/B33/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B34/Info.luau",
+   "bytes": 919,
+   "lines": 36
+  },
+  {
+   "path": "src/Workspace/Buttons/B34/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B35/Info.luau",
+   "bytes": 907,
+   "lines": 36
+  },
+  {
+   "path": "src/Workspace/Buttons/B35/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B36/Info.luau",
+   "bytes": 937,
+   "lines": 36
+  },
+  {
+   "path": "src/Workspace/Buttons/B36/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B37/Info.luau",
+   "bytes": 957,
+   "lines": 36
+  },
+  {
+   "path": "src/Workspace/Buttons/B37/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B38/Info.luau",
+   "bytes": 970,
+   "lines": 35
+  },
+  {
+   "path": "src/Workspace/Buttons/B38/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B4/Info.luau",
+   "bytes": 747,
+   "lines": 31
+  },
+  {
+   "path": "src/Workspace/Buttons/B4/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B5/Info.luau",
+   "bytes": 810,
+   "lines": 31
+  },
+  {
+   "path": "src/Workspace/Buttons/B5/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B6/Info.luau",
+   "bytes": 1158,
+   "lines": 38
+  },
+  {
+   "path": "src/Workspace/Buttons/B6/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B7/Info.luau",
+   "bytes": 1170,
+   "lines": 39
+  },
+  {
+   "path": "src/Workspace/Buttons/B7/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B8/Info.luau",
+   "bytes": 2642,
+   "lines": 83
+  },
+  {
+   "path": "src/Workspace/Buttons/B8/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B9/Hitbox/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/B9/Hitbox/Script.server.luau",
+   "bytes": 2362,
+   "lines": 82
+  },
+  {
+   "path": "src/Workspace/Buttons/B9/Info.luau",
+   "bytes": 732,
+   "lines": 30
+  },
+  {
+   "path": "src/Workspace/Buttons/B9/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/C1/Info.luau",
+   "bytes": 981,
+   "lines": 36
+  },
+  {
+   "path": "src/Workspace/Buttons/C1/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/D1/Button/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/D1/Button/Script.server.luau",
+   "bytes": 1478,
+   "lines": 56
+  },
+  {
+   "path": "src/Workspace/Buttons/D1/Info.luau",
+   "bytes": 899,
+   "lines": 33
+  },
+  {
+   "path": "src/Workspace/Buttons/D1/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/D2/Button/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/D2/Button/Script.server.luau",
+   "bytes": 1478,
+   "lines": 56
+  },
+  {
+   "path": "src/Workspace/Buttons/D2/Info.luau",
+   "bytes": 898,
+   "lines": 33
+  },
+  {
+   "path": "src/Workspace/Buttons/D2/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/D3/Button/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/D3/Button/Script.server.luau",
+   "bytes": 1478,
+   "lines": 56
+  },
+  {
+   "path": "src/Workspace/Buttons/D3/Info.luau",
+   "bytes": 899,
+   "lines": 33
+  },
+  {
+   "path": "src/Workspace/Buttons/D3/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Buttons/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "wally.toml",
+   "bytes": 394,
+   "lines": 13
+  }
+ ]
+}

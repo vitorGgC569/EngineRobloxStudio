@@ -1,0 +1,1241 @@
+{
+ "$comment": "Unmodified source copied from a licensed project, kept whole so the relationships between modules survive. Generalising anything here into a Forge family is a separate step; nothing in this folder has been reviewed, adapted, or cleared for shipping as-is.",
+ "kit": "minershaven",
+ "source": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\minershaven",
+ "files": 246,
+ "lines": 28077,
+ "skipped": 0,
+ "takenAt": "2026-08-26T21:25:45+00:00",
+ "manifest": [
+  {
+   "path": "src/Chat/ChatModules/ExtraDataInitializer.lua",
+   "bytes": 5728,
+   "lines": 202
+  },
+  {
+   "path": "src/Chat/ChatModules/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Chat/ClientChatModules/ChatSettings.lua",
+   "bytes": 4831,
+   "lines": 113
+  },
+  {
+   "path": "src/Chat/ClientChatModules/CommandModules/DeveloperConsole.lua",
+   "bytes": 912,
+   "lines": 26
+  },
+  {
+   "path": "src/Chat/ClientChatModules/CommandModules/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Chat/ClientChatModules/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Chat/ClientChatModules/MessageCreatorModules/DefaultChatMessage.lua",
+   "bytes": 4478,
+   "lines": 115
+  },
+  {
+   "path": "src/Chat/ClientChatModules/MessageCreatorModules/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/Chat/ClientChatModules/MessageCreatorModules/Util.lua",
+   "bytes": 12352,
+   "lines": 366
+  },
+  {
+   "path": "src/Chat/ClientChatModules/MessageCreatorModules/WhisperMessage.lua",
+   "bytes": 5074,
+   "lines": 112
+  },
+  {
+   "path": "src/ReplicatedStorage/LotteryLib.lua",
+   "bytes": 23797,
+   "lines": 914
+  },
+  {
+   "path": "src/ReplicatedStorage/MoneyLib.lua",
+   "bytes": 4168,
+   "lines": 153
+  },
+  {
+   "path": "src/ReplicatedStorage/PlacementModule.lua",
+   "bytes": 30719,
+   "lines": 1040
+  },
+  {
+   "path": "src/ServerScriptService/AdminHunter.server.lua",
+   "bytes": 249,
+   "lines": 10
+  },
+  {
+   "path": "src/ServerScriptService/Analytics/init.server.lua",
+   "bytes": 5674,
+   "lines": 231
+  },
+  {
+   "path": "src/ServerScriptService/Analytics/key.lua",
+   "bytes": 342,
+   "lines": 69
+  },
+  {
+   "path": "src/ServerScriptService/Analytics/testing.lua",
+   "bytes": 342,
+   "lines": 69
+  },
+  {
+   "path": "src/ServerScriptService/ChatAds.server.lua",
+   "bytes": 818,
+   "lines": 14
+  },
+  {
+   "path": "src/ServerScriptService/CloverEvent.server.lua",
+   "bytes": 4904,
+   "lines": 162
+  },
+  {
+   "path": "src/ServerScriptService/DailyRewards.server.lua",
+   "bytes": 13937,
+   "lines": 396
+  },
+  {
+   "path": "src/ServerScriptService/EggScript.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/ServerScriptService/EggScript.server.lua",
+   "bytes": 4407,
+   "lines": 111
+  },
+  {
+   "path": "src/ServerScriptService/GameAnalytics/bit.lua",
+   "bytes": 7270,
+   "lines": 347
+  },
+  {
+   "path": "src/ServerScriptService/GameAnalytics/init.lua",
+   "bytes": 3526,
+   "lines": 137
+  },
+  {
+   "path": "src/ServerScriptService/GameAnalytics/INSTRUCTIONS.server.lua",
+   "bytes": 1149,
+   "lines": 36
+  },
+  {
+   "path": "src/ServerScriptService/GameAnalytics/lockbox/digest/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/ServerScriptService/GameAnalytics/lockbox/digest/sha2_256.lua",
+   "bytes": 5633,
+   "lines": 212
+  },
+  {
+   "path": "src/ServerScriptService/GameAnalytics/lockbox/init.lua",
+   "bytes": 130,
+   "lines": 7
+  },
+  {
+   "path": "src/ServerScriptService/GameAnalytics/lockbox/mac/hmac.lua",
+   "bytes": 1715,
+   "lines": 89
+  },
+  {
+   "path": "src/ServerScriptService/GameAnalytics/lockbox/mac/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/ServerScriptService/GameAnalytics/lockbox/util/array.lua",
+   "bytes": 3193,
+   "lines": 213
+  },
+  {
+   "path": "src/ServerScriptService/GameAnalytics/lockbox/util/base64.lua",
+   "bytes": 3644,
+   "lines": 160
+  },
+  {
+   "path": "src/ServerScriptService/GameAnalytics/lockbox/util/bit.lua",
+   "bytes": 325,
+   "lines": 18
+  },
+  {
+   "path": "src/ServerScriptService/GameAnalytics/lockbox/util/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/ServerScriptService/GameAnalytics/lockbox/util/queue.lua",
+   "bytes": 660,
+   "lines": 48
+  },
+  {
+   "path": "src/ServerScriptService/GameAnalytics/lockbox/util/stream.lua",
+   "bytes": 1642,
+   "lines": 106
+  },
+  {
+   "path": "src/ServerScriptService/InventoryPersistance/init.server.lua",
+   "bytes": 17048,
+   "lines": 579
+  },
+  {
+   "path": "src/ServerScriptService/InventoryPersistance/Shutdown/init.meta.json",
+   "bytes": 67,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerScriptService/InventoryPersistance/Shutdown/LocalScript.client.lua",
+   "bytes": 211,
+   "lines": 10
+  },
+  {
+   "path": "src/ServerScriptService/IslandManager.server.lua",
+   "bytes": 9669,
+   "lines": 300
+  },
+  {
+   "path": "src/ServerScriptService/LeaderboardStats.server.lua",
+   "bytes": 323,
+   "lines": 7
+  },
+  {
+   "path": "src/ServerScriptService/Main/ChatSystem.server.lua",
+   "bytes": 1931,
+   "lines": 63
+  },
+  {
+   "path": "src/ServerScriptService/Main/DedicatedCharacterHandler/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/ServerScriptService/Main/DedicatedCharacterHandler/init.server.lua",
+   "bytes": 4731,
+   "lines": 158
+  },
+  {
+   "path": "src/ServerScriptService/Main/DedicatedCharacterHandler/SplashScreen/init.meta.json",
+   "bytes": 67,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerScriptService/Main/DedicatedCharacterHandler/SplashScreen/LocalScript.client.lua",
+   "bytes": 842,
+   "lines": 29
+  },
+  {
+   "path": "src/ServerScriptService/Main/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/ServerScriptService/Main/init.server.lua",
+   "bytes": 37907,
+   "lines": 1380
+  },
+  {
+   "path": "src/ServerScriptService/Main/ItemLoader.server.lua",
+   "bytes": 2189,
+   "lines": 87
+  },
+  {
+   "path": "src/ServerScriptService/Main/LinkedLeaderboard.server.lua",
+   "bytes": 1608,
+   "lines": 67
+  },
+  {
+   "path": "src/ServerScriptService/Main/MapLoader.server.lua",
+   "bytes": 0,
+   "lines": 1
+  },
+  {
+   "path": "src/ServerScriptService/Main/MPSCalc.server.lua",
+   "bytes": 1640,
+   "lines": 76
+  },
+  {
+   "path": "src/ServerScriptService/Main/MysteryBox.server.lua",
+   "bytes": 6916,
+   "lines": 235
+  },
+  {
+   "path": "src/ServerScriptService/Main/PlayerPoints.server.lua",
+   "bytes": 1827,
+   "lines": 58
+  },
+  {
+   "path": "src/ServerScriptService/Main/RealisticTimeOfDay.server.lua",
+   "bytes": 4915,
+   "lines": 155
+  },
+  {
+   "path": "src/ServerScriptService/Main/RebirthHandler.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/ServerScriptService/Main/RebirthHandler.server.lua",
+   "bytes": 14483,
+   "lines": 481
+  },
+  {
+   "path": "src/ServerScriptService/Main/RemoveHats.server.lua",
+   "bytes": 613,
+   "lines": 23
+  },
+  {
+   "path": "src/ServerScriptService/Main/SelectionBoxHandler.server.lua",
+   "bytes": 525,
+   "lines": 16
+  },
+  {
+   "path": "src/ServerScriptService/Main/Shouter.server.lua",
+   "bytes": 2485,
+   "lines": 86
+  },
+  {
+   "path": "src/ServerScriptService/Main/TwitterCode.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/ServerScriptService/Main/TwitterCode.server.lua",
+   "bytes": 14859,
+   "lines": 469
+  },
+  {
+   "path": "src/ServerScriptService/Multiplayer.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/ServerScriptService/Multiplayer.server.lua",
+   "bytes": 7733,
+   "lines": 242
+  },
+  {
+   "path": "src/ServerScriptService/PlayerDataGuardian/DataLib.lua",
+   "bytes": 6479,
+   "lines": 245
+  },
+  {
+   "path": "src/ServerScriptService/PlayerDataGuardian/FastVals.lua",
+   "bytes": 1161,
+   "lines": 88
+  },
+  {
+   "path": "src/ServerScriptService/PlayerDataGuardian/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/ServerScriptService/PlayerDataGuardian/init.server.lua",
+   "bytes": 43531,
+   "lines": 1346
+  },
+  {
+   "path": "src/ServerScriptService/PlayerDataGuardian/ModuleScript.lua",
+   "bytes": 1357,
+   "lines": 50
+  },
+  {
+   "path": "src/ServerScriptService/PlayerDataGuardian/Shutdown/init.meta.json",
+   "bytes": 67,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerScriptService/PlayerDataGuardian/Shutdown/LocalScript.client.lua",
+   "bytes": 211,
+   "lines": 10
+  },
+  {
+   "path": "src/ServerScriptService/RadioControl.server.lua",
+   "bytes": 5751,
+   "lines": 172
+  },
+  {
+   "path": "src/ServerScriptService/Sacrifice.server.lua",
+   "bytes": 8514,
+   "lines": 292
+  },
+  {
+   "path": "src/ServerScriptService/Saving.lua",
+   "bytes": 2627,
+   "lines": 94
+  },
+  {
+   "path": "src/ServerScriptService/TutorialStepListener.server.lua",
+   "bytes": 2796,
+   "lines": 103
+  },
+  {
+   "path": "src/ServerScriptService/VirtualStore/init.server.lua",
+   "bytes": 24697,
+   "lines": 584
+  },
+  {
+   "path": "src/ServerScriptService/VirtualStore/PerkHandler.server.lua",
+   "bytes": 5847,
+   "lines": 164
+  },
+  {
+   "path": "src/ServerScriptService/Whitelist.server.lua",
+   "bytes": 2403,
+   "lines": 67
+  },
+  {
+   "path": "src/ServerStorage/CrateItems.lua",
+   "bytes": 824,
+   "lines": 42
+  },
+  {
+   "path": "src/ServerStorage/CrystalCrate/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/CrystalCrate/ResearchCrateScript.server.lua",
+   "bytes": 2450,
+   "lines": 86
+  },
+  {
+   "path": "src/ServerStorage/DarkCrate/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/DarkCrate/ResearchCrateScript.server.lua",
+   "bytes": 1542,
+   "lines": 48
+  },
+  {
+   "path": "src/ServerStorage/DiamondCrate/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/DiamondCrate/ResearchCrateScript.server.lua",
+   "bytes": 4745,
+   "lines": 115
+  },
+  {
+   "path": "src/ServerStorage/ExecutiveCrate/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/ExecutiveCrate/ResearchCrateScript.server.lua",
+   "bytes": 4294,
+   "lines": 102
+  },
+  {
+   "path": "src/ServerStorage/Fake Crate/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/Fake Crate/LocalScript.client.lua",
+   "bytes": 469,
+   "lines": 12
+  },
+  {
+   "path": "src/ServerStorage/FartCrate/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/FartCrate/ResearchCrateScript.server.lua",
+   "bytes": 768,
+   "lines": 23
+  },
+  {
+   "path": "src/ServerStorage/Fire Mine/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/Fire Mine/Item.server.lua",
+   "bytes": 254,
+   "lines": 8
+  },
+  {
+   "path": "src/ServerStorage/GiantCrate/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/GiantCrate/ResearchCrateScript.server.lua",
+   "bytes": 3131,
+   "lines": 72
+  },
+  {
+   "path": "src/ServerStorage/Gift/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/Gift/ResearchCrateScript.server.lua",
+   "bytes": 1689,
+   "lines": 45
+  },
+  {
+   "path": "src/ServerStorage/GiftCrate/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/GiftCrate/ResearchCrateScript.server.lua",
+   "bytes": 2284,
+   "lines": 65
+  },
+  {
+   "path": "src/ServerStorage/GoldenCrate/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/GoldenCrate/ResearchCrateScript.server.lua",
+   "bytes": 3602,
+   "lines": 97
+  },
+  {
+   "path": "src/ServerStorage/Ice Mine/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/Ice Mine/Item.server.lua",
+   "bytes": 254,
+   "lines": 8
+  },
+  {
+   "path": "src/ServerStorage/InnovationRobotDog/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/InnovationRobotDog/Script.server.lua",
+   "bytes": 1074,
+   "lines": 45
+  },
+  {
+   "path": "src/ServerStorage/Lightning Mine/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/Lightning Mine/Item.server.lua",
+   "bytes": 254,
+   "lines": 8
+  },
+  {
+   "path": "src/ServerStorage/Locard's Module Dump/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/ServerStorage/LuckyCrate/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/LuckyCrate/ResearchCrateScript.server.lua",
+   "bytes": 2804,
+   "lines": 81
+  },
+  {
+   "path": "src/ServerStorage/MarketItems/init.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/ServerStorage/MarketItems/Luxury Box/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/MarketItems/Luxury Box/Special.lua",
+   "bytes": 309,
+   "lines": 6
+  },
+  {
+   "path": "src/ServerStorage/MarketItems/Spectral Box/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/MarketItems/Spectral Box/Special.lua",
+   "bytes": 315,
+   "lines": 6
+  },
+  {
+   "path": "src/ServerStorage/MarketOld/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/MarketOld/MarketScript.server.lua",
+   "bytes": 4777,
+   "lines": 143
+  },
+  {
+   "path": "src/ServerStorage/MegaPumpkin/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/MegaPumpkin/ResearchCrateScript.server.lua",
+   "bytes": 1951,
+   "lines": 45
+  },
+  {
+   "path": "src/ServerStorage/ResearchCrate/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/ResearchCrate/ResearchCrateScript.server.lua",
+   "bytes": 2671,
+   "lines": 78
+  },
+  {
+   "path": "src/ServerStorage/ShadowCrate/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/ShadowCrate/ResearchCrateScript.server.lua",
+   "bytes": 1642,
+   "lines": 47
+  },
+  {
+   "path": "src/ServerStorage/Trial/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/ServerStorage/Trial/TrialScript.server.lua",
+   "bytes": 1080,
+   "lines": 32
+  },
+  {
+   "path": "src/StarterGui/GUI/Ambiance.lua",
+   "bytes": 1074,
+   "lines": 56
+  },
+  {
+   "path": "src/StarterGui/GUI/ArrowHandler.lua",
+   "bytes": 2021,
+   "lines": 86
+  },
+  {
+   "path": "src/StarterGui/GUI/ArrowHandler.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/StarterGui/GUI/BadgePopup/BadgePopup.lua",
+   "bytes": 1475,
+   "lines": 53
+  },
+  {
+   "path": "src/StarterGui/GUI/BadgePopup/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Badges/Badges.lua",
+   "bytes": 3070,
+   "lines": 103
+  },
+  {
+   "path": "src/StarterGui/GUI/Badges/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/BadgeScaling/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/BadgeScaling/ModuleScript.lua",
+   "bytes": 763,
+   "lines": 27
+  },
+  {
+   "path": "src/StarterGui/GUI/Boxes/BoxesNew.lua",
+   "bytes": 14423,
+   "lines": 493
+  },
+  {
+   "path": "src/StarterGui/GUI/Boxes/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Craftsman/Craftsman.lua",
+   "bytes": 5473,
+   "lines": 169
+  },
+  {
+   "path": "src/StarterGui/GUI/Craftsman/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Currency.lua",
+   "bytes": 2321,
+   "lines": 98
+  },
+  {
+   "path": "src/StarterGui/GUI/DailyGift/DailyGift.lua",
+   "bytes": 6782,
+   "lines": 219
+  },
+  {
+   "path": "src/StarterGui/GUI/DailyGift/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/EventMenu/EventMenu.lua",
+   "bytes": 2818,
+   "lines": 93
+  },
+  {
+   "path": "src/StarterGui/GUI/EventMenu/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/EventShop/EventScript.lua",
+   "bytes": 9576,
+   "lines": 323
+  },
+  {
+   "path": "src/StarterGui/GUI/EventShop/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Focus.lua",
+   "bytes": 5062,
+   "lines": 205
+  },
+  {
+   "path": "src/StarterGui/GUI/HUD.lua",
+   "bytes": 12628,
+   "lines": 402
+  },
+  {
+   "path": "src/StarterGui/GUI/HUDAway/Currency/AwayHUDCurrency.lua",
+   "bytes": 777,
+   "lines": 35
+  },
+  {
+   "path": "src/StarterGui/GUI/HUDAway/Currency/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/HUDAway/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/HUDBottom/HUDBottom.lua",
+   "bytes": 236,
+   "lines": 11
+  },
+  {
+   "path": "src/StarterGui/GUI/HUDBottom/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/HUDLeft/Buttons/Buttons.lua",
+   "bytes": 4517,
+   "lines": 173
+  },
+  {
+   "path": "src/StarterGui/GUI/HUDLeft/Buttons/Buttons.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/StarterGui/GUI/HUDLeft/Buttons/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/HUDLeft/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/HUDRight/HUDRight.lua",
+   "bytes": 1936,
+   "lines": 76
+  },
+  {
+   "path": "src/StarterGui/GUI/HUDRight/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/init.meta.json",
+   "bytes": 67,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Input.lua",
+   "bytes": 13574,
+   "lines": 482
+  },
+  {
+   "path": "src/StarterGui/GUI/Input.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/StarterGui/GUI/InputPrompt/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/InputPrompt/InputPrompt/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/InputPrompt/InputPrompt/InputPrompt.lua",
+   "bytes": 3953,
+   "lines": 162
+  },
+  {
+   "path": "src/StarterGui/GUI/Inventory/Frame/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Inventory/Frame/Inventory.lua",
+   "bytes": 16777,
+   "lines": 605
+  },
+  {
+   "path": "src/StarterGui/GUI/Inventory/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/ItemInfo/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/ItemInfo/ItemInfo.lua",
+   "bytes": 9027,
+   "lines": 269
+  },
+  {
+   "path": "src/StarterGui/GUI/ItemPreview/Frame/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/ItemPreview/Frame/Preview.lua",
+   "bytes": 7593,
+   "lines": 275
+  },
+  {
+   "path": "src/StarterGui/GUI/ItemPreview/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Layouts/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Layouts/Layouts.lua",
+   "bytes": 10932,
+   "lines": 363
+  },
+  {
+   "path": "src/StarterGui/GUI/Layouts/Layouts.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/StarterGui/GUI/LocalGod.client.lua",
+   "bytes": 3196,
+   "lines": 117
+  },
+  {
+   "path": "src/StarterGui/GUI/Menu/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Menu/Menu.lua",
+   "bytes": 8517,
+   "lines": 252
+  },
+  {
+   "path": "src/StarterGui/GUI/Menu/Menu.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/StarterGui/GUI/MOTD/Body/Gamepasses/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/MOTD/Body/Gamepasses/MOTDPasses.lua",
+   "bytes": 575,
+   "lines": 22
+  },
+  {
+   "path": "src/StarterGui/GUI/MOTD/Body/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/MOTD/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/MOTD/MOTDModule.lua",
+   "bytes": 3975,
+   "lines": 154
+  },
+  {
+   "path": "src/StarterGui/GUI/NewPlayer/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/NewPlayer/NewPlayer.lua",
+   "bytes": 1608,
+   "lines": 59
+  },
+  {
+   "path": "src/StarterGui/GUI/NoticePrompt/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/NoticePrompt/InputPrompt/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/NoticePrompt/InputPrompt/NoticePrompt.lua",
+   "bytes": 3050,
+   "lines": 125
+  },
+  {
+   "path": "src/StarterGui/GUI/Notifications/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Notifications/Notify.lua",
+   "bytes": 5153,
+   "lines": 174
+  },
+  {
+   "path": "src/StarterGui/GUI/Placement.lua",
+   "bytes": 51064,
+   "lines": 1856
+  },
+  {
+   "path": "src/StarterGui/GUI/Placement.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/StarterGui/GUI/Premium/Contents/Goodies/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Premium/Contents/Goodies/ShoutColor/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Premium/Contents/Goodies/ShoutColor/Owned/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Premium/Contents/Goodies/ShoutColor/Owned/ShoutColor.lua",
+   "bytes": 1323,
+   "lines": 30
+  },
+  {
+   "path": "src/StarterGui/GUI/Premium/Contents/init.meta.json",
+   "bytes": 72,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Premium/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Premium/Premium.lua",
+   "bytes": 8205,
+   "lines": 251
+  },
+  {
+   "path": "src/StarterGui/GUI/PremiumAd/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/PremiumAd/PremiumAd.lua",
+   "bytes": 555,
+   "lines": 23
+  },
+  {
+   "path": "src/StarterGui/GUI/Settings/Contents/init.meta.json",
+   "bytes": 72,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Settings/Contents/Multiplayer/Contents/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Settings/Contents/Multiplayer/Contents/MultiplayerSettings.lua",
+   "bytes": 3168,
+   "lines": 123
+  },
+  {
+   "path": "src/StarterGui/GUI/Settings/Contents/Multiplayer/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Settings/Contents/Settings.lua",
+   "bytes": 13186,
+   "lines": 353
+  },
+  {
+   "path": "src/StarterGui/GUI/Settings/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Shop/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Shop/Shop.lua",
+   "bytes": 26653,
+   "lines": 868
+  },
+  {
+   "path": "src/StarterGui/GUI/Sizing.lua",
+   "bytes": 2112,
+   "lines": 67
+  },
+  {
+   "path": "src/StarterGui/GUI/Splash/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Splash/Splash.lua",
+   "bytes": 1058,
+   "lines": 39
+  },
+  {
+   "path": "src/StarterGui/GUI/TeleportPrompt/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/TeleportPrompt/TeleportPrompt.lua",
+   "bytes": 709,
+   "lines": 30
+  },
+  {
+   "path": "src/StarterGui/GUI/TemplateWindow/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/TemplateWindow/Template.lua",
+   "bytes": 2861,
+   "lines": 77
+  },
+  {
+   "path": "src/StarterGui/GUI/Translate.lua",
+   "bytes": 861,
+   "lines": 37
+  },
+  {
+   "path": "src/StarterGui/GUI/Tutorial/init.meta.json",
+   "bytes": 68,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/Tutorial/tutorialFrame.lua",
+   "bytes": 6175,
+   "lines": 251
+  },
+  {
+   "path": "src/StarterGui/GUI/Tutorial.lua",
+   "bytes": 51858,
+   "lines": 1693
+  },
+  {
+   "path": "src/StarterGui/GUI/Tutorial.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/StarterGui/GUI/Tycoon.lua",
+   "bytes": 5810,
+   "lines": 196
+  },
+  {
+   "path": "src/StarterGui/GUI/XboxChat.lua",
+   "bytes": 3749,
+   "lines": 128
+  },
+  {
+   "path": "src/StarterGui/GUI/XboxMessage/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/GUI/XboxMessage/XboxMessage.lua",
+   "bytes": 978,
+   "lines": 36
+  },
+  {
+   "path": "src/StarterGui/LoadGui/Contents/Ambiance.lua",
+   "bytes": 1034,
+   "lines": 56
+  },
+  {
+   "path": "src/StarterGui/LoadGui/Contents/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/LoadGui/init.meta.json",
+   "bytes": 67,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterGui/LoadGui/LoadGuiScript.lua",
+   "bytes": 19291,
+   "lines": 579
+  },
+  {
+   "path": "src/StarterGui/LoadGui/LocalScript.client.lua",
+   "bytes": 235,
+   "lines": 8
+  },
+  {
+   "path": "src/StarterPack/Flashlight/init.meta.json",
+   "bytes": 62,
+   "lines": 4
+  },
+  {
+   "path": "src/StarterPack/Flashlight/Script.server.lua",
+   "bytes": 878,
+   "lines": 46
+  },
+  {
+   "path": "src/StarterPlayer/StarterCharacterScripts/CameraReset.client.lua",
+   "bytes": 420,
+   "lines": 11
+  },
+  {
+   "path": "src/StarterPlayer/StarterCharacterScripts/CoolStuff.client.lua",
+   "bytes": 1735,
+   "lines": 67
+  },
+  {
+   "path": "src/StarterPlayer/StarterCharacterScripts/CoolStuff.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/Ambiance.lua",
+   "bytes": 4066,
+   "lines": 193
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/Ambiance.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/LocalScript.client.lua",
+   "bytes": 3028,
+   "lines": 112
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/LocalScript.meta.json",
+   "bytes": 38,
+   "lines": 3
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/Physics.client.lua",
+   "bytes": 5462,
+   "lines": 218
+  },
+  {
+   "path": "src/StarterPlayer/StarterPlayerScripts/RebuildGui.client.lua",
+   "bytes": 252,
+   "lines": 7
+  },
+  {
+   "path": "src/Workspace/Innovator/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Innovator/Innovator.server.lua",
+   "bytes": 1219,
+   "lines": 42
+  },
+  {
+   "path": "src/Workspace/Market/init.meta.json",
+   "bytes": 63,
+   "lines": 4
+  },
+  {
+   "path": "src/Workspace/Market/MarketScript.server.lua",
+   "bytes": 6225,
+   "lines": 186
+  }
+ ]
+}

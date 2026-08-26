@@ -1,0 +1,631 @@
+{
+ "$comment": "Unmodified source copied from a licensed project, kept whole so the relationships between modules survive. Generalising anything here into a Forge family is a separate step; nothing in this folder has been reviewed, adapted, or cleared for shipping as-is.",
+ "kit": "robloquake",
+ "source": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\robloquake",
+ "files": 124,
+ "lines": 46119,
+ "skipped": 54,
+ "takenAt": "2026-08-26T21:25:44+00:00",
+ "manifest": [
+  {
+   "path": "assets.project.json",
+   "bytes": 179,
+   "lines": 12
+  },
+  {
+   "path": "default.project.json",
+   "bytes": 1400,
+   "lines": 66
+  },
+  {
+   "path": "manifest.json",
+   "bytes": 66065,
+   "lines": 1
+  },
+  {
+   "path": "rokit.toml",
+   "bytes": 336,
+   "lines": 10
+  },
+  {
+   "path": "src/client/console.luau",
+   "bytes": 10977,
+   "lines": 342
+  },
+  {
+   "path": "src/client/controls.luau",
+   "bytes": 18096,
+   "lines": 520
+  },
+  {
+   "path": "src/client/directorui.luau",
+   "bytes": 26630,
+   "lines": 795
+  },
+  {
+   "path": "src/client/hud.luau",
+   "bytes": 52119,
+   "lines": 1497
+  },
+  {
+   "path": "src/client/init.client.luau",
+   "bytes": 95542,
+   "lines": 2714
+  },
+  {
+   "path": "src/client/input.luau",
+   "bytes": 8605,
+   "lines": 291
+  },
+  {
+   "path": "src/client/joincard.luau",
+   "bytes": 7292,
+   "lines": 219
+  },
+  {
+   "path": "src/client/keymap.luau",
+   "bytes": 2075,
+   "lines": 72
+  },
+  {
+   "path": "src/client/leaderboardui.luau",
+   "bytes": 2841,
+   "lines": 80
+  },
+  {
+   "path": "src/client/menu.luau",
+   "bytes": 17401,
+   "lines": 552
+  },
+  {
+   "path": "src/client/menukit.luau",
+   "bytes": 6509,
+   "lines": 182
+  },
+  {
+   "path": "src/client/pausemenu.luau",
+   "bytes": 89305,
+   "lines": 2364
+  },
+  {
+   "path": "src/client/prefs.luau",
+   "bytes": 5313,
+   "lines": 178
+  },
+  {
+   "path": "src/client/qwclient.luau",
+   "bytes": 97335,
+   "lines": 2655
+  },
+  {
+   "path": "src/client/render/avatarface.luau",
+   "bytes": 11530,
+   "lines": 338
+  },
+  {
+   "path": "src/client/render/avatarlayer.luau",
+   "bytes": 19838,
+   "lines": 569
+  },
+  {
+   "path": "src/client/render/avatarrender.luau",
+   "bytes": 21863,
+   "lines": 601
+  },
+  {
+   "path": "src/client/render/confont.luau",
+   "bytes": 3736,
+   "lines": 129
+  },
+  {
+   "path": "src/client/render/entrender.luau",
+   "bytes": 22913,
+   "lines": 669
+  },
+  {
+   "path": "src/client/render/lightatlas.luau",
+   "bytes": 13296,
+   "lines": 436
+  },
+  {
+   "path": "src/client/render/mildmode.luau",
+   "bytes": 5984,
+   "lines": 146
+  },
+  {
+   "path": "src/client/render/particles.luau",
+   "bytes": 5402,
+   "lines": 172
+  },
+  {
+   "path": "src/client/render/particlesim.luau",
+   "bytes": 19234,
+   "lines": 530
+  },
+  {
+   "path": "src/client/render/skinforge.luau",
+   "bytes": 27425,
+   "lines": 716
+  },
+  {
+   "path": "src/client/render/teamcolors.luau",
+   "bytes": 2003,
+   "lines": 52
+  },
+  {
+   "path": "src/client/render/textures.luau",
+   "bytes": 13710,
+   "lines": 387
+  },
+  {
+   "path": "src/client/render/tris.luau",
+   "bytes": 1704,
+   "lines": 63
+  },
+  {
+   "path": "src/client/render/viewmodel.luau",
+   "bytes": 2732,
+   "lines": 72
+  },
+  {
+   "path": "src/client/render/worldmesh.luau",
+   "bytes": 24071,
+   "lines": 690
+  },
+  {
+   "path": "src/client/shopclient.luau",
+   "bytes": 4134,
+   "lines": 126
+  },
+  {
+   "path": "src/client/sound.luau",
+   "bytes": 11753,
+   "lines": 367
+  },
+  {
+   "path": "src/client/tweaksui.luau",
+   "bytes": 12944,
+   "lines": 379
+  },
+  {
+   "path": "src/loadingscreen/init.client.luau",
+   "bytes": 6289,
+   "lines": 139
+  },
+  {
+   "path": "src/server/assetchunks.luau",
+   "bytes": 1132,
+   "lines": 42
+  },
+  {
+   "path": "src/server/avatarrigs.luau",
+   "bytes": 8229,
+   "lines": 189
+  },
+  {
+   "path": "src/server/clientbundle.luau",
+   "bytes": 4364,
+   "lines": 141
+  },
+  {
+   "path": "src/server/director.luau",
+   "bytes": 20479,
+   "lines": 629
+  },
+  {
+   "path": "src/server/globaladmins.luau",
+   "bytes": 603,
+   "lines": 17
+  },
+  {
+   "path": "src/server/hostgreeting.luau",
+   "bytes": 1610,
+   "lines": 42
+  },
+  {
+   "path": "src/server/init.server.luau",
+   "bytes": 29262,
+   "lines": 799
+  },
+  {
+   "path": "src/server/loadout.luau",
+   "bytes": 2318,
+   "lines": 61
+  },
+  {
+   "path": "src/server/modeconfig.luau",
+   "bytes": 234,
+   "lines": 6
+  },
+  {
+   "path": "src/server/modepresets.luau",
+   "bytes": 10730,
+   "lines": 293
+  },
+  {
+   "path": "src/server/onboarding.luau",
+   "bytes": 10166,
+   "lines": 319
+  },
+  {
+   "path": "src/server/prefstore.luau",
+   "bytes": 7982,
+   "lines": 258
+  },
+  {
+   "path": "src/server/qwserver.luau",
+   "bytes": 23984,
+   "lines": 623
+  },
+  {
+   "path": "src/server/shop.luau",
+   "bytes": 4970,
+   "lines": 119
+  },
+  {
+   "path": "src/server/stats.luau",
+   "bytes": 4832,
+   "lines": 155
+  },
+  {
+   "path": "src/server/statscore.luau",
+   "bytes": 11177,
+   "lines": 357
+  },
+  {
+   "path": "src/server/statstore.luau",
+   "bytes": 24919,
+   "lines": 758
+  },
+  {
+   "path": "src/shared/engine/bsp/bsp.luau",
+   "bytes": 23340,
+   "lines": 827
+  },
+  {
+   "path": "src/shared/engine/client/cl.luau",
+   "bytes": 26070,
+   "lines": 886
+  },
+  {
+   "path": "src/shared/engine/client/lightpoint.luau",
+   "bytes": 3247,
+   "lines": 114
+  },
+  {
+   "path": "src/shared/engine/client/qcoords.luau",
+   "bytes": 3473,
+   "lines": 83
+  },
+  {
+   "path": "src/shared/engine/client/view.luau",
+   "bytes": 14284,
+   "lines": 437
+  },
+  {
+   "path": "src/shared/engine/common/base64.luau",
+   "bytes": 3464,
+   "lines": 111
+  },
+  {
+   "path": "src/shared/engine/common/bufio.luau",
+   "bytes": 3149,
+   "lines": 130
+  },
+  {
+   "path": "src/shared/engine/common/com.luau",
+   "bytes": 3749,
+   "lines": 149
+  },
+  {
+   "path": "src/shared/engine/common/cvar.luau",
+   "bytes": 2725,
+   "lines": 113
+  },
+  {
+   "path": "src/shared/engine/common/mathlib.luau",
+   "bytes": 4165,
+   "lines": 127
+  },
+  {
+   "path": "src/shared/engine/common/msg.luau",
+   "bytes": 6133,
+   "lines": 225
+  },
+  {
+   "path": "src/shared/engine/common/pak.luau",
+   "bytes": 1926,
+   "lines": 73
+  },
+  {
+   "path": "src/shared/engine/common/vfs.luau",
+   "bytes": 3966,
+   "lines": 137
+  },
+  {
+   "path": "src/shared/engine/gfx/wad.luau",
+   "bytes": 3369,
+   "lines": 128
+  },
+  {
+   "path": "src/shared/engine/models/mdl.luau",
+   "bytes": 8003,
+   "lines": 290
+  },
+  {
+   "path": "src/shared/engine/models/models.luau",
+   "bytes": 2338,
+   "lines": 106
+  },
+  {
+   "path": "src/shared/engine/models/spr.luau",
+   "bytes": 3124,
+   "lines": 129
+  },
+  {
+   "path": "src/shared/engine/progs/defs.luau",
+   "bytes": 2956,
+   "lines": 155
+  },
+  {
+   "path": "src/shared/engine/progs/prdebug.luau",
+   "bytes": 9494,
+   "lines": 293
+  },
+  {
+   "path": "src/shared/engine/progs/progs.luau",
+   "bytes": 5151,
+   "lines": 174
+  },
+  {
+   "path": "src/shared/engine/progs/vm.luau",
+   "bytes": 29656,
+   "lines": 920
+  },
+  {
+   "path": "src/shared/engine/protocol.luau",
+   "bytes": 2912,
+   "lines": 115
+  },
+  {
+   "path": "src/shared/engine/quakedef.luau",
+   "bytes": 2899,
+   "lines": 106
+  },
+  {
+   "path": "src/shared/engine/qw/pmove.luau",
+   "bytes": 25324,
+   "lines": 989
+  },
+  {
+   "path": "src/shared/engine/qw/qwbuiltins.luau",
+   "bytes": 28989,
+   "lines": 918
+  },
+  {
+   "path": "src/shared/engine/qw/qwcl.luau",
+   "bytes": 55276,
+   "lines": 1653
+  },
+  {
+   "path": "src/shared/engine/qw/qwdefs.luau",
+   "bytes": 3902,
+   "lines": 111
+  },
+  {
+   "path": "src/shared/engine/qw/qwents.luau",
+   "bytes": 11779,
+   "lines": 411
+  },
+  {
+   "path": "src/shared/engine/qw/qwnetchan.luau",
+   "bytes": 6047,
+   "lines": 136
+  },
+  {
+   "path": "src/shared/engine/qw/qwphys.luau",
+   "bytes": 30821,
+   "lines": 977
+  },
+  {
+   "path": "src/shared/engine/qw/qwplerp.luau",
+   "bytes": 9612,
+   "lines": 232
+  },
+  {
+   "path": "src/shared/engine/qw/qwprotocol.luau",
+   "bytes": 3268,
+   "lines": 154
+  },
+  {
+   "path": "src/shared/engine/qw/qwsv.luau",
+   "bytes": 84538,
+   "lines": 2526
+  },
+  {
+   "path": "src/shared/engine/qw/qwview.luau",
+   "bytes": 10529,
+   "lines": 333
+  },
+  {
+   "path": "src/shared/engine/qw/qwworld.luau",
+   "bytes": 21613,
+   "lines": 792
+  },
+  {
+   "path": "src/shared/engine/server/host.luau",
+   "bytes": 28722,
+   "lines": 899
+  },
+  {
+   "path": "src/shared/engine/server/pr_cmds.luau",
+   "bytes": 25245,
+   "lines": 825
+  },
+  {
+   "path": "src/shared/engine/server/savegame.luau",
+   "bytes": 6945,
+   "lines": 239
+  },
+  {
+   "path": "src/shared/engine/server/sv.luau",
+   "bytes": 28042,
+   "lines": 945
+  },
+  {
+   "path": "src/shared/engine/server/sv_move.luau",
+   "bytes": 12438,
+   "lines": 415
+  },
+  {
+   "path": "src/shared/engine/server/sv_phys.luau",
+   "bytes": 28500,
+   "lines": 919
+  },
+  {
+   "path": "src/shared/engine/server/sv_user.luau",
+   "bytes": 11727,
+   "lines": 376
+  },
+  {
+   "path": "src/shared/engine/server/world.luau",
+   "bytes": 21841,
+   "lines": 804
+  },
+  {
+   "path": "src/shared/init.luau",
+   "bytes": 92,
+   "lines": 5
+  },
+  {
+   "path": "src/shared/netsplit.luau",
+   "bytes": 3724,
+   "lines": 106
+  },
+  {
+   "path": "src/shared/shopcatalog.luau",
+   "bytes": 5632,
+   "lines": 156
+  },
+  {
+   "path": "tools/bench_audit.luau",
+   "bytes": 3047,
+   "lines": 98
+  },
+  {
+   "path": "tools/build_title_glyphs.luau",
+   "bytes": 2616,
+   "lines": 78
+  },
+  {
+   "path": "tools/debug/ambcheck.luau",
+   "bytes": 1123,
+   "lines": 33
+  },
+  {
+   "path": "tools/debug/census.luau",
+   "bytes": 951,
+   "lines": 37
+  },
+  {
+   "path": "tools/debug/doortest.luau",
+   "bytes": 2680,
+   "lines": 68
+  },
+  {
+   "path": "tools/debug/entcount.luau",
+   "bytes": 1933,
+   "lines": 63
+  },
+  {
+   "path": "tools/debug/fullversion.luau",
+   "bytes": 1207,
+   "lines": 28
+  },
+  {
+   "path": "tools/debug/lavafind.luau",
+   "bytes": 886,
+   "lines": 26
+  },
+  {
+   "path": "tools/debug/librequake.luau",
+   "bytes": 2820,
+   "lines": 82
+  },
+  {
+   "path": "tools/debug/qwdefs_probe.luau",
+   "bytes": 758,
+   "lines": 18
+  },
+  {
+   "path": "tools/debug/qwdiag.luau",
+   "bytes": 1198,
+   "lines": 22
+  },
+  {
+   "path": "tools/debug/qwprogs_probe.luau",
+   "bytes": 1196,
+   "lines": 26
+  },
+  {
+   "path": "tools/debug/qwspawn_probe.luau",
+   "bytes": 1366,
+   "lines": 32
+  },
+  {
+   "path": "tools/debug/rockettest.luau",
+   "bytes": 3214,
+   "lines": 100
+  },
+  {
+   "path": "tools/debug/winding.luau",
+   "bytes": 1604,
+   "lines": 46
+  },
+  {
+   "path": "tools/mode.luau",
+   "bytes": 7420,
+   "lines": 191
+  },
+  {
+   "path": "tools/soundbank_assets.json",
+   "bytes": 360,
+   "lines": 5
+  },
+  {
+   "path": "tools/verify_crosshair.luau",
+   "bytes": 3115,
+   "lines": 75
+  },
+  {
+   "path": "tools/verify_editablepool.luau",
+   "bytes": 4153,
+   "lines": 101
+  },
+  {
+   "path": "tools/verify_input_nq.luau",
+   "bytes": 2218,
+   "lines": 54
+  },
+  {
+   "path": "tools/verify_meshbudget.luau",
+   "bytes": 3566,
+   "lines": 78
+  },
+  {
+   "path": "tools/verify_punchangle_qw.luau",
+   "bytes": 1949,
+   "lines": 48
+  },
+  {
+   "path": "tools/verify_stairsmooth_qw.luau",
+   "bytes": 3236,
+   "lines": 68
+  },
+  {
+   "path": "tools/verify_visual_anchor.luau",
+   "bytes": 2580,
+   "lines": 54
+  }
+ ]
+}

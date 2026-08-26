@@ -1,0 +1,119 @@
+--[[
+    UIViewportScale — one fix for the "pixel-designed HUD explodes on small screens" problem.
+
+    The HUD is designed in PIXELS against a desktop canvas (panes, hotbar, player bar, squad
+    strip). On a small viewport (mobile, small Studio window) those pixels don't shrink, so
+    everything collides. Standard remedy: attach a UIScale to each HUD ROOT that tracks
+    viewport ÷ design-baseline, clamped so desktop renders exactly as designed (scale 1) and
+    small screens shrink proportionally. Roots keep their corner AnchorPoints, so scaling pins
+    them in place.
+
+        local UIViewportScale = require(...UI.UIViewportScale)
+        UIViewportScale.attach(rootFrame)            -- defaults: 1280x720 baseline, [0.45, 1]
+        UIViewportScale.attach(rootFrame, { min = 0.6 })
+        UIViewportScale.setMultiplier(rootFrame, 1.8) -- user enlarge; Roblox applies one UIScale
+
+    One camera listener total (all attached scales update together).
+    A second UIScale on the same object is ignored — put user enlarge in `multiplier`.
+]]
+
+local Workspace = game:GetService("Workspace")
+local GuiService = game:GetService("GuiService")
+
+local UIViewportScale = {}
+
+local BASE_X, BASE_Y = 1280, 720 -- design canvas: the HUD reads correctly at/above this
+local DEFAULT_MIN, DEFAULT_MAX = 0.45, 1
+
+local attached = {} -- { { scale = UIScale, min, max } } (weak via instance lifetime)
+
+local function factorFor(entry)
+    local cam = Workspace.CurrentCamera
+    local vp = cam and cam.ViewportSize or Vector2.new(BASE_X, BASE_Y)
+    local f = math.min(vp.X / BASE_X, vp.Y / BASE_Y)
+    local tenFoot = false
+    pcall(function()
+        tenFoot = GuiService:IsTenFootInterface()
+    end)
+    local maxScale = entry.max
+    if tenFoot and not entry.explicitMax then
+        maxScale = 1.15
+    end
+    return math.clamp(f, entry.min, maxScale) * (entry.multiplier or 1)
+end
+
+local function entryFor(guiObject)
+    local scale = guiObject and guiObject:FindFirstChild("ViewportScale")
+    if not (scale and scale:IsA("UIScale")) then
+        return nil
+    end
+    for _, entry in ipairs(attached) do
+        if entry.scale == scale then
+            return entry
+        end
+    end
+    return nil
+end
+
+local function refreshAll()
+    for i = #attached, 1, -1 do
+        local entry = attached[i]
+        if entry.scale.Parent then
+            entry.scale.Scale = factorFor(entry)
+        else
+            table.remove(attached, i)
+        end
+    end
+end
+
+local listening = false
+local function ensureListener()
+    if listening then
+        return
+    end
+    listening = true
+    local function hook(cam)
+        if cam then
+            cam:GetPropertyChangedSignal("ViewportSize"):Connect(refreshAll)
+        end
+    end
+    hook(Workspace.CurrentCamera)
+    Workspace:GetPropertyChangedSignal("CurrentCamera"):Connect(function()
+        hook(Workspace.CurrentCamera)
+        refreshAll()
+    end)
+end
+
+-- Attach (or reuse) a viewport-tracking UIScale on `guiObject`. opts = { min?, max? }.
+function UIViewportScale.attach(guiObject, opts)
+    opts = opts or {}
+    local existing = guiObject:FindFirstChild("ViewportScale")
+    local scale = existing or Instance.new("UIScale")
+    scale.Name = "ViewportScale"
+    scale.Parent = guiObject
+    local entry = {
+        scale = scale,
+        min = tonumber(opts.min) or DEFAULT_MIN,
+        max = tonumber(opts.max) or DEFAULT_MAX,
+        explicitMax = opts.max ~= nil,
+        multiplier = tonumber(opts.multiplier) or 1,
+    }
+    attached[#attached + 1] = entry
+    scale.Scale = factorFor(entry)
+    ensureListener()
+    return scale
+end
+
+-- Extra uniform enlarge on top of the viewport factor. Roblox only honors one
+-- UIScale per object, so a second instance does nothing — this writes the same one.
+function UIViewportScale.setMultiplier(guiObject, multiplier)
+    local entry = entryFor(guiObject)
+    if not entry then
+        return nil
+    end
+    entry.multiplier = math.max(0.05, tonumber(multiplier) or 1)
+    entry.scale.Scale = factorFor(entry)
+    return entry.scale.Scale
+end
+
+return UIViewportScale

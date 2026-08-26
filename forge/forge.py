@@ -425,6 +425,83 @@ def cmd_pack(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_sweep(args: argparse.Namespace) -> int:
+    """Search, fetch and read Creator Store assets across every game topic."""
+    import sys
+
+    sys.path.insert(0, str(REPO_ROOT))
+    from rqe.assets import sweep as sweeper
+
+    kinds = args.kind or None
+    if kinds:
+        unknown = [k for k in kinds if k not in sweeper.TOPICS]
+        if unknown:
+            print(f"unknown kind(s): {', '.join(unknown)}")
+            print(f"known: {', '.join(sweeper.TOPICS)}")
+            return 1
+
+    catalogue = sweeper.run(kinds=kinds, per_topic=args.per_topic,
+                            open_top=args.open_top)
+    stats = catalogue["stats"]
+    print(f"\n{stats['kept']} kept of {stats['searched']} searched "
+          f"({stats['filtered']} filtered on metadata, {stats['opened']} opened, "
+          f"{stats['failed']} could not be fetched) in {stats['seconds']}s")
+    print(f"-> {sweeper.CATALOGUE}")
+    return 0
+
+
+def cmd_catalogue(args: argparse.Namespace) -> int:
+    """Read back what the sweep kept, filtered how you want it."""
+    import collections
+    import sys
+
+    sys.path.insert(0, str(REPO_ROOT))
+    from rqe.assets import sweep as sweeper
+
+    if not sweeper.CATALOGUE.exists():
+        print("no catalogue yet. run: python forge/forge.py sweep")
+        return 1
+
+    catalogue = json.loads(sweeper.CATALOGUE.read_text(encoding="utf-8"))
+    assets = catalogue.get("assets") or []
+
+    if args.kind:
+        assets = [a for a in assets if a["kind"] == args.kind]
+    if args.topic:
+        needle = args.topic.lower()
+        assets = [a for a in assets if needle in a["topic"].lower()]
+    if args.clean:
+        # "ok" only: no unanchored parts, no notes, nothing to read.
+        assets = [a for a in assets if a["verdict"] == "ok"]
+
+    if not assets:
+        print("nothing matches")
+        return 0
+
+    if args.summary:
+        by_kind: collections.Counter = collections.Counter(a["kind"] for a in assets)
+        for kind, count in by_kind.most_common():
+            topics = collections.Counter(
+                a["topic"] for a in assets if a["kind"] == kind)
+            print(f"{kind:12} {count:>4}   " +
+                  "  ".join(f"{t}:{n}" for t, n in topics.most_common(6)))
+        return 0
+
+    assets.sort(key=lambda a: -a["score"])
+    for asset in assets[: args.show]:
+        flags = "".join((
+            "E" if asset["endorsed"] else " ",
+            "V" if asset["verified"] else " ",
+            "!" if asset["verdict"] != "ok" else " ",
+        ))
+        print(f"  {asset['score']:5.2f} {flags} {asset['id']:<14} "
+              f"{asset['name'][:34]:36} {asset['topic'][:16]:18} "
+              f"{asset['parts']:>3}p {asset['triangles']:>6}tri")
+        for note in asset.get("notes", []):
+            print(f"                 ! {note}")
+    return 0
+
+
 # ============================ asset verification ============================
 def cmd_assets(args: argparse.Namespace) -> int:
     """Load every asset id this project references and record the verdict."""
@@ -868,6 +945,25 @@ def main(argv: list[str] | None = None) -> int:
     p_pack.add_argument("--role", default="prop", help="triangle budget to judge it against")
     p_pack.add_argument("--show", type=int, default=20, help="how many props to print")
     p_pack.set_defaults(func=cmd_pack)
+
+    p_sweep = sub.add_parser("sweep", help="search, fetch and read store assets by topic")
+    p_sweep.add_argument("--kind", action="append",
+                         help="limit to one kind (repeatable): shared, tycoon, simulator, "
+                              "shooter, rpg, obby, horror, furniture, vfx")
+    p_sweep.add_argument("--per-topic", type=int, default=20,
+                         help="search results per topic before filtering")
+    p_sweep.add_argument("--open-top", type=int, default=4,
+                         help="how many of each topic's best to actually fetch and read")
+    p_sweep.set_defaults(func=cmd_sweep)
+
+    p_cat = sub.add_parser("catalogue", help="read back what the sweep kept")
+    p_cat.add_argument("topic", nargs="?", help="substring match on the topic")
+    p_cat.add_argument("--kind", help="limit to one game kind")
+    p_cat.add_argument("--clean", action="store_true",
+                       help="only assets with nothing at all to report")
+    p_cat.add_argument("--summary", action="store_true", help="counts per kind and topic")
+    p_cat.add_argument("--show", type=int, default=20)
+    p_cat.set_defaults(func=cmd_catalogue)
 
     p_assets = sub.add_parser("assets", help="verify every asset id by loading it in Studio")
     p_assets.add_argument("step", nargs="?", default="verify", choices=("scan", "verify"))

@@ -560,4 +560,25 @@ function Catalog.describe(): { [string]: any }
 	}
 end
 
-return Catalog
+--[[
+	Siblings, resolved on the first thing that asks for one.
+
+	Matching every other family that holds modules beside its init. Until now
+	`Catalog` had none and did not need this; `StoreAssets` arrived and
+	`Forge.Catalog.StoreAssets` was silently nil -- which is the exact failure
+	this pattern exists elsewhere in the engine to prevent.
+
+	Lazy rather than eager: `StoreAssets` builds its lookup tables at load, and
+	touching the catalogue to read one constant should not pay for that.
+]]
+return setmetatable(Catalog, {
+	__index = function(self, key: string): any
+		local child = script:FindFirstChild(key)
+		if not child or not child:IsA("ModuleScript") then
+			return nil
+		end
+		local module = require(child) :: any
+		rawset(self, key, module)
+		return module
+	end,
+})

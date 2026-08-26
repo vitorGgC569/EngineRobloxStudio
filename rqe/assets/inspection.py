@@ -451,3 +451,27 @@ def catalogue(root_name: str, folder: str = IMPORT_FOLDER) -> dict[str, Any]:
               .replace("@@FOLDER@@", folder)
               .replace("@@ROOT@@", root_name))
     return _call(source)
+
+
+DISCARD_LUA = """
+local ServerStorage = game:GetService("ServerStorage")
+local folder = ServerStorage:FindFirstChild("@@FOLDER@@")
+if not folder then return { removed = 0 } end
+local removed = 0
+for _, child in folder:GetChildren() do
+	child:Destroy()
+	removed += 1
+end
+return { removed = removed }
+"""
+
+
+def discard(folder: str = IMPORT_FOLDER) -> int:
+    """Empty the import folder.
+
+    Not housekeeping -- a budget. Inspecting a few hundred models means loading
+    a few hundred models' worth of mesh and texture into one Studio process, and
+    nothing releases that until the instances go. A sweep that does not discard
+    is a sweep that dies partway through with no catalogue to show for it.
+    """
+    return int(_call(DISCARD_LUA.replace("@@FOLDER@@", folder)).get("removed") or 0)

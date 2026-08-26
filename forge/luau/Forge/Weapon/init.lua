@@ -56,6 +56,20 @@ local Combat = require(script.Parent.Combat)
 
 local Weapon = {}
 
+--[[
+	Three things the trigger logic below does not do on its own.
+
+	`Stance` is how posture scales the cone -- aiming narrows it, sprinting and
+	jumping widen it -- which is what makes movement a decision rather than a
+	free action. `Sway` is the walk bob, strafe lean and idle drift that make a
+	held weapon read as held. `Validate` is for servers accepting a client's
+	claim about where it fired from, and is the only one of the three that a
+	single-player game can ignore.
+]]
+Weapon.Stance = require(script.Stance)
+Weapon.Sway = require(script.Sway)
+Weapon.Validate = require(script.Validate)
+
 local defs: { [string]: any } = {}
 local equipped: { [Model]: any } = {}
 
@@ -340,9 +354,23 @@ function Weapon.spreadDirection(direction: Vector3, degrees: number, seed: numbe
 	return (forward + offset).Unit
 end
 
-function Weapon.currentSpread(owner: Model): number
+--[[
+	The cone right now, in degrees.
+
+	Pass a stance to include posture. Omitting it returns the bloom alone, which
+	is what a HUD wants when the game has no aiming model -- and what every
+	existing caller got before stance existed.
+]]
+function Weapon.currentSpread(owner: Model, stance: any?): number
 	local state = Weapon.state(owner)
-	return state and state.spread or 0
+	if not state then
+		return 0
+	end
+	local cone = state.spread or 0
+	if stance then
+		cone *= Weapon.Stance.multiplier(defs[state.id], stance)
+	end
+	return cone
 end
 
 -- =================================== damage =================================
@@ -383,6 +411,7 @@ end
 	Options:
 	  ignore   instances the shot passes through (the shooter, usually)
 	  seed     supply one to reproduce a shot exactly; omit and one is made
+	  stance   {ads, moving, sprinting, airborne}; widens or narrows this shot
 	  onHit    called per pellet that connects: (model?, position, normal, damage)
 	  onSpawn  projectile mode only, called with each projectile made
 	  filter   projectile mode only, forwarded to Combat
@@ -412,7 +441,14 @@ function Weapon.fire(owner: Model, origin: Vector3, direction: Vector3, options:
 	end
 
 	local seed = opts.seed or math.random(1, 2 ^ 30)
+	--: Posture widens or narrows the cone this shot rolls in. Applied to the
+	--: roll only, never written back to `state.spread`, so bloom and stance
+	--: stay separable -- a player who stops sprinting is instantly accurate
+	--: again, while the bloom they built up still has to recover.
 	local spread = state.spread
+	if opts.stance then
+		spread *= Weapon.Stance.multiplier(def, opts.stance)
+	end
 	local shots = {}
 
 	local params = RaycastParams.new()
@@ -548,6 +584,9 @@ function Weapon.describe(): { [string]: any }
 		context = RunService:IsServer() and "server" or "client",
 		defined = list,
 		equippedCount = held,
+		stance = Weapon.Stance.describe(),
+		sway = Weapon.Sway.describe(),
+		validate = Weapon.Validate.describe(),
 	}
 end
 

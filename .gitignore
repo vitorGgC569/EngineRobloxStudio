@@ -73,3 +73,7 @@ tools/rbx-convert/target/
 # Staging for `forge kit harvest` on a binary source: the XML it converts to on
 # the way in. Reproducible from the licensed project, and large.
 forge/kits/*/.converted/
+
+# Scratch helper for capturing Studio windows during UI investigation.
+# Reproducible and not part of the engine.
+_shot.py

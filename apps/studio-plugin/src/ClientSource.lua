@@ -345,9 +345,41 @@ function COMMANDS.fire_remote(params)
 	if not remote:IsA("RemoteEvent") then
 		error({ code = "E_BAD_PARAMS", message = remote:GetFullName() .. " is not a RemoteEvent" })
 	end
+	--[[
+		An array is a list of arguments; a map is one payload.
+
+		This unpacked every table, and `table.unpack` on a dictionary yields
+		nothing at all -- so `{ machine = "drill" }` arrived at the server as
+		`FireServer()` with no argument, the handler's first guard saw a nil
+		payload, and it returned silently. The bridge reported `fired = true`
+		and the game did nothing.
+
+		That is the shape almost every Roblox game uses: one table of named
+		fields per event. Driving a game's network layer from outside was
+		therefore broken for exactly the common case, and broken without a
+		message.
+
+		A sequence still unpacks, because a caller who writes `args = {a, b, c}`
+		means three arguments. The empty table goes through whole: a handler
+		expecting a payload is better served by an empty one than by nil.
+	]]
 	local args = params.args
 	if type(args) == "table" then
-		remote:FireServer(table.unpack(args))
+		local isSequence = next(args) ~= nil
+		if isSequence then
+			for key in pairs(args) do
+				if type(key) ~= "number" then
+					isSequence = false
+					break
+				end
+			end
+		end
+
+		if isSequence then
+			remote:FireServer(table.unpack(args))
+		else
+			remote:FireServer(args)
+		end
 	elseif args ~= nil then
 		remote:FireServer(args)
 	else

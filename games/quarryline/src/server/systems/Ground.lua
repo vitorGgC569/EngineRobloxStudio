@@ -221,6 +221,167 @@ local function scatterRocks(field: any, container: Instance)
 	return placed
 end
 
+-- ================================ the road ==================================
+--[[
+	A road along the plot row, and lamps down it.
+
+	The plots were six grey slabs sitting on an open plain with nothing between
+	them: no edge, no direction, no reason to walk anywhere rather than anywhere
+	else. A road is the cheapest thing in level design and does the most work --
+	it tells you the row is a row, it tells you which way the site runs, and it
+	gives the eye a line to follow instead of a field to scan.
+
+	Laid on measured ground rather than at a remembered height, for the reason
+	the spawn is: the terrain is a bowl and its floor is not the same Y at both
+	ends of a four-hundred-stud row.
+]]
+local function layRoad(container: Instance)
+	local plots = Config.plots
+	local half, centre = Ground.extent()
+	local span = (plots.count - 1) * plots.spacing + plots.size + 40
+	local z = -plots.size * 1.25
+
+	local segments = math.ceil(span / 24)
+	for index = 0, segments do
+		local x = centre - span * 0.5 + index * (span / segments)
+		local ground = World.surface(x, z)
+		if not ground then
+			continue
+		end
+
+		local slab = Instance.new("Part")
+		slab.Name = "Road"
+		slab.Size = Vector3.new(span / segments + 0.6, 0.4, 14)
+		slab.CFrame = CFrame.new(ground + Vector3.new(0, 0.2, 0))
+		slab.Anchored = true
+		slab.Color = Color3.fromRGB(88, 84, 78)
+		slab.Material = Enum.Material.Asphalt
+		slab.TopSurface = Enum.SurfaceType.Smooth
+		slab.Parent = container
+		Mark.exclude(slab)
+	end
+
+	--[[
+		Lamps, one every other plot.
+
+		Not for light -- the place is lit at half past nine in the morning. For
+		vertical marks along a horizontal row: without something standing up,
+		a quarry floor photographs as a texture.
+	]]
+	for index = 0, plots.count - 1, 2 do
+		local x = plots.origin.X + index * plots.spacing
+		local ground = World.surface(x, z - 9)
+		if not ground then
+			continue
+		end
+
+		local post = Instance.new("Part")
+		post.Name = "LampPost"
+		post.Size = Vector3.new(0.6, 11, 0.6)
+		post.CFrame = CFrame.new(ground + Vector3.new(0, 5.5, 0))
+		post.Anchored = true
+		post.Color = Color3.fromRGB(58, 56, 52)
+		post.Material = Enum.Material.Metal
+		post.Parent = container
+
+		local head = Instance.new("Part")
+		head.Name = "LampHead"
+		head.Size = Vector3.new(1.8, 0.5, 1.2)
+		head.CFrame = CFrame.new(ground + Vector3.new(0, 10.9, 0.5))
+		head.Anchored = true
+		head.CanCollide = false
+		head.Color = Color3.fromRGB(232, 216, 176)
+		head.Material = Enum.Material.Neon
+		head.Parent = container
+
+		Mark.root(post, "prop", "lamp")
+	end
+end
+
+-- ================================= the hub ==================================
+--[[
+	One building, at the head of the row.
+
+	A tycoon needs somewhere that is not a plot: a place the eye rests, that
+	tells you where the site starts, and that gives the row a head and a tail
+	instead of six equivalent rectangles trailing off. It is also the only
+	object in the scene taller than a machine, which is what stops the horizon
+	reading as empty.
+
+	Deliberately not interactive yet. A landmark earns its place by being
+	looked at; wiring a shop into it is a separate decision and a separate
+	system, and building the box first is how the decision gets made against
+	something real.
+]]
+local function buildHub(container: Instance)
+	local plots = Config.plots
+	local x = plots.origin.X - plots.spacing * 0.9
+	local z = -plots.size * 1.9
+	local ground = World.surface(x, z)
+	if not ground then
+		return
+	end
+
+	local base = Instance.new("Part")
+	base.Name = "HubFloor"
+	base.Size = Vector3.new(38, 1, 26)
+	base.CFrame = CFrame.new(ground + Vector3.new(0, 0.5, 0))
+	base.Anchored = true
+	base.Color = Color3.fromRGB(104, 99, 92)
+	base.Material = Enum.Material.Concrete
+	base.Parent = container
+
+	local body = Instance.new("Part")
+	body.Name = "HubBody"
+	body.Size = Vector3.new(30, 13, 18)
+	body.CFrame = CFrame.new(ground + Vector3.new(0, 7.5, 0))
+	body.Anchored = true
+	body.Color = Color3.fromRGB(146, 122, 96)
+	body.Material = Enum.Material.Brick
+	body.Parent = container
+
+	local roof = Instance.new("Part")
+	roof.Name = "HubRoof"
+	roof.Size = Vector3.new(33, 1.2, 21)
+	roof.CFrame = CFrame.new(ground + Vector3.new(0, 14.6, 0))
+	roof.Anchored = true
+	roof.Color = Color3.fromRGB(66, 62, 58)
+	roof.Material = Enum.Material.Metal
+	roof.Parent = container
+
+	--: A lit sign, so the building reads as somewhere rather than something.
+	local sign = Instance.new("Part")
+	sign.Name = "HubSign"
+	sign.Size = Vector3.new(16, 2.6, 0.4)
+	sign.CFrame = CFrame.new(ground + Vector3.new(0, 11.5, -9.2))
+	sign.Anchored = true
+	sign.CanCollide = false
+	sign.Color = Color3.fromRGB(238, 196, 108)
+	sign.Material = Enum.Material.Neon
+	sign.Parent = container
+
+	--[[
+		A silo beside it, for height.
+
+		Nothing on this site is tall, and a horizon with no vertical in it
+		reads as a plain rather than an industrial site. One cylinder does more
+		for the skyline than another twenty boulders.
+	]]
+	local silo = Instance.new("Part")
+	silo.Name = "Silo"
+	silo.Shape = Enum.PartType.Cylinder
+	silo.Size = Vector3.new(26, 11, 11)
+	silo.CFrame = CFrame.new(ground + Vector3.new(24, 13, 2)) * CFrame.Angles(0, 0, math.rad(90))
+	silo.Anchored = true
+	silo.Color = Color3.fromRGB(168, 164, 156)
+	silo.Material = Enum.Material.CorrodedMetal
+	silo.Parent = container
+
+	Mark.landmark(body, "quarry-office")
+	Mark.root(silo, "structure", "silo")
+end
+
+
 -- =================================== start ==================================
 function Ground.start()
 	defineLook()
@@ -236,6 +397,8 @@ function Ground.start()
 
 	local pad = placeSpawn(scenery)
 	local rocks = scatterRocks(field, scenery)
+	layRoad(scenery)
+	buildHub(scenery)
 
 	--[[
 		The floor is a region, and the spawn pad is where the eye starts.

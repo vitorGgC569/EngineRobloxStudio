@@ -1,0 +1,593 @@
+<?xml version='1.0' encoding='utf-8'?>
+<roblox version="4"><Item class="Tool" referent="60694">
+      <Properties>
+        <string name="Name">CommunityPizzaLauncher</string>
+        <bool name="CanBeDropped">true</bool>
+        <bool name="Enabled">true</bool>
+        <CoordinateFrame name="Grip">
+          <X>0</X>
+          <Y>-0.39999998</Y>
+          <Z>0.10000008</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="ManualActivationOnly">false</bool>
+        <bool name="RequiresHandle">true</bool>
+        <BinaryString name="Tags" />
+        <Content name="TextureId">
+          <url>rbxassetid://2900587743</url>
+        </Content>
+        <string name="ToolTip" />
+      </Properties>
+      <Item class="Keyframe" referent="60695">
+        <Properties>
+          <string name="Name">ThumbnailPose</string>
+          <BinaryString name="Tags" />
+          <float name="Time">0</float>
+        </Properties>
+        <Item class="Pose" referent="60696">
+          <Properties>
+            <string name="Name">UpperTorso</string>
+            <CoordinateFrame name="CFrame">
+              <X>0</X>
+              <Y>0</Y>
+              <Z>0</Z>
+              <R00>1</R00>
+              <R01>0</R01>
+              <R02>0</R02>
+              <R10>0</R10>
+              <R11>1</R11>
+              <R12>0</R12>
+              <R20>0</R20>
+              <R21>0</R21>
+              <R22>1</R22>
+            </CoordinateFrame>
+            <token name="EasingDirection">1</token>
+            <token name="EasingStyle">0</token>
+            <BinaryString name="Tags" />
+            <float name="Weight">0</float>
+          </Properties>
+          <Item class="Pose" referent="60697">
+            <Properties>
+              <string name="Name">RightUpperArm</string>
+              <CoordinateFrame name="CFrame">
+                <X>0</X>
+                <Y>-0.000000067055225</Y>
+                <Z>-0.000000059604645</Z>
+                <R00>1</R00>
+                <R01>0</R01>
+                <R02>0</R02>
+                <R10>0</R10>
+                <R11>0.1736482</R11>
+                <R12>-0.9848077</R12>
+                <R20>0</R20>
+                <R21>0.9848077</R21>
+                <R22>0.1736482</R22>
+              </CoordinateFrame>
+              <token name="EasingDirection">1</token>
+              <token name="EasingStyle">0</token>
+              <BinaryString name="Tags" />
+              <float name="Weight">1</float>
+            </Properties>
+            <Item class="Pose" referent="60698">
+              <Properties>
+                <string name="Name">RightLowerArm</string>
+                <CoordinateFrame name="CFrame">
+                  <X>0</X>
+                  <Y>-0.000000014901161</Y>
+                  <Z>0.0000000037252903</Z>
+                  <R00>1</R00>
+                  <R01>0</R01>
+                  <R02>0</R02>
+                  <R10>0</R10>
+                  <R11>0.9848077</R11>
+                  <R12>-0.17364818</R12>
+                  <R20>0</R20>
+                  <R21>0.17364818</R21>
+                  <R22>0.9848077</R22>
+                </CoordinateFrame>
+                <token name="EasingDirection">1</token>
+                <token name="EasingStyle">0</token>
+                <BinaryString name="Tags" />
+                <float name="Weight">1</float>
+              </Properties>
+              <Item class="Pose" referent="60699">
+                <Properties>
+                  <string name="Name">RightHand</string>
+                  <CoordinateFrame name="CFrame">
+                    <X>0</X>
+                    <Y>0</Y>
+                    <Z>0</Z>
+                    <R00>1</R00>
+                    <R01>0</R01>
+                    <R02>0</R02>
+                    <R10>0</R10>
+                    <R11>1</R11>
+                    <R12>0</R12>
+                    <R20>0</R20>
+                    <R21>0</R21>
+                    <R22>1</R22>
+                  </CoordinateFrame>
+                  <token name="EasingDirection">1</token>
+                  <token name="EasingStyle">0</token>
+                  <BinaryString name="Tags" />
+                  <float name="Weight">1</float>
+                </Properties>
+              </Item>
+            </Item>
+          </Item>
+        </Item>
+      </Item>
+      <Item class="MeshPart" referent="60700">
+        <Properties>
+          <string name="Name">Handle</string>
+          <bool name="Anchored">false</bool>
+          <float name="BackParamA">-0.5</float>
+          <float name="BackParamB">0.5</float>
+          <token name="BackSurface">0</token>
+          <token name="BackSurfaceInput">0</token>
+          <float name="BottomParamA">-0.5</float>
+          <float name="BottomParamB">0.5</float>
+          <token name="BottomSurface">0</token>
+          <token name="BottomSurfaceInput">0</token>
+          <CoordinateFrame name="CFrame">
+            <X>-48.198627</X>
+            <Y>820.46735</Y>
+            <Z>-82.899445</Z>
+            <R00>0.19913809</R00>
+            <R01>0</R01>
+            <R02>0.97997147</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>-0.97997147</R20>
+            <R21>0</R21>
+            <R22>0.19913809</R22>
+          </CoordinateFrame>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <int name="CollisionGroupId">0</int>
+          <Color3uint8 name="Color3uint8">10724005</Color3uint8>
+          <PhysicalProperties name="CustomPhysicalProperties">
+            <CustomPhysics>false</CustomPhysics>
+          </PhysicalProperties>
+          <float name="FrontParamA">-0.5</float>
+          <float name="FrontParamB">0.5</float>
+          <token name="FrontSurface">0</token>
+          <token name="FrontSurfaceInput">0</token>
+          <Vector3 name="InitialSize">
+            <X>1.40349</X>
+            <Y>1.63527</Y>
+            <Z>1.50263</Z>
+          </Vector3>
+          <float name="LeftParamA">-0.5</float>
+          <float name="LeftParamB">0.5</float>
+          <token name="LeftSurface">0</token>
+          <token name="LeftSurfaceInput">0</token>
+          <bool name="Locked">false</bool>
+          <bool name="Massless">false</bool>
+          <token name="Material">256</token>
+          <Content name="MeshId">
+            <url>rbxassetid://2900582466</url>
+          </Content>
+          <SharedString name="PhysicalConfigData">IZG+Fo/XNKSl7NCwxqeNZw==</SharedString>
+          <BinaryString name="PhysicsData">
+          </BinaryString>
+          <float name="Reflectance">0</float>
+          <token name="RenderFidelity">1</token>
+          <float name="RightParamA">-0.5</float>
+          <float name="RightParamB">0.5</float>
+          <token name="RightSurface">0</token>
+          <token name="RightSurfaceInput">0</token>
+          <int name="RootPriority">0</int>
+          <Vector3 name="RotVelocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+          <Vector3 name="size">
+            <X>1.40349</X>
+            <Y>1.63527</Y>
+            <Z>1.50263</Z>
+          </Vector3>
+          <BinaryString name="Tags" />
+          <Content name="TextureID">
+            <url>rbxassetid://2900584316</url>
+          </Content>
+          <float name="TopParamA">-0.5</float>
+          <float name="TopParamB">0.5</float>
+          <token name="TopSurface">0</token>
+          <token name="TopSurfaceInput">0</token>
+          <float name="Transparency">0</float>
+          <Vector3 name="Velocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+        </Properties>
+        <Item class="Motor6D" referent="60701">
+          <Properties>
+            <string name="Name">Motor6D</string>
+            <CoordinateFrame name="C0">
+              <X>0</X>
+              <Y>0</Y>
+              <Z>0</Z>
+              <R00>1</R00>
+              <R01>0</R01>
+              <R02>0</R02>
+              <R10>0</R10>
+              <R11>1</R11>
+              <R12>0</R12>
+              <R20>0</R20>
+              <R21>0</R21>
+              <R22>1</R22>
+            </CoordinateFrame>
+            <CoordinateFrame name="C1">
+              <X>0.039763846</X>
+              <Y>-0.14199688</Y>
+              <Z>0.5558059</Z>
+              <R00>0.9959868</R00>
+              <R01>0.033259142</R01>
+              <R02>0.08309154</R02>
+              <R10>-0.031130165</R10>
+              <R11>0.9991563</R11>
+              <R12>-0.026787875</R12>
+              <R20>-0.08391239</R20>
+              <R21>0.024093715</R21>
+              <R22>0.99618185</R22>
+            </CoordinateFrame>
+            <float name="DesiredAngle">0</float>
+            <float name="MaxVelocity">0</float>
+            <Ref name="Part0">60700</Ref>
+            <Ref name="Part1">null</Ref>
+            <BinaryString name="Tags" />
+          </Properties>
+        </Item>
+        <Item class="Attachment" referent="60702">
+          <Properties>
+            <string name="Name">LaunchAttachment</string>
+            <CoordinateFrame name="CFrame">
+              <X>0.002614975</X>
+              <Y>0.12716293</Y>
+              <Z>-0.560791</Z>
+              <R00>0.9959868</R00>
+              <R01>-0.031130165</R01>
+              <R02>-0.08391238</R02>
+              <R10>0.033259142</R10>
+              <R11>0.9991563</R11>
+              <R12>0.024093717</R12>
+              <R20>0.08309154</R20>
+              <R21>-0.026787875</R21>
+              <R22>0.9961819</R22>
+            </CoordinateFrame>
+            <BinaryString name="Tags" />
+            <bool name="Visible">false</bool>
+          </Properties>
+        </Item>
+        <Item class="Attachment" referent="60703">
+          <Properties>
+            <string name="Name">RightGripAttachment</string>
+            <CoordinateFrame name="CFrame">
+              <X>0</X>
+              <Y>-0.39999998</Y>
+              <Z>0.10000008</Z>
+              <R00>1</R00>
+              <R01>0</R01>
+              <R02>0</R02>
+              <R10>0</R10>
+              <R11>1</R11>
+              <R12>0</R12>
+              <R20>0</R20>
+              <R21>0</R21>
+              <R22>1</R22>
+            </CoordinateFrame>
+            <BinaryString name="Tags" />
+            <bool name="Visible">false</bool>
+          </Properties>
+        </Item>
+        <Item class="Sound" referent="60704">
+          <Properties>
+            <string name="Name">Fire</string>
+            <bool name="Looped">false</bool>
+            <bool name="PlayOnRemove">false</bool>
+            <float name="PlaybackSpeed">1</float>
+            <bool name="Playing">false</bool>
+            <float name="xmlRead_MaxDistance_3">10000</float>
+            <float name="EmitterSize">10</float>
+            <token name="RollOffMode">0</token>
+            <Ref name="SoundGroup">null</Ref>
+            <Content name="SoundId"><null></null></Content>
+            <BinaryString name="Tags" />
+            <double name="TimePosition">0</double>
+            <float name="Volume">0.5</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Camera" referent="60705">
+        <Properties>
+          <string name="Name">ThumbnailCamera</string>
+          <CoordinateFrame name="CFrame">
+            <X>-2.024386</X>
+            <Y>6.2487183</Y>
+            <Z>1.0847812</Z>
+            <R00>0.4765821</R00>
+            <R01>0.28475672</R01>
+            <R02>-0.83173513</R02>
+            <R10>-0</R10>
+            <R11>0.946089</R11>
+            <R12>0.32390738</R12>
+            <R20>0.87913007</R20>
+            <R21>-0.15436846</R21>
+            <R22>0.450889</R22>
+          </CoordinateFrame>
+          <Ref name="CameraSubject">null</Ref>
+          <token name="CameraType">0</token>
+          <float name="FieldOfView">70</float>
+          <CoordinateFrame name="Focus">
+            <X>-0.36091566</X>
+            <Y>5.6009035</Y>
+            <Z>0.18300319</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <bool name="HeadLocked">true</bool>
+          <float name="HeadScale">1</float>
+          <BinaryString name="Tags" />
+        </Properties>
+      </Item>
+      <Item class="Part" referent="60706">
+        <Properties>
+          <string name="Name">Display</string>
+          <bool name="Anchored">false</bool>
+          <float name="BackParamA">-0.5</float>
+          <float name="BackParamB">0.5</float>
+          <token name="BackSurface">0</token>
+          <token name="BackSurfaceInput">0</token>
+          <float name="BottomParamA">-0.5</float>
+          <float name="BottomParamB">0.5</float>
+          <token name="BottomSurface">0</token>
+          <token name="BottomSurfaceInput">0</token>
+          <CoordinateFrame name="CFrame">
+            <X>-3.6771417</X>
+            <Y>0.042857226</Y>
+            <Z>61.212856</Z>
+            <R00>0</R00>
+            <R01>1</R01>
+            <R02>0</R02>
+            <R10>-1</R10>
+            <R11>0</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <int name="CollisionGroupId">0</int>
+          <Color3uint8 name="Color3uint8">14850880</Color3uint8>
+          <PhysicalProperties name="CustomPhysicalProperties">
+            <CustomPhysics>false</CustomPhysics>
+          </PhysicalProperties>
+          <token name="formFactorRaw">1</token>
+          <float name="FrontParamA">-0.5</float>
+          <float name="FrontParamB">0.5</float>
+          <token name="FrontSurface">0</token>
+          <token name="FrontSurfaceInput">0</token>
+          <float name="LeftParamA">-0.5</float>
+          <float name="LeftParamB">0.5</float>
+          <token name="LeftSurface">0</token>
+          <token name="LeftSurfaceInput">0</token>
+          <bool name="Locked">false</bool>
+          <bool name="Massless">false</bool>
+          <token name="Material">272</token>
+          <float name="Reflectance">0</float>
+          <float name="RightParamA">-0.5</float>
+          <float name="RightParamB">0.5</float>
+          <token name="RightSurface">0</token>
+          <token name="RightSurfaceInput">0</token>
+          <int name="RootPriority">0</int>
+          <Vector3 name="RotVelocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+          <token name="shape">2</token>
+          <Vector3 name="size">
+            <X>0.08571445</X>
+            <Y>2.5142868</Y>
+            <Z>2.6857157</Z>
+          </Vector3>
+          <BinaryString name="Tags" />
+          <float name="TopParamA">-0.5</float>
+          <float name="TopParamB">0.5</float>
+          <token name="TopSurface">0</token>
+          <token name="TopSurfaceInput">0</token>
+          <float name="Transparency">0</float>
+          <Vector3 name="Velocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+        </Properties>
+        <Item class="Decal" referent="60707">
+          <Properties>
+            <string name="Name">Decal</string>
+            <Color3 name="Color3">
+              <R>1</R>
+              <G>1</G>
+              <B>1</B>
+            </Color3>
+            <token name="Face">3</token>
+            <BinaryString name="Tags" />
+            <Content name="Texture">
+              <url>http://www.roblox.com/asset/?id=182837904</url>
+            </Content>
+            <float name="Transparency">0</float>
+          </Properties>
+        </Item>
+        <Item class="ParticleEmitter" referent="60708">
+          <Properties>
+            <string name="Name">ParticleEmitter</string>
+            <Vector3 name="Acceleration">
+              <X>0</X>
+              <Y>0</Y>
+              <Z>0</Z>
+            </Vector3>
+            <ColorSequence name="Color">0 1 1 1 0 1 1 1 1 0 </ColorSequence>
+            <float name="Drag">0</float>
+            <token name="EmissionDirection">3</token>
+            <bool name="Enabled">true</bool>
+            <NumberRange name="Lifetime">1 2 </NumberRange>
+            <float name="LightEmission">0</float>
+            <float name="LightInfluence">1</float>
+            <bool name="LockedToPart">false</bool>
+            <float name="Rate">20</float>
+            <NumberRange name="RotSpeed">-100 100 </NumberRange>
+            <NumberRange name="Rotation">0 0 </NumberRange>
+            <NumberSequence name="Size">0 0 0 0.38002294 0.43749988 0 1 0 0 </NumberSequence>
+            <NumberRange name="Speed">5 5 </NumberRange>
+            <Vector2 name="SpreadAngle">
+              <X>0</X>
+              <Y>0</Y>
+            </Vector2>
+            <BinaryString name="Tags" />
+            <Content name="Texture">
+              <url>rbxassetid://2724296167</url>
+            </Content>
+            <NumberSequence name="Transparency">0 0 0 1 0 0 </NumberSequence>
+            <float name="VelocityInheritance">0</float>
+            <float name="ZOffset">0</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Script" referent="60709">
+        <Properties>
+          <string name="Name">Script</string>
+          <bool name="Disabled">false</bool>
+          <Content name="LinkedSource">
+            <null>
+            </null>
+          </Content>
+          <string name="ScriptGuid">{B7B48D37-2B0D-4480-90D8-0D0B8221ED2D}</string>
+          <string name="Source">-- // Created by StarWars
+local Debris = game:GetService("Debris")
+
+local Tool = script.Parent
+local Handle = Tool.Handle
+
+local Motor = Handle:FindFirstChildOfClass("Motor6D")
+if Motor then
+	Motor:Destroy()
+	Motor = nil
+end
+
+local Display = Tool:FindFirstChild("Display")
+if Display then
+	Display:Destroy()
+	Display = nil
+end
+
+local GearService = require(1075123174)
+local GearData = GearService:BindGear(Tool)
+GearData:SetupRemoteFunctions()
+GearData:SetupLocalScript("MouseIcon")
+--[[
+local BaseAmmo = Instance.new("Part")
+BaseAmmo.Size = Vector3.new(0.613, 0.086, 0.613)	-- The size from the mesh part
+BaseAmmo.TopSurface = Enum.SurfaceType.Smooth
+BaseAmmo.BottomSurface = Enum.SurfaceType.Smooth
+BaseAmmo.Massless = true
+local Mesh = Instance.new("SpecialMesh")
+Mesh.MeshId = "rbxassetid://" .. 2900583218
+Mesh.TextureId = "rbxassetid://" .. 2900585624
+Mesh.Parent = BaseAmmo
+]]
+
+local BaseAmmo = game.ReplicatedStorage.pizza:Clone()
+
+local VELOCITY = 250
+local RELOAD_TIME = 2.5
+
+local Damage = {
+	Min = 2,
+	Max = 5
+}
+
+function FireElf()
+	local MouseData = nil
+	pcall(function() MouseData = GearData.ClientControls:InvokeClient(GearData.Player, "GetMouseData") end)
+	if not MouseData then return end
+	local Direction = (MouseData.Position - GearData.RootPart.Position).Unit
+	
+	local NewAmmo = BaseAmmo:Clone()
+	
+	Handle.Fire:Play()
+	
+	NewAmmo.CFrame = CFrame.new(Handle.LaunchAttachment.WorldPosition, MouseData.Position)
+	NewAmmo.Velocity = Direction--[[(Direction + Vector3.new(0, 1, 0)).Unit]] * math.random(VELOCITY - 20, VELOCITY + 20)
+	NewAmmo.RotVelocity = Vector3.new(0, 0, -math.random(VELOCITY - 20, VELOCITY + 20)) * 0.25
+	local Debounce = true
+	spawn(function()
+		wait(0.2)
+		Debounce = false
+	end)
+	NewAmmo.Touched:Connect(function(hit)
+		
+		if Debounce then return end 
+		
+		if hit and hit.Parent and not hit:IsDescendantOf(GearData.Character) then
+			
+			local HitHumanoid = hit.Parent:FindFirstChild("Humanoid")
+			if HitHumanoid then
+				Debounce = true
+				local HitPlayer = game.Players:GetPlayerFromCharacter(HitHumanoid.Parent)
+				if HitPlayer then
+					local hitsound = NewAmmo:FindFirstChild("sound")
+					if hitsound then
+						hitsound.Parent = HitHumanoid.Parent.PrimaryPart
+						hitsound:Play()
+						game.Debris:AddItem(hitsound,5)
+					end
+					NewAmmo:Destroy()
+					game.BadgeService:AwardBadge(HitPlayer.userId, 2124459205)
+					game.ReplicatedStorage.BadgeAwardedNew:FireClient(HitPlayer, 2124459205)
+				end
+				wait()
+				Debounce = false				
+			end
+
+		end
+	end)
+	
+
+--	Handle.Fire:Play()
+	NewAmmo.Parent = workspace
+	
+	Debris:AddItem(NewAmmo, 20)
+end
+
+GearData:BindActivateFunction("pizza_launcher", function()
+	-- // Pew
+	FireElf()	
+	
+	wait(RELOAD_TIME)
+end)</string>
+          <BinaryString name="Tags" />
+        </Properties>
+      </Item>
+    </Item>
+    </roblox>

@@ -52,6 +52,7 @@ local Testing = Forge.Testing
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local Config = require(Shared:WaitForChild("Config"))
+local Channels = require(Shared:WaitForChild("Channels"))
 local Content = require(Shared:WaitForChild("Content"))
 
 local startedAt = os.clock()
@@ -81,19 +82,7 @@ if #problems > 0 then
 end
 
 -- ================================== channels ================================
-Net.define({
-	--: The client asks; the server decides. Every one of these is re-checked
-	--: server-side, because a rate limit is not a permission.
-	ClaimPlot = { dir = "c2s", rate = 2 },
-	Build = { dir = "c2s", rate = 8 },
-	BuyUpgrade = { dir = "c2s", rate = 6 },
-	Rebirth = { dir = "c2s", rate = 1 },
-	ClaimDaily = { dir = "c2s", rate = 2 },
-
-	StateSync = { dir = "s2c" },
-	Notify = { dir = "s2c" },
-	LineSync = { dir = "s2c" },
-})
+Channels.define(Net)
 
 Content.load()
 
@@ -129,13 +118,45 @@ local Line = require(Systems.Line)
 local Progress = require(Systems.Progress)
 local Meta = require(Systems.Meta)
 
--- Ground first: the plots sit on it, and `World.surface` has nothing to
--- measure against until the terrain is written.
-Ground.start()
-Plots.start()
-Line.start()
-Progress.start()
-Meta.start()
+--[[
+	Nobody spawns into a world that is still being built.
+
+	Writing the terrain and laying six plots takes a couple of seconds, and
+	Roblox does not wait: the character loads on join, falls through a place
+	with no floor and no `SpawnLocation` yet, and lands on whatever part
+	happens to exist by then. The first screenshot of this game showed exactly
+	that -- a player standing on top of a claim marker, several plots away from
+	the spawn pad that was created a moment after they landed.
+
+	So the gate goes up before the first system runs and comes down after the
+	last one. `pcall` around the build is not defensive dressing: this file's
+	own header records a server that died with the gate still up and no player
+	ever spawning, which produced no error and no clue. A build that throws must
+	still let people in to see the broken world.
+]]
+Players.CharacterAutoLoads = false
+
+local built, buildError = pcall(function()
+	-- Ground first: the plots sit on it, and `World.surface` has nothing to
+	-- measure against until the terrain is written.
+	Ground.start()
+	Plots.start()
+	Line.start()
+	Progress.start()
+	Meta.start()
+end)
+
+Players.CharacterAutoLoads = true
+for _, player in Players:GetPlayers() do
+	if not player.Character then
+		player:LoadCharacter()
+	end
+end
+
+if not built then
+	Debug.error(string.format("world build failed: %s", tostring(buildError)))
+	error(buildError, 0)
+end
 
 --[[
 	Everything the economy needs is up.
@@ -177,6 +198,9 @@ task.spawn(function()
 					perTick = coins,
 					explain = Line.explain(plotId),
 				})
+				if coins > 0 then
+					Net.fireAll("Sold", { plot = plotId, amount = coins })
+				end
 			end
 		end
 	end
@@ -204,8 +228,49 @@ local function attach(player: Player, profile: any)
 	else
 		Line.attach(plotId)
 		Progress.tutorial:begin(tostring(player.UserId), profile.tutorialDone == true)
+
+		--[[
+			A saved factory is rebuilt; a first arrival is given one.
+
+			The order matters and the old version had only the second half. It
+			gated the starter line on `machinesBuilt == 0` -- correct on its own
+			-- but nothing ever restored a layout, so a returning player whose
+			counter was four came back to an empty plot and could never be given
+			another line. They kept their coins and lost their factory.
+		]]
+		local saved = profile.layout
+		if typeof(saved) == "table" and #saved > 0 then
+			local back, lost = Plots.restore(plotId, saved)
+			profile.layout = Plots.snapshot(plotId)
+			Net.fire(player, "Notify", {
+				text = lost > 0
+					and string.format("Restored %d machines (%d no longer fit)", back, lost)
+					or string.format("Welcome back -- %d machines running", back),
+			})
+		--[[
+			An empty plot gets a line, whatever the counter says.
+
+			The gate used to be `machinesBuilt == 0`, and that is the wrong
+			question twice over. It asks how many machines this player has ever
+			built, when what matters is whether they have a factory now -- and
+			it strands every profile saved before layouts were persisted, whose
+			counter is four and whose plot is bare.
+
+			Asking the plot instead is both the migration and the correct rule.
+		]]
+		elseif next(Plots.built[plotId] or {}) == nil then
+			local given = Plots.grantStarterLine(plotId)
+			if given > 0 then
+				profile.machinesBuilt = given
+				profile.layout = Plots.snapshot(plotId)
+				Net.fire(player, "Notify", {
+					text = string.format("Your first line is running (%d machines)", given),
+				})
+			end
+		end
 	end
 
+	Progress.publishStats(player, profile)
 	Net.fire(player, "StateSync", profile)
 end
 
@@ -231,19 +296,40 @@ Net.on("ClaimPlot", function(player)
 	})
 end)
 
+--[[
+	Every refusal says why, including the ones that used to say nothing.
+
+	This had three silent `return`s at the top -- a malformed payload, a missing
+	profile or plot, and an unknown machine -- and Build is the player's main
+	action. Pressing it and receiving *nothing* is indistinguishable from a
+	broken button, and it hid a real fault for an entire debugging session:
+	firing Build from a live client did nothing at all, and no message existed
+	anywhere to say which of the three checks had turned it away.
+
+	A refusal a player cannot see is a refusal the developer cannot see either.
+]]
 Net.on("Build", function(player, payload)
 	if typeof(payload) ~= "table" then
+		Net.fire(player, "Notify", { text = "that build request was malformed" })
 		return
 	end
 	local profile = Save.get(player)
 	local plotId = Plots.plotOf(player)
-	if not profile or not plotId then
+	if not profile then
+		Net.fire(player, "Notify", { text = "your save is still loading" })
+		return
+	end
+	if not plotId then
+		Net.fire(player, "Notify", { text = "claim a plot before building" })
 		return
 	end
 
 	local machineId = tostring(payload.machine)
 	local machine = Content.machines[machineId]
 	if not machine then
+		Net.fire(player, "Notify", {
+			text = string.format("there is no machine called '%s'", machineId),
+		})
 		return
 	end
 
@@ -261,7 +347,7 @@ Net.on("Build", function(player, payload)
 		return
 	end
 
-	local placed, refusal = Plots.place(player, machineId,
+	local placed, refusal, model = Plots.place(player, machineId,
 		tonumber(payload.x) or 0, tonumber(payload.z) or 0, tonumber(payload.rotation))
 	if not placed then
 		Net.fire(player, "Notify", { text = refusal })
@@ -274,11 +360,49 @@ Net.on("Build", function(player, payload)
 	Progress.tutorial:completeStep(tostring(player.UserId))
 	Telemetry.event("build", { machine = machineId })
 	Net.fire(player, "StateSync", profile)
+
+	--[[
+		Broadcast the spot, so everyone nearby sees it land.
+
+		`Plots.place` hands back the model as a third value, so this reports
+		where the machine actually went rather than where the client asked for
+		-- the two differ whenever the grid snaps to the next free cell, which
+		is most of the time.
+	]]
+	--: The layout is what a profile has to carry: a counter tells you how many
+	--: things were ever built, and rebuilds nothing.
+	profile.layout = Plots.snapshot(plotId)
+
+	if model then
+		Net.fireAll("Built", { at = model:GetPivot().Position })
+	end
+end)
+
+Net.on("ClientReady", function(player, payload)
+	if typeof(payload) ~= "table" then
+		return
+	end
+	local adopted = tonumber(payload.adopted) or -1
+	local tagged = tonumber(payload.tagged) or -1
+	Debug.info(string.format("[client] %s bound %d of %d tagged machines",
+		player.Name, adopted, tagged))
+
+	--[[
+		Recorded on the player, not only in the log.
+
+		A log line needs somebody watching the console at the right moment; an
+		attribute can be read at any time, by a tool, from outside the game.
+		That is the difference between a diagnostic and a hope.
+	]]
+	player:SetAttribute("boundMachines", adopted)
+	player:SetAttribute("taggedMachines", tagged)
 end)
 
 Net.on("BuyUpgrade", function(player, payload)
 	local profile = Save.get(player)
 	if not profile or typeof(payload) ~= "table" then
+		--: Silent for the same reason Build was, and wrong for the same reason.
+		Net.fire(player, "Notify", { text = "that upgrade request was malformed" })
 		return
 	end
 	local ok, refusal = Progress.buyUpgrade(player, profile, tostring(payload.id))

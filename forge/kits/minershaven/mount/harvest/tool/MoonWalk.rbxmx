@@ -1,0 +1,357 @@
+<?xml version='1.0' encoding='utf-8'?>
+<roblox version="4"><Item class="Tool" referent="60864">
+      <Properties>
+        <string name="Name">MoonWalk</string>
+        <bool name="CanBeDropped">true</bool>
+        <bool name="Enabled">true</bool>
+        <CoordinateFrame name="Grip">
+          <X>0.2</X>
+          <Y>-0.35</Y>
+          <Z>-0</Z>
+          <R00>0.21703635</R00>
+          <R01>0</R01>
+          <R02>0.9761635</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>-0</R12>
+          <R20>-0.9761635</R20>
+          <R21>0</R21>
+          <R22>0.21703635</R22>
+        </CoordinateFrame>
+        <bool name="ManualActivationOnly">false</bool>
+        <bool name="RequiresHandle">true</bool>
+        <BinaryString name="Tags" />
+        <Content name="TextureId">
+          <url>http://www.roblox.com/asset/?id=29871912</url>
+        </Content>
+        <string name="ToolTip" />
+      </Properties>
+      <Item class="Part" referent="60865">
+        <Properties>
+          <string name="Name">Handle</string>
+          <bool name="Anchored">false</bool>
+          <float name="BackParamA">-0.5</float>
+          <float name="BackParamB">0.5</float>
+          <token name="BackSurface">0</token>
+          <token name="BackSurfaceInput">0</token>
+          <float name="BottomParamA">-0.5</float>
+          <float name="BottomParamB">0.5</float>
+          <token name="BottomSurface">0</token>
+          <token name="BottomSurfaceInput">0</token>
+          <CoordinateFrame name="CFrame">
+            <X>-54.5</X>
+            <Y>25.2</Y>
+            <Z>175.5</Z>
+            <R00>-1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>-1</R22>
+          </CoordinateFrame>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <int name="CollisionGroupId">0</int>
+          <Color3uint8 name="Color3uint8">13487565</Color3uint8>
+          <PhysicalProperties name="CustomPhysicalProperties">
+            <CustomPhysics>false</CustomPhysics>
+          </PhysicalProperties>
+          <token name="formFactorRaw">2</token>
+          <float name="FrontParamA">-0.5</float>
+          <float name="FrontParamB">0.5</float>
+          <token name="FrontSurface">0</token>
+          <token name="FrontSurfaceInput">0</token>
+          <float name="LeftParamA">-0.5</float>
+          <float name="LeftParamB">0.5</float>
+          <token name="LeftSurface">0</token>
+          <token name="LeftSurfaceInput">0</token>
+          <bool name="Locked">true</bool>
+          <bool name="Massless">false</bool>
+          <token name="Material">256</token>
+          <float name="Reflectance">0</float>
+          <float name="RightParamA">-0.5</float>
+          <float name="RightParamB">0.5</float>
+          <token name="RightSurface">0</token>
+          <token name="RightSurfaceInput">0</token>
+          <int name="RootPriority">0</int>
+          <Vector3 name="RotVelocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+          <token name="shape">1</token>
+          <Vector3 name="size">
+            <X>1</X>
+            <Y>1.6</Y>
+            <Z>1</Z>
+          </Vector3>
+          <BinaryString name="Tags" />
+          <float name="TopParamA">-0.5</float>
+          <float name="TopParamB">0.5</float>
+          <token name="TopSurface">0</token>
+          <token name="TopSurfaceInput">0</token>
+          <float name="Transparency">0</float>
+          <Vector3 name="Velocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+        </Properties>
+        <Item class="SpecialMesh" referent="60866">
+          <Properties>
+            <string name="Name">Mesh</string>
+            <Content name="MeshId">
+              <url>http://www.roblox.com/asset/?id=29869475</url>
+            </Content>
+            <token name="MeshType">5</token>
+            <Vector3 name="Offset">
+              <X>0</X>
+              <Y>0</Y>
+              <Z>0</Z>
+            </Vector3>
+            <Vector3 name="Scale">
+              <X>1</X>
+              <Y>1</Y>
+              <Z>1</Z>
+            </Vector3>
+            <BinaryString name="Tags" />
+            <Content name="TextureId">
+              <url>http://www.roblox.com/asset/?id=29868858</url>
+            </Content>
+            <Vector3 name="VertexColor">
+              <X>1</X>
+              <Y>1</Y>
+              <Z>1</Z>
+            </Vector3>
+          </Properties>
+        </Item>
+        <Item class="Sound" referent="60867">
+          <Properties>
+            <string name="Name">WooSound</string>
+            <bool name="Looped">false</bool>
+            <bool name="PlayOnRemove">false</bool>
+            <float name="PlaybackSpeed">1</float>
+            <bool name="Playing">false</bool>
+            <float name="xmlRead_MaxDistance_3">10000</float>
+            <float name="EmitterSize">10</float>
+            <token name="RollOffMode">0</token>
+            <Ref name="SoundGroup">null</Ref>
+            <Content name="SoundId"><null></null></Content>
+            <BinaryString name="Tags" />
+            <double name="TimePosition">0</double>
+            <float name="Volume">1</float>
+          </Properties>
+        </Item>
+        <Item class="Weld" referent="60868">
+          <Properties>
+            <string name="Name">Weld</string>
+            <CoordinateFrame name="C0">
+              <X>-0.00000039543124</X>
+              <Y>0.000007307695</Y>
+              <Z>0</Z>
+              <R00>-0.000000000000000000003925433</R00>
+              <R01>0.9975662</R01>
+              <R02>-0.06972506</R02>
+              <R10>0.0000000000000000000000126768054</R10>
+              <R11>0.06972506</R11>
+              <R12>0.9975662</R12>
+              <R20>1</R20>
+              <R21>0.0000000000000000000039149954</R21>
+              <R22>-0.000000000000000000000286347</R22>
+            </CoordinateFrame>
+            <CoordinateFrame name="C1">
+              <X>-0.0000098125365</X>
+              <Y>0.1327947</Y>
+              <Z>0.40039074</Z>
+              <R00>0.0000000003829842</R00>
+              <R01>0.069739275</R01>
+              <R02>0.9975653</R02>
+              <R10>-0.00000000040772796</R10>
+              <R11>0.9975653</R11>
+              <R12>-0.069739275</R12>
+              <R20>-1</R20>
+              <R21>-0.00000000038002623</R21>
+              <R22>0.00000000041048642</R22>
+            </CoordinateFrame>
+            <Ref name="Part0">null</Ref>
+            <Ref name="Part1">null</Ref>
+            <BinaryString name="Tags" />
+          </Properties>
+        </Item>
+        <Item class="Sound" referent="60869">
+          <Properties>
+            <string name="Name">DanceMusic</string>
+            <bool name="Looped">true</bool>
+            <bool name="PlayOnRemove">false</bool>
+            <float name="PlaybackSpeed">1</float>
+            <bool name="Playing">false</bool>
+            <float name="xmlRead_MaxDistance_3">10000</float>
+            <float name="EmitterSize">10</float>
+            <token name="RollOffMode">0</token>
+            <Ref name="SoundGroup">null</Ref>
+            <Content name="SoundId"><null></null></Content>
+            <BinaryString name="Tags" />
+            <double name="TimePosition">0</double>
+            <float name="Volume">0.5</float>
+          </Properties>
+        </Item>
+        <Item class="Sound" referent="60870">
+          <Properties>
+            <string name="Name">DrinkSound</string>
+            <bool name="Looped">false</bool>
+            <bool name="PlayOnRemove">false</bool>
+            <float name="PlaybackSpeed">1</float>
+            <bool name="Playing">false</bool>
+            <float name="xmlRead_MaxDistance_3">10000</float>
+            <float name="EmitterSize">10</float>
+            <token name="RollOffMode">0</token>
+            <Ref name="SoundGroup">null</Ref>
+            <Content name="SoundId"><null></null></Content>
+            <BinaryString name="Tags" />
+            <double name="TimePosition">0</double>
+            <float name="Volume">0.5</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="LocalScript" referent="60871">
+        <Properties>
+          <string name="Name">Local Gui</string>
+          <bool name="Disabled">false</bool>
+          <Content name="LinkedSource">
+            <null>
+            </null>
+          </Content>
+          <string name="ScriptGuid">{3F082FB9-D57D-4B6F-B189-460D57CC3400}</string>
+          <string name="Source">local Tool = script.Parent
+local humanoid = nil
+local moonwalk = nil
+local playing = false
+local connection = nil
+local debris = game:GetService("Debris")
+local equalizingForce = 236 / 1.2 -- amount of force required to levitate a mass
+local gravity = .75 -- things float at &gt; 1
+local bodyPos = nil
+local sparkles = Instance.new("Sparkles")
+sparkles.SparkleColor = Color3.new(0,0.5,0)
+
+function onEquippedLocal(mouse)
+
+	humanoid = Tool.Parent:FindFirstChild("Humanoid")
+	moonwalk = humanoid:LoadAnimation(Tool.moonwalk)
+	connection = mouse.Button1Down:connect(moonWalker)
+
+end
+
+function onUnequippedLocal()
+
+	humanoid = nil
+
+	if moonwalk ~= nil then
+		moonwalk:Stop()
+		moonwalk:remove()
+		moonwalk = nil
+	end
+
+	connection:disconnect()
+
+	if bodyPos ~= nil then
+		bodyPos:remove()
+	end
+
+	Tool.Handle.DanceMusic:Stop()
+	Tool.Handle.DrinkSound:Stop()
+	Tool.Handle.WooSound:Stop()
+
+	sparkles:remove()
+	sparkles.Parent = nil
+
+end
+
+function moonWalker()
+
+	if playing then
+		return
+	end
+
+	playing = true
+
+	moonwalk:Play(0.1,1,2)
+	Tool.Handle.DrinkSound:Play()
+
+	wait(0.3)
+	Tool.Handle.DanceMusic:Play()
+	sparkles.Parent = humanoid.Parent:FindFirstChild("Left Leg")
+
+	local HumanoidRootPart = humanoid.Parent:FindFirstChild("HumanoidRootPart")
+	local xLook = HumanoidRootPart.CFrame.lookVector.x/(math.abs(HumanoidRootPart.CFrame.lookVector.x) + math.abs(HumanoidRootPart.CFrame.lookVector.z))
+	local zLook = HumanoidRootPart.CFrame.lookVector.z/(math.abs(HumanoidRootPart.CFrame.lookVector.x) + math.abs(HumanoidRootPart.CFrame.lookVector.z))
+	local unitLook = Vector2.new(xLook,zLook).unit
+	local dist = 60
+
+	
+	bodyPos = Instance.new("BodyPosition")
+	bodyPos.position = Vector3.new(HumanoidRootPart.Position.x + (-unitLook.x * dist), HumanoidRootPart.Position.y + 2,HumanoidRootPart.Position.z + (-unitLook.y * dist))
+	print(recursiveGetLift(humanoid.Parent))
+	bodyPos.P = recursiveGetLift(humanoid.Parent) * 6.7
+	bodyPos.D = bodyPos.P/2
+	bodyPos.maxForce = Vector3.new(bodyPos.P,bodyPos.P,bodyPos.P)
+
+	wait(0.9)
+	bodyPos.Parent = HumanoidRootPart
+	debris:AddItem(bodyPos,5.8)
+
+	wait(6)
+
+	Tool.Handle.WooSound:Play()
+
+	wait(1)
+
+	Tool.Handle.DanceMusic:Stop()
+	sparkles.Parent = nil
+
+	playing = false
+
+end
+
+local head = nil
+function recursiveGetLift(node)
+	local m = 0
+	local c = node:GetChildren()
+	if (node:FindFirstChild("Head") ~= nil) then head = node:FindFirstChild("Head") end -- nasty hack to detect when your parts get blown off
+
+	for i=1,#c do
+		if c[i].className == "Part" then
+			if (head ~= nil and (c[i].Position - head.Position).magnitude &lt; 10) then -- GROSS
+				if c[i].Name == "Handle" then
+					m = m + (c[i]:GetMass() * equalizingForce * 1) -- hack that makes hats weightless, so different hats don't change your jump height
+				else
+					m = m + (c[i]:GetMass() * equalizingForce * gravity)
+				end
+			end
+		end
+		m = m + recursiveGetLift(c[i])
+	end
+	return m
+end
+
+
+Tool.Equipped:connect(onEquippedLocal)
+Tool.Unequipped:connect(onUnequippedLocal)
+</string>
+          <BinaryString name="Tags" />
+        </Properties>
+      </Item>
+      <Item class="Animation" referent="60872">
+        <Properties>
+          <string name="Name">moonwalk</string>
+          <Content name="AnimationId">
+            <url>http://www.roblox.com/Asset?ID=30196114</url>
+          </Content>
+          <BinaryString name="Tags" />
+        </Properties>
+      </Item>
+    </Item>
+    </roblox>

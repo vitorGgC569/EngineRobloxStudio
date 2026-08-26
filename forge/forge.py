@@ -605,15 +605,90 @@ def cmd_kit(args: argparse.Namespace) -> int:
                     print(f"    {category:<14} {count}")
                 return 0
 
-            for entry in kit.installed():
-                print(f"  {entry['kit']:<16} {entry['pieces']:>4} pieces  "
+            entries = kit.installed()
+            for entry in entries:
+                print(f"  {entry['kit']:<22} {entry['pieces']:>4} pieces  "
                       + ", ".join(f"{k} {v}" for k, v in sorted(entry["byCategory"].items())))
+            index = REPO_ROOT / "forge" / "kits" / "index.json"
+            if index.exists():
+                totals = json.loads(index.read_text(encoding="utf-8"))["totals"]
+                print()
+                print(f"  {totals['kits']} kits, {totals['copied']} files copied, "
+                      f"{totals['extracted']} models lifted out of authored places")
+                print(f"  {totals['indexed']} further files recorded and left at source "
+                      f"({totals['indexedBytes'] / 1_000_000:.0f}MB)")
+                harvest = json.loads(index.read_text(encoding="utf-8")).get("harvest")
+                if harvest:
+                    print()
+                    print(f"  {harvest['pieces']} pieces shelved by what they are:")
+                    for shelf, count in sorted(harvest["totals"].items(),
+                                               key=lambda kv: -kv[1]):
+                        print(f"    {shelf:<12} {count:>4}")
+            return 0
+
+        if args.step == "convert":
+            if not args.source:
+                raise SystemExit("forge: kit convert needs a binary .rbxl or .rbxm")
+            source = Path(args.source)
+            output = Path(args.output) if args.output else source.with_suffix(
+                ".rbxlx" if source.suffix.lower() == ".rbxl" else ".rbxmx")
+            written = kit.convert(source, output)
+            print(f"  {source.name} -> {written} ({written.stat().st_size / 1_000_000:.1f}MB)")
+            return 0
+
+        if args.step == "assets":
+            if not args.source:
+                raise SystemExit("forge: kit assets needs a file to catalogue")
+            found = kit.asset_ids(Path(args.source))
+            print(f"  {found['total']} asset references")
+            for kind, ids in found["byKind"].items():
+                print(f"    {kind:<10} {len(ids):>4}   {', '.join(ids[:3])}"
+                      + (" ..." if len(ids) > 3 else ""))
+            return 0
+
+        if args.step == "harvest":
+            if not args.source or not args.name:
+                raise SystemExit("forge: kit harvest needs a place file and --name")
+            source = Path(args.source)
+            #[[
+            #   A binary source is converted rather than refused.
+            #
+            #   Refusing was the old behaviour and it is what kept five projects
+            #   out of the library entirely. The conversion is one subprocess and
+            #   it is the difference between a shelf of animations and an empty
+            #   one.
+            #]]
+            if source.suffix.lower() in (".rbxl", ".rbxm"):
+                staged = kit.KITS / args.name / ".converted" / (source.stem + ".rbxlx")
+                source = kit.convert(source, staged)
+            destination = kit.KITS / args.name / "mount" / "harvest"
+            result = kit.harvest(source, destination, limit=args.limit,
+                                 min_parts=args.min_parts, max_parts=args.max_parts,
+                                 per_kind=args.per_kind)
+            total = len(result["written"])
+            print(f"  {total} pieces shelved into {destination.relative_to(REPO_ROOT)}")
+            for shelf, count in sorted(result["byKind"].items()):
+                print(f"    {shelf:<12} {count:>4}")
+            return 0
+
+        if args.step == "extract":
+            if not args.source or not args.name:
+                raise SystemExit("forge: kit extract needs a place file and --name")
+            destination = kit.KITS / args.name / "mount" / "extracted"
+            written = kit.extract_models(Path(args.source), destination,
+                                         limit=args.limit, min_parts=args.min_parts,
+                                         max_parts=args.max_parts)
+            print(f"  {len(written)} models lifted into "
+                  f"{destination.relative_to(REPO_ROOT)}")
+            for piece in sorted(written, key=lambda p: -p["parts"])[:12]:
+                print(f"    {piece['name']:<34} {piece['parts']:>5} parts")
             return 0
 
         if not args.source or not args.name:
             raise SystemExit("forge: kit add needs a source path and --name")
         manifest = kit.add(Path(args.source), args.name,
-                           categories=args.only or None)
+                           categories=args.only or None,
+                           kinds=args.kinds or None)
         print(kit.render(manifest))
     except kit.KitError as exc:
         raise SystemExit(f"forge: {exc}")
@@ -740,11 +815,25 @@ def main(argv: list[str] | None = None) -> int:
     p_an.set_defaults(func=cmd_analytics)
 
     p_kit = sub.add_parser("kit", help="harvest authored content from a licensed project")
-    p_kit.add_argument("step", nargs="?", default="list", choices=("list", "add"))
+    p_kit.add_argument("step", nargs="?", default="list",
+                       choices=("list", "add", "extract", "harvest", "convert", "assets"))
     p_kit.add_argument("source", nargs="?", default=None, help="path to the project")
     p_kit.add_argument("--name", default=None, help="what to call the kit")
     p_kit.add_argument("--only", nargs="*", default=None,
                        help="categories to take (enemy, structure, prop, pickup, interface)")
+    p_kit.add_argument("--kinds", nargs="*", default=None,
+                       choices=("instance", "uploadable", "place"),
+                       help="what to take: mountable instances, uploadable art, whole places")
+    p_kit.add_argument("--limit", type=int, default=400,
+                       help="extract: how many models to lift")
+    p_kit.add_argument("--min-parts", type=int, default=4, dest="min_parts",
+                       help="extract: skip 'models' smaller than this")
+    p_kit.add_argument("--max-parts", type=int, default=400, dest="max_parts",
+                       help="extract: skip whole levels dressed as one model")
+    p_kit.add_argument("--output", default=None,
+                       help="convert: where to write the XML form")
+    p_kit.add_argument("--per-kind", type=int, default=200, dest="per_kind",
+                       help="harvest: ceiling per shelf, so chairs cannot crowd out monsters")
     p_kit.set_defaults(func=cmd_kit)
 
     p_traps = sub.add_parser("traps", help="what breaks, and what to do instead")

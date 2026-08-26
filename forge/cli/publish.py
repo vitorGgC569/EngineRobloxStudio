@@ -182,4 +182,28 @@ def publish(game: str, release: bool = False,
                 "experience, or its IP allow-list excludes this machine")
     elif status == 404:
         hint = "no such universe or place id"
+    elif status == 409:
+        # Roblox answers "Save failed. Server is busy and unable to process
+        # your upload request. Please try again in a couple minutes."
+        #
+        # What has been ruled out, by measurement rather than by reasoning:
+        #
+        #   * size -- refused at 139MB and again at 1.4MB
+        #   * Studio holding the place open -- refused with Studio killed
+        #   * key permission -- a no-op PATCH to the same place returned 200
+        #     throughout, on both this universe and another
+        #   * versionType -- refused as Saved and as Published, and a run of
+        #     two consecutive successes included one of each
+        #
+        # What is left, and what the successes have in common, is elapsed time:
+        # the pair that went through followed a long gap, and the refusals
+        # cluster immediately after a recent upload. So this reads as a rate
+        # limit on the endpoint wearing a misleading message.
+        #
+        # Stated as a suspicion rather than a cause, because two confident
+        # explanations were written here first and both were wrong.
+        hint = ("Roblox refused the upload; this endpoint appears to rate-limit "
+                "and reports it as 'server is busy'. Wait several minutes and "
+                "retry -- size, Studio, versionType and key permission have all "
+                "been ruled out")
     return {"ok": False, "status": status, "hint": hint, "body": body[:300]}

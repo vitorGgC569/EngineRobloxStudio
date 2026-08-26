@@ -6,7 +6,7 @@
     "path": "schemas/bridge-commands.v1.json",
     "schemaVersion": 1,
     "protocol": "rqe.bridge/1",
-    "sha256": "17a74a6104201f4c7e04034e32b2a7c221ded718f438eef455067735d0a53b37"
+    "sha256": "39e3a53fbdf65c73ea60b92dd9bf4fa730e16eb68c5e6d2c8c9435e5a694abc3"
   },
   "phases": [
     {
@@ -1040,8 +1040,8 @@
       "phase": "assets",
       "title": "Author an image in-engine and publish it as a real asset",
       "description": "Generates a token-derived raster, writes it into an EditableImage inside Studio and publishes it through AssetService:CreateAssetAsync, returning a persistent asset id with content provenance.",
-      "status": "PARTIAL",
-      "validationLevel": "STATICALLY_VALIDATED",
+      "status": "AVAILABLE",
+      "validationLevel": "RUNTIME_VALIDATED",
       "bridgeCommands": [
         {
           "method": "assets.capabilities",
@@ -1068,10 +1068,15 @@
         "Publishing is irreversible from this side: the asset exists on Roblox and enters moderation.",
         "Moderation latency is unbounded, so a published id is not an approved id."
       ],
-      "gaps": [
-        "No live publish has been executed: the account gates and an Open Cloud key are still required, so the loop is STATICALLY_VALIDATED rather than RUNTIME_VALIDATED."
+      "gaps": [],
+      "limitations": [
+        "Requires the \"CreateAssetAsync Luau API\" beta enabled in Studio > File > Beta Features. The method is present on AssetService without it and refuses the call, so its presence cannot be used to detect the gate.",
+        "Moderation is asynchronous and outside this pipeline: a published id is not an approved id, and asset 103055152891653 read back as Reviewing immediately after publishing.",
+        "Rate limited to 30 uploads per minute."
       ],
-      "limitations": []
+      "evidence": [
+        "Published a 16x16 image from EditableImage through AssetService:CreateAssetAsync and read it back independently through Open Cloud: assetId 103055152891653, assetType Image, creator 5812220258, moderationState Reviewing."
+      ]
     },
     {
       "id": "edit.datamodel.primitives",
@@ -1526,6 +1531,49 @@
         "No alignment to a named face of a rotated model, and no multi-part layout: one placement at a time."
       ],
       "gaps": []
+    },
+    {
+      "id": "assets.library.import",
+      "phase": "assets",
+      "title": "Find a free model in the Roblox library and pull it into Studio",
+      "description": "Searches Roblox's own toolbox endpoints by keyword without a credential, verifies each candidate through Open Cloud (type, creator, moderation state), then inserts the chosen asset into the edit DataModel and reports its structure -- part count, script count and class census -- so a model is chosen on what it contains rather than on its title.",
+      "status": "BLOCKED",
+      "validationLevel": "RUNTIME_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "assets.insert",
+          "required": true
+        }
+      ],
+      "adapters": [
+        {
+          "symbol": "rqe.assets.toolbox:search",
+          "role": "unauthenticated keyword search over the Roblox toolbox",
+          "required": true
+        },
+        {
+          "symbol": "rqe.assets.local_credentials:load",
+          "role": "load the operator's Open Cloud key for verification",
+          "required": true
+        },
+        {
+          "symbol": "rqe.assets.toolbox:verify",
+          "role": "Open Cloud verification of type, creator and moderation state",
+          "required": true
+        }
+      ],
+      "risks": [
+        "Toolbox results are largely keyword spam; a title says nothing about what is inside.",
+        "An imported model carries another author's work and its provenance has to travel with it."
+      ],
+      "gaps": [
+        "InsertService:LoadAsset answers 'User is not authorized to access Asset.' for third-party models from a local unpublished place, measured against five separate free models. Search and verification work; the fetch does not.",
+        "Open Cloud returns metadata and moderation state for any public asset but never the bytes: assetdelivery v1 and v2 and cloud/v2/assets all answer 401 to an API key, because model content is gated on a browser session rather than on a key."
+      ],
+      "limitations": [
+        "Edit context only, by design: LoadAsset hangs rather than fails in a running place.",
+        "The remaining path is a human dragging from the Studio Toolbox panel and saving the result as .rbxm into a kit folder, which `forge kit harvest` already handles."
+      ]
     }
   ]
 }

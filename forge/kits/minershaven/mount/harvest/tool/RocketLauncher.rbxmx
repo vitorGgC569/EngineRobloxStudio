@@ -1,0 +1,352 @@
+<?xml version='1.0' encoding='utf-8'?>
+<roblox version="4"><Item class="Tool" referent="60923">
+      <Properties>
+        <string name="Name">RocketLauncher</string>
+        <bool name="CanBeDropped">false</bool>
+        <bool name="Enabled">true</bool>
+        <CoordinateFrame name="Grip">
+          <X>0.05</X>
+          <Y>-0.6</Y>
+          <Z>-1</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="ManualActivationOnly">false</bool>
+        <bool name="RequiresHandle">true</bool>
+        <BinaryString name="Tags" />
+        <Content name="TextureId">
+          <url>http://www.roblox.com/asset/?id=94689922</url>
+        </Content>
+        <string name="ToolTip">Big bad rocket goes BOOM!</string>
+      </Properties>
+      <Item class="Part" referent="60924">
+        <Properties>
+          <string name="Name">Handle</string>
+          <bool name="Anchored">false</bool>
+          <float name="BackParamA">-0.5</float>
+          <float name="BackParamB">0.5</float>
+          <token name="BackSurface">0</token>
+          <token name="BackSurfaceInput">0</token>
+          <float name="BottomParamA">-0.5</float>
+          <float name="BottomParamB">0.5</float>
+          <token name="BottomSurface">0</token>
+          <token name="BottomSurfaceInput">0</token>
+          <CoordinateFrame name="CFrame">
+            <X>-182.42</X>
+            <Y>0.575</Y>
+            <Z>-67.775</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>0</R20>
+            <R21>0</R21>
+            <R22>1</R22>
+          </CoordinateFrame>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <int name="CollisionGroupId">0</int>
+          <Color3uint8 name="Color3uint8">10724005</Color3uint8>
+          <PhysicalProperties name="CustomPhysicalProperties">
+            <CustomPhysics>false</CustomPhysics>
+          </PhysicalProperties>
+          <token name="formFactorRaw">3</token>
+          <float name="FrontParamA">-0.5</float>
+          <float name="FrontParamB">0.5</float>
+          <token name="FrontSurface">0</token>
+          <token name="FrontSurfaceInput">0</token>
+          <float name="LeftParamA">-0.5</float>
+          <float name="LeftParamB">0.5</float>
+          <token name="LeftSurface">0</token>
+          <token name="LeftSurfaceInput">0</token>
+          <bool name="Locked">false</bool>
+          <bool name="Massless">false</bool>
+          <token name="Material">256</token>
+          <float name="Reflectance">0</float>
+          <float name="RightParamA">-0.5</float>
+          <float name="RightParamB">0.5</float>
+          <token name="RightSurface">0</token>
+          <token name="RightSurfaceInput">0</token>
+          <int name="RootPriority">0</int>
+          <Vector3 name="RotVelocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+          <token name="shape">1</token>
+          <Vector3 name="size">
+            <X>0.84</X>
+            <Y>1.15</Y>
+            <Z>3.5500002</Z>
+          </Vector3>
+          <BinaryString name="Tags" />
+          <float name="TopParamA">-0.5</float>
+          <float name="TopParamB">0.5</float>
+          <token name="TopSurface">0</token>
+          <token name="TopSurfaceInput">0</token>
+          <float name="Transparency">0</float>
+          <Vector3 name="Velocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+        </Properties>
+        <Item class="SpecialMesh" referent="60925">
+          <Properties>
+            <string name="Name">Mesh</string>
+            <Content name="MeshId">
+              <url>http://www.roblox.com/asset/?id=94690054</url>
+            </Content>
+            <token name="MeshType">5</token>
+            <Vector3 name="Offset">
+              <X>0</X>
+              <Y>0</Y>
+              <Z>0</Z>
+            </Vector3>
+            <Vector3 name="Scale">
+              <X>1</X>
+              <Y>1</Y>
+              <Z>1</Z>
+            </Vector3>
+            <BinaryString name="Tags" />
+            <Content name="TextureId">
+              <url>http://www.roblox.com/asset/?id=94689966</url>
+            </Content>
+            <Vector3 name="VertexColor">
+              <X>1</X>
+              <Y>1</Y>
+              <Z>1</Z>
+            </Vector3>
+          </Properties>
+        </Item>
+        <Item class="Sound" referent="60926">
+          <Properties>
+            <string name="Name">Fire</string>
+            <bool name="Looped">false</bool>
+            <bool name="PlayOnRemove">false</bool>
+            <float name="PlaybackSpeed">1</float>
+            <bool name="Playing">false</bool>
+            <float name="xmlRead_MaxDistance_3">10000</float>
+            <float name="EmitterSize">10</float>
+            <token name="RollOffMode">0</token>
+            <Ref name="SoundGroup">null</Ref>
+            <Content name="SoundId"><null></null></Content>
+            <BinaryString name="Tags" />
+            <double name="TimePosition">0</double>
+            <float name="Volume">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="RemoteFunction" referent="60927">
+        <Properties>
+          <string name="Name">Launch</string>
+          <BinaryString name="Tags" />
+        </Properties>
+      </Item>
+      <Item class="Script" referent="60928">
+        <Properties>
+          <string name="Name">RocketScript</string>
+          <bool name="Disabled">false</bool>
+          <Content name="LinkedSource">
+            <null>
+            </null>
+          </Content>
+          <string name="ScriptGuid">{E061AAC4-07E0-4D42-8B9E-A1E10BE0339F}</string>
+          <string name="Source">local Debounce = true
+
+local Rocket
+local TargetPart
+
+local function Boom()
+	if TargetPart and Rocket then
+		TargetPart.CFrame = Rocket.CFrame
+		
+		local Explode = Instance.new("Explosion")
+		Explode.Position = Rocket.Position
+		Explode.DestroyJointRadiusPercent = 0
+		Explode.BlastPressure = 500000
+
+		
+		Explode.BlastRadius = math.floor(Explode.BlastRadius * 1.5)
+		
+		local ExplodeSound = script.Explode:Clone()
+		ExplodeSound.Parent = TargetPart
+		ExplodeSound:Play()
+		
+		Explode.Parent = workspace
+		
+		Explode.Hit:connect(function(Part,Distance)
+			if Part.Name == "HumanoidRootPart" then
+				local Human = Part.Parent:FindFirstChild("Humanoid")
+				if Human and Human:FindFirstChild("Safe") == nil then
+					Human:TakeDamage(100)
+					Human.Sit = true
+				end
+			end
+		end)
+		
+		Rocket:Destroy()
+		Rocket = nil
+		
+		wait(1)
+		TargetPart:Destroy()
+		
+		Debounce = true	
+	end		
+end
+
+function Fire(Player, Position)
+	if Rocket ~= nil and Rocket.Parent == workspace then
+		Boom()
+	elseif Debounce and Rocket == nil then
+		
+		Debounce = false
+		
+		script.Parent.Handle.Fire:Play()
+		
+		Rocket = Instance.new("Part",workspace)
+		Rocket.Size = Vector3.new(1,1,1)
+		local Mesh = script.Mesh:Clone()
+		Mesh.Parent = Rocket
+		local Fire = Instance.new("Fire",Rocket)
+		Fire.Size = 1
+		
+		Rocket.CFrame = CFrame.new(script.Parent.Handle.Position + script.Parent.Handle.CFrame.lookVector * 3)
+		
+		
+
+		
+		TargetPart = Instance.new("Part",workspace)
+		TargetPart.Size = Vector3.new(0.5,0.5,0.5)
+		TargetPart.Transparency = 1
+		TargetPart.CanCollide = false
+		TargetPart.Anchored = true
+		TargetPart.CFrame = CFrame.new(Position)
+		TargetPart.Name = "RocketTarget"
+		
+		local Force = Instance.new("RocketPropulsion",Rocket)
+		Force.Target = TargetPart
+		Force.CartoonFactor = 1
+		Force.TurnP = 99999
+		Force.MaxSpeed = 45
+		Force.MaxThrust = 4000
+
+
+		wait()		
+		
+		Force:Fire()
+		
+		local Sound = script.Rocket:Clone()
+		Sound.Parent = Rocket
+		Sound:Play()
+		
+
+		
+		Force.ReachedTarget:connect(Boom)
+	end
+end
+
+script.Parent.Launch.OnServerInvoke = Fire</string>
+          <BinaryString name="Tags" />
+        </Properties>
+        <Item class="SpecialMesh" referent="60929">
+          <Properties>
+            <string name="Name">Mesh</string>
+            <Content name="MeshId">
+              <url>http://www.roblox.com/asset/?id=90780825</url>
+            </Content>
+            <token name="MeshType">5</token>
+            <Vector3 name="Offset">
+              <X>0</X>
+              <Y>0</Y>
+              <Z>0</Z>
+            </Vector3>
+            <Vector3 name="Scale">
+              <X>1.5</X>
+              <Y>1.5</Y>
+              <Z>1.5</Z>
+            </Vector3>
+            <BinaryString name="Tags" />
+            <Content name="TextureId">
+              <url>http://www.roblox.com/asset/?id=90780623</url>
+            </Content>
+            <Vector3 name="VertexColor">
+              <X>1</X>
+              <Y>1</Y>
+              <Z>1</Z>
+            </Vector3>
+          </Properties>
+        </Item>
+        <Item class="Sound" referent="60930">
+          <Properties>
+            <string name="Name">Rocket</string>
+            <bool name="Looped">false</bool>
+            <bool name="PlayOnRemove">false</bool>
+            <float name="PlaybackSpeed">1.3</float>
+            <bool name="Playing">false</bool>
+            <float name="xmlRead_MaxDistance_3">10000</float>
+            <float name="EmitterSize">10</float>
+            <token name="RollOffMode">0</token>
+            <Ref name="SoundGroup">null</Ref>
+            <Content name="SoundId"><null></null></Content>
+            <BinaryString name="Tags" />
+            <double name="TimePosition">0</double>
+            <float name="Volume">0.5</float>
+          </Properties>
+        </Item>
+        <Item class="Sound" referent="60931">
+          <Properties>
+            <string name="Name">Explode</string>
+            <bool name="Looped">false</bool>
+            <bool name="PlayOnRemove">false</bool>
+            <float name="PlaybackSpeed">1</float>
+            <bool name="Playing">false</bool>
+            <float name="xmlRead_MaxDistance_3">10000</float>
+            <float name="EmitterSize">10</float>
+            <token name="RollOffMode">0</token>
+            <Ref name="SoundGroup">null</Ref>
+            <Content name="SoundId"><null></null></Content>
+            <BinaryString name="Tags" />
+            <double name="TimePosition">0</double>
+            <float name="Volume">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="LocalScript" referent="60932">
+        <Properties>
+          <string name="Name">LocalScript</string>
+          <bool name="Disabled">false</bool>
+          <Content name="LinkedSource">
+            <null>
+            </null>
+          </Content>
+          <string name="ScriptGuid">{0853A50B-86DA-4D46-B878-EB1C13EB6A95}</string>
+          <string name="Source">local Mouse
+
+script.Parent.Equipped:connect(function(Moose)
+	Mouse = Moose
+end)
+
+local Debounce = true
+
+script.Parent.Activated:connect(function()
+	if Mouse and Debounce then
+		Debounce = false
+		script.Parent.Launch:InvokeServer(Mouse.Hit.p)
+		Debounce = true
+	end
+end)</string>
+          <BinaryString name="Tags" />
+        </Properties>
+      </Item>
+    </Item>
+    </roblox>

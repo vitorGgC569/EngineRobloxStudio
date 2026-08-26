@@ -1,0 +1,12 @@
+[package]
+name = "rbx-convert"
+version = "0.1.0"
+edition = "2021"
+
+[dependencies]
+rbx_binary = "0.7"
+rbx_xml = "0.13"
+rbx_dom_weak = "2.7"
+
+[profile.release]
+opt-level = 2

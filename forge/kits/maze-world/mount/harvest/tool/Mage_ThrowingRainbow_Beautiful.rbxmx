@@ -1,0 +1,520 @@
+<?xml version='1.0' encoding='utf-8'?>
+<roblox version="4"><Item class="Tool" referent="799">
+        <Properties>
+          <string name="Name">Mage ThrowingRainbow Beautiful</string>
+          <BinaryString name="AttributesSerialize" />
+          <bool name="CanBeDropped">true</bool>
+          <bool name="Enabled">true</bool>
+          <CoordinateFrame name="Grip">
+            <X>0</X>
+            <Y>-0.3</Y>
+            <Z>0.7</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>-0</R10>
+            <R11>0.70710677</R11>
+            <R12>0.70710677</R12>
+            <R20>0</R20>
+            <R21>-0.70710677</R21>
+            <R22>0.70710677</R22>
+          </CoordinateFrame>
+          <bool name="ManualActivationOnly">false</bool>
+          <bool name="RequiresHandle">true</bool>
+          <BinaryString name="Tags" />
+          <Content name="TextureId">
+            <null>
+            </null>
+          </Content>
+          <string name="ToolTip" />
+        </Properties>
+        <Item class="Script" referent="800">
+          <Properties>
+            <string name="Name">Server</string>
+            <BinaryString name="AttributesSerialize" />
+            <bool name="Disabled">false</bool>
+            <Content name="LinkedSource">
+              <null>
+              </null>
+            </Content>
+            <string name="ScriptGuid" />
+            <string name="Source">local Tool = script.Parent
+local Remote = Tool:WaitForChild("Remote")
+local Handle = Tool:WaitForChild("Handle")
+
+local FriendlyFire = false
+
+local AttackPower = 3
+local AttackDamage = 24
+local AtackRechargeTime = 1
+local AttackRecharge = 1/AtackRechargeTime
+local AttackSpeed = 1000
+
+local Equipped = false
+local Heartbeat = game:GetService("RunService").Heartbeat
+
+local Knives = {}
+
+--returns the wielding player of this tool
+function getPlayer()
+	local char = Tool.Parent
+	return game:GetService("Players"):GetPlayerFromCharacter(char)
+end
+
+--helpfully checks a table for a specific value
+function contains(t, v)
+	for _, val in pairs(t) do
+		if val == v then
+			return true
+		end
+	end
+	return false
+end
+
+--tags a human for the ROBLOX KO system
+function tagHuman(human)
+	local tag = Instance.new("ObjectValue")
+	tag.Value = getPlayer()
+	tag.Name = "creator"
+	tag.Parent = human
+	game:GetService("Debris"):AddItem(tag)
+end
+
+--used by checkTeams
+function sameTeam(otherHuman)
+	local player = getPlayer()
+	local otherPlayer = game:GetService("Players"):GetPlayerFromCharacter(otherHuman.Parent)
+	if player and otherPlayer then
+		if otherPlayer.Neutral then
+			return false
+		end
+		return player.TeamColor == otherPlayer.TeamColor
+	end
+	return false
+end
+
+--use this to determine if you want this human to be harmed or not, returns boolean
+function checkTeams(otherHuman)
+	return not (sameTeam(otherHuman) and not FriendlyFire)
+end
+
+function getKnife()
+	local knife = Handle:clone()
+	knife.Transparency = 1
+	knife.Hit.Pitch = math.random(90, 110)/100
+	
+	local lift = Instance.new("BodyForce")
+	lift.force = Vector3.new(0, 196.2, 0) * knife:GetMass() * 0.8
+	lift.Parent = knife
+	
+	local proj = Tool.Projectile:Clone()
+	proj.Disabled = false
+	proj.Parent = knife
+	
+	return knife
+end
+
+function equippedLoop()
+	while Equipped do
+		local dt = Heartbeat:wait()
+		
+		if AttackPower &lt; 1 then
+			AttackPower = AttackPower + dt * AttackRecharge
+			if AttackPower &gt; 1 then
+				AttackPower = 1
+			end
+		end
+		
+		Handle.Fire.Enabled = AttackPower &gt;= 1
+		Handle.Transparency = 1 - AttackPower
+	end
+end
+
+function changeMesh()
+	local mesh = Handle.Mesh
+	if mesh.MeshId == "rbxassetid://218516391" then
+		mesh.MeshId = "rbxassetid://218516421"
+	elseif mesh.MeshId == "rbxasseid://218516421" then
+		mesh.MeshId = "rbxassetid://218516461"
+	else
+		mesh.MeshId = "rbxassetid://218516391"
+	end
+end
+
+function onLeftDown(mousePos)
+	local knife = getKnife()
+	knife.CFrame = CFrame.new(Handle.Position, mousePos)
+	knife.Velocity = knife.CFrame.lookVector * AttackSpeed * AttackPower
+	local damage = AttackDamage * AttackPower
+	local touched
+	touched = knife.Touched:connect(function(part)
+		if part:IsDescendantOf(Tool.Parent) then return end
+		if contains(Knives, part) then return end
+		
+		if part.Parent and part.Parent:FindFirstChild("Humanoid") then
+			local human = part.Parent.Humanoid
+			if checkTeams(human) then
+				tagHuman(human)
+				human:TakeDamage(damage)
+				knife.Hit:Play()
+			end
+		end
+		
+		knife.Projectile:Destroy()
+		
+		local w = Instance.new("Weld")
+		w.Part0 = part
+		w.Part1 = knife
+		w.C0 = part.CFrame:toObjectSpace(knife.CFrame)
+		w.Parent = w.Part0
+		
+		touched:disconnect()
+	end)
+	table.insert(Knives, knife)
+	knife.Parent = workspace
+	
+	game:GetService("Debris"):AddItem(knife, 3.5)
+	delay(2, function()
+		knife.Transparency = 1
+		knife.Fire.Enabled = false
+	end)
+	
+	Remote:FireClient(getPlayer(), "PlayAnimation", "Throw")	
+	
+	Handle.Throw.Pitch = 0.8 + 0.4 * AttackPower
+	Handle.Throw:Play()
+	
+	AttackPower = 0
+	
+	changeMesh()
+end
+
+function onRemote(player, func, ...)
+	if player ~= getPlayer() then return end
+	
+	if func == "LeftDown" then
+		onLeftDown(...)
+	end
+end
+
+function onEquip()
+	Equipped = true
+	equippedLoop()
+end
+
+function onUnequip()
+	Equipped = false
+end
+
+Remote.OnServerEvent:connect(onRemote)
+Tool.Equipped:connect(onEquip)
+Tool.Unequipped:connect(onUnequip)
+
+changeMesh()
+</string>
+            <BinaryString name="Tags" />
+          </Properties>
+        </Item>
+        <Item class="LocalScript" referent="801">
+          <Properties>
+            <string name="Name">Client</string>
+            <BinaryString name="AttributesSerialize" />
+            <bool name="Disabled">false</bool>
+            <Content name="LinkedSource">
+              <null>
+              </null>
+            </Content>
+            <string name="ScriptGuid" />
+            <string name="Source">local Player = game:GetService("Players").LocalPlayer
+local UIS = game:GetService("UserInputService")
+local Mouse = Player:GetMouse()
+local Tool = script.Parent
+local Remote = Tool:WaitForChild("Remote")
+local Tracks = {}
+local InputType = Enum.UserInputType
+
+local BeganConnection, EndedConnection
+
+function playAnimation(animName, ...)
+	if Tracks[animName] then
+		Tracks[animName]:Play()
+	else
+		local anim = Tool:FindFirstChild(animName)
+		if anim and Tool.Parent and Tool.Parent:FindFirstChild("Humanoid") then
+			Tracks[animName] = Tool.Parent.Humanoid:LoadAnimation(anim)
+			playAnimation(animName, ...)
+		end
+	end
+end
+
+function stopAnimation(animName)
+	if Tracks[animName] then
+		Tracks[animName]:Stop()
+	end
+end
+
+function inputBegan(input)
+	if input.UserInputType == InputType.MouseButton1 then
+		Remote:FireServer("LeftDown", Mouse.Hit.p)
+	end
+end
+
+function inputEnded(input)
+	if input.UserInputType == InputType.MouseButton1 then
+		Remote:FireServer("LeftUp")
+	end
+end
+
+function onRemote(func, ...)
+	if func == "PlayAnimation" then
+		playAnimation(...)
+	elseif func == "StopAnimation" then
+		stopAnimation(...)
+	end
+end
+
+function onEquip()
+	BeganConnection = UIS.InputBegan:connect(inputBegan)
+	EndedConnection = UIS.InputEnded:connect(inputEnded)
+end
+
+function onUnequip()
+	if BeganConnection then
+		BeganConnection:disconnect()
+		BeganConnection = nil
+	end
+	
+	if EndedConnection then
+		EndedConnection:disconnect()
+		EndedConnection = nil
+	end
+end
+
+Tool.Equipped:connect(onEquip)
+Tool.Unequipped:connect(onUnequip)
+Remote.OnClientEvent:connect(onRemote)</string>
+            <BinaryString name="Tags" />
+          </Properties>
+        </Item>
+        <Item class="RemoteEvent" referent="802">
+          <Properties>
+            <string name="Name">Remote</string>
+            <BinaryString name="AttributesSerialize" />
+            <BinaryString name="Tags" />
+          </Properties>
+        </Item>
+        <Item class="Animation" referent="803">
+          <Properties>
+            <string name="Name">Throw</string>
+            <Content name="AnimationId">
+              <url>http://www.roblox.com/asset/?id=207107855</url>
+            </Content>
+            <BinaryString name="AttributesSerialize" />
+            <BinaryString name="Tags" />
+          </Properties>
+        </Item>
+        <Item class="Part" referent="804">
+          <Properties>
+            <string name="Name">Handle</string>
+            <bool name="Anchored">false</bool>
+            <BinaryString name="AttributesSerialize" />
+            <float name="BackParamA">-0.5</float>
+            <float name="BackParamB">0.5</float>
+            <token name="BackSurface">0</token>
+            <token name="BackSurfaceInput">0</token>
+            <float name="BottomParamA">-0.5</float>
+            <float name="BottomParamB">0.5</float>
+            <token name="BottomSurface">0</token>
+            <token name="BottomSurfaceInput">0</token>
+            <CoordinateFrame name="CFrame">
+              <X>-94.16821</X>
+              <Y>-27.753815</Y>
+              <Z>-70.63522</Z>
+              <R00>0</R00>
+              <R01>0</R01>
+              <R02>-1</R02>
+              <R10>0</R10>
+              <R11>1</R11>
+              <R12>0</R12>
+              <R20>1</R20>
+              <R21>0</R21>
+              <R22>0</R22>
+            </CoordinateFrame>
+            <bool name="CanCollide">false</bool>
+            <bool name="CastShadow">true</bool>
+            <int name="CollisionGroupId">0</int>
+            <Color3uint8 name="Color3uint8">10796359</Color3uint8>
+            <PhysicalProperties name="CustomPhysicalProperties">
+              <CustomPhysics>false</CustomPhysics>
+            </PhysicalProperties>
+            <token name="formFactorRaw">3</token>
+            <float name="FrontParamA">-0.5</float>
+            <float name="FrontParamB">0.5</float>
+            <token name="FrontSurface">0</token>
+            <token name="FrontSurfaceInput">0</token>
+            <float name="LeftParamA">-0.5</float>
+            <float name="LeftParamB">0.5</float>
+            <token name="LeftSurface">0</token>
+            <token name="LeftSurfaceInput">0</token>
+            <bool name="Locked">false</bool>
+            <bool name="Massless">false</bool>
+            <token name="Material">256</token>
+            <float name="Reflectance">1</float>
+            <float name="RightParamA">-0.5</float>
+            <float name="RightParamB">0.5</float>
+            <token name="RightSurface">0</token>
+            <token name="RightSurfaceInput">0</token>
+            <int name="RootPriority">0</int>
+            <Vector3 name="RotVelocity">
+              <X>0</X>
+              <Y>0</Y>
+              <Z>0</Z>
+            </Vector3>
+            <token name="shape">1</token>
+            <Vector3 name="size">
+              <X>0.2</X>
+              <Y>0.2</Y>
+              <Z>0.2</Z>
+            </Vector3>
+            <BinaryString name="Tags" />
+            <float name="TopParamA">-0.5</float>
+            <float name="TopParamB">0.5</float>
+            <token name="TopSurface">0</token>
+            <token name="TopSurfaceInput">0</token>
+            <float name="Transparency">0</float>
+            <Vector3 name="Velocity">
+              <X>0</X>
+              <Y>0</Y>
+              <Z>0</Z>
+            </Vector3>
+          </Properties>
+          <Item class="Sound" referent="805">
+            <Properties>
+              <string name="Name">Throw</string>
+              <BinaryString name="AttributesSerialize" />
+              <bool name="Looped">false</bool>
+              <bool name="PlayOnRemove">false</bool>
+              <float name="PlaybackSpeed">1</float>
+              <bool name="Playing">false</bool>
+              <float name="xmlRead_MaxDistance_3">10000</float>
+              <float name="EmitterSize">0</float>
+              <token name="RollOffMode">0</token>
+              <Ref name="SoundGroup">null</Ref>
+              <Content name="SoundId"><null></null></Content>
+              <BinaryString name="Tags" />
+              <double name="TimePosition">0</double>
+              <float name="Volume">0.5</float>
+            </Properties>
+          </Item>
+          <Item class="Sound" referent="806">
+            <Properties>
+              <string name="Name">Hit</string>
+              <BinaryString name="AttributesSerialize" />
+              <bool name="Looped">false</bool>
+              <bool name="PlayOnRemove">false</bool>
+              <float name="PlaybackSpeed">1</float>
+              <bool name="Playing">false</bool>
+              <float name="xmlRead_MaxDistance_3">10000</float>
+              <float name="EmitterSize">0</float>
+              <token name="RollOffMode">0</token>
+              <Ref name="SoundGroup">null</Ref>
+              <Content name="SoundId"><null></null></Content>
+              <BinaryString name="Tags" />
+              <double name="TimePosition">0</double>
+              <float name="Volume">0.5</float>
+            </Properties>
+          </Item>
+          <Item class="Fire" referent="807">
+            <Properties>
+              <string name="Name">Fire</string>
+              <BinaryString name="AttributesSerialize" />
+              <Color3 name="Color">
+                <R>0</R>
+                <G>1</G>
+                <B>0</B>
+              </Color3>
+              <bool name="Enabled">false</bool>
+              <float name="heat_xml">0</float>
+              <Color3 name="SecondaryColor">
+                <R>0</R>
+                <G>1</G>
+                <B>0</B>
+              </Color3>
+              <float name="size_xml">2</float>
+              <BinaryString name="Tags" />
+            </Properties>
+          </Item>
+          <Item class="PointLight" referent="808">
+            <Properties>
+              <string name="Name">PointLight</string>
+              <BinaryString name="AttributesSerialize" />
+              <float name="Brightness">10</float>
+              <Color3 name="Color">
+                <R>1</R>
+                <G>1</G>
+                <B>1</B>
+              </Color3>
+              <bool name="Enabled">true</bool>
+              <float name="Range">8</float>
+              <bool name="Shadows">false</bool>
+              <BinaryString name="Tags" />
+            </Properties>
+          </Item>
+          <Item class="ParticleEmitter" referent="809">
+            <Properties>
+              <string name="Name">ParticleEmitter</string>
+              <Vector3 name="Acceleration">
+                <X>0</X>
+                <Y>0</Y>
+                <Z>0</Z>
+              </Vector3>
+              <BinaryString name="AttributesSerialize" />
+              <ColorSequence name="Color">0 1 1 1 0 1 1 1 1 0 </ColorSequence>
+              <float name="Drag">0</float>
+              <token name="EmissionDirection">1</token>
+              <bool name="Enabled">true</bool>
+              <NumberRange name="Lifetime">1 1 </NumberRange>
+              <float name="LightEmission">0.2</float>
+              <float name="LightInfluence">0</float>
+              <bool name="LockedToPart">false</bool>
+              <float name="Rate">10</float>
+              <NumberRange name="RotSpeed">100 100 </NumberRange>
+              <NumberRange name="Rotation">0 0 </NumberRange>
+              <NumberSequence name="Size">0 1 0 1 2.5 0 </NumberSequence>
+              <NumberRange name="Speed">0 0 </NumberRange>
+              <Vector2 name="SpreadAngle">
+                <X>0</X>
+                <Y>0</Y>
+              </Vector2>
+              <BinaryString name="Tags" />
+              <Content name="Texture">
+                <url>http://www.roblox.com/asset/?id=249481416</url>
+              </Content>
+              <NumberSequence name="Transparency">0 0 0 1 0.47499996 0 </NumberSequence>
+              <float name="VelocityInheritance">0</float>
+              <float name="ZOffset">0</float>
+            </Properties>
+          </Item>
+        </Item>
+        <Item class="Script" referent="810">
+          <Properties>
+            <string name="Name">Projectile</string>
+            <BinaryString name="AttributesSerialize" />
+            <bool name="Disabled">true</bool>
+            <Content name="LinkedSource">
+              <null>
+              </null>
+            </Content>
+            <string name="ScriptGuid" />
+            <string name="Source">local Projectile = script.Parent
+local Heartbeat = game:GetService("RunService").Heartbeat
+
+while Heartbeat:wait() do
+	Projectile.CFrame = CFrame.new(Projectile.Position, Projectile.Position + Projectile.Velocity)
+end
+</string>
+            <BinaryString name="Tags" />
+          </Properties>
+        </Item>
+      </Item>
+      </roblox>

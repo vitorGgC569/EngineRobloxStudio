@@ -64,3 +64,12 @@ desktop.ini
 # what the contract produced is not.
 artifacts/
 reports/
+
+# Rust build output for the binary-place reader. The source is a single file;
+# `target/` is 149MB of compiled dependencies and is rebuilt by
+# `cd tools/rbx-convert && cargo build --release`.
+tools/rbx-convert/target/
+
+# Staging for `forge kit harvest` on a binary source: the XML it converts to on
+# the way in. Reproducible from the licensed project, and large.
+forge/kits/*/.converted/

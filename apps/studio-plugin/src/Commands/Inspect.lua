@@ -39,6 +39,17 @@ local INTERESTING: { [string]: { string } } = {
 	Sound = { "SoundId", "Volume", "Playing", "Looped", "TimePosition" },
 	Constraint = { "Enabled", "Attachment0", "Attachment1" },
 	Script = { "Enabled", "Disabled" },
+	--[[
+		The abstract base, so every *Value class is covered by one entry.
+
+		Left out, and the engine could not read its own test report: the suite
+		publishes to `ReplicatedStorage.ForgeTests.Report`, a StringValue, and
+		`dm.properties` returned its Name and ClassName and silently omitted the
+		only field that carries anything. The result read as "the tests never
+		ran" when they had run and published perfectly.
+	]]
+	ValueBase = { "Value" },
+	Folder = {},
 }
 
 local function readProperties(thing: Instance): { [string]: any }

@@ -168,16 +168,57 @@ def _lua_list(refs: list[str]) -> str:
 
 
 def verify(refs: list[str]) -> dict:
-    """Load each reference in Studio and write the registry."""
+    """Load each reference in Studio and write the registry.
+
+    Goes through the `assets.verify` bridge command rather than pushing Luau
+    text through `bridge.exec`. The text route needed `loadstring`, which is
+    off, so every batch raised and every id in it was recorded as failing --
+    including Roblox's own built-in fonts and textures. The registry then held
+    twenty confident failures for assets that had never been tested, and the
+    doctor reported them as broken.
+
+    A verifier that invents failures is worse than none: the thing it writes
+    gets trusted.
+    """
+    import sys as _sys
+    _sys.path.insert(0, str(REPO))
+    from rqe.hub.client import StudioBridge
+
+    bridge = StudioBridge("http://127.0.0.1:8790")
     results: dict[str, Any] = {}
-    # Batched: one bridge round trip per twenty ids rather than per id.
+
+    # Batched: one round trip per twenty ids rather than per id.
     for start in range(0, len(refs), 20):
         chunk = refs[start:start + 20]
         try:
-            report = bridge_exec(_VERIFY_LUAU % {"refs": _lua_list(chunk)}) or {}
-        except BridgeError as exc:
+            answer = bridge.call("assets.verify", {"refs": chunk, "timeout": 10}, timeout=120)
+            report = answer.get("assets") or {}
+        except Exception as exc:
             report = {ref: {"ok": False, "error": str(exc)[:160]} for ref in chunk}
         results.update(report)
+
+        #[[
+        #   Retry the failures once before writing them down.
+        #
+        #   A batch of twenty fetched at once produces occasional
+        #   `AssetFetchStatus.Failure` for ids that pass on their own: three
+        #   uploaded icons failed in a full run and all three passed when asked
+        #   again a minute later. Recording those as broken is the same fault
+        #   this verifier was rewritten to stop -- writing down failures that
+        #   were never real.
+        #]]
+        doubtful = [ref for ref in chunk if not (results.get(ref) or {}).get("ok")]
+        if doubtful:
+            try:
+                again = bridge.call("assets.verify",
+                                    {"refs": doubtful, "timeout": 45}, timeout=180)
+                for ref, row in (again.get("assets") or {}).items():
+                    if row.get("ok"):
+                        row["recoveredOnRetry"] = True
+                        results[ref] = row
+            except Exception:
+                pass
+
         for ref in chunk:
             row = results.get(ref) or {}
             mark = "OK " if row.get("ok") else "NAO"

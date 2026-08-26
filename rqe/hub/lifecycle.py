@@ -613,6 +613,39 @@ def start_play_solo(bridge: Any | None = None, wait_seconds: float = 90.0, resta
     result["seconds"] = round(time.monotonic() - started, 1)
     result["playSessions"] = play_sessions
     result["started"] = bool(play_sessions)
+
+    #[[
+    #   When it did not start, say what was in the way.
+    #
+    #   A modal dialog owns the Studio window, so F5 lands on the dialog and
+    #   nothing happens -- and the caller got `started: False` and no reason at
+    #   all. This session lost a full build-and-restart cycle to a package
+    #   permission notice sitting silently behind the return value.
+    #
+    #   Reported, not dismissed. Closing a dialog nobody read is how an agent
+    #   agrees to something on the user's behalf; naming it is how the person
+    #   who can decide finds out there is something to decide.
+    #]]
+    if not play_sessions:
+        try:
+            from rqe.capture import Win32CaptureBackend
+
+            backend = Win32CaptureBackend()
+            blocking = [
+                popup.title.strip()
+                for window in backend.studio_windows()
+                for popup in backend.modal_windows(window)
+                if popup.title.strip()
+            ]
+            if blocking:
+                result["blockedBy"] = blocking
+                result["reason"] = (
+                    "a Studio dialog is holding the window, so F5 never reached "
+                    "the editor: " + "; ".join(sorted(set(blocking)))
+                )
+        except Exception:
+            pass
+
     return result
 
 

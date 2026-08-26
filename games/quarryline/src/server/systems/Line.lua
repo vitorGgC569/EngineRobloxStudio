@@ -169,10 +169,27 @@ function Line.mayBuild(plotId: string, level: number, premium: boolean?): (boole
 		return false, "that plot is not running"
 	end
 	local live = ledger:count()
-	if not Line.chain:canProduce(live, level, premium) then
+
+	--[[
+		`life` counts rebirths from zero; `DropperChain` counts tiers from one.
+
+		Passing the profile's `life` straight through meant every player who had
+		never rebirthed -- which is every new player -- hit
+		`assert(level >= 1, "level starts at 1")` inside the engine. The Build
+		handler threw on its capacity check, every single time, for everyone.
+
+		It stayed hidden because `Net.on` catches a handler error and reports it
+		with `warn`, so it never appeared in the error stream anyone was
+		watching, and the player saw a button that did nothing at all.
+
+		The conversion belongs here: this game decides what a life is, the
+		engine decides what a tier is, and the boundary is the only place that
+		knows both.
+	]]
+	if not Line.chain:canProduce(live, level + 1, premium) then
 		return false, string.format(
 			"this plot holds %d machines; upgrade capacity to fit more",
-			Line.chain:limit(level, premium))
+			Line.chain:limit(level + 1, premium))
 	end
 	return true
 end
@@ -250,6 +267,7 @@ function Line.tick(plotId: string, profile: any): number
 	local produced, detail = Line.throughput(plotId, levels)
 	if produced <= 0 then
 		Line.lastPayout[plotId] = { coins = 0, detail = detail, steps = {} }
+		Plots.setActive(plotId, false)
 		return 0
 	end
 
@@ -269,6 +287,7 @@ function Line.tick(plotId: string, profile: any): number
 		steps = steps,
 		at = Clock.now(),
 	}
+	Plots.setActive(plotId, true)
 	return coins
 end
 

@@ -421,14 +421,91 @@ end
 	organise itself and insisting on a flat folder would mean re-organising
 	somebody else's export by hand.
 ]]
-function Catalog.fromKit(name: string): Instance?
+--[[
+	One piece out of a mounted kit, by name.
+
+	`className` is the whole reason this takes a second argument. Without it
+	the answer was hardcoded to "a Model or a BasePart", which was right while
+	a kit held nothing but props and quietly wrong the moment the harvester
+	started shelving animations, tools and HUDs: eighty-nine `KeyframeSequence`
+	files sat in the place, mounted and correct, and no call could ever reach
+	one. Extracted and reachable are not the same thing, and only the second is
+	worth anything.
+
+	The default stays props, because every existing caller asks for a machine
+	and would be badly served by a Sound that happens to share its name.
+]]
+local function acceptable(thing: Instance, className: string?): boolean
+	if className then
+		return thing:IsA(className)
+	end
+	return thing:IsA("Model") or thing:IsA("BasePart")
+end
+
+function Catalog.fromKit(name: string, className: string?): Instance?
 	for _, kit in kits do
+		--[[
+			The fast path first, then a real search.
+
+			`FindFirstChild(name, true)` returns *a* descendant with that name,
+			not the one that was asked for, and a kit is full of repeated
+			names: the animation shelf holds clips called "1", "2", "3", and so
+			does the button row of every HUD in the place. Checking the first
+			hit and giving up returned nil for animations that were mounted,
+			present and three folders further down -- a lookup that reported
+			the library was empty while standing in it.
+		]]
 		local found = kit:FindFirstChild(name, true)
-		if found and (found:IsA("Model") or found:IsA("BasePart")) then
+		if found and acceptable(found, className) then
 			return found:Clone()
+		end
+
+		for _, descendant in kit:GetDescendants() do
+			if descendant.Name == name and acceptable(descendant, className) then
+				return descendant:Clone()
+			end
 		end
 	end
 	return nil
+end
+
+--[[
+	What is on one shelf of the harvest.
+
+	The harvester writes into `harvest/<category>/`, so the folder name *is* the
+	category and asking the kit is cheaper and truer than keeping a manifest in
+	Luau that drifts from the files on disk.
+]]
+function Catalog.kitShelf(category: string): { string }
+	local out = {}
+	for _, kit in kits do
+		local harvest = kit:FindFirstChild("harvest")
+		local shelf = harvest and harvest:FindFirstChild(category)
+		if shelf then
+			for _, piece in shelf:GetChildren() do
+				table.insert(out, piece.Name)
+			end
+		end
+	end
+	return out
+end
+
+--- Every category any mounted kit has anything on.
+function Catalog.kitShelves(): { string }
+	local seen, out = {}, {}
+	for _, kit in kits do
+		local harvest = kit:FindFirstChild("harvest")
+		if harvest then
+			for _, shelf in harvest:GetChildren() do
+				if not seen[shelf.Name] then
+					seen[shelf.Name] = true
+					table.insert(out, shelf.Name)
+				end
+			end
+		end
+	end
+	table.sort(out)
+	return out
 end
 
 --: Everything a kit holds, as ids you can pass to `fromKit`.

@@ -1,0 +1,451 @@
+<?xml version='1.0' encoding='utf-8'?>
+<roblox version="4"><Item class="Tool" referent="705">
+        <Properties>
+          <string name="Name">Mage Light</string>
+          <BinaryString name="AttributesSerialize" />
+          <bool name="CanBeDropped">true</bool>
+          <bool name="Enabled">true</bool>
+          <CoordinateFrame name="Grip">
+            <X>-0.6</X>
+            <Y>0</Y>
+            <Z>0.7</Z>
+            <R00>-0.0034734062</R00>
+            <R01>0.92854565</R01>
+            <R02>0.3712019</R02>
+            <R10>-0.99995625</R10>
+            <R11>0</R11>
+            <R12>-0.009356779</R12>
+            <R20>-0.008688197</R20>
+            <R21>-0.37121814</R21>
+            <R22>0.92850506</R22>
+          </CoordinateFrame>
+          <bool name="ManualActivationOnly">false</bool>
+          <bool name="RequiresHandle">true</bool>
+          <BinaryString name="Tags" />
+          <Content name="TextureId">
+            <null>
+            </null>
+          </Content>
+          <string name="ToolTip" />
+        </Properties>
+        <Item class="LocalScript" referent="706">
+          <Properties>
+            <string name="Name">LocalScript</string>
+            <BinaryString name="AttributesSerialize" />
+            <bool name="Disabled">false</bool>
+            <Content name="LinkedSource">
+              <null>
+              </null>
+            </Content>
+            <string name="ScriptGuid" />
+            <string name="Source">--Made by Stickmasterluke
+
+
+sp=script.Parent
+
+
+firerate=.20
+power=42
+
+local debris=game:GetService("Debris")
+local handle=sp:WaitForChild("Handle")
+equipped=false
+check=true
+
+function throwstar(start,vec)
+	if start and vec then
+		local p=handle:clone()
+		p.CanCollide=true
+		p.Transparency=1
+		local c=Instance.new("ObjectValue")
+		c.Name="creator"
+		c.Value=game.Players.LocalPlayer
+		c.Parent=p
+		local bf=Instance.new("BodyForce")
+		bf.force=Vector3.new(0,p:GetMass()*196.2,0)
+		bf.Parent=p
+		local s=script.Script:clone()
+		s.Parent=p
+		s.Disabled=false
+		local HitSound=Instance.new("Sound")
+		HitSound.SoundId="http://www.roblox.com/asset/?id=11113679"
+		HitSound.Parent=arrow
+		HitSound.Volume=.5
+		HitSound.Parent=p
+		p.CFrame=CFrame.new(start)
+		p.Velocity=vec*power
+		p.RotVelocity=Vector3.new(0,100,0)
+		debris:AddItem(p,15)
+		p.Parent=game.Workspace
+	end
+end
+
+function onEquipped(mouse)
+	equipped=true
+	if mouse~=nil then
+		mouse.Icon="rbxasset://textures\\GunCursor.png"
+		mouse.Button1Down:connect(function()
+			local hu=sp.Parent:FindFirstChild("Humanoid")
+			local t=sp.Parent:FindFirstChild("Torso")
+			if check and hu and hu.Health&gt;0 and t then
+				check=false
+				mouse.Icon="rbxasset://textures\\GunWaitCursor.png"
+				local sound=sp.Handle:FindFirstChild("Sound")
+				if sound~=nil then
+					sound:Play()
+				end
+				local shoulder=t:FindFirstChild("Right Shoulder")
+				if shoulder~=nil then
+					shoulder.CurrentAngle=3
+				end
+				local sound=handle:FindFirstChild("Fire")
+				if sound then
+					sound:Play()
+				end
+				local basevec=(mouse.Hit.p-t.Position).unit
+				throwstar(t.Position+basevec*5.5,basevec)
+				--[[local vec=CFrame.Angles(0,-.3,0)*basevec
+				throwstar(t.Position+vec*4,vec)
+				local vec=CFrame.Angles(0,.3,0)*basevec
+				throwstar(t.Position+vec*4,vec)]]
+
+				handle.Transparency=1
+				wait(firerate)
+				handle.Transparency=1
+				mouse.Icon="rbxasset://textures\\GunCursor.png"
+				check=true
+			end
+		end)
+	end
+end
+
+function onUnequipped()
+	equipped=false
+	handle.Transparency=1
+end
+
+sp.Equipped:connect(onEquipped)
+sp.Unequipped:connect(onUnequipped)
+
+
+
+
+
+</string>
+            <BinaryString name="Tags" />
+          </Properties>
+          <Item class="Script" referent="707">
+            <Properties>
+              <string name="Name">Script</string>
+              <BinaryString name="AttributesSerialize" />
+              <bool name="Disabled">true</bool>
+              <Content name="LinkedSource">
+                <null>
+                </null>
+              </Content>
+              <string name="ScriptGuid" />
+              <string name="Source">--Stickmasterluke
+
+
+sp=script.Parent
+
+damage=20
+stuck=false
+
+sp.Touched:connect(function(hit)
+	if hit and hit~=nil and sp~=nil and not stuck then
+		local ct=sp:FindFirstChild("creator")
+		if ct.Value~=nil and ct.Value.Character~=nil then
+			if hit.Parent~=ct.Value.Character and hit.Name~="Handle" and hit.Name~="Effect" then
+				stuck=true
+				local w=Instance.new("Weld")
+				w.Part0=hit
+				w.Part1=sp
+				w.C0=hit.CFrame:toObjectSpace(sp.CFrame)
+				w.Parent=sp
+				local bf=sp:FindFirstChild("BodyForce")
+				if bf then
+					bf:remove()
+				end
+				local sound=sp:FindFirstChild("Sound")
+				if sound then
+					sound:Play()
+				end
+				sp.Transparency=1
+				local h=hit.Parent:FindFirstChild("Humanoid")
+				local t=hit.Parent:FindFirstChild("Torso")
+				if h~=nil and t~=nil and h.Health&gt;0 then
+					for i,v in ipairs(h:GetChildren()) do
+						if v.Name=="creator" then
+							v:remove()
+						end
+					end
+					ct:clone().Parent=h
+					h:TakeDamage(damage)
+				end
+				local smoke=sp:FindFirstChild("Smoke")
+				if smoke then
+					smoke.Enabled=true
+					wait(.1)
+					if smoke then
+						smoke.Enabled=false
+					end
+				end
+				wait(5)
+				if sp and sp~=nil and sp.Parent~=nil then
+					sp:remove()
+				end
+			end
+		end
+	end
+end)
+
+while not stuck do
+	wait(.5)
+	local smoke=sp:FindFirstChild("Smoke")
+	if not stuck and smoke then
+		sp.Transparency=1
+		smoke.Enabled=true
+		wait(.3)
+		if smoke then
+			smoke.Enabled=false
+		end
+	end
+	wait(1.5)
+	local smoke=sp:FindFirstChild("Smoke")
+	if not stuck and smoke then
+		sp.Transparency=0
+		smoke.Enabled=true
+		wait(.3)
+		if smoke then
+			smoke.Enabled=false
+		end
+	end
+end
+
+
+</string>
+              <BinaryString name="Tags" />
+            </Properties>
+          </Item>
+        </Item>
+        <Item class="Part" referent="708">
+          <Properties>
+            <string name="Name">Handle</string>
+            <bool name="Anchored">false</bool>
+            <BinaryString name="AttributesSerialize" />
+            <float name="BackParamA">-0.5</float>
+            <float name="BackParamB">0.5</float>
+            <token name="BackSurface">0</token>
+            <token name="BackSurfaceInput">0</token>
+            <float name="BottomParamA">-0.5</float>
+            <float name="BottomParamB">0.5</float>
+            <token name="BottomSurface">0</token>
+            <token name="BottomSurfaceInput">0</token>
+            <CoordinateFrame name="CFrame">
+              <X>-91.7682</X>
+              <Y>-28.653809</Y>
+              <Z>-43.2352</Z>
+              <R00>1</R00>
+              <R01>0</R01>
+              <R02>0</R02>
+              <R10>0</R10>
+              <R11>1</R11>
+              <R12>0</R12>
+              <R20>0</R20>
+              <R21>0</R21>
+              <R22>1</R22>
+            </CoordinateFrame>
+            <bool name="CanCollide">true</bool>
+            <bool name="CastShadow">true</bool>
+            <int name="CollisionGroupId">0</int>
+            <Color3uint8 name="Color3uint8">10724005</Color3uint8>
+            <PhysicalProperties name="CustomPhysicalProperties">
+              <CustomPhysics>false</CustomPhysics>
+            </PhysicalProperties>
+            <token name="formFactorRaw">0</token>
+            <float name="FrontParamA">-0.5</float>
+            <float name="FrontParamB">0.5</float>
+            <token name="FrontSurface">0</token>
+            <token name="FrontSurfaceInput">0</token>
+            <float name="LeftParamA">-0.5</float>
+            <float name="LeftParamB">0.5</float>
+            <token name="LeftSurface">0</token>
+            <token name="LeftSurfaceInput">0</token>
+            <bool name="Locked">false</bool>
+            <bool name="Massless">false</bool>
+            <token name="Material">256</token>
+            <float name="Reflectance">0</float>
+            <float name="RightParamA">-0.5</float>
+            <float name="RightParamB">0.5</float>
+            <token name="RightSurface">0</token>
+            <token name="RightSurfaceInput">0</token>
+            <int name="RootPriority">0</int>
+            <Vector3 name="RotVelocity">
+              <X>0</X>
+              <Y>0</Y>
+              <Z>0</Z>
+            </Vector3>
+            <token name="shape">0</token>
+            <Vector3 name="size">
+              <X>1</X>
+              <Y>1</Y>
+              <Z>1</Z>
+            </Vector3>
+            <BinaryString name="Tags" />
+            <float name="TopParamA">-0.5</float>
+            <float name="TopParamB">0.5</float>
+            <token name="TopSurface">0</token>
+            <token name="TopSurfaceInput">0</token>
+            <float name="Transparency">1</float>
+            <Vector3 name="Velocity">
+              <X>0</X>
+              <Y>0</Y>
+              <Z>0</Z>
+            </Vector3>
+          </Properties>
+          <Item class="Sound" referent="709">
+            <Properties>
+              <string name="Name">Fire</string>
+              <BinaryString name="AttributesSerialize" />
+              <bool name="Looped">false</bool>
+              <bool name="PlayOnRemove">false</bool>
+              <float name="PlaybackSpeed">1</float>
+              <bool name="Playing">false</bool>
+              <float name="xmlRead_MaxDistance_3">10000</float>
+              <float name="EmitterSize">0</float>
+              <token name="RollOffMode">0</token>
+              <Ref name="SoundGroup">null</Ref>
+              <Content name="SoundId"><null></null></Content>
+              <BinaryString name="Tags" />
+              <double name="TimePosition">0</double>
+              <float name="Volume">0.7</float>
+            </Properties>
+          </Item>
+          <Item class="Sound" referent="710">
+            <Properties>
+              <string name="Name">Fire</string>
+              <BinaryString name="AttributesSerialize" />
+              <bool name="Looped">false</bool>
+              <bool name="PlayOnRemove">false</bool>
+              <float name="PlaybackSpeed">1</float>
+              <bool name="Playing">false</bool>
+              <float name="xmlRead_MaxDistance_3">10000</float>
+              <float name="EmitterSize">0</float>
+              <token name="RollOffMode">0</token>
+              <Ref name="SoundGroup">null</Ref>
+              <Content name="SoundId"><null></null></Content>
+              <BinaryString name="Tags" />
+              <double name="TimePosition">0</double>
+              <float name="Volume">0.7</float>
+            </Properties>
+          </Item>
+          <Item class="PointLight" referent="711">
+            <Properties>
+              <string name="Name">PointLight</string>
+              <BinaryString name="AttributesSerialize" />
+              <float name="Brightness">1</float>
+              <Color3 name="Color">
+                <R>1</R>
+                <G>1</G>
+                <B>0</B>
+              </Color3>
+              <bool name="Enabled">true</bool>
+              <float name="Range">9</float>
+              <bool name="Shadows">false</bool>
+              <BinaryString name="Tags" />
+            </Properties>
+          </Item>
+          <Item class="Script" referent="712">
+            <Properties>
+              <string name="Name">Script</string>
+              <BinaryString name="AttributesSerialize" />
+              <bool name="Disabled">false</bool>
+              <Content name="LinkedSource">
+                <null>
+                </null>
+              </Content>
+              <string name="ScriptGuid" />
+              <string name="Source">function Break(hit) 
+hit:BreakJoints() 
+end 
+
+script.Parent.Touched:connect(Break)
+
+</string>
+              <BinaryString name="Tags" />
+            </Properties>
+          </Item>
+          <Item class="ParticleEmitter" referent="713">
+            <Properties>
+              <string name="Name">ParticleEmitter</string>
+              <Vector3 name="Acceleration">
+                <X>0</X>
+                <Y>0</Y>
+                <Z>0</Z>
+              </Vector3>
+              <BinaryString name="AttributesSerialize" />
+              <ColorSequence name="Color">0 0.5764706 1 0.93725497 0 1 1 1 1 0 </ColorSequence>
+              <float name="Drag">0</float>
+              <token name="EmissionDirection">1</token>
+              <bool name="Enabled">true</bool>
+              <NumberRange name="Lifetime">1 1 </NumberRange>
+              <float name="LightEmission">1</float>
+              <float name="LightInfluence">0</float>
+              <bool name="LockedToPart">false</bool>
+              <float name="Rate">5</float>
+              <NumberRange name="RotSpeed">400 400 </NumberRange>
+              <NumberRange name="Rotation">0 0 </NumberRange>
+              <NumberSequence name="Size">0 0 0 1 5.9375 0.5214727 </NumberSequence>
+              <NumberRange name="Speed">0 0 </NumberRange>
+              <Vector2 name="SpreadAngle">
+                <X>0</X>
+                <Y>0</Y>
+              </Vector2>
+              <BinaryString name="Tags" />
+              <Content name="Texture">
+                <url>http://www.roblox.com/asset/?id=243043575</url>
+              </Content>
+              <NumberSequence name="Transparency">0 0 0 0.62718207 0.5875 0 1 1 0 </NumberSequence>
+              <float name="VelocityInheritance">0</float>
+              <float name="ZOffset">0</float>
+            </Properties>
+          </Item>
+          <Item class="ParticleEmitter" referent="714">
+            <Properties>
+              <string name="Name">ParticleEmitter</string>
+              <Vector3 name="Acceleration">
+                <X>0</X>
+                <Y>0</Y>
+                <Z>0</Z>
+              </Vector3>
+              <BinaryString name="AttributesSerialize" />
+              <ColorSequence name="Color">0 1 0.7490196 0 0 1 1 0 0.015686275 0 </ColorSequence>
+              <float name="Drag">0</float>
+              <token name="EmissionDirection">1</token>
+              <bool name="Enabled">true</bool>
+              <NumberRange name="Lifetime">0.5 0.5 </NumberRange>
+              <float name="LightEmission">1</float>
+              <float name="LightInfluence">0</float>
+              <bool name="LockedToPart">false</bool>
+              <float name="Rate">200</float>
+              <NumberRange name="RotSpeed">400 400 </NumberRange>
+              <NumberRange name="Rotation">0 0 </NumberRange>
+              <NumberSequence name="Size">0 1.5644175 0.5214727 0.0798005 0.625 0 0.16458854 1.0624999 0 0.21695761 0.18750012 0 0.33167082 0.8125001 0 0.38653368 0.062499642 0 0.49625936 0.99999964 0 0.553616 0.12499988 0 0.59351623 1.1874998 0 0.6608479 0.37499964 0 0.7718205 0.24999976 0 0.83665836 1.1250001 0 0.92144644 0.37499964 0 0.98254365 1.5625 0 1 0 0 </NumberSequence>
+              <NumberRange name="Speed">0 0 </NumberRange>
+              <Vector2 name="SpreadAngle">
+                <X>40</X>
+                <Y>40</Y>
+              </Vector2>
+              <BinaryString name="Tags" />
+              <Content name="Texture">
+                <url>http://www.roblox.com/asset/?id=241674353</url>
+              </Content>
+              <NumberSequence name="Transparency">0 0 0 0.33665836 0.9375 0 1 1 0 </NumberSequence>
+              <float name="VelocityInheritance">0</float>
+              <float name="ZOffset">0</float>
+            </Properties>
+          </Item>
+        </Item>
+      </Item>
+      </roblox>

@@ -1,0 +1,240 @@
+<?xml version='1.0' encoding='utf-8'?>
+<roblox version="4"><Item class="Tool" referent="60918">
+      <Properties>
+        <string name="Name">FidgetSpinner</string>
+        <bool name="CanBeDropped">true</bool>
+        <bool name="Enabled">true</bool>
+        <CoordinateFrame name="Grip">
+          <X>0.125</X>
+          <Y>-0.425</Y>
+          <Z>-0.4</Z>
+          <R00>0.8164967</R00>
+          <R01>0.57735026</R01>
+          <R02>0</R02>
+          <R10>-0.40824834</R10>
+          <R11>0.57735026</R11>
+          <R12>-0.70710677</R12>
+          <R20>-0.40824834</R20>
+          <R21>0.57735026</R21>
+          <R22>0.70710677</R22>
+        </CoordinateFrame>
+        <bool name="ManualActivationOnly">false</bool>
+        <bool name="RequiresHandle">true</bool>
+        <BinaryString name="Tags" />
+        <Content name="TextureId">
+          <url>rbxassetid://785048824</url>
+        </Content>
+        <string name="ToolTip">Watch it spin!</string>
+      </Properties>
+      <Item class="Part" referent="60919">
+        <Properties>
+          <string name="Name">Handle</string>
+          <bool name="Anchored">false</bool>
+          <float name="BackParamA">-0.5</float>
+          <float name="BackParamB">0.5</float>
+          <token name="BackSurface">0</token>
+          <token name="BackSurfaceInput">0</token>
+          <float name="BottomParamA">-0.5</float>
+          <float name="BottomParamB">0.5</float>
+          <token name="BottomSurface">0</token>
+          <token name="BottomSurfaceInput">0</token>
+          <CoordinateFrame name="CFrame">
+            <X>-39</X>
+            <Y>0.200035</Y>
+            <Z>-14</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>-0.00000004371139</R11>
+            <R12>-1</R12>
+            <R20>0</R20>
+            <R21>1</R21>
+            <R22>-0.00000004371139</R22>
+          </CoordinateFrame>
+          <bool name="CanCollide">false</bool>
+          <bool name="CastShadow">true</bool>
+          <int name="CollisionGroupId">0</int>
+          <Color3uint8 name="Color3uint8">16711680</Color3uint8>
+          <PhysicalProperties name="CustomPhysicalProperties">
+            <CustomPhysics>false</CustomPhysics>
+          </PhysicalProperties>
+          <token name="formFactorRaw">1</token>
+          <float name="FrontParamA">-0.5</float>
+          <float name="FrontParamB">0.5</float>
+          <token name="FrontSurface">0</token>
+          <token name="FrontSurfaceInput">0</token>
+          <float name="LeftParamA">-0.5</float>
+          <float name="LeftParamB">0.5</float>
+          <token name="LeftSurface">0</token>
+          <token name="LeftSurfaceInput">0</token>
+          <bool name="Locked">false</bool>
+          <bool name="Massless">false</bool>
+          <token name="Material">256</token>
+          <float name="Reflectance">0</float>
+          <float name="RightParamA">-0.5</float>
+          <float name="RightParamB">0.5</float>
+          <token name="RightSurface">0</token>
+          <token name="RightSurfaceInput">0</token>
+          <int name="RootPriority">0</int>
+          <Vector3 name="RotVelocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+          <token name="shape">1</token>
+          <Vector3 name="size">
+            <X>1.2</X>
+            <Y>0.2</Y>
+            <Z>1.2</Z>
+          </Vector3>
+          <BinaryString name="Tags" />
+          <float name="TopParamA">-0.5</float>
+          <float name="TopParamB">0.5</float>
+          <token name="TopSurface">0</token>
+          <token name="TopSurfaceInput">0</token>
+          <float name="Transparency">0</float>
+          <Vector3 name="Velocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+        </Properties>
+        <Item class="Decal" referent="60920">
+          <Properties>
+            <string name="Name">Decal</string>
+            <Color3 name="Color3">
+              <R>1</R>
+              <G>1</G>
+              <B>1</B>
+            </Color3>
+            <token name="Face">1</token>
+            <BinaryString name="Tags" />
+            <Content name="Texture">
+              <url>rbxassetid://785492382</url>
+            </Content>
+            <float name="Transparency">0</float>
+          </Properties>
+        </Item>
+        <Item class="SpecialMesh" referent="60921">
+          <Properties>
+            <string name="Name">Mesh</string>
+            <Content name="MeshId">
+              <url>rbxassetid://785024366</url>
+            </Content>
+            <token name="MeshType">5</token>
+            <Vector3 name="Offset">
+              <X>0</X>
+              <Y>0</Y>
+              <Z>-0.16</Z>
+            </Vector3>
+            <Vector3 name="Scale">
+              <X>3</X>
+              <Y>5</Y>
+              <Z>3</Z>
+            </Vector3>
+            <BinaryString name="Tags" />
+            <Content name="TextureId">
+              <null>
+              </null>
+            </Content>
+            <Vector3 name="VertexColor">
+              <X>1</X>
+              <Y>1</Y>
+              <Z>1</Z>
+            </Vector3>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Script" referent="60922">
+        <Properties>
+          <string name="Name">Activate</string>
+          <bool name="Disabled">false</bool>
+          <Content name="LinkedSource">
+            <null>
+            </null>
+          </Content>
+          <string name="ScriptGuid">{C904A05A-44C9-492D-9DDF-41262E286BF5}</string>
+          <string name="Source">local Active = false
+
+local Human 
+local Connection
+local Part
+
+script.Parent.Equipped:connect(function()
+	local Humanoid = script.Parent.Parent:FindFirstChild("Humanoid")
+	if Human ~= Humanoid then
+		if Connection then
+			Connection:disconnect()
+		end
+		Human = Humanoid
+		
+		Connection = Humanoid.Died:connect(function()
+			if Part then
+				Part:Destroy()
+			end
+		end)
+	end
+end)
+
+local Debounce = true
+
+script.Parent.Activated:connect(function()
+	if Human and Debounce then
+		Debounce = false
+		spawn(function()
+			wait(0.5)
+			Debounce = true
+		end)
+		if not Active then
+			
+			Active = true
+			local Spinner = script.Parent.Handle:Clone()
+			script.Parent.Handle.Transparency = 1
+			script.Parent.Handle.Decal.Transparency = 1
+
+			spawn(function()
+				for i=1,10 do
+					wait(0.1)
+					if Spinner then
+						Spinner.Orientation = Vector3.new(0,Spinner.Orientation.Y,0)
+						Spinner.Velocity = Spinner.Velocity * 0.5
+					end
+				end
+			end)			
+			
+			Spinner.CanCollide = true
+			Spinner.Transparency = 0
+			Spinner.Parent = workspace
+			Spinner.CFrame = script.Parent.Handle.CFrame
+			local Velo = Instance.new("BodyAngularVelocity",Spinner)
+			Velo.MaxTorque = Vector3.new(0,1000,0)
+			Velo.P = 10
+			
+			if script.Parent.Parent:FindFirstChild("HumanoidRootPart") then
+				Spinner.Velocity = (script.Parent.Parent.HumanoidRootPart.CFrame.lookVector * 25) + Vector3.new(0,5,0)
+			end
+			
+			Part = Spinner			
+			
+			local Angular = math.random(60,120)
+			while Spinner ~= nil and Angular &gt; 0 do
+				Velo.AngularVelocity = Vector3.new(0,Angular,0)
+				wait(0.5)
+				Angular = Angular - 1
+			end
+		else
+			Active = false
+			script.Parent.Handle.Transparency = 0
+			script.Parent.Handle.Decal.Transparency = 0
+			if Part then
+				Part:Destroy()
+			end
+		end
+	end
+end)</string>
+          <BinaryString name="Tags" />
+        </Properties>
+      </Item>
+    </Item>
+    </roblox>

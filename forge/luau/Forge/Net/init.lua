@@ -311,7 +311,7 @@ function Net.on(name: string, handler: (...any) -> ...any): RBXScriptConnection?
 				end
 				local success, result = pcall(handler, player, checked)
 				if not success then
-					warn(string.format("[Net] handler '%s' errored: %s", name, tostring(result)))
+					error(string.format("[Net] handler '%s' errored: %s", name, tostring(result)), 0)
 					return nil
 				end
 				return result
@@ -326,7 +326,7 @@ function Net.on(name: string, handler: (...any) -> ...any): RBXScriptConnection?
 			end
 			local success, err = pcall(handler, player, checked)
 			if not success then
-				warn(string.format("[Net] handler '%s' errored: %s", name, tostring(err)))
+				error(string.format("[Net] handler '%s' errored: %s", name, tostring(err)), 0)
 			end
 		end)
 	end
@@ -338,7 +338,7 @@ function Net.on(name: string, handler: (...any) -> ...any): RBXScriptConnection?
 	return (remote :: RemoteEvent).OnClientEvent:Connect(function(payload)
 		local ok, err = pcall(handler, payload)
 		if not ok then
-			warn(string.format("[Net] client handler '%s' errored: %s", name, tostring(err)))
+			error(string.format("[Net] client handler '%s' errored: %s", name, tostring(err)), 0)
 		end
 	end)
 end

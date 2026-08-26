@@ -1,0 +1,237 @@
+<?xml version='1.0' encoding='utf-8'?>
+<roblox version="4"><Item class="Tool" referent="60792">
+      <Properties>
+        <string name="Name">FFOrb</string>
+        <bool name="CanBeDropped">true</bool>
+        <bool name="Enabled">true</bool>
+        <CoordinateFrame name="Grip">
+          <X>0</X>
+          <Y>0</Y>
+          <Z>0</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="ManualActivationOnly">false</bool>
+        <bool name="RequiresHandle">true</bool>
+        <BinaryString name="Tags" />
+        <Content name="TextureId">
+          <url>rbxassetid://284846517</url>
+        </Content>
+        <string name="ToolTip" />
+      </Properties>
+      <Item class="Script" referent="60793">
+        <Properties>
+          <string name="Name">ShieldScript</string>
+          <bool name="Disabled">false</bool>
+          <Content name="LinkedSource">
+            <null>
+            </null>
+          </Content>
+          <string name="ScriptGuid">{8FFAA4CF-EC57-4C71-8E52-6EBBCC41E642}</string>
+          <string name="Source">Tool = script.Parent
+
+local field = nil
+
+function shieldsUp()
+
+	if (field == nil) then
+		Tool.Handle.Boing:play()
+
+		local vCharacter = Tool.Parent
+
+		Tool.Handle.BrickColor = BrickColor.new(24) -- yellow
+
+		field = Instance.new("ForceField")
+		field.Parent = vCharacter
+
+	end
+
+end
+
+function shieldsDown()
+	if (field ~= nil) then
+		field.Parent = nil
+		field = nil
+		Tool.Handle.BrickColor = BrickColor.new(104) -- purple
+	end
+end
+
+
+Tool.Enabled = true
+function onActivated()
+
+	if not Tool.Enabled then
+		return
+	end
+
+	Tool.Enabled = false
+
+	shieldsUp()
+
+	wait(8)
+
+	shieldsDown()
+
+	wait(7)
+
+	Tool.Enabled = true
+end
+
+
+script.Parent.Activated:connect(onActivated)
+Tool.Unequipped:connect(shieldsDown)
+
+
+</string>
+          <BinaryString name="Tags" />
+        </Properties>
+      </Item>
+      <Item class="Part" referent="60794">
+        <Properties>
+          <string name="Name">Handle</string>
+          <bool name="Anchored">false</bool>
+          <float name="BackParamA">-0.5</float>
+          <float name="BackParamB">0.5</float>
+          <token name="BackSurface">0</token>
+          <token name="BackSurfaceInput">0</token>
+          <float name="BottomParamA">-0.5</float>
+          <float name="BottomParamB">0.5</float>
+          <token name="BottomSurface">0</token>
+          <token name="BottomSurfaceInput">0</token>
+          <CoordinateFrame name="CFrame">
+            <X>-2.4000015</X>
+            <Y>3.3999975</Y>
+            <Z>0</Z>
+            <R00>1</R00>
+            <R01>0</R01>
+            <R02>0</R02>
+            <R10>0</R10>
+            <R11>0</R11>
+            <R12>1</R12>
+            <R20>0</R20>
+            <R21>-1</R21>
+            <R22>0</R22>
+          </CoordinateFrame>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <int name="CollisionGroupId">0</int>
+          <Color3uint8 name="Color3uint8">7025276</Color3uint8>
+          <PhysicalProperties name="CustomPhysicalProperties">
+            <CustomPhysics>true</CustomPhysics>
+            <Density>0.7</Density>
+            <Friction>0</Friction>
+            <Elasticity>1</Elasticity>
+            <FrictionWeight>1</FrictionWeight>
+            <ElasticityWeight>1</ElasticityWeight>
+          </PhysicalProperties>
+          <token name="formFactorRaw">0</token>
+          <float name="FrontParamA">-0.5</float>
+          <float name="FrontParamB">0.5</float>
+          <token name="FrontSurface">0</token>
+          <token name="FrontSurfaceInput">0</token>
+          <float name="LeftParamA">-0.5</float>
+          <float name="LeftParamB">0.5</float>
+          <token name="LeftSurface">0</token>
+          <token name="LeftSurfaceInput">0</token>
+          <bool name="Locked">false</bool>
+          <bool name="Massless">false</bool>
+          <token name="Material">288</token>
+          <float name="Reflectance">0</float>
+          <float name="RightParamA">-0.5</float>
+          <float name="RightParamB">0.5</float>
+          <token name="RightSurface">0</token>
+          <token name="RightSurfaceInput">0</token>
+          <int name="RootPriority">0</int>
+          <Vector3 name="RotVelocity">
+            <X>0.00000000000000001885991</X>
+            <Y>0.0000000000000000108609005</Y>
+            <Z>-0.000000000000000011514345</Z>
+          </Vector3>
+          <token name="shape">0</token>
+          <Vector3 name="size">
+            <X>2</X>
+            <Y>2</Y>
+            <Z>2</Z>
+          </Vector3>
+          <BinaryString name="Tags" />
+          <float name="TopParamA">-0.5</float>
+          <float name="TopParamB">0.5</float>
+          <token name="TopSurface">0</token>
+          <token name="TopSurfaceInput">0</token>
+          <float name="Transparency">0.5</float>
+          <Vector3 name="Velocity">
+            <X>0.0000000000000000114621905</X>
+            <Y>-0.0036042482</Y>
+            <Z>0.000000000000000018697298</Z>
+          </Vector3>
+        </Properties>
+        <Item class="Sound" referent="60795">
+          <Properties>
+            <string name="Name">Boing</string>
+            <bool name="Looped">false</bool>
+            <bool name="PlayOnRemove">false</bool>
+            <float name="PlaybackSpeed">1</float>
+            <bool name="Playing">false</bool>
+            <float name="xmlRead_MaxDistance_3">10000</float>
+            <float name="EmitterSize">10</float>
+            <token name="RollOffMode">0</token>
+            <Ref name="SoundGroup">null</Ref>
+            <Content name="SoundId"><null></null></Content>
+            <BinaryString name="Tags" />
+            <double name="TimePosition">0</double>
+            <float name="Volume">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="LocalScript" referent="60796">
+        <Properties>
+          <string name="Name">Local Gui</string>
+          <bool name="Disabled">false</bool>
+          <Content name="LinkedSource">
+            <null>
+            </null>
+          </Content>
+          <string name="ScriptGuid">{77E99E74-D10F-45F5-ABD1-6672D00D8AF4}</string>
+          <string name="Source">local Tool = script.Parent;
+
+enabled = true
+function onButton1Down(mouse)
+	if not enabled then
+		return
+	end
+
+	enabled = false
+	mouse.Icon = "rbxasset://textures\\GunWaitCursor.png"
+
+	wait(15)
+	mouse.Icon = "rbxasset://textures\\GunCursor.png"
+	enabled = true
+
+end
+
+function onEquippedLocal(mouse)
+
+	if mouse == nil then
+		print("Mouse not found")
+		return 
+	end
+
+	mouse.Icon = "rbxasset://textures\\GunCursor.png"
+	mouse.Button1Down:connect(function() onButton1Down(mouse) end)
+end
+
+
+Tool.Equipped:connect(onEquippedLocal)
+</string>
+          <BinaryString name="Tags" />
+        </Properties>
+      </Item>
+    </Item>
+    </roblox>

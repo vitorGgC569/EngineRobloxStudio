@@ -83,14 +83,25 @@ function Resolve.instance(path: string?): Instance
 	local current: Instance = game
 	local startIndex = 1
 
+	--[[
+		`walked` is the message, and the message has to name the real root.
+
+		It used to start at "game" unconditionally, so a path rooted at the
+		Workspace that failed on its second segment reported "no instance at
+		game.Plots" -- a path nobody asked about, pointing at the wrong parent.
+		That message cost a debugging session: it reads as a broken resolver
+		when the resolver was right and the instance simply was not in the
+		DataModel being asked.
+	]]
+	local walked = { "game" }
+
 	if ROOT_ALIASES[parts[1]] then
 		startIndex = 2
 	elseif parts[1] == "workspace" or parts[1] == "Workspace" then
 		current = workspace
 		startIndex = 2
+		walked = { "Workspace" }
 	end
-
-	local walked = { "game" }
 
 	for index = startIndex, #parts do
 		local name = parts[index]

@@ -1,0 +1,359 @@
+<?xml version='1.0' encoding='utf-8'?>
+<roblox version="4"><Item class="Tool" referent="60908">
+      <Properties>
+        <string name="Name">Banhammer</string>
+        <bool name="CanBeDropped">true</bool>
+        <bool name="Enabled">true</bool>
+        <CoordinateFrame name="Grip">
+          <X>0</X>
+          <Y>-1</Y>
+          <Z>0</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="ManualActivationOnly">false</bool>
+        <bool name="RequiresHandle">true</bool>
+        <BinaryString name="Tags" />
+        <Content name="TextureId">
+          <url>http://www.roblox.com/asset/?id=10684453</url>
+        </Content>
+        <string name="ToolTip" />
+      </Properties>
+      <Item class="Part" referent="60909">
+        <Properties>
+          <string name="Name">Handle</string>
+          <bool name="Anchored">false</bool>
+          <float name="BackParamA">-0.5</float>
+          <float name="BackParamB">0.5</float>
+          <token name="BackSurface">0</token>
+          <token name="BackSurfaceInput">0</token>
+          <float name="BottomParamA">-0.5</float>
+          <float name="BottomParamB">0.5</float>
+          <token name="BottomSurface">4</token>
+          <token name="BottomSurfaceInput">0</token>
+          <CoordinateFrame name="CFrame">
+            <X>-22.5</X>
+            <Y>7.600019</Y>
+            <Z>33.5</Z>
+            <R00>0</R00>
+            <R01>0</R01>
+            <R02>1</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>-1</R20>
+            <R21>0</R21>
+            <R22>0</R22>
+          </CoordinateFrame>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <int name="CollisionGroupId">0</int>
+          <Color3uint8 name="Color3uint8">10724005</Color3uint8>
+          <PhysicalProperties name="CustomPhysicalProperties">
+            <CustomPhysics>false</CustomPhysics>
+          </PhysicalProperties>
+          <token name="formFactorRaw">1</token>
+          <float name="FrontParamA">-0.5</float>
+          <float name="FrontParamB">0.5</float>
+          <token name="FrontSurface">0</token>
+          <token name="FrontSurfaceInput">0</token>
+          <float name="LeftParamA">-0.5</float>
+          <float name="LeftParamB">0.5</float>
+          <token name="LeftSurface">0</token>
+          <token name="LeftSurfaceInput">0</token>
+          <bool name="Locked">true</bool>
+          <bool name="Massless">false</bool>
+          <token name="Material">256</token>
+          <float name="Reflectance">0</float>
+          <float name="RightParamA">-0.5</float>
+          <float name="RightParamB">0.5</float>
+          <token name="RightSurface">0</token>
+          <token name="RightSurfaceInput">0</token>
+          <int name="RootPriority">0</int>
+          <Vector3 name="RotVelocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+          <token name="shape">1</token>
+          <Vector3 name="size">
+            <X>3</X>
+            <Y>7</Y>
+            <Z>3</Z>
+          </Vector3>
+          <BinaryString name="Tags" />
+          <float name="TopParamA">-0.5</float>
+          <float name="TopParamB">0.5</float>
+          <token name="TopSurface">3</token>
+          <token name="TopSurfaceInput">0</token>
+          <float name="Transparency">0</float>
+          <Vector3 name="Velocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+        </Properties>
+        <Item class="SpecialMesh" referent="60910">
+          <Properties>
+            <string name="Name">Mesh</string>
+            <Content name="MeshId">
+              <url>http://www.roblox.com/asset/?id=10604848</url>
+            </Content>
+            <token name="MeshType">5</token>
+            <Vector3 name="Offset">
+              <X>0</X>
+              <Y>0</Y>
+              <Z>0</Z>
+            </Vector3>
+            <Vector3 name="Scale">
+              <X>0.7</X>
+              <Y>0.7</Y>
+              <Z>0.7</Z>
+            </Vector3>
+            <BinaryString name="Tags" />
+            <Content name="TextureId">
+              <url>http://www.roblox.com/asset/?id=10605252</url>
+            </Content>
+            <Vector3 name="VertexColor">
+              <X>1</X>
+              <Y>1</Y>
+              <Z>1</Z>
+            </Vector3>
+          </Properties>
+        </Item>
+        <Item class="Decal" referent="60911">
+          <Properties>
+            <string name="Name">Decal</string>
+            <Color3 name="Color3">
+              <R>1</R>
+              <G>1</G>
+              <B>1</B>
+            </Color3>
+            <token name="Face">2</token>
+            <BinaryString name="Tags" />
+            <Content name="Texture">
+              <url>http://www.roblox.com/asset/?id=10605252</url>
+            </Content>
+            <float name="Transparency">0</float>
+          </Properties>
+        </Item>
+        <Item class="Sound" referent="60912">
+          <Properties>
+            <string name="Name">Swing</string>
+            <bool name="Looped">false</bool>
+            <bool name="PlayOnRemove">false</bool>
+            <float name="PlaybackSpeed">1</float>
+            <bool name="Playing">false</bool>
+            <float name="xmlRead_MaxDistance_3">10000</float>
+            <float name="EmitterSize">10</float>
+            <token name="RollOffMode">0</token>
+            <Ref name="SoundGroup">null</Ref>
+            <Content name="SoundId"><null></null></Content>
+            <BinaryString name="Tags" />
+            <double name="TimePosition">0</double>
+            <float name="Volume">0.5</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Sound" referent="60913">
+        <Properties>
+          <string name="Name">Banned</string>
+          <bool name="Looped">false</bool>
+          <bool name="PlayOnRemove">false</bool>
+          <float name="PlaybackSpeed">1</float>
+          <bool name="Playing">false</bool>
+          <float name="xmlRead_MaxDistance_3">250</float>
+          <float name="EmitterSize">10</float>
+          <token name="RollOffMode">0</token>
+          <Ref name="SoundGroup">null</Ref>
+          <Content name="SoundId"><null></null></Content>
+          <BinaryString name="Tags" />
+          <double name="TimePosition">0</double>
+          <float name="Volume">1</float>
+        </Properties>
+      </Item>
+      <Item class="Script" referent="60914">
+        <Properties>
+          <string name="Name">MeleeScript</string>
+          <bool name="Disabled">false</bool>
+          <Content name="LinkedSource">
+            <null>
+            </null>
+          </Content>
+          <string name="ScriptGuid">{0BD0A366-9ABA-43C9-9B5B-34043BD95CA9}</string>
+          <string name="Source">local Debounce = true
+local Human
+local Swing
+
+local Damage = 100
+--[[
+local function FindTargets(Parts)
+	local Targets = {}
+	if Parts ~= nil and #Parts &gt; 0 then		
+		for i, Part in pairs(Parts) do
+			if Part and Part.Parent then
+				if Part.Parent:FindFirstChild("Humanoid") and Targets[Part.Parent.Name] == nil and Part.Parent ~= script.Parent.Parent then
+					Targets[Part.Parent.Name] = {["Humanoid"] = Part.Parent.Humanoid,["Part"] = Part}
+				end				
+			end			
+		end
+	end
+	return Targets
+end
+]]
+
+local InSwing = false
+
+script.Parent.Equipped:connect(function(Mouse)
+	local Humanoid = script.Parent.Parent:FindFirstChild("Humanoid")
+	if Swing == nil or Humanoid ~= Human then
+		
+		if Humanoid then
+			Human = Humanoid
+			Swing = Humanoid:LoadAnimation(script.Parent.Swing)
+			Swing.KeyframeReached:connect(function(Key)
+				
+				if Key == "SwingStart" then
+					InSwing = true	
+					script.Parent.Handle.Swing:Play()
+				elseif Key == "Hit" then
+					
+					wait(0.1)
+					InSwing = false
+												
+				end
+					
+			--	end
+			end)			
+		end
+	end
+end)
+
+script.Parent.Handle.Touched:connect(function(Hit)
+	local Target = Hit.Parent
+	if InSwing and Target:FindFirstChild("Humanoid") and Target ~= script.Parent.Parent then
+		if Target.Humanoid:FindFirstChild("HitHard") == nil then
+			if Target.Humanoid:FindFirstChild("Safe") == nil and Target.Humanoid:FindFirstChild("ForceField") == nil then
+				
+				Target.Humanoid:TakeDamage(Damage)
+				Target.Humanoid.Sit = true
+				local OldPower = Target.Humanoid.JumpPower
+				Target.Humanoid.JumpPower = 0
+				Target.Humanoid.WalkSpeed = Target.Humanoid.WalkSpeed - 10
+				spawn(function()
+					wait(1)
+					if Target.Humanoid then
+						Target.Humanoid.JumpPower = OldPower
+						Target.Humanoid.WalkSpeed = Target.Humanoid.WalkSpeed + 8
+					end
+				end)
+				
+				
+				local ExpTarget = Target:FindFirstChild("HumanoidRootPart")	
+				
+				if ExpTarget == nil then
+					ExpTarget = Target:FindFirstChild("Head")
+				end				
+				
+				if ExpTarget then
+					local Exp = Instance.new("Explosion",workspace)
+					Exp.DestroyJointRadiusPercent = 0
+					Exp.Position = ExpTarget.Position
+					local Velo = Instance.new("BodyVelocity")
+					local dir = script.Parent.Handle.CFrame.lookVector
+					local Vect = Vector3.new(dir.X,math.abs(dir.Y),dir.Z) * 250
+					Velo.Velocity = Vect
+					ExpTarget.Velocity = Vect
+					Velo.Parent = ExpTarget
+					game.Debris:AddItem(Velo,0.5)
+					local Sound = script.Parent.Hit:Clone()
+					Sound.Parent = Hit
+					Sound:Play()
+					game.Debris:AddItem(Sound,1.5)
+				end
+			end
+		
+
+			
+			spawn(function()
+				wait(0.3)
+				local Banned = script.Parent.Banned:Clone()
+				Banned.Parent = Hit
+				Banned:Play()
+				game.Debris:AddItem(Banned,3)
+			end)
+			
+			local Tag = Instance.new("BoolValue")
+			Tag.Name = "HitHard"
+			Tag.Parent = Target.Humanoid
+			game.Debris:AddItem(Tag,0.5)
+		end
+	end
+	
+
+end)
+
+script.Parent.Activated:connect(function()
+	if Swing and Debounce then
+		Debounce = false
+		Swing:Play()
+		wait(1)
+		Debounce = true
+	end
+end)
+</string>
+          <BinaryString name="Tags" />
+        </Properties>
+      </Item>
+      <Item class="Animation" referent="60915">
+        <Properties>
+          <string name="Name">Swing</string>
+          <Content name="AnimationId">
+            <url>rbxassetid://842020940</url>
+          </Content>
+          <BinaryString name="Tags" />
+        </Properties>
+      </Item>
+      <Item class="BodyVelocity" referent="60916">
+        <Properties>
+          <string name="Name">BodyVelocity</string>
+          <Vector3 name="MaxForce">
+            <X>4000</X>
+            <Y>4000</Y>
+            <Z>4000</Z>
+          </Vector3>
+          <float name="P">1250</float>
+          <BinaryString name="Tags" />
+          <Vector3 name="Velocity">
+            <X>0</X>
+            <Y>2</Y>
+            <Z>0</Z>
+          </Vector3>
+        </Properties>
+      </Item>
+      <Item class="Sound" referent="60917">
+        <Properties>
+          <string name="Name">Hit</string>
+          <bool name="Looped">false</bool>
+          <bool name="PlayOnRemove">false</bool>
+          <float name="PlaybackSpeed">1</float>
+          <bool name="Playing">false</bool>
+          <float name="xmlRead_MaxDistance_3">10000</float>
+          <float name="EmitterSize">10</float>
+          <token name="RollOffMode">0</token>
+          <Ref name="SoundGroup">null</Ref>
+          <Content name="SoundId"><null></null></Content>
+          <BinaryString name="Tags" />
+          <double name="TimePosition">0</double>
+          <float name="Volume">0.5</float>
+        </Properties>
+      </Item>
+    </Item>
+    </roblox>

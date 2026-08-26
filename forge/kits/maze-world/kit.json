@@ -1,0 +1,812 @@
+{
+  "kit": "maze-world",
+  "source": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\maze-world",
+  "harvestedAt": "2026-08-25T18:06:37.309714+00:00",
+  "licence": "held by the repository owner; see the source project",
+  "pieces": [
+    {
+      "path": "assets/brand/loading-logo.png",
+      "name": "loading-logo",
+      "bytes": 73261,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "kitPath": "upload/image/loading-logo.png"
+    },
+    {
+      "path": "assets/brand/logo-icon.png",
+      "name": "logo-icon",
+      "bytes": 14329,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "kitPath": "upload/image/logo-icon.png"
+    },
+    {
+      "path": "assets/brand/logo.png",
+      "name": "logo",
+      "bytes": 91146,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "kitPath": "upload/image/logo.png"
+    },
+    {
+      "path": "assets/faces/cartoon-face-angry.png",
+      "name": "cartoon-face-angry",
+      "bytes": 9831,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "kitPath": "upload/image/cartoon-face-angry.png"
+    },
+    {
+      "path": "assets/faces/cartoon-face-died.png",
+      "name": "cartoon-face-died",
+      "bytes": 5076,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "kitPath": "upload/image/cartoon-face-died.png"
+    },
+    {
+      "path": "assets/faces/cartoon-face-sad.png",
+      "name": "cartoon-face-sad",
+      "bytes": 8340,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "kitPath": "upload/image/cartoon-face-sad.png"
+    },
+    {
+      "path": "assets/faces/coins-pile.png",
+      "name": "coins-pile",
+      "bytes": 51868,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "kitPath": "upload/image/coins-pile.png"
+    },
+    {
+      "path": "assets/money/coins-pile.png",
+      "name": "coins-pile",
+      "bytes": 118167,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "kitPath": "upload/image/coins-pile_2.png"
+    },
+    {
+      "path": "maze-world.rbxl",
+      "name": "maze-world",
+      "bytes": 434874,
+      "kind": "place",
+      "category": "place",
+      "format": "binary",
+      "kitPath": "places/maze-world.rbxl"
+    },
+    {
+      "path": "models/Collectables/cherry.rbxmx",
+      "name": "cherry",
+      "bytes": 52931,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/cherry.rbxmx"
+    },
+    {
+      "path": "models/FallItems/Blood.rbxmx",
+      "name": "Blood",
+      "bytes": 6835,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Blood.rbxmx"
+    },
+    {
+      "path": "models/FallItems/Bugs.rbxmx",
+      "name": "Bugs",
+      "bytes": 69768,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Bugs.rbxmx"
+    },
+    {
+      "path": "models/FallItems/Candies.rbxmx",
+      "name": "Candies",
+      "bytes": 29020,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Candies.rbxmx"
+    },
+    {
+      "path": "models/FallItems/Eyes.rbxmx",
+      "name": "Eyes",
+      "bytes": 6000,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Eyes.rbxmx"
+    },
+    {
+      "path": "models/FallItems/Sculls.rbxmx",
+      "name": "Sculls",
+      "bytes": 28605,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Sculls.rbxmx"
+    },
+    {
+      "path": "models/FallItems/Snakes.rbxmx",
+      "name": "Snakes",
+      "bytes": 38232,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Snakes.rbxmx"
+    },
+    {
+      "path": "models/Misc/Dark.rbxmx",
+      "name": "Dark",
+      "bytes": 6879171,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Dark.rbxmx"
+    },
+    {
+      "path": "models/Misc/Light.rbxmx",
+      "name": "Light",
+      "bytes": 460435,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Light.rbxmx"
+    },
+    {
+      "path": "models/Money/Coin.rbxmx",
+      "name": "Coin",
+      "bytes": 8581,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Coin.rbxmx"
+    },
+    {
+      "path": "models/Money/PileOfCoins.rbxmx",
+      "name": "PileOfCoins",
+      "bytes": 51876,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/PileOfCoins.rbxmx"
+    },
+    {
+      "path": "models/Pets/Light Pet 1.rbxmx",
+      "name": "Light Pet 1",
+      "bytes": 27274,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Light_Pet_1.rbxmx"
+    },
+    {
+      "path": "models/Pets/Light Pet 2.rbxmx",
+      "name": "Light Pet 2",
+      "bytes": 27257,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Light_Pet_2.rbxmx"
+    },
+    {
+      "path": "models/Pets/Light Pet 3.rbxmx",
+      "name": "Light Pet 3",
+      "bytes": 27244,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Light_Pet_3.rbxmx"
+    },
+    {
+      "path": "models/Pets/Light Pet 4.rbxmx",
+      "name": "Light Pet 4",
+      "bytes": 27262,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Light_Pet_4.rbxmx"
+    },
+    {
+      "path": "models/Pets/Light Pet 5.rbxmx",
+      "name": "Light Pet 5",
+      "bytes": 27239,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Light_Pet_5.rbxmx"
+    },
+    {
+      "path": "models/Pets/Path Pet Green.rbxmx",
+      "name": "Path Pet Green",
+      "bytes": 12420,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Path_Pet_Green.rbxmx"
+    },
+    {
+      "path": "models/Pets/Path Pet Rainbow.rbxmx",
+      "name": "Path Pet Rainbow",
+      "bytes": 12656,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Path_Pet_Rainbow.rbxmx"
+    },
+    {
+      "path": "models/Pets/Path Pet Red.rbxmx",
+      "name": "Path Pet Red",
+      "bytes": 12400,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Path_Pet_Red.rbxmx"
+    },
+    {
+      "path": "models/Pets/Path Pet Yellow.rbxmx",
+      "name": "Path Pet Yellow",
+      "bytes": 12431,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Path_Pet_Yellow.rbxmx"
+    },
+    {
+      "path": "models/Pets/Speed Pet 1.rbxmx",
+      "name": "Speed Pet 1",
+      "bytes": 16664,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Speed_Pet_1.rbxmx"
+    },
+    {
+      "path": "models/Pets/Speed Pet 2.rbxmx",
+      "name": "Speed Pet 2",
+      "bytes": 16683,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Speed_Pet_2.rbxmx"
+    },
+    {
+      "path": "models/Pets/Speed Pet 3.rbxmx",
+      "name": "Speed Pet 3",
+      "bytes": 16679,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Speed_Pet_3.rbxmx"
+    },
+    {
+      "path": "models/Pets/Speed Pet 4.rbxmx",
+      "name": "Speed Pet 4",
+      "bytes": 16677,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Speed_Pet_4.rbxmx"
+    },
+    {
+      "path": "models/Pets/Speed Pet 5.rbxmx",
+      "name": "Speed Pet 5",
+      "bytes": 16664,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Speed_Pet_5.rbxmx"
+    },
+    {
+      "path": "models/Pets/Speed Pet 6.rbxmx",
+      "name": "Speed Pet 6",
+      "bytes": 16661,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Speed_Pet_6.rbxmx"
+    },
+    {
+      "path": "models/Prefabs/FinishPlaceholder.rbxmx",
+      "name": "FinishPlaceholder",
+      "bytes": 4399,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/FinishPlaceholder.rbxmx"
+    },
+    {
+      "path": "models/Prefabs/Floor.rbxmx",
+      "name": "Floor",
+      "bytes": 2762,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Floor.rbxmx"
+    },
+    {
+      "path": "models/Prefabs/Killbrick.rbxmx",
+      "name": "Killbrick",
+      "bytes": 2789,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Killbrick.rbxmx"
+    },
+    {
+      "path": "models/Prefabs/SpawnPlaceholder.rbxmx",
+      "name": "SpawnPlaceholder",
+      "bytes": 4388,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/SpawnPlaceholder.rbxmx"
+    },
+    {
+      "path": "models/Prefabs/Wall.rbxmx",
+      "name": "Wall",
+      "bytes": 2715,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Wall.rbxmx"
+    },
+    {
+      "path": "models/Trails/GreenTrail.rbxmx",
+      "name": "GreenTrail",
+      "bytes": 1173,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/GreenTrail.rbxmx"
+    },
+    {
+      "path": "models/Trails/RainbowTrail.rbxmx",
+      "name": "RainbowTrail",
+      "bytes": 1502,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/RainbowTrail.rbxmx"
+    },
+    {
+      "path": "models/Trails/RedTrail.rbxmx",
+      "name": "RedTrail",
+      "bytes": 1169,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/RedTrail.rbxmx"
+    },
+    {
+      "path": "models/Trails/YellowTrail.rbxmx",
+      "name": "YellowTrail",
+      "bytes": 1174,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/YellowTrail.rbxmx"
+    },
+    {
+      "path": "models/Walls/Walls_1.rbxmx",
+      "name": "Walls_1",
+      "bytes": 71626,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Walls_1.rbxmx"
+    },
+    {
+      "path": "models/Walls/Walls_1_killbrick.rbxmx",
+      "name": "Walls_1_killbrick",
+      "bytes": 3186,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Walls_1_killbrick.rbxmx"
+    },
+    {
+      "path": "models/Walls/Walls_2.rbxmx",
+      "name": "Walls_2",
+      "bytes": 9021,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/Walls_2.rbxmx"
+    },
+    {
+      "path": "PlaceTerrain.rbxmx",
+      "name": "PlaceTerrain",
+      "bytes": 585617,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/PlaceTerrain.rbxmx"
+    },
+    {
+      "path": "plugin/MazeGenerator.rbxmx",
+      "name": "MazeGenerator",
+      "bytes": 1138610,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "kitPath": "mount/prop/MazeGenerator.rbxmx"
+    },
+    {
+      "path": "plugin/plugin.rbxl",
+      "name": "plugin",
+      "bytes": 185185,
+      "kind": "place",
+      "category": "place",
+      "format": "binary",
+      "kitPath": "places/plugin.rbxl"
+    },
+    {
+      "path": "raw-assets/badges/ghost_mode.png",
+      "name": "ghost_mode",
+      "bytes": 11328,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "kitPath": "upload/image/ghost_mode.png"
+    },
+    {
+      "path": "raw-assets/badges/high_jump.png",
+      "name": "high_jump",
+      "bytes": 8851,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "kitPath": "upload/image/high_jump.png"
+    },
+    {
+      "path": "raw-assets/blender/box.fbx",
+      "name": "box",
+      "bytes": 31116,
+      "kind": "uploadable",
+      "category": "mesh",
+      "format": "binary",
+      "kitPath": "upload/mesh/box.fbx"
+    },
+    {
+      "path": "raw-assets/blender/cherry.fbx",
+      "name": "cherry",
+      "bytes": 51068,
+      "kind": "uploadable",
+      "category": "mesh",
+      "format": "binary",
+      "kitPath": "upload/mesh/cherry.fbx"
+    },
+    {
+      "path": "raw-assets/blender/coin.obj",
+      "name": "coin",
+      "bytes": 26661,
+      "kind": "uploadable",
+      "category": "mesh",
+      "format": "binary",
+      "kitPath": "upload/mesh/coin.obj"
+    },
+    {
+      "path": "raw-assets/blender/rock_01.fbx",
+      "name": "rock_01",
+      "bytes": 12812,
+      "kind": "uploadable",
+      "category": "mesh",
+      "format": "binary",
+      "kitPath": "upload/mesh/rock_01.fbx"
+    },
+    {
+      "path": "raw-assets/blender/rock_02.fbx",
+      "name": "rock_02",
+      "bytes": 13020,
+      "kind": "uploadable",
+      "category": "mesh",
+      "format": "binary",
+      "kitPath": "upload/mesh/rock_02.fbx"
+    },
+    {
+      "path": "raw-assets/blender/rock_03.fbx",
+      "name": "rock_03",
+      "bytes": 12556,
+      "kind": "uploadable",
+      "category": "mesh",
+      "format": "binary",
+      "kitPath": "upload/mesh/rock_03.fbx"
+    },
+    {
+      "path": "raw-assets/brand/GameImage.png",
+      "name": "GameImage",
+      "bytes": 261393,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "kitPath": "upload/image/GameImage.png"
+    },
+    {
+      "path": "raw-assets/brand/GameImageHorror.png",
+      "name": "GameImageHorror",
+      "bytes": 329299,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "kitPath": "upload/image/GameImageHorror.png"
+    },
+    {
+      "path": "raw-assets/brand/GameImageNew.png",
+      "name": "GameImageNew",
+      "bytes": 265737,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "kitPath": "upload/image/GameImageNew.png"
+    },
+    {
+      "path": "raw-assets/brand/logo.png",
+      "name": "logo",
+      "bytes": 91146,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "kitPath": "upload/image/logo_2.png"
+    },
+    {
+      "path": "raw-assets/brand/RobloxAd.png",
+      "name": "RobloxAd",
+      "bytes": 161999,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "kitPath": "upload/image/RobloxAd.png"
+    },
+    {
+      "path": "raw-assets/brand/RobloxAdHalloween.png",
+      "name": "RobloxAdHalloween",
+      "bytes": 163856,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "kitPath": "upload/image/RobloxAdHalloween.png"
+    },
+    {
+      "path": "raw-assets/game-models-scary-reference.rbxlx",
+      "name": "game-models-scary-reference",
+      "bytes": 10213853,
+      "kind": "place",
+      "category": "place",
+      "format": "xml",
+      "kitPath": "places/game-models-scary-reference.rbxlx"
+    },
+    {
+      "path": "raw-assets/game-models.rbxlx",
+      "name": "game-models",
+      "bytes": 8061393,
+      "kind": "place",
+      "category": "place",
+      "format": "xml",
+      "kitPath": "places/game-models.rbxlx"
+    },
+    {
+      "path": "raw-assets/game-pets-reference-only.rbxl",
+      "name": "game-pets-reference-only",
+      "bytes": 69780,
+      "kind": "place",
+      "category": "place",
+      "format": "binary",
+      "kitPath": "places/game-pets-reference-only.rbxl"
+    },
+    {
+      "path": "raw-assets/images/cartoon-face1.png",
+      "name": "cartoon-face1",
+      "bytes": 18877,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "kitPath": "upload/image/cartoon-face1.png"
+    },
+    {
+      "path": "raw-assets/images/cartoon-face2.png",
+      "name": "cartoon-face2",
+      "bytes": 23104,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "kitPath": "upload/image/cartoon-face2.png"
+    },
+    {
+      "path": "screenshots/maze-generator-controls.png",
+      "name": "maze-generator-controls",
+      "bytes": 166794,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "kitPath": "upload/image/maze-generator-controls.png"
+    }
+  ],
+  "indexed": [
+    {
+      "path": "assets/brand/plugin-icon.png",
+      "name": "plugin-icon",
+      "bytes": 415560,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "reason": "over 400KB for a uploadable",
+      "sourcePath": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\maze-world\\assets\\brand\\plugin-icon.png"
+    },
+    {
+      "path": "Game.rbxlx",
+      "name": "Game",
+      "bytes": 107032803,
+      "kind": "place",
+      "category": "place",
+      "format": "xml",
+      "reason": "over 12000KB for a place",
+      "sourcePath": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\maze-world\\Game.rbxlx"
+    },
+    {
+      "path": "Place.rbxmx",
+      "name": "Place",
+      "bytes": 96742663,
+      "kind": "instance",
+      "category": "prop",
+      "format": "xml",
+      "reason": "over 12000KB for a instance",
+      "sourcePath": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\maze-world\\Place.rbxmx"
+    },
+    {
+      "path": "raw-assets/blender/textures/Cherry_correct.png",
+      "name": "Cherry_correct",
+      "bytes": 997390,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "reason": "over 400KB for a uploadable",
+      "sourcePath": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\maze-world\\raw-assets\\blender\\textures\\Cherry_correct.png"
+    },
+    {
+      "path": "raw-assets/game-place.rbxlx",
+      "name": "game-place",
+      "bytes": 78245383,
+      "kind": "place",
+      "category": "place",
+      "format": "xml",
+      "reason": "over 12000KB for a place",
+      "sourcePath": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\maze-world\\raw-assets\\game-place.rbxlx"
+    },
+    {
+      "path": "screenshots/maze-generator-result.png",
+      "name": "maze-generator-result",
+      "bytes": 2346536,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "reason": "over 400KB for a uploadable",
+      "sourcePath": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\maze-world\\screenshots\\maze-generator-result.png"
+    },
+    {
+      "path": "screenshots/maze-world-1.png",
+      "name": "maze-world-1",
+      "bytes": 7936277,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "reason": "over 400KB for a uploadable",
+      "sourcePath": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\maze-world\\screenshots\\maze-world-1.png"
+    },
+    {
+      "path": "screenshots/maze-world-10.png",
+      "name": "maze-world-10",
+      "bytes": 7745635,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "reason": "over 400KB for a uploadable",
+      "sourcePath": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\maze-world\\screenshots\\maze-world-10.png"
+    },
+    {
+      "path": "screenshots/maze-world-2.png",
+      "name": "maze-world-2",
+      "bytes": 5071615,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "reason": "over 400KB for a uploadable",
+      "sourcePath": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\maze-world\\screenshots\\maze-world-2.png"
+    },
+    {
+      "path": "screenshots/maze-world-3.png",
+      "name": "maze-world-3",
+      "bytes": 4207218,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "reason": "over 400KB for a uploadable",
+      "sourcePath": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\maze-world\\screenshots\\maze-world-3.png"
+    },
+    {
+      "path": "screenshots/maze-world-4.png",
+      "name": "maze-world-4",
+      "bytes": 6465377,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "reason": "over 400KB for a uploadable",
+      "sourcePath": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\maze-world\\screenshots\\maze-world-4.png"
+    },
+    {
+      "path": "screenshots/maze-world-5.png",
+      "name": "maze-world-5",
+      "bytes": 6721521,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "reason": "over 400KB for a uploadable",
+      "sourcePath": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\maze-world\\screenshots\\maze-world-5.png"
+    },
+    {
+      "path": "screenshots/maze-world-6.png",
+      "name": "maze-world-6",
+      "bytes": 8858399,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "reason": "over 400KB for a uploadable",
+      "sourcePath": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\maze-world\\screenshots\\maze-world-6.png"
+    },
+    {
+      "path": "screenshots/maze-world-7.png",
+      "name": "maze-world-7",
+      "bytes": 5298761,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "reason": "over 400KB for a uploadable",
+      "sourcePath": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\maze-world\\screenshots\\maze-world-7.png"
+    },
+    {
+      "path": "screenshots/maze-world-8.png",
+      "name": "maze-world-8",
+      "bytes": 3763663,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "reason": "over 400KB for a uploadable",
+      "sourcePath": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\maze-world\\screenshots\\maze-world-8.png"
+    },
+    {
+      "path": "screenshots/maze-world-9.png",
+      "name": "maze-world-9",
+      "bytes": 7141239,
+      "kind": "uploadable",
+      "category": "image",
+      "format": "binary",
+      "reason": "over 400KB for a uploadable",
+      "sourcePath": "C:\\Users\\vitor\\OneDrive\\Desktop\\projetos\\maze-world\\screenshots\\maze-world-9.png"
+    }
+  ],
+  "byCategory": {
+    "image": 19,
+    "place": 5,
+    "prop": 40,
+    "mesh": 6
+  },
+  "byKind": {
+    "uploadable": 25,
+    "place": 5,
+    "instance": 40
+  },
+  "indexedBytes": 348990040
+}

@@ -41,6 +41,8 @@ local REGISTRY: { [string]: Handler } = {
 	-- CreateAssetAsync is permitted, so this cannot move to the Creator Store.
 	["assets.capabilities"] = AssetCommands.capabilities,
 	["assets.create_image"] = AssetCommands.createImage,
+	["assets.insert"] = AssetCommands.insert,
+	["assets.verify"] = AssetCommands.verify,
 
 	-- hierarchy
 	["dm.tree"] = DataModelCommands.tree,

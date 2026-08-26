@@ -123,9 +123,21 @@ end
 --: knows about, and nothing reads a field that is not in this table.
 function Progress.template(): { [string]: any }
 	return {
-		coins = 0,
+		--[[
+			Enough for the next machine, not the next line.
+
+			Zero was a softlock: the cheapest useful addition to a plot is a
+			second drill at 250, and nothing on a plot earns until the chain is
+			complete. The free starter line handles the chain; this handles the
+			first decision after it, so the player has something to spend
+			before they have something to earn.
+		]]
+		coins = 300,
 		lifetimeCoins = 0,
 		machinesBuilt = 0,
+		--: What is actually on the plot, not just how many things were ever
+		--: built. The counter feeds an achievement; this feeds the world.
+		layout = {},
 		upgrades = {},
 		life = 0,
 		daysClaimed = 0,
@@ -183,6 +195,48 @@ function Progress.payOffline(player: Player, profile: any): number
 	return result.amount
 end
 
+-- ================================ leaderstats ===============================
+--[[
+	The number on the player list.
+
+	Every tycoon has this and this one did not, which is a gap in the game and
+	was also a gap in the instrumentation: with the HUD reading zero there was
+	no second opinion anywhere about whether the server was paying at all. A
+	value that both the player and a tool can read separates "the economy is
+	broken" from "the interface is not being told", and those have nothing to
+	do with each other.
+
+	Rebuilt rather than cached: `leaderstats` is a folder Roblox may replace on
+	respawn, and a stale reference writes to an instance nobody is looking at.
+]]
+function Progress.publishStats(player: Player, profile: any)
+	local stats = player:FindFirstChild("leaderstats")
+	if not stats then
+		local folder = Instance.new("Folder")
+		folder.Name = "leaderstats"
+		folder.Parent = player
+		stats = folder
+	end
+
+	local coins = stats:FindFirstChild("Coins")
+	if not coins then
+		local value = Instance.new("IntValue")
+		value.Name = "Coins"
+		value.Parent = stats
+		coins = value
+	end
+	;(coins :: IntValue).Value = math.floor(profile.coins or 0)
+
+	local life = stats:FindFirstChild("Rebirths")
+	if not life then
+		local value = Instance.new("IntValue")
+		value.Name = "Rebirths"
+		value.Parent = stats
+		life = value
+	end
+	;(life :: IntValue).Value = math.floor(profile.life or 0)
+end
+
 -- ================================== earning =================================
 function Progress.credit(player: Player, profile: any, coins: number, reason: string)
 	if coins <= 0 then
@@ -190,6 +244,7 @@ function Progress.credit(player: Player, profile: any, coins: number, reason: st
 	end
 	profile.coins += coins
 	profile.lifetimeCoins += coins
+	Progress.publishStats(player, profile)
 
 	local awarded = Achievements.evaluate(profile)
 	for _, achievement in awarded do
@@ -252,13 +307,35 @@ function Progress.doRebirth(player: Player, profile: any): (boolean, string?)
 		return false, string.format("rebirth costs %d and you have %d", price, profile.coins)
 	end
 
-	Progress.rebirth:execute(state)
-	profile.life = state.life
+	--[[
+		`execute` plans; it does not mutate.
+
+		This read `state.life` straight back after calling it, and `state.life`
+		is exactly what it was before -- so every rebirth in the game charged
+		the player, wiped their upgrades and left them on the same life, with
+		the same multiplier, for ever. It returned `true`, so nothing anywhere
+		said otherwise.
+
+		The plan also carries the lives skipped by a player rich enough to buy
+		several at once, which the old line silently threw away.
+	]]
+	local plan = Progress.rebirth:execute(state)
+	if not plan then
+		return false, "rebirth was affordable a moment ago and is not now"
+	end
+
+	profile.life = plan.newLife
 	profile.coins = 0
 	profile.upgrades = {}
 
+	--: `plan.awards` is empty here, because `Content.rebirth` configures no
+	--: `rewardsOnLife`. Recorded rather than granted: there is no granting call
+	--: to make yet, and inventing one that no content reaches would be a
+	--: function whose first real caller discovers it was never run.
+	profile.pendingRebirthAwards = #plan.awards > 0 and plan.awards or nil
+
 	Achievements.evaluate(profile)
-	Telemetry.event("rebirth", { life = profile.life })
+	Telemetry.event("rebirth", { life = profile.life, skipped = plan.skipped })
 	return true
 end
 

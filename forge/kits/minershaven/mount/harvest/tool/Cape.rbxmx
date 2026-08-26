@@ -1,0 +1,619 @@
+<?xml version='1.0' encoding='utf-8'?>
+<roblox version="4"><Item class="Tool" referent="60856">
+      <Properties>
+        <string name="Name">Cape</string>
+        <bool name="CanBeDropped">true</bool>
+        <bool name="Enabled">true</bool>
+        <CoordinateFrame name="Grip">
+          <X>1.5</X>
+          <Y>0.65</Y>
+          <Z>-1.9</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="ManualActivationOnly">false</bool>
+        <bool name="RequiresHandle">true</bool>
+        <BinaryString name="Tags" />
+        <Content name="TextureId">
+          <url>http://www.roblox.com/asset/?id=129414426</url>
+        </Content>
+        <string name="ToolTip" />
+      </Properties>
+      <Item class="Part" referent="60857">
+        <Properties>
+          <string name="Name">Handle</string>
+          <bool name="Anchored">false</bool>
+          <float name="BackParamA">-0.5</float>
+          <float name="BackParamB">0.5</float>
+          <token name="BackSurface">0</token>
+          <token name="BackSurfaceInput">0</token>
+          <float name="BottomParamA">-0.5</float>
+          <float name="BottomParamB">0.5</float>
+          <token name="BottomSurface">0</token>
+          <token name="BottomSurfaceInput">0</token>
+          <CoordinateFrame name="CFrame">
+            <X>-0.239999</X>
+            <Y>17.23866</Y>
+            <Z>23.243746</Z>
+            <R00>1</R00>
+            <R01>0.000000000000014418928</R01>
+            <R02>-0.000000000000002261242</R02>
+            <R10>-0.000000000000014367529</R10>
+            <R11>0.99977344</R11>
+            <R12>0.02128567</R12>
+            <R20>0.0000000000000025676463</R20>
+            <R21>-0.02128567</R21>
+            <R22>0.99977344</R22>
+          </CoordinateFrame>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <int name="CollisionGroupId">0</int>
+          <Color3uint8 name="Color3uint8">10724005</Color3uint8>
+          <PhysicalProperties name="CustomPhysicalProperties">
+            <CustomPhysics>false</CustomPhysics>
+          </PhysicalProperties>
+          <token name="formFactorRaw">3</token>
+          <float name="FrontParamA">-0.5</float>
+          <float name="FrontParamB">0.5</float>
+          <token name="FrontSurface">0</token>
+          <token name="FrontSurfaceInput">0</token>
+          <float name="LeftParamA">-0.5</float>
+          <float name="LeftParamB">0.5</float>
+          <token name="LeftSurface">0</token>
+          <token name="LeftSurfaceInput">0</token>
+          <bool name="Locked">true</bool>
+          <bool name="Massless">false</bool>
+          <token name="Material">256</token>
+          <float name="Reflectance">0</float>
+          <float name="RightParamA">-0.5</float>
+          <float name="RightParamB">0.5</float>
+          <token name="RightSurface">0</token>
+          <token name="RightSurfaceInput">0</token>
+          <int name="RootPriority">0</int>
+          <Vector3 name="RotVelocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+          <token name="shape">1</token>
+          <Vector3 name="size">
+            <X>1.3</X>
+            <Y>1.3</Y>
+            <Z>2.4</Z>
+          </Vector3>
+          <BinaryString name="Tags" />
+          <float name="TopParamA">-0.5</float>
+          <float name="TopParamB">0.5</float>
+          <token name="TopSurface">0</token>
+          <token name="TopSurfaceInput">0</token>
+          <float name="Transparency">0</float>
+          <Vector3 name="Velocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+        </Properties>
+        <Item class="SpecialMesh" referent="60858">
+          <Properties>
+            <string name="Name">Mesh</string>
+            <Content name="MeshId">
+              <url>http://www.roblox.com/asset/?id=114046169</url>
+            </Content>
+            <token name="MeshType">5</token>
+            <Vector3 name="Offset">
+              <X>0</X>
+              <Y>0</Y>
+              <Z>0</Z>
+            </Vector3>
+            <Vector3 name="Scale">
+              <X>1.3</X>
+              <Y>1.3</Y>
+              <Z>1.3</Z>
+            </Vector3>
+            <BinaryString name="Tags" />
+            <Content name="TextureId">
+              <url>http://www.roblox.com/asset/?id=129317782 </url>
+            </Content>
+            <Vector3 name="VertexColor">
+              <X>1</X>
+              <Y>1</Y>
+              <Z>1</Z>
+            </Vector3>
+          </Properties>
+        </Item>
+        <Item class="Sound" referent="60859">
+          <Properties>
+            <string name="Name">WooshStart</string>
+            <bool name="Looped">false</bool>
+            <bool name="PlayOnRemove">false</bool>
+            <float name="PlaybackSpeed">1</float>
+            <bool name="Playing">false</bool>
+            <float name="xmlRead_MaxDistance_3">10000</float>
+            <float name="EmitterSize">10</float>
+            <token name="RollOffMode">0</token>
+            <Ref name="SoundGroup">null</Ref>
+            <Content name="SoundId"><null></null></Content>
+            <BinaryString name="Tags" />
+            <double name="TimePosition">0</double>
+            <float name="Volume">0.5</float>
+          </Properties>
+        </Item>
+        <Item class="Sound" referent="60860">
+          <Properties>
+            <string name="Name">WooshEnd</string>
+            <bool name="Looped">false</bool>
+            <bool name="PlayOnRemove">false</bool>
+            <float name="PlaybackSpeed">1</float>
+            <bool name="Playing">false</bool>
+            <float name="xmlRead_MaxDistance_3">10000</float>
+            <float name="EmitterSize">10</float>
+            <token name="RollOffMode">0</token>
+            <Ref name="SoundGroup">null</Ref>
+            <Content name="SoundId"><null></null></Content>
+            <BinaryString name="Tags" />
+            <double name="TimePosition">0</double>
+            <float name="Volume">0.5</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="LocalScript" referent="60861">
+        <Properties>
+          <string name="Name">MouseIcon</string>
+          <bool name="Disabled">false</bool>
+          <Content name="LinkedSource">
+            <null>
+            </null>
+          </Content>
+          <string name="ScriptGuid">{A4698E01-CA03-4633-801C-24AD30AAF1B4}</string>
+          <string name="Source">--Made by Luckymaxer
+
+Mouse_Icon = "rbxasset://textures/GunCursor.png"
+Reloading_Icon = "rbxasset://textures/GunWaitCursor.png"
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+	if Mouse then
+		Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+	end
+end
+
+function OnEquipped(ToolMouse)
+	Mouse = ToolMouse
+	UpdateIcon()
+end
+
+function OnChanged(Property)
+	if Property == "Enabled" then
+		UpdateIcon()
+	end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)
+</string>
+          <BinaryString name="Tags" />
+        </Properties>
+      </Item>
+      <Item class="Script" referent="60862">
+        <Properties>
+          <string name="Name">Script</string>
+          <bool name="Disabled">false</bool>
+          <Content name="LinkedSource">
+            <null>
+            </null>
+          </Content>
+          <string name="ScriptGuid">{31FC9B49-F73B-4B97-96B4-64805481F85A}</string>
+          <string name="Source">--Rescripted by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+
+ConfusionScript = script:WaitForChild("ConfusionScript")
+
+RbxUtility = LoadLibrary("RbxUtility")
+Create = RbxUtility.Create
+
+BaseUrl = "http://www.roblox.com/asset/?id="
+
+BasePart = Create("Part"){
+	Shape = Enum.PartType.Block,
+	Material = Enum.Material.Plastic,
+	TopSurface = Enum.SurfaceType.Smooth,
+	BottomSurface = Enum.SurfaceType.Smooth,
+	FormFactor = Enum.FormFactor.Custom,
+	Size = Vector3.new(0.2, 0.2, 0.2),
+	CanCollide = true,
+	Locked = true,
+	Anchored = false,
+}
+
+Sounds = {
+	WooshStart = Handle:WaitForChild("WooshStart"),
+	WooshEnd = Handle:WaitForChild("WooshEnd"),
+}
+
+Duration = 8
+CoolDown = 3
+
+TransparentObjects = {}
+
+ToolEquipped = false
+
+Handle.Transparency = 0
+Tool.Enabled = true
+
+function IsTeamMate(Player1, Player2)
+	return (Player1 and Player2 and not Player1.Neutral and not Player2.Neutral and Player1.TeamColor == Player2.TeamColor)
+end
+
+function GetTotalParts(MaxParts, PossibleParts, Parts)
+	if MaxParts &lt; PossibleParts then
+		return MaxParts
+	elseif Parts &gt;= MaxParts then
+		return 0
+	elseif MaxParts &gt;= PossibleParts then
+		local PartCount = (MaxParts - PossibleParts)
+		if Parts &lt;= MaxParts then
+			PartCount = (MaxParts - Parts)
+			if PartCount &gt; PossibleParts then
+				return PossibleParts
+			else
+				return PartCount
+			end
+		elseif PartCount &gt;= PossibleParts then
+			return PossibleParts
+		else
+			return PartCount
+		end
+	end
+end
+
+function GetParts(Region, MaxParts, Ignore)
+	local Parts = {}
+	local RerunFailed = false
+	while #Parts &lt; MaxParts and not RerunFailed do
+		local Region = Region
+		local PossibleParts = GetTotalParts(MaxParts, 100, #Parts)
+		local PartsNearby = game:GetService("Workspace"):FindPartsInRegion3WithIgnoreList(Region, Ignore, PossibleParts)
+		if #PartsNearby == 0 then
+			RerunFailed = true
+		else
+			for i, v in pairs(PartsNearby) do
+				table.insert(Parts, v)
+				table.insert(Ignore, v)
+			end
+		end
+	end
+	return Parts
+end
+
+function CheckTableForInstance(Table, Instance)
+	for i, v in pairs(Table) do
+		if v == Instance then
+			return true
+		end
+	end
+	return false
+end
+
+function CheckTableForString(Table, String)
+	for i, v in pairs(Table) do
+		if string.lower(v) == string.lower(String) then
+			return true
+		end
+	end
+	return false
+end
+
+function GetPlayersNearby(Radius)
+	local NegativeRegion = (HumanoidRootPart.Position - Vector3.new(Radius, Radius, Radius))
+	local PositiveRegion = (HumanoidRootPart.Position + Vector3.new(Radius, Radius, Radius))
+	local Region = Region3.new(NegativeRegion, PositiveRegion)
+	local IgnoreList = {Character}
+	for i, v in pairs(Players:GetChildren()) do
+		if v:IsA("Player") and v ~= Player and v.Character and v.Character.Parent and IsTeamMate(Player, v) then
+			table.insert(IgnoreList, v.Character)
+		end
+	end
+	local Parts = GetParts(Region, 500, IgnoreList)
+	local Humanoids = {}
+	for i, v in pairs(Parts) do
+		local character = v.Parent
+		if character:IsA("Hat") then
+			character = character.Parent
+		end
+		local humanoid = character:FindFirstChild("Humanoid")
+		local HumanoidRootPart = character:FindFirstChild("HumanoidRootPart")
+		if humanoid and humanoid.Health &gt; 0 and HumanoidRootPart and not CheckTableForInstance(Humanoids, humanoid) then
+			table.insert(Humanoids, humanoid)
+		end
+	end
+	return Humanoids
+end
+
+function GetAllObjectsWithProperty(Parent, Property, Type)
+	local Objects = {}
+	local function GetObjects(Parent)
+		for i, v in pairs(Parent:GetChildren()) do
+			local PropertyExists = false
+			pcall(function()
+				local Property = v[Property]
+				if type(Property) == Type then
+					PropertyExists = true
+				end
+			end)
+			if PropertyExists then
+				table.insert(Objects, v)
+			end
+			GetObjects(v)
+		end
+	end
+	GetObjects(Parent)
+	return Objects
+end
+
+function GetTransparentObjects(Parent)
+	local Objects = {}
+	local IgnoreObjects = {"HumanoidRootPart"}
+	for i, v in pairs(GetAllObjectsWithProperty(Parent, "Transparency", "number")) do
+		table.insert(Objects, v)
+	end
+	for i, v in pairs(Objects) do
+		if CheckTableForString(IgnoreObjects, v.Name) then
+			table.remove(Objects, i)
+		end
+	end
+	return Objects
+end
+
+function ResetTransparency(Object)
+	local PartNames = {"Head", "HumanoidRootPart", "Left Arm", "Right Arm", "Left Leg", "Right Leg"}
+	if not Object then
+		for i, v in pairs({DescendantAdded, DescendantRemoving}) do
+			if v then
+				v:disconnect()
+			end
+		end
+		for i, v in pairs(TransparentObjects) do
+			v.Object.Transparency = ((CheckTableForString(PartNames, v.Object.Name) and 0) or v.Transparency)
+		end
+		TransparentObjects = {}
+	else
+		local Objects = GetAllObjectsWithProperty(Object, "Transparency", "number")
+		for i, v in pairs(TransparentObjects) do
+			for ii, vv in pairs(Objects) do
+				if v.Object == vv then
+					v.Object.Transparency = ((CheckTableForString(PartNames, v.Object.Name) and 0) or v.Transparency)
+					table.remove(TransparentObjects, i)
+					break
+				end
+			end
+		end
+	end
+end
+
+function SetTransparency(Parent, Invisible, Delay)
+	local Objects = {}
+	if type(Parent) == "table" then
+		Objects = Parent
+	else
+		for i, v in pairs(GetTransparentObjects(Parent)) do
+			table.insert(Objects, {Object = v, Transparency = v.Transparency})
+		end
+	end
+	if ToolUnequipped1 then
+		ToolUnequipped1:disconnect()
+	end
+	local CurrentlyEquipped = true
+	ToolUnequipped1 = Tool.Unequipped:connect(function()
+		CurrentlyEquipped = false
+	end)
+	Spawn(function()
+		if Delay then
+			local AllAltered = false
+			while not AllAltered and ToolEquipped and CurrentlyEquipped and CheckIfAlive() do
+				local AllCurrentlyAltered = true
+				for i, v in pairs(Objects) do
+					if ((Invisible and v.Object.Transparency &lt; 1) or (not Invisible and v.Object.Transparency &gt; v.Transparency)) then
+						v.Object.Transparency = (v.Object.Transparency + (0.1 * ((Invisible and 1) or -1)))
+						AllCurrentlyAltered = false
+					end
+				end
+				if AllCurrentlyAltered then
+					AllAltered = true
+				end
+				wait()
+			end
+			if ToolUnequipped1 then
+				ToolUnequipped1:disconnect()
+			end
+		end
+		if not ToolEquipped or not CurrentlyEquipped or not CheckIfAlive() then
+			return
+		end
+		for i, v in pairs(Objects) do
+			if Invisible then
+				v.Object.Transparency = 1
+			else
+				ResetTransparency(v.Object)
+			end
+		end
+	end)
+	return Objects
+end
+
+function Activated()
+	if not Tool.Enabled or not ToolEquipped or not CheckIfAlive() then
+		return
+	end
+	if Character:FindFirstChild("Invisible") then
+		return
+	end
+	Tool.Enabled = false
+	Invisible = Create("BoolValue"){
+		Name = "Invisible",
+		Value = true,
+	}
+	Debris:AddItem(Invisible, (Duration + 2))
+	Invisible.Parent = Character
+	for i, v in pairs({ToolUnequipped2, DescendantAdded, DescendantRemoving}) do
+		if v then
+			v:disconnect()
+		end
+	end
+	local CurrentlyEquipped = true
+	ToolUnequipped2 = Tool.Unequipped:connect(function()
+		CurrentlyEquipped = false
+	end)
+	Humanoid.WalkSpeed = 26
+	Sounds.WooshStart:Play()
+	TransparentObjects = SetTransparency(Character, true, true)
+	DescendantAdded = Character.ChildAdded:connect(function(Child)
+		local Objects = SetTransparency(Child, true, false)
+		for i, v in pairs(Objects) do
+			table.insert(TransparentObjects, v)
+		end
+	end)
+	DescendantRemoving = Character.ChildRemoved:connect(function(Child)
+		ResetTransparency(Child)
+	end)
+	wait(Duration)
+	Sounds.WooshEnd:Play()
+	for i, v in pairs({ToolUnequipped2, DescendantAdded, DescendantRemoving}) do
+		if v then
+			v:disconnect()
+		end
+	end
+	if CurrentlyEquipped then
+		if CheckIfAlive() then
+			Humanoid.WalkSpeed = 16
+		end
+		SetTransparency(TransparentObjects, false, true)
+		TransparentObjects = {}
+		local PlayersNearby = GetPlayersNearby(15)
+		for i, v in pairs(PlayersNearby) do
+			local character = v.Parent
+			if character then
+				local ConfusionScriptCopy = ConfusionScript:Clone()
+				ConfusionScriptCopy.Disabled = false
+				ConfusionScriptCopy.Parent = character
+			end
+		end
+	end
+	wait(CoolDown)
+	Tool.Enabled = true
+end
+
+function MakeCape(MakeNew)
+	for i, v in pairs(Tool:GetChildren()) do
+		if v:IsA("BasePart") and v ~= Handle then
+			v:Destroy()
+		end
+	end
+	if not MakeNew then
+		return
+	end
+	Cape = Handle:Clone()
+	Cape.Name = "Cape"
+	Cape.Transparency = 0
+	local Weld = Create("Weld"){
+		Part0 = HumanoidRootPart,
+		Part1 = Cape,
+		C0 = CFrame.new(0, -0.15, 0.4),
+		Parent = Cape,
+	}
+	Handle.Transparency = 1
+	Cape.Parent = Tool
+end
+
+function CheckIfAlive()
+	return (((Player and Player.Parent and Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and HumanoidRootPart and HumanoidRootPart.Parent) and true) or false)
+end
+
+function Equipped()
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
+	if not CheckIfAlive() then
+		return
+	end
+	Spawn(function()
+		MakeCape(true)
+	end)
+	ToolEquipped = true
+end
+
+function Unequipped()
+	Spawn(function()
+		for i, v in pairs(Sounds) do
+			v:Stop()
+		end
+		for i, v in pairs({ToolUnequipped2, DescendantAdded, DescendantRemoving}) do
+			if v then
+				v:disconnect()
+			end
+		end
+		if Invisible and Invisible.Parent then
+			Invisible:Destroy()
+		end
+		if CheckIfAlive() then
+			Humanoid.WalkSpeed = 16
+		end
+		Handle.Transparency = 0
+		MakeCape(false)
+		ResetTransparency()
+		ToolEquipped = false
+	end)
+end
+
+MakeCape(false)
+
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</string>
+          <BinaryString name="Tags" />
+        </Properties>
+        <Item class="Script" referent="60863">
+          <Properties>
+            <string name="Name">ConfusionScript</string>
+            <bool name="Disabled">true</bool>
+            <Content name="LinkedSource">
+              <null>
+              </null>
+            </Content>
+            <string name="ScriptGuid">{73F906AD-9D10-48CD-A6E4-A24D60CFE22A}</string>
+            <string name="Source">--Rescripted by Luckymaxer
+
+Character = script.Parent
+Humanoid = Character:FindFirstChild("Humanoid")
+
+Debris = game:GetService("Debris")
+
+if Humanoid then
+	Humanoid.WalkSpeed = (math.abs(Humanoid.WalkSpeed) * -1)
+	wait(2.5)
+	Humanoid.WalkSpeed = (math.abs(Humanoid.WalkSpeed) * 1)
+end
+
+Debris:AddItem(script, 0.5)
+script:Destroy()</string>
+            <BinaryString name="Tags" />
+          </Properties>
+        </Item>
+      </Item>
+    </Item>
+    </roblox>

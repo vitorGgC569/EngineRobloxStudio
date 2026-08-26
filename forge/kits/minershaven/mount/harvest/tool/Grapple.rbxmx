@@ -1,0 +1,809 @@
+<?xml version='1.0' encoding='utf-8'?>
+<roblox version="4"><Item class="Tool" referent="60846">
+      <Properties>
+        <string name="Name">Grapple</string>
+        <bool name="CanBeDropped">true</bool>
+        <bool name="Enabled">true</bool>
+        <CoordinateFrame name="Grip">
+          <X>0</X>
+          <Y>-0.6</Y>
+          <Z>1</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>0</R20>
+          <R21>0</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="ManualActivationOnly">false</bool>
+        <bool name="RequiresHandle">true</bool>
+        <BinaryString name="Tags" />
+        <Content name="TextureId">
+          <url>http://www.roblox.com/asset/?id=30327988</url>
+        </Content>
+        <string name="ToolTip" />
+      </Properties>
+      <Item class="Part" referent="60847">
+        <Properties>
+          <string name="Name">Handle</string>
+          <bool name="Anchored">false</bool>
+          <float name="BackParamA">-0.5</float>
+          <float name="BackParamB">0.5</float>
+          <token name="BackSurface">0</token>
+          <token name="BackSurfaceInput">0</token>
+          <float name="BottomParamA">-0.5</float>
+          <float name="BottomParamB">0.5</float>
+          <token name="BottomSurface">0</token>
+          <token name="BottomSurfaceInput">0</token>
+          <CoordinateFrame name="CFrame">
+            <X>-0.034744</X>
+            <Y>21.896505</Y>
+            <Z>-0.022909</Z>
+            <R00>-0.99532545</R00>
+            <R01>-0.046492934</R01>
+            <R02>-0.084650435</R02>
+            <R10>0.0000000027774796</R10>
+            <R11>0.87649906</R11>
+            <R12>-0.48140347</R12>
+            <R20>0.09657789</R20>
+            <R21>-0.47915307</R21>
+            <R22>-0.8724019</R22>
+          </CoordinateFrame>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <int name="CollisionGroupId">0</int>
+          <Color3uint8 name="Color3uint8">1780277</Color3uint8>
+          <PhysicalProperties name="CustomPhysicalProperties">
+            <CustomPhysics>false</CustomPhysics>
+          </PhysicalProperties>
+          <token name="formFactorRaw">3</token>
+          <float name="FrontParamA">-0.5</float>
+          <float name="FrontParamB">0.5</float>
+          <token name="FrontSurface">0</token>
+          <token name="FrontSurfaceInput">0</token>
+          <float name="LeftParamA">-0.5</float>
+          <float name="LeftParamB">0.5</float>
+          <token name="LeftSurface">0</token>
+          <token name="LeftSurfaceInput">0</token>
+          <bool name="Locked">true</bool>
+          <bool name="Massless">false</bool>
+          <token name="Material">256</token>
+          <float name="Reflectance">0</float>
+          <float name="RightParamA">-0.5</float>
+          <float name="RightParamB">0.5</float>
+          <token name="RightSurface">0</token>
+          <token name="RightSurfaceInput">0</token>
+          <int name="RootPriority">0</int>
+          <Vector3 name="RotVelocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+          <token name="shape">1</token>
+          <Vector3 name="size">
+            <X>1</X>
+            <Y>1</Y>
+            <Z>2</Z>
+          </Vector3>
+          <BinaryString name="Tags" />
+          <float name="TopParamA">-0.5</float>
+          <float name="TopParamB">0.5</float>
+          <token name="TopSurface">0</token>
+          <token name="TopSurfaceInput">0</token>
+          <float name="Transparency">0</float>
+          <Vector3 name="Velocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+        </Properties>
+        <Item class="Sound" referent="60848">
+          <Properties>
+            <string name="Name">Connect</string>
+            <bool name="Looped">false</bool>
+            <bool name="PlayOnRemove">false</bool>
+            <float name="PlaybackSpeed">1</float>
+            <bool name="Playing">false</bool>
+            <float name="xmlRead_MaxDistance_3">10000</float>
+            <float name="EmitterSize">10</float>
+            <token name="RollOffMode">0</token>
+            <Ref name="SoundGroup">null</Ref>
+            <Content name="SoundId"><null></null></Content>
+            <BinaryString name="Tags" />
+            <double name="TimePosition">0</double>
+            <float name="Volume">1</float>
+          </Properties>
+        </Item>
+        <Item class="Sound" referent="60849">
+          <Properties>
+            <string name="Name">Fire</string>
+            <bool name="Looped">false</bool>
+            <bool name="PlayOnRemove">false</bool>
+            <float name="PlaybackSpeed">1</float>
+            <bool name="Playing">false</bool>
+            <float name="xmlRead_MaxDistance_3">10000</float>
+            <float name="EmitterSize">10</float>
+            <token name="RollOffMode">0</token>
+            <Ref name="SoundGroup">null</Ref>
+            <Content name="SoundId"><null></null></Content>
+            <BinaryString name="Tags" />
+            <double name="TimePosition">0</double>
+            <float name="Volume">1</float>
+          </Properties>
+        </Item>
+        <Item class="SpecialMesh" referent="60850">
+          <Properties>
+            <string name="Name">Mesh</string>
+            <Content name="MeshId">
+              <url>http://www.roblox.com/asset/?id=33393806</url>
+            </Content>
+            <token name="MeshType">5</token>
+            <Vector3 name="Offset">
+              <X>0</X>
+              <Y>0</Y>
+              <Z>0</Z>
+            </Vector3>
+            <Vector3 name="Scale">
+              <X>0.4</X>
+              <Y>0.4</Y>
+              <Z>0.4</Z>
+            </Vector3>
+            <BinaryString name="Tags" />
+            <Content name="TextureId">
+              <url>http://www.roblox.com/asset/?id=30307531</url>
+            </Content>
+            <Vector3 name="VertexColor">
+              <X>1</X>
+              <Y>1</Y>
+              <Z>1</Z>
+            </Vector3>
+          </Properties>
+        </Item>
+        <Item class="Sound" referent="60851">
+          <Properties>
+            <string name="Name">Hit</string>
+            <bool name="Looped">false</bool>
+            <bool name="PlayOnRemove">false</bool>
+            <float name="PlaybackSpeed">1</float>
+            <bool name="Playing">false</bool>
+            <float name="xmlRead_MaxDistance_3">10000</float>
+            <float name="EmitterSize">10</float>
+            <token name="RollOffMode">0</token>
+            <Ref name="SoundGroup">null</Ref>
+            <Content name="SoundId"><null></null></Content>
+            <BinaryString name="Tags" />
+            <double name="TimePosition">0</double>
+            <float name="Volume">1</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="LocalScript" referent="60852">
+        <Properties>
+          <string name="Name">LocalScript</string>
+          <bool name="Disabled">false</bool>
+          <Content name="LinkedSource">
+            <null>
+            </null>
+          </Content>
+          <string name="ScriptGuid">{B123EDC8-E3FE-496D-A60D-C1FF03D0A71A}</string>
+          <string name="Source">--Rescripted by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+RunService = game:GetService("RunService")
+ContentProvider = game:GetService("ContentProvider")
+UserInputService = game:GetService("UserInputService")
+
+InputCheck = Instance.new("ScreenGui")
+InputCheck.Name = "InputCheck"
+InputFrame = Instance.new("Frame")
+InputFrame.BackgroundTransparency = 1
+InputFrame.Size = UDim2.new(1, 0, 1, 0)
+InputFrame.Parent = InputCheck
+
+RbxUtility = LoadLibrary("RbxUtility")
+Create = RbxUtility.Create
+
+Animations = {}
+
+ServerControl = Tool:WaitForChild("ServerControl")
+ClientControl = Tool:WaitForChild("ClientControl")
+
+Rate = (1 / 60)
+
+ToolEquipped = false
+
+function SetAnimation(mode, value)
+	if not ToolEquipped or not CheckIfAlive() then
+		return
+	end
+	local function StopAnimation(Animation)
+		for i, v in pairs(Animations) do
+			if v.Animation == Animation then
+				v.AnimationTrack:Stop(value.EndFadeTime)
+				if v.TrackStopped then
+					v.TrackStopped:disconnect()
+				end
+				table.remove(Animations, i)
+			end
+		end
+	end
+	if mode == "PlayAnimation" then
+		for i, v in pairs(Animations) do
+			if v.Animation == value.Animation then
+				if value.Speed then
+					v.AnimationTrack:AdjustSpeed(value.Speed)
+					return
+				elseif value.Weight or value.FadeTime then
+					v.AnimationTrack:AdjustWeight(value.Weight, value.FadeTime)
+					return
+				else
+					StopAnimation(value.Animation, false)
+				end
+			end
+		end
+		local AnimationMonitor = Create("Model"){}
+		local TrackEnded = Create("StringValue"){Name = "Ended"}
+		local AnimationTrack = Humanoid:LoadAnimation(value.Animation)
+		local TrackStopped
+		if not value.Manual then
+			TrackStopped = AnimationTrack.Stopped:connect(function()
+				if TrackStopped then
+					TrackStopped:disconnect()
+				end
+				StopAnimation(value.Animation, true)
+				TrackEnded.Parent = AnimationMonitor
+			end)
+		end
+		table.insert(Animations, {Animation = value.Animation, AnimationTrack = AnimationTrack, TrackStopped = TrackStopped})
+		AnimationTrack:Play(value.FadeTime, value.Weight, value.Speed)
+		if TrackStopped then
+			AnimationMonitor:WaitForChild(TrackEnded.Name)
+		end
+		return TrackEnded.Name
+	elseif mode == "StopAnimation" and value then
+		StopAnimation(value.Animation)
+	end
+end
+
+function CheckIfAlive()
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and Player and Player.Parent) and true) or false)
+end
+
+function Equipped(Mouse)
+	Character = Tool.Parent
+	Player = Players:GetPlayerFromCharacter(Character)
+	Humanoid = Character:FindFirstChild("Humanoid")
+	ToolEquipped = true
+	if not CheckIfAlive() then
+		return
+	end
+	Spawn(function()
+		PlayerMouse = Player:GetMouse()
+		Mouse.Button1Down:connect(function()
+			InvokeServer("Button1Click", {Down = true})
+		end)
+		Mouse.Button1Up:connect(function()
+			InvokeServer("Button1Click", {Down = false})
+		end)
+		Mouse.KeyDown:connect(function(Key)
+			InvokeServer("KeyPress", {Key = Key, Down = true})
+		end)
+		Mouse.KeyUp:connect(function(Key)
+			InvokeServer("KeyPress", {Key = Key, Down = false})
+		end)
+		local PlayerGui = Player:FindFirstChild("PlayerGui")
+		if PlayerGui then
+			InputCheckClone = InputCheck:Clone()
+			if UserInputService.TouchEnabled then
+				InputCheckClone = InputCheck:Clone()
+				InputCheckClone.InputButton.InputBegan:connect(function()
+					InvokeServer("Button1Click", {Down = true})
+				end)
+				InputCheckClone.InputButton.InputEnded:connect(function()
+					InvokeServer("Button1Click", {Down = false})
+				end)
+				InputCheckClone.Parent = PlayerGui
+			end
+		end
+		for i, v in pairs(Tool:GetChildren()) do
+			if v:IsA("Animation") then
+				ContentProvider:Preload(v.AnimationId)
+			end
+		end
+	end)
+end
+
+function Unequipped()
+	if InputCheckClone then
+		Debris:AddItem(InputCheckClone, 0)
+	end
+	for i, v in pairs(Animations) do
+		if v and v.AnimationTrack then
+			v.AnimationTrack:Stop()
+		end
+	end
+	Animations = {}
+	ToolEquipped = false
+end
+
+function InvokeServer(mode, value)
+	local ServerReturn = nil
+	pcall(function()
+		ServerReturn = ServerControl:InvokeServer(mode, value)
+	end)
+	return ServerReturn
+end
+
+function OnClientInvoke(mode, value)
+	if mode == "PlayAnimation" and value and ToolEquipped and Humanoid then
+		SetAnimation("PlayAnimation", value)
+	elseif mode == "StopAnimation" and value then
+		SetAnimation("StopAnimation", value)
+	elseif mode == "PlaySound" and value then
+		value:Play()
+	elseif mode == "StopSound" and value then
+		value:Stop()
+	elseif mode == "MousePosition" then
+		return ((PlayerMouse and {Position = PlayerMouse.Hit.p, Target = PlayerMouse.Target}) or nil)
+	end
+end
+
+ClientControl.OnClientInvoke = OnClientInvoke
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</string>
+          <BinaryString name="Tags" />
+        </Properties>
+      </Item>
+      <Item class="LocalScript" referent="60853">
+        <Properties>
+          <string name="Name">MouseIcon</string>
+          <bool name="Disabled">false</bool>
+          <Content name="LinkedSource">
+            <null>
+            </null>
+          </Content>
+          <string name="ScriptGuid">{E54740F4-77A9-4CAF-982E-7B58663D442D}</string>
+          <string name="Source">--Rescripted by Luckymaxer
+
+Mouse_Icon = "rbxasset://textures/GunCursor.png"
+Reloading_Icon = "rbxasset://textures/GunWaitCursor.png"
+
+Tool = script.Parent
+
+Mouse = nil
+
+function UpdateIcon()
+	if Mouse then
+		Mouse.Icon = Tool.Enabled and Mouse_Icon or Reloading_Icon
+	end
+end
+
+function OnEquipped(ToolMouse)
+	Mouse = ToolMouse
+	UpdateIcon()
+end
+
+function OnChanged(Property)
+	if Property == "Enabled" then
+		UpdateIcon()
+	end
+end
+
+Tool.Equipped:connect(OnEquipped)
+Tool.Changed:connect(OnChanged)
+</string>
+          <BinaryString name="Tags" />
+        </Properties>
+      </Item>
+      <Item class="Script" referent="60854">
+        <Properties>
+          <string name="Name">Script</string>
+          <bool name="Disabled">false</bool>
+          <Content name="LinkedSource">
+            <null>
+            </null>
+          </Content>
+          <string name="ScriptGuid">{4B91DE7A-4B07-468B-89D7-81969DABC48A}</string>
+          <string name="Source">--Rescripted by Luckymaxer
+
+Tool = script.Parent
+Handle = Tool:WaitForChild("Handle")
+Mesh = Handle:WaitForChild("Mesh")
+
+Players = game:GetService("Players")
+Debris = game:GetService("Debris")
+
+RbxUtility = LoadLibrary("RbxUtility")
+Create = RbxUtility.Create
+
+BaseUrl = "http://www.roblox.com/asset/?id="
+
+Meshes = {
+	GrappleWithHook = 33393806,
+	Grapple = 30308256,
+	Hook = 30307623,
+}
+
+Animations = {
+	Crouch = {Animation = Tool:WaitForChild("Crouch"), FadeTime = 0.25, Weight = nil, Speed = nil},
+}
+
+Sounds = {
+	Fire = Handle:WaitForChild("Fire"),
+	Connect = Handle:WaitForChild("Connect"),
+	Hit = Handle:WaitForChild("Hit"),
+}
+
+for i, v in pairs(Meshes) do
+	Meshes[i] = (BaseUrl .. v)
+end
+
+BasePart = Create("Part"){
+	Material = Enum.Material.Plastic,
+	Shape = Enum.PartType.Block,
+	TopSurface = Enum.SurfaceType.Smooth,
+	BottomSurface = Enum.SurfaceType.Smooth,
+	FormFactor = Enum.FormFactor.Custom,
+	Size = Vector3.new(0.2, 0.2, 0.2),
+	CanCollide = true,
+	Locked = true,
+}
+
+BaseRope = BasePart:Clone()
+BaseRope.Name = "Effect"
+BaseRope.BrickColor = BrickColor.new("Really black")
+BaseRope.Anchored = true
+BaseRope.CanCollide = false
+Create("CylinderMesh"){
+	Scale = Vector3.new(1, 1, 1),
+	Parent = BaseRope,
+}
+
+BaseGrappleHook = BasePart:Clone()
+BaseGrappleHook.Name = "Projectile"
+BaseGrappleHook.Transparency = 0
+BaseGrappleHook.Size = Vector3.new(1, 0.4, 1)
+BaseGrappleHook.Anchored = false
+BaseGrappleHook.CanCollide = true
+Create("SpecialMesh"){
+	MeshType = Enum.MeshType.FileMesh,
+	MeshId = (BaseUrl .. "30307623"),
+	TextureId = (BaseUrl .. "30307531"),
+	Scale = Mesh.Scale,
+	VertexColor = Vector3.new(1, 1, 1),
+	Offset = Vector3.new(0, 0, 0),
+	Parent = BaseGrappleHook,
+}
+Create("BodyGyro"){
+	Parent = BaseGrappleHook,
+}
+for i, v in pairs({Sounds.Connect, Sounds.Hit}) do
+	local Sound = v:Clone()
+	Sound.Parent = BaseGrappleHook
+end
+
+Gravity = 196.20
+Rate = (1 / 60)
+
+MaxDistance = 200
+CanFireWhileGrappling = true
+
+Crouching = false
+ToolEquipped = false
+
+ServerControl = (Tool:FindFirstChild("ServerControl") or Create("RemoteFunction"){
+	Name = "ServerControl",
+	Parent = Tool,
+})
+
+ClientControl = (Tool:FindFirstChild("ClientControl") or Create("RemoteFunction"){
+	Name = "ClientControl",
+	Parent = Tool,
+})
+
+for i, v in pairs(Tool:GetChildren()) do
+	if v:IsA("BasePart") and v ~= Handle then
+		v:Destroy()
+	end
+end
+
+Mesh.MeshId = Meshes.GrappleWithHook
+Handle.Transparency = 0
+Tool.Enabled = true
+
+function CheckTableForString(Table, String)
+	for i, v in pairs(Table) do
+		if string.find(string.lower(String), string.lower(v)) then
+			return true
+		end
+	end
+	return false
+end
+
+function CheckIntangible(Hit)
+	local ProjectileNames = {"Water", "Arrow", "Projectile", "Effect", "Rail", "Laser", "Bullet", "GrappleHook"}
+	if Hit and Hit.Parent then
+		if ((not Hit.CanCollide or CheckTableForString(ProjectileNames, Hit.Name)) and not Hit.Parent:FindFirstChild("Humanoid")) then
+			return true
+		end
+	end
+	return false
+end
+
+function CastRay(StartPos, Vec, Length, Ignore, DelayIfHit)
+	local Ignore = ((type(Ignore) == "table" and Ignore) or {Ignore})
+	local RayHit, RayPos, RayNormal = game:GetService("Workspace"):FindPartOnRayWithIgnoreList(Ray.new(StartPos, Vec * Length), Ignore)
+	if RayHit and CheckIntangible(RayHit) then
+		if DelayIfHit then
+			wait()
+		end
+		RayHit, RayPos, RayNormal = CastRay((RayPos + (Vec * 0.01)), Vec, (Length - ((StartPos - RayPos).magnitude)), Ignore, DelayIfHit)
+	end
+	return RayHit, RayPos, RayNormal
+end
+
+function AdjustRope()
+	if not Rope or not Rope.Parent or not CheckIfGrappleHookAlive() then
+		return
+	end
+	local StartPosition = Handle.Position
+	local EndPosition = GrappleHook.Position
+	local RopeLength = (StartPosition - EndPosition).Magnitude
+	Rope.Size = Vector3.new(1, 1, 1)
+	Rope.Mesh.Scale = Vector3.new(0.1, RopeLength, 0.1)
+	Rope.CFrame = (CFrame.new(((StartPosition + EndPosition) / 2), EndPosition) * CFrame.Angles(-(math.pi / 2), 0, 0))
+end
+
+function DisconnectGrappleHook(KeepBodyObjects)
+	for i, v in pairs({Rope, GrappleHook, GrappleHookChanged}) do
+		if v then
+			if tostring(v) == "Connection" then
+				v:disconnect()
+			elseif type(v) == "userdata" and v.Parent then
+				v:Destroy()
+			end
+		end
+	end
+	if CheckIfAlive() and not KeepBodyObjects then
+		for i, v in pairs(HumanoidRootPart:GetChildren()) do
+			if string.find(string.lower(v.ClassName), string.lower("Body")) then
+				v:Destroy()
+			end
+		end	
+	end
+	Connected = false
+	Mesh.MeshId = Meshes.GrappleWithHook
+end
+
+function TryToConnect()
+	if not ToolEquipped or not CheckIfAlive() or not CheckIfGrappleHookAlive() or Connected then
+		DisconnectGrappleHook()
+		return
+	end
+	local DistanceApart = (HumanoidRootPart.Position - GrappleHook.Position).Magnitude
+	if DistanceApart &gt; MaxDistance then
+		DisconnectGrappleHook()
+		return
+	end
+	local Directions = {Vector3.new(0, 1, 0), Vector3.new(0, -1, 0), Vector3.new(1, 0, 0), Vector3.new(-1, 0, 0), Vector3.new(0, 0, 1), Vector3.new(0, 0, -1)}
+	local ClosestRay = {DistanceApart = math.huge}
+	for i, v in pairs(Directions) do
+		local Direction = CFrame.new(GrappleHook.Position, (GrappleHook.CFrame + v * 2).p).lookVector
+		local RayHit, RayPos, RayNormal = CastRay((GrappleHook.Position + Vector3.new(0, 0, 0)), Direction, 2, {Character, GrappleHook, Rope}, false)
+		if RayHit then
+			local DistanceApart = (GrappleHook.Position - RayPos).Magnitude
+			if DistanceApart &lt; ClosestRay.DistanceApart then
+				ClosestRay = {Hit = RayHit, Pos = RayPos, Normal = RayNormal, DistanceApart = DistanceApart}
+			end
+		end
+	end
+	if ClosestRay.Hit then
+		Connected = true
+		local GrappleCFrame = CFrame.new(ClosestRay.Pos, (CFrame.new(ClosestRay.Pos) + ClosestRay.Normal * 2).p) * CFrame.Angles((math.pi / 2), 0, 0)
+		GrappleCFrame = (GrappleCFrame * CFrame.new(0, -(GrappleHook.Size.Y / 1.5), 0))
+		GrappleCFrame = (CFrame.new(GrappleCFrame.p, Handle.Position) * CFrame.Angles(0, math.pi, 0))
+		local Weld = Create("Motor6D"){
+			Part0 = GrappleHook,
+			Part1 = ClosestRay.Hit,
+			C0 = GrappleCFrame:inverse(),
+			C1 = ClosestRay.Hit.CFrame:inverse(),
+			Parent = GrappleHook,
+		}
+		for i, v in pairs(GrappleHook:GetChildren()) do
+			if string.find(string.lower(v.ClassName), string.lower("Body")) then
+				v:Destroy()
+			end
+		end	
+		local HitSound = GrappleHook:FindFirstChild("Hit")
+		if HitSound then
+			HitSound:Play()
+		end
+		local BackUpGrappleHook = GrappleHook
+		wait(0.4)
+		if not CheckIfGrappleHookAlive() or GrappleHook ~= BackUpGrappleHook then
+			return
+		end
+		Sounds.Connect:Play()
+		local ConnectSound = GrappleHook:FindFirstChild("Connect")
+		if ConnectSound then
+			ConnectSound:Play()
+		end
+		
+		for i, v in pairs(HumanoidRootPart:GetChildren()) do
+			if string.find(string.lower(v.ClassName), string.lower("Body")) then
+				v:Destroy()
+			end
+		end	
+		
+		local TargetPosition = GrappleHook.Position
+		local BackUpPosition = TargetPosition
+		
+		local BodyPos = Create("BodyPosition"){
+			D = 1000,
+			P = 3000,
+			maxForce = Vector3.new(1000000, 1000000, 1000000),
+			position = TargetPosition,
+			Parent = HumanoidRootPart,
+		}
+		
+		local BodyGyro = Create("BodyGyro"){
+			maxTorque = Vector3.new(math.huge, math.huge, math.huge),
+			cframe = CFrame.new(HumanoidRootPart.Position, Vector3.new(GrappleCFrame.p.X, HumanoidRootPart.Position.Y, GrappleCFrame.p.Z)),
+			Parent = HumanoidRootPart,
+		}
+	
+		Spawn(function()
+			while TargetPosition == BackUpPosition and CheckIfGrappleHookAlive() and Connected and ToolEquipped and CheckIfAlive() do
+				BodyPos.position = GrappleHook.Position
+				wait()
+			end
+		end)
+		
+	end
+end
+
+function CheckIfGrappleHookAlive()
+	return (((GrappleHook and GrappleHook.Parent --[[and Rope and Rope.Parent]]) and true) or false)
+end
+
+function CheckIfAlive()
+	return (((Character and Character.Parent and Humanoid and Humanoid.Parent and Humanoid.Health &gt; 0 and HumanoidRootPart and HumanoidRootPart.Parent and Player and Player.Parent) and true) or false)
+end
+
+function Activated()
+	if not Tool.Enabled or not ToolEquipped or not CheckIfAlive() then
+		return
+	end
+	local MousePosition = InvokeClient("MousePosition")
+	if not MousePosition then
+		return
+	end
+	MousePosition = MousePosition.Position
+	if CheckIfGrappleHookAlive() then
+		if not CanFireWhileGrappling then
+			return
+		end
+		if GrappleHookChanged then
+			GrappleHookChanged:disconnect()
+		end
+		DisconnectGrappleHook(true)
+	end
+	if GrappleHookChanged then
+		GrappleHookChanged:disconnect()
+	end
+	Tool.Enabled = false
+	Sounds.Fire:Play()
+	Mesh.MeshId = Meshes.Grapple
+	GrappleHook = BaseGrappleHook:Clone()
+	GrappleHook.CFrame = (CFrame.new((Handle.Position + (MousePosition - Handle.Position).Unit * 5), MousePosition) * CFrame.Angles(0, 0, 0))
+	local Weight = 70
+	GrappleHook.Velocity = (GrappleHook.CFrame.lookVector * Weight)
+	local Force = Create("BodyForce"){
+		force = Vector3.new(0, Weight, 0),
+		Parent = GrappleHook,
+	}
+	GrappleHook.Parent = Tool
+	GrappleHookChanged = GrappleHook.Changed:connect(function(Property)
+		if Property == "Parent" then
+			DisconnectGrappleHook()
+		end
+	end)
+	Rope = BaseRope:Clone()
+	Rope.Parent = Tool
+	Spawn(function()
+		while CheckIfGrappleHookAlive() and ToolEquipped and CheckIfAlive() do
+			AdjustRope()
+			Spawn(function()
+				if not Connected then
+					TryToConnect()
+				end
+			end)
+			wait()
+		end
+	end)
+	wait(2)
+	Tool.Enabled = true
+end
+
+function Equipped(Mouse)
+	Character = Tool.Parent
+	Humanoid = Character:FindFirstChild("Humanoid")
+	HumanoidRootPart = Character:FindFirstChild("HumanoidRootPart")
+	Player = Players:GetPlayerFromCharacter(Character)
+	if not CheckIfAlive() then
+		return
+	end
+	Spawn(function()
+		DisconnectGrappleHook()
+		if HumanoidJumping then
+			HumanoidJumping:disconnect()
+		end
+		HumanoidJumping = Humanoid.Jumping:connect(function()
+			DisconnectGrappleHook()
+		end)
+	end)
+	Crouching = false
+	ToolEquipped = true
+end
+
+function Unequipped()
+	if HumanoidJumping then
+		HumanoidJumping:disconnect()
+	end
+	DisconnectGrappleHook()
+	Crouching = false
+	ToolEquipped = false
+end
+
+function OnServerInvoke(player, mode, value)
+	if player ~= Player or not ToolEquipped or not value or not CheckIfAlive() then
+		return
+	end
+	if mode == "KeyPress" then
+		local Key = value.Key
+		local Down = value.Down
+		if Key == "q" and Down then
+			DisconnectGrappleHook()
+		elseif Key == "c" and Down then
+			Crouching = not Crouching
+			Spawn(function()
+				InvokeClient(((Crouching and "PlayAnimation") or "StopAnimation"), Animations.Crouch)
+			end)
+		end
+	end
+end
+
+function InvokeClient(Mode, Value)
+	local ClientReturn = nil
+	pcall(function()
+		ClientReturn = ClientControl:InvokeClient(Player, Mode, Value)
+	end)
+	return ClientReturn
+end
+
+ServerControl.OnServerInvoke = OnServerInvoke
+
+Tool.Activated:connect(Activated)
+Tool.Equipped:connect(Equipped)
+Tool.Unequipped:connect(Unequipped)</string>
+          <BinaryString name="Tags" />
+        </Properties>
+      </Item>
+      <Item class="Animation" referent="60855">
+        <Properties>
+          <string name="Name">Crouch</string>
+          <Content name="AnimationId">
+            <url>http://www.roblox.com/asset/?id=287325678</url>
+          </Content>
+          <BinaryString name="Tags" />
+        </Properties>
+      </Item>
+    </Item>
+    </roblox>

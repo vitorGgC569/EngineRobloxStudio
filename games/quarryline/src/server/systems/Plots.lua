@@ -42,6 +42,10 @@ local PlotAllocator = require(ReplicatedStorage.Forge.Tycoon.PlotAllocator)
 local GridPlacement = require(ReplicatedStorage.Forge.Tycoon.GridPlacement)
 local PlotPermissions = require(ReplicatedStorage.Forge.Social.PlotPermissions)
 
+--: A sibling in `systems`, so `script.Parent` -- not `script`, which is this
+--: file, and not `Shared`, which is a different tree.
+local Machinery = require(script.Parent.Machinery)
+
 local Plots = {}
 
 Plots.allocator = nil :: any
@@ -98,11 +102,43 @@ local function buildPlot(index: number, container: Instance): Model
 	rim.Material = Enum.Material.Concrete
 	rim.Parent = model
 
+	--[[
+		A post with a lamp, not a monolith.
+
+		This was a four-by-eight-by-four neon slab, and in every screenshot of
+		this game it is the brightest object on screen and occupies more of the
+		frame than the entire factory it is labelling. A marker that outshines
+		the thing it marks is not a marker.
+
+		Slim post, small lamp on top, at the front corner rather than the
+		middle of the walkway.
+	]]
+	local post = Instance.new("Part")
+	post.Name = "ClaimPost"
+	post.Size = Vector3.new(0.5, 4.5, 0.5)
+	post.CFrame = CFrame.new(origin + Vector3.new(-size / 2 + 2.5, 2.75, -size / 2 + 2.5))
+	post.Anchored = true
+	post.CanCollide = false
+	post.Color = Color3.fromRGB(64, 62, 58)
+	post.Material = Enum.Material.Metal
+	post.Parent = model
+
 	local claim = Instance.new("Part")
 	claim.Name = "Claim"
-	claim.Size = Vector3.new(4, 8, 4)
-	claim.CFrame = CFrame.new(origin + Vector3.new(0, 4.5, -size / 2 + 3))
+	claim.Shape = Enum.PartType.Ball
+	claim.Size = Vector3.new(1.1, 1.1, 1.1)
+	claim.CFrame = CFrame.new(origin + Vector3.new(-size / 2 + 2.5, 5.4, -size / 2 + 2.5))
 	claim.Anchored = true
+	--[[
+		A sign, not a platform.
+
+		Left collidable, the first screenshot of this game had the player
+		standing on top of their own claim marker like a lamp post, because an
+		eight-stud neon pillar next to a spawn is the tallest thing a character
+		can walk into. Nothing about a marker wants to be stood on.
+	]]
+	claim.CanCollide = false
+	claim.CanQuery = false
 	claim.Color = Color3.fromRGB(210, 176, 96)
 	claim.Material = Enum.Material.Neon
 	claim.Parent = model
@@ -256,8 +292,10 @@ end
 	machine is real. A client that asks for a drill on somebody else's plot at
 	coordinates outside the bounds gets four separate reasons why not.
 ]]
+--: Returns the model as a third value: the caller needs to tell everyone
+--: *where* the machine landed, and the grid decides that, not the request.
 function Plots.place(player: Player, machineId: string, x: number, z: number, rotation: number?)
-	: (boolean, string?)
+	: (boolean, string?, Model?)
 	local key = tostring(player.UserId)
 	local id = Plots.allocator:plotOf(key)
 	if not id then
@@ -274,9 +312,29 @@ function Plots.place(player: Player, machineId: string, x: number, z: number, ro
 
 	local grid = Plots.grids[id]
 	local turn = rotation or 0
+	--[[
+		Say which way it does not fit.
+
+		`GridPlacement.fits` returns a reason -- `outside_plot`, `obstacle`,
+		`occupied`, `unknown_item` -- and this threw it away for a sentence that
+		covers all four. Three of them mean completely different things to the
+		player: move it, the plot is full, or that machine does not exist.
+
+		It also cost a debugging session. "that does not fit there" at three
+		separate coordinates is indistinguishable from a broken grid, and the
+		one word that would have separated them was being discarded one line
+		from where it was produced.
+	]]
 	local at = grid:snap({ x = x, z = z })
-	if not grid:fits(machineId, turn, at) then
-		return false, "that does not fit there"
+	local ok, why = grid:fits(machineId, turn, at)
+	if not ok then
+		local said = {
+			outside_plot = "that is past the edge of your plot",
+			obstacle = "something is already built there",
+			occupied = "that space is taken",
+			unknown_item = string.format("there is no machine called '%s'", machineId),
+		}
+		return false, said[why] or string.format("that does not fit there (%s)", tostring(why))
 	end
 
 	local placementId = string.format("%s:%d:%d", machineId, at.x, at.z)
@@ -291,7 +349,7 @@ function Plots.place(player: Player, machineId: string, x: number, z: number, ro
 		x = at.x, z = at.z, rotation = turn,
 		model = model,
 	}
-	return true
+	return true, nil, model
 end
 
 --[[
@@ -302,6 +360,201 @@ end
 	depot across the plot at a glance — and four distinctly coloured boxes do
 	that better than four detailed meshes that all look like machinery.
 ]]
+--[[
+	Tell the machines on a plot whether the line is actually earning.
+
+	One attribute per machine, written only when it changes. The client reads
+	it to decide whether the bit spins and the furnace glows -- which is the
+	only thing that makes the animation *information* rather than decoration:
+	a stalled line looks stalled, from across the map, without opening a panel.
+
+	The change guard is not a micro-optimisation. Without it this writes an
+	attribute to every machine on every plot every two seconds for ever, and
+	attribute writes replicate.
+]]
+--[[
+	A working line, free, the moment a plot is claimed.
+
+	This is not generosity, it is the only way the game is playable at all.
+
+	The payout rule is that a chain runs at its narrowest link, which is the one
+	genuinely interesting constraint here -- it is what makes layout a decision
+	instead of a shopping list. But it also means a partial line earns exactly
+	nothing: a drill on its own produces zero, so a new player with an empty
+	plot and no coins can never take a first step. The starting balance was
+	zero and the four machines cost 1640 together. There was no first move.
+
+	Two ways out. Relax the rule so a lone drill trickles -- which throws away
+	the constraint. Or hand over one complete line and let the player extend it,
+	which keeps the rule and means the factory is running, visibly, within a
+	few seconds of arriving. A tycoon has to show you what it is before it asks
+	you to invest in it.
+
+	Positions are tried, not assumed: the grid refuses overlaps, and hardcoding
+	four coordinates that happen to fit today is how this breaks the first time
+	somebody edits a footprint.
+]]
+local STARTER_LINE = { "drill", "belt", "smelter", "depot" }
+
+function Plots.grantStarterLine(plotId: string): number
+	local grid = Plots.grids[plotId]
+	if not grid then
+		return 0
+	end
+
+	local half = Config.plots.size / 2
+	local placed = 0
+
+	for index, machineId in STARTER_LINE do
+		local machine = Content.machines[machineId]
+		if not machine then
+			continue
+		end
+
+		--[[
+			Scanned, not guessed.
+
+			The first version picked four X positions by arithmetic and tried
+			four Z offsets at each. It placed three machines and silently
+			dropped the depot -- which, under the narrowest-link rule, means
+			the "starter line" earned exactly zero and every machine on it sat
+			still. A line that is three-quarters built is not a line.
+
+			So this walks the plot and takes the first cell the grid accepts.
+			It still prefers the chain order left to right, because the scan
+			starts from the machine's ideal X and works outward, but it can
+			never come up short while a free cell exists.
+		]]
+		local wantX = -half + 6 + (index - 1) * ((half * 2 - 12) / (#STARTER_LINE - 1))
+		local put = false
+
+		local candidates: { { x: number, z: number } } = {}
+		for _, offsetZ in { -6, 2, -14, 10 } do
+			table.insert(candidates, { x = wantX, z = offsetZ })
+		end
+		for step = 4, half * 2, 4 do
+			for _, dx in { -step, step } do
+				for _, dz in { -6, 2, -14, 10, 6, -2 } do
+					table.insert(candidates, { x = wantX + dx, z = dz })
+				end
+			end
+		end
+
+		for _, want in candidates do
+			local at = grid:snap(want)
+			if grid:fits(machineId, 0, at) then
+				local placementId = string.format("%s:%d:%d", machineId, at.x, at.z)
+				if grid:place(placementId, machineId, 0, at) then
+					local model = Plots.spawnMachine(plotId, machineId, at, 0)
+					Plots.built[plotId][placementId] = {
+						placementId = placementId,
+						machineId = machineId,
+						x = at.x, z = at.z, rotation = 0,
+						model = model,
+					}
+					placed += 1
+					put = true
+					break
+				end
+			end
+		end
+
+		if not put then
+			Debug.warn(string.format(
+				"[Plots] starter %s found no room on %s", machineId, plotId))
+		end
+	end
+
+	return placed
+end
+
+--[[
+	The plot layout, as data a profile can hold.
+
+	`Plots.built` is server memory: it dies with the server, and the profile
+	only ever recorded `machinesBuilt`, a counter. So a returning player got
+	their coins back and an empty plot -- and because the counter was already
+	four, the starter line never came either. They were left with money, no
+	factory, and no way to get one.
+
+	Nothing caught it for the obvious reason: every session before this one ran
+	in MEMORY-ONLY mode, where nothing is saved and so nothing can come back
+	wrong. The defect was introduced the moment the profile started persisting
+	and was invisible until then.
+]]
+function Plots.snapshot(plotId: string): { { [string]: any } }
+	local out = {}
+	for _, entry in Plots.built[plotId] or {} do
+		table.insert(out, {
+			machineId = entry.machineId,
+			x = entry.x, z = entry.z, rotation = entry.rotation,
+		})
+	end
+	return out
+end
+
+--[[
+	Rebuild a saved layout onto a plot.
+
+	Goes through the grid rather than straight to `spawnMachine`, so a layout
+	saved before a footprint changed is rejected cell by cell instead of
+	producing machines that overlap. A piece that no longer fits is dropped and
+	counted; losing one machine is recoverable, a corrupt grid is not.
+]]
+function Plots.restore(plotId: string, layout: { any }): (number, number)
+	local grid = Plots.grids[plotId]
+	if not grid or not layout then
+		return 0, 0
+	end
+
+	local placed, dropped = 0, 0
+	for _, want in layout do
+		local machineId = tostring(want.machineId)
+		if not Content.machines[machineId] then
+			dropped += 1
+			continue
+		end
+		local turn = tonumber(want.rotation) or 0
+		local at = grid:snap({ x = tonumber(want.x) or 0, z = tonumber(want.z) or 0 })
+		if not grid:fits(machineId, turn, at) then
+			dropped += 1
+			continue
+		end
+		local placementId = string.format("%s:%d:%d", machineId, at.x, at.z)
+		if not grid:place(placementId, machineId, turn, at) then
+			dropped += 1
+			continue
+		end
+		local model = Plots.spawnMachine(plotId, machineId, at, turn)
+		Plots.built[plotId][placementId] = {
+			placementId = placementId,
+			machineId = machineId,
+			x = at.x, z = at.z, rotation = turn,
+			model = model,
+		}
+		placed += 1
+	end
+
+	if dropped > 0 then
+		Debug.warn(string.format(
+			"[Plots] %s: %d saved machines no longer fit and were dropped", plotId, dropped))
+	end
+	return placed, dropped
+end
+
+function Plots.setActive(plotId: string, working: boolean)
+	local plot = Plots.models[plotId]
+	local container = plot and plot:FindFirstChild("Machines")
+	if not container then
+		return
+	end
+	for _, model in container:GetChildren() do
+		if model:GetAttribute("active") ~= working then
+			model:SetAttribute("active", working)
+		end
+	end
+end
+
 function Plots.spawnMachine(id: string, machineId: string, at: any, rotation: number): Model
 	local machine = Content.machines[machineId]
 	local plot = Plots.models[id]
@@ -325,6 +578,30 @@ function Plots.spawnMachine(id: string, machineId: string, at: any, rotation: nu
 		coloured boxes reads as a prototype however correct the simulation is,
 		and no test in this repository can tell you that.
 	]]
+	--[[
+		Real machinery first, a kit model second, a box last.
+
+		`Machinery` builds the shape this game actually wants: one silhouette
+		per role, with the one or two named children the client animates. It
+		comes before the kit lookup because a licensed horror map has no drill
+		in it -- `Catalog.fromKit("drill")` searched two hundred and fifty-seven
+		harvested pieces and matched nothing but a clothing belt from a fighting
+		game, so every machine fell through to the box.
+	]]
+	local built = Machinery.build(machineId, origin * CFrame.new(at.x, 0.5, at.z), rotation)
+	if built then
+		built:SetAttribute("plotId", id)
+		local container = plot:FindFirstChild("Machines")
+		if not container then
+			local folder = Instance.new("Folder")
+			folder.Name = "Machines"
+			folder.Parent = plot
+			container = folder
+		end
+		built.Parent = container
+		return built
+	end
+
 	local dressed = Catalog.fromKit(machine.model or machineId)
 	if dressed then
 		dressed.Name = "Body"

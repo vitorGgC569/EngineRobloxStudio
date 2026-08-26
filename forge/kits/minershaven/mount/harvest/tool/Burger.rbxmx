@@ -1,0 +1,259 @@
+<?xml version='1.0' encoding='utf-8'?>
+<roblox version="4"><Item class="Tool" referent="60933">
+      <Properties>
+        <string name="Name">Burger</string>
+        <bool name="CanBeDropped">true</bool>
+        <bool name="Enabled">true</bool>
+        <CoordinateFrame name="Grip">
+          <X>0.5</X>
+          <Y>-0.1</Y>
+          <Z>0</Z>
+          <R00>0</R00>
+          <R01>0</R01>
+          <R02>1</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>0</R12>
+          <R20>-1</R20>
+          <R21>0</R21>
+          <R22>0</R22>
+        </CoordinateFrame>
+        <bool name="ManualActivationOnly">false</bool>
+        <bool name="RequiresHandle">true</bool>
+        <BinaryString name="Tags" />
+        <Content name="TextureId">
+          <url>http://www.roblox.com/asset/?id=16646570</url>
+        </Content>
+        <string name="ToolTip">Ze Chef Doge's famous burger</string>
+      </Properties>
+      <Item class="Part" referent="60934">
+        <Properties>
+          <string name="Name">Handle</string>
+          <bool name="Anchored">false</bool>
+          <float name="BackParamA">-0.5</float>
+          <float name="BackParamB">0.5</float>
+          <token name="BackSurface">0</token>
+          <token name="BackSurfaceInput">0</token>
+          <float name="BottomParamA">-0.5</float>
+          <float name="BottomParamB">0.5</float>
+          <token name="BottomSurface">0</token>
+          <token name="BottomSurfaceInput">0</token>
+          <CoordinateFrame name="CFrame">
+            <X>-7.5</X>
+            <Y>0.4</Y>
+            <Z>-229.5</Z>
+            <R00>-1</R00>
+            <R01>-0.000000000000000026456914</R01>
+            <R02>-0.000000000000000000000075468366</R02>
+            <R10>-0.000000000000000026456914</R10>
+            <R11>1</R11>
+            <R12>0.000000000000000026457354</R12>
+            <R20>0.000000000000000000000075468366</R20>
+            <R21>0.000000000000000026457354</R21>
+            <R22>-1</R22>
+          </CoordinateFrame>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <int name="CollisionGroupId">0</int>
+          <Color3uint8 name="Color3uint8">13487565</Color3uint8>
+          <PhysicalProperties name="CustomPhysicalProperties">
+            <CustomPhysics>false</CustomPhysics>
+          </PhysicalProperties>
+          <token name="formFactorRaw">2</token>
+          <float name="FrontParamA">-0.5</float>
+          <float name="FrontParamB">0.5</float>
+          <token name="FrontSurface">0</token>
+          <token name="FrontSurfaceInput">0</token>
+          <float name="LeftParamA">-0.5</float>
+          <float name="LeftParamB">0.5</float>
+          <token name="LeftSurface">0</token>
+          <token name="LeftSurfaceInput">0</token>
+          <bool name="Locked">false</bool>
+          <bool name="Massless">false</bool>
+          <token name="Material">256</token>
+          <float name="Reflectance">5</float>
+          <float name="RightParamA">-0.5</float>
+          <float name="RightParamB">0.5</float>
+          <token name="RightSurface">0</token>
+          <token name="RightSurfaceInput">0</token>
+          <int name="RootPriority">0</int>
+          <Vector3 name="RotVelocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+          <token name="shape">1</token>
+          <Vector3 name="size">
+            <X>1</X>
+            <Y>0.8</Y>
+            <Z>1</Z>
+          </Vector3>
+          <BinaryString name="Tags" />
+          <float name="TopParamA">-0.5</float>
+          <float name="TopParamB">0.5</float>
+          <token name="TopSurface">0</token>
+          <token name="TopSurfaceInput">0</token>
+          <float name="Transparency">0</float>
+          <Vector3 name="Velocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+        </Properties>
+        <Item class="SpecialMesh" referent="60935">
+          <Properties>
+            <string name="Name">Mesh</string>
+            <Content name="MeshId">
+              <url>http://www.roblox.com/asset/?id=16646125</url>
+            </Content>
+            <token name="MeshType">5</token>
+            <Vector3 name="Offset">
+              <X>0</X>
+              <Y>0</Y>
+              <Z>0</Z>
+            </Vector3>
+            <Vector3 name="Scale">
+              <X>1</X>
+              <Y>1</Y>
+              <Z>1</Z>
+            </Vector3>
+            <BinaryString name="Tags" />
+            <Content name="TextureId">
+              <url>http://www.roblox.com/asset/?id=16432575</url>
+            </Content>
+            <Vector3 name="VertexColor">
+              <X>1</X>
+              <Y>1</Y>
+              <Z>1</Z>
+            </Vector3>
+          </Properties>
+        </Item>
+        <Item class="Sound" referent="60936">
+          <Properties>
+            <string name="Name">OpenSound</string>
+            <bool name="Looped">false</bool>
+            <bool name="PlayOnRemove">false</bool>
+            <float name="PlaybackSpeed">1</float>
+            <bool name="Playing">false</bool>
+            <float name="xmlRead_MaxDistance_3">40</float>
+            <float name="EmitterSize">1</float>
+            <token name="RollOffMode">0</token>
+            <Ref name="SoundGroup">null</Ref>
+            <Content name="SoundId"><null></null></Content>
+            <BinaryString name="Tags" />
+            <double name="TimePosition">0</double>
+            <float name="Volume">1</float>
+          </Properties>
+        </Item>
+        <Item class="Weld" referent="60937">
+          <Properties>
+            <string name="Name">Weld</string>
+            <CoordinateFrame name="C0">
+              <X>0.00000012681667</X>
+              <Y>-0.000000023445322</Y>
+              <Z>0.0000005902233</Z>
+              <R00>-0.99999976</R00>
+              <R01>-0.00001855502</R01>
+              <R02>-0.0000000058359415</R02>
+              <R10>-0.000018606028</R10>
+              <R11>1</R11>
+              <R12>-0.0000081117305</R12>
+              <R20>0.00000006296603</R20>
+              <R21>-0.000008072159</R21>
+              <R22>-1.0000001</R22>
+            </CoordinateFrame>
+            <CoordinateFrame name="C1">
+              <X>0.00000012681667</X>
+              <Y>-0.000000023445322</Y>
+              <Z>0.0000005902233</Z>
+              <R00>-0.99999976</R00>
+              <R01>-0.00001855502</R01>
+              <R02>-0.0000000058359415</R02>
+              <R10>-0.000018606028</R10>
+              <R11>1</R11>
+              <R12>-0.0000081117305</R12>
+              <R20>0.00000006296603</R20>
+              <R21>-0.000008072159</R21>
+              <R22>-1.0000001</R22>
+            </CoordinateFrame>
+            <Ref name="Part0">60934</Ref>
+            <Ref name="Part1">60934</Ref>
+            <BinaryString name="Tags" />
+          </Properties>
+        </Item>
+        <Item class="Sound" referent="60938">
+          <Properties>
+            <string name="Name">DrinkSound</string>
+            <bool name="Looped">false</bool>
+            <bool name="PlayOnRemove">false</bool>
+            <float name="PlaybackSpeed">1</float>
+            <bool name="Playing">false</bool>
+            <float name="xmlRead_MaxDistance_3">50</float>
+            <float name="EmitterSize">1</float>
+            <token name="RollOffMode">0</token>
+            <Ref name="SoundGroup">null</Ref>
+            <Content name="SoundId"><null></null></Content>
+            <BinaryString name="Tags" />
+            <double name="TimePosition">0</double>
+            <float name="Volume">0.5</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Script" referent="60939">
+        <Properties>
+          <string name="Name">SandwichScript</string>
+          <bool name="Disabled">false</bool>
+          <Content name="LinkedSource">
+            <null>
+            </null>
+          </Content>
+          <string name="ScriptGuid">{8BA98288-EFFA-4DE1-AF80-2DEE18AAD779}</string>
+          <string name="Source">local Tool = script.Parent;
+
+enabled = true
+
+local function deactivate()
+	Tool.Handle.DrinkSound:Stop()
+	Tool.GripForward = Vector3.new(-1, 0, 0)
+	Tool.GripPos = Vector3.new(-.5, -.1, 0)
+	Tool.GripRight = Vector3.new(0, 0, 1)
+	Tool.GripUp = Vector3.new(0,1,0)
+	enabled = true
+end
+
+
+
+function onActivated()
+	if not enabled  then
+		return
+	end
+
+	enabled = false
+	Tool.GripForward = Vector3.new(-.981, .196, 0)
+	Tool.GripPos = Vector3.new(-.5, -0.6, -1.5)
+	Tool.GripRight = Vector3.new(0, -0, -1)
+	Tool.GripUp = Vector3.new(0.196, .981, 0)
+
+
+	Tool.Handle.DrinkSound:Play()
+
+	wait(70)
+	
+	deactivate()
+
+end
+
+function onEquipped()
+	Tool.Handle.OpenSound:play()
+end
+
+script.Parent.Unequipped:connect(deactivate)
+
+script.Parent.Activated:connect(onActivated)
+script.Parent.Equipped:connect(onEquipped)
+</string>
+          <BinaryString name="Tags" />
+        </Properties>
+      </Item>
+    </Item>
+    </roblox>

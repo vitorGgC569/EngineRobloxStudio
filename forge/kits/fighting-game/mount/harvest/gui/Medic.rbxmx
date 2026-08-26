@@ -1,0 +1,331 @@
+<?xml version='1.0' encoding='utf-8'?>
+<roblox version="4"><Item class="ScreenGui" referent="29611">
+      <Properties>
+        <string name="Name">Medic</string>
+        <BinaryString name="AttributesSerialize" />
+        <bool name="AutoLocalize">true</bool>
+        <SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+        <bool name="ClipToDeviceSafeArea">true</bool>
+        <bool name="DefinesCapabilities">false</bool>
+        <int name="DisplayOrder">0</int>
+        <bool name="Enabled">false</bool>
+        <UniqueId name="HistoryId">00000000000000000000000000000000</UniqueId>
+        <bool name="ResetOnSpawn">true</bool>
+        <Ref name="RootLocalizationTable">null</Ref>
+        <token name="SafeAreaCompatibility">1</token>
+        <token name="ScreenInsets">2</token>
+        <token name="SelectionBehaviorDown">0</token>
+        <token name="SelectionBehaviorLeft">0</token>
+        <token name="SelectionBehaviorRight">0</token>
+        <token name="SelectionBehaviorUp">0</token>
+        <bool name="SelectionGroup">false</bool>
+        <int64 name="SourceAssetId">-1</int64>
+        <BinaryString name="Tags" />
+        <UniqueId name="UniqueId">4f5e1da4bed9fcdf04d53d6400009348</UniqueId>
+        <token name="ZIndexBehavior">0</token>
+      </Properties>
+      <Item class="TextLabel" referent="29612">
+        <Properties>
+          <string name="Name">Ammo</string>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint">
+            <X>0</X>
+            <Y>0</Y>
+          </Vector2>
+          <BinaryString name="AttributesSerialize" />
+          <bool name="AutoLocalize">true</bool>
+          <token name="AutomaticSize">0</token>
+          <Color3 name="BackgroundColor3">
+            <R>1</R>
+            <G>1</G>
+            <B>1</B>
+          </Color3>
+          <float name="BackgroundTransparency">1</float>
+          <Color3 name="BorderColor3">
+            <R>0</R>
+            <G>0</G>
+            <B>0</B>
+          </Color3>
+          <token name="BorderMode">0</token>
+          <int name="BorderSizePixel">0</int>
+          <SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="DefinesCapabilities">false</bool>
+          <bool name="Draggable">false</bool>
+          <Font name="FontFace">
+            <Family>
+              <url>rbxasset://fonts/families/SourceSansPro.json</url>
+            </Family>
+            <Weight>700</Weight>
+            <Style>Normal</Style>
+          </Font>
+          <UniqueId name="HistoryId">00000000000000000000000000000000</UniqueId>
+          <bool name="Interactable">true</bool>
+          <int name="LayoutOrder">0</int>
+          <float name="LineHeight">1</float>
+          <string name="LocalizationMatchIdentifier" />
+          <string name="LocalizationMatchedSourceText" />
+          <int name="MaxVisibleGraphemes">-1</int>
+          <Ref name="NextSelectionDown">null</Ref>
+          <Ref name="NextSelectionLeft">null</Ref>
+          <Ref name="NextSelectionRight">null</Ref>
+          <Ref name="NextSelectionUp">null</Ref>
+          <UDim2 name="Position">
+            <XS>0.7756132</XS>
+            <XO>0</XO>
+            <YS>0.4376547</YS>
+            <YO>0</YO>
+          </UDim2>
+          <bool name="RichText">true</bool>
+          <Ref name="RootLocalizationTable">null</Ref>
+          <float name="Rotation">0</float>
+          <bool name="Selectable">false</bool>
+          <token name="SelectionBehaviorDown">0</token>
+          <token name="SelectionBehaviorLeft">0</token>
+          <token name="SelectionBehaviorRight">0</token>
+          <token name="SelectionBehaviorUp">0</token>
+          <bool name="SelectionGroup">false</bool>
+          <Ref name="SelectionImageObject">null</Ref>
+          <int name="SelectionOrder">0</int>
+          <UDim2 name="Size">
+            <XS>0.2245737</XS>
+            <XO>0</XO>
+            <YS>0.062254373</YS>
+            <YO>0</YO>
+          </UDim2>
+          <token name="SizeConstraint">0</token>
+          <int64 name="SourceAssetId">-1</int64>
+          <BinaryString name="Tags" />
+          <string name="Text">AMMO TYPE:</string>
+          <Color3 name="TextColor3">
+            <R>1</R>
+            <G>1</G>
+            <B>1</B>
+          </Color3>
+          <token name="TextDirection">0</token>
+          <bool name="TextScaled">true</bool>
+          <float name="TextSize">14</float>
+          <Color3 name="TextStrokeColor3">
+            <R>1</R>
+            <G>1</G>
+            <B>1</B>
+          </Color3>
+          <float name="TextStrokeTransparency">1</float>
+          <float name="TextTransparency">0</float>
+          <token name="TextTruncate">0</token>
+          <bool name="TextWrapped">true</bool>
+          <token name="TextXAlignment">0</token>
+          <token name="TextYAlignment">1</token>
+          <UniqueId name="UniqueId">4f5e1da4bed9fcdf04d53d640000936f</UniqueId>
+          <bool name="Visible">true</bool>
+          <int name="ZIndex">1</int>
+        </Properties>
+      </Item>
+      <Item class="TextLabel" referent="29613">
+        <Properties>
+          <string name="Name">Gren</string>
+          <bool name="Active">false</bool>
+          <Vector2 name="AnchorPoint">
+            <X>0</X>
+            <Y>0</Y>
+          </Vector2>
+          <BinaryString name="AttributesSerialize" />
+          <bool name="AutoLocalize">true</bool>
+          <token name="AutomaticSize">0</token>
+          <Color3 name="BackgroundColor3">
+            <R>1</R>
+            <G>1</G>
+            <B>1</B>
+          </Color3>
+          <float name="BackgroundTransparency">1</float>
+          <Color3 name="BorderColor3">
+            <R>0</R>
+            <G>0</G>
+            <B>0</B>
+          </Color3>
+          <token name="BorderMode">0</token>
+          <int name="BorderSizePixel">0</int>
+          <SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+          <bool name="ClipsDescendants">false</bool>
+          <bool name="DefinesCapabilities">false</bool>
+          <bool name="Draggable">false</bool>
+          <Font name="FontFace">
+            <Family>
+              <url>rbxasset://fonts/families/SourceSansPro.json</url>
+            </Family>
+            <Weight>700</Weight>
+            <Style>Normal</Style>
+          </Font>
+          <UniqueId name="HistoryId">4f5e1da4bed9fcdf04d53d640000936f</UniqueId>
+          <bool name="Interactable">true</bool>
+          <int name="LayoutOrder">0</int>
+          <float name="LineHeight">1</float>
+          <string name="LocalizationMatchIdentifier" />
+          <string name="LocalizationMatchedSourceText" />
+          <int name="MaxVisibleGraphemes">-1</int>
+          <Ref name="NextSelectionDown">null</Ref>
+          <Ref name="NextSelectionLeft">null</Ref>
+          <Ref name="NextSelectionRight">null</Ref>
+          <Ref name="NextSelectionUp">null</Ref>
+          <UDim2 name="Position">
+            <XS>0.7756132</XS>
+            <XO>0</XO>
+            <YS>0.49974114</YS>
+            <YO>0</YO>
+          </UDim2>
+          <bool name="RichText">true</bool>
+          <Ref name="RootLocalizationTable">null</Ref>
+          <float name="Rotation">0</float>
+          <bool name="Selectable">false</bool>
+          <token name="SelectionBehaviorDown">0</token>
+          <token name="SelectionBehaviorLeft">0</token>
+          <token name="SelectionBehaviorRight">0</token>
+          <token name="SelectionBehaviorUp">0</token>
+          <bool name="SelectionGroup">false</bool>
+          <Ref name="SelectionImageObject">null</Ref>
+          <int name="SelectionOrder">0</int>
+          <UDim2 name="Size">
+            <XS>0.2245737</XS>
+            <XO>0</XO>
+            <YS>0.062254373</YS>
+            <YO>0</YO>
+          </UDim2>
+          <token name="SizeConstraint">0</token>
+          <int64 name="SourceAssetId">-1</int64>
+          <BinaryString name="Tags" />
+          <string name="Text">GRENADE TYPE:</string>
+          <Color3 name="TextColor3">
+            <R>1</R>
+            <G>1</G>
+            <B>1</B>
+          </Color3>
+          <token name="TextDirection">0</token>
+          <bool name="TextScaled">true</bool>
+          <float name="TextSize">14</float>
+          <Color3 name="TextStrokeColor3">
+            <R>1</R>
+            <G>1</G>
+            <B>1</B>
+          </Color3>
+          <float name="TextStrokeTransparency">1</float>
+          <float name="TextTransparency">0</float>
+          <token name="TextTruncate">0</token>
+          <bool name="TextWrapped">true</bool>
+          <token name="TextXAlignment">0</token>
+          <token name="TextYAlignment">1</token>
+          <UniqueId name="UniqueId">4f5e1da4bed9fcdf04d53d6400009447</UniqueId>
+          <bool name="Visible">true</bool>
+          <int name="ZIndex">1</int>
+        </Properties>
+      </Item>
+      <Item class="LocalScript" referent="29614">
+        <Properties>
+          <string name="Name">LocalScript</string>
+          <BinaryString name="AttributesSerialize" />
+          <SecurityCapabilities name="Capabilities">0</SecurityCapabilities>
+          <bool name="DefinesCapabilities">false</bool>
+          <bool name="Disabled">false</bool>
+          <UniqueId name="HistoryId">00000000000000000000000000000000</UniqueId>
+          <Content name="LinkedSource">
+            <null>
+            </null>
+          </Content>
+          <token name="RunContext">0</token>
+          <string name="ScriptGuid">{54D9736C-0988-4ACB-ADCD-D609845A4C12}</string>
+          <string name="Source">local player = game.Players.LocalPlayer
+local gui = script.Parent
+local gren = gui.Gren
+local ammo = gui.Ammo
+local connections = {}
+
+repeat task.wait() until player:GetAttribute("Class")
+if player:GetAttribute("Class") == "Medic" then gui.Enabled = true else gui.Enabled = false end
+player:GetAttributeChangedSignal("Class"):Connect(function()
+	if player:GetAttribute("Class") == "Medic" then gui.Enabled = true
+	else gui.Enabled = false end
+end)
+
+local cripple = '&lt;mark&gt;&lt;font color="rgb(0,0,0)"&gt;CRIPPLING AMMO&lt;/font&gt;&lt;/mark&gt;'
+local shatter = '&lt;mark&gt;&lt;font color="rgb(255, 63, 5)"&gt;SHATTER DART&lt;/font&gt;&lt;/mark&gt;'
+local regen = '&lt;mark&gt;&lt;font color="rgb(100, 255, 92)"&gt;HEALING DART&lt;/font&gt;&lt;/mark&gt;'
+local toxic = '&lt;mark&gt;&lt;font color="rgb(156, 0, 156)"&gt;TOXIC VIAL&lt;/font&gt;&lt;/mark&gt;'
+local adrenaline = '&lt;mark&gt;&lt;font color="rgb(255, 255, 0)"&gt;ADRENALINE BOMB&lt;/font&gt;&lt;/mark&gt;'
+local healing = '&lt;mark&gt;&lt;font color="rgb(100, 255, 92)"&gt;MEDI-GRENADE&lt;/font&gt;&lt;/mark&gt;'
+
+local chara = player.Character
+if not chara or not chara.Parent then
+	player.CharacterAdded:Wait()
+end
+local grentype = if chara:GetAttribute("SP2type") == 1 then toxic
+	elseif chara:GetAttribute("SP2type") == 2 then adrenaline
+	elseif chara:GetAttribute("SP2type") == 3 then healing
+	else toxic
+
+local ammotype = if chara:GetAttribute("SP1type") == 1 then cripple
+	elseif chara:GetAttribute("SP1type") == 2 then shatter
+	elseif chara:GetAttribute("SP1type") == 3 then regen
+	else cripple
+
+gren.Text = "GRENADE TYPE: " .. grentype
+ammo.Text = "AMMO TYPE: " .. ammotype
+connections[player.Name .. "Gren"] = chara:GetAttributeChangedSignal("SP2type"):Connect(function()
+	local grentype = if chara:GetAttribute("SP2type") == 1 then toxic
+		elseif chara:GetAttribute("SP2type") == 2 then adrenaline
+		elseif chara:GetAttribute("SP2type") == 3 then healing
+		else toxic
+	gren.Text = "GRENADE TYPE: " .. grentype
+end)
+
+connections[player.Name .. "Ammo"] = chara:GetAttributeChangedSignal("SP1type"):Connect(function()
+	local ammotype = if chara:GetAttribute("SP1type") == 1 then cripple
+		elseif chara:GetAttribute("SP1type") == 2 then shatter
+		elseif chara:GetAttribute("SP1type") == 3 then regen
+		else cripple
+	ammo.Text = "AMMO TYPE: " .. ammotype
+end)
+
+player.CharacterAdded:Connect(function(char)
+	local hum = char:WaitForChild("Hum")
+	repeat task.wait()
+	until char:GetAttribute("SP1type") and char:GetAttribute("SP2type")
+	
+	for i, v in pairs(connections) do
+		v:Disconnect()
+		connections[i] = nil
+	end
+	
+	local grentype = if char:GetAttribute("SP2type") == 1 then toxic
+		elseif char:GetAttribute("SP2type") == 2 then adrenaline
+		elseif char:GetAttribute("SP2type") == 3 then healing
+		else toxic
+
+	local ammotype = if char:GetAttribute("SP1type") == 1 then cripple
+		elseif char:GetAttribute("SP1type") == 2 then shatter
+		elseif char:GetAttribute("SP1type") == 3 then regen
+		else cripple
+
+	gren.Text = "GRENADE TYPE: " .. grentype
+	ammo.Text = "AMMO TYPE: " .. ammotype
+	connections[player.Name] = char:GetAttributeChangedSignal("SP2type"):Connect(function()
+		local grentype = if char:GetAttribute("SP2type") == 1 then toxic
+			elseif char:GetAttribute("SP2type") == 2 then adrenaline
+			elseif char:GetAttribute("SP2type") == 3 then healing
+			else toxic
+		gren.Text = "GRENADE TYPE: " .. grentype
+	end)
+	connections[player.Name .. "Ammo"] = chara:GetAttributeChangedSignal("SP1type"):Connect(function()
+		local ammotype = if chara:GetAttribute("SP1type") == 1 then cripple
+			elseif chara:GetAttribute("SP1type") == 2 then shatter
+			elseif chara:GetAttribute("SP1type") == 3 then regen
+			else cripple
+		ammo.Text = "AMMO TYPE: " .. ammotype
+	end)
+
+end)</string>
+          <int64 name="SourceAssetId">-1</int64>
+          <BinaryString name="Tags" />
+          <UniqueId name="UniqueId">4f5e1da4bed9fcdf04d53d64000095ce</UniqueId>
+        </Properties>
+      </Item>
+    </Item>
+    </roblox>

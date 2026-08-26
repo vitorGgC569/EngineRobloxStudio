@@ -1,0 +1,359 @@
+<?xml version='1.0' encoding='utf-8'?>
+<roblox version="4"><Item class="Tool" referent="60884">
+      <Properties>
+        <string name="Name">Minigun</string>
+        <bool name="CanBeDropped">true</bool>
+        <bool name="Enabled">true</bool>
+        <CoordinateFrame name="Grip">
+          <X>0</X>
+          <Y>-0.2</Y>
+          <Z>-0.5</Z>
+          <R00>1</R00>
+          <R01>0</R01>
+          <R02>0</R02>
+          <R10>0</R10>
+          <R11>1</R11>
+          <R12>-0.000060000002</R12>
+          <R20>-0</R20>
+          <R21>0.000060000002</R21>
+          <R22>1</R22>
+        </CoordinateFrame>
+        <bool name="ManualActivationOnly">false</bool>
+        <bool name="RequiresHandle">true</bool>
+        <BinaryString name="Tags" />
+        <Content name="TextureId">
+          <url>http://www.roblox.com/asset/?id=98029408</url>
+        </Content>
+        <string name="ToolTip">Tear them to pieces!</string>
+      </Properties>
+      <Item class="Part" referent="60885">
+        <Properties>
+          <string name="Name">Handle</string>
+          <bool name="Anchored">false</bool>
+          <float name="BackParamA">-0.5</float>
+          <float name="BackParamB">0.5</float>
+          <token name="BackSurface">0</token>
+          <token name="BackSurfaceInput">0</token>
+          <float name="BottomParamA">-0.5</float>
+          <float name="BottomParamB">0.5</float>
+          <token name="BottomSurface">0</token>
+          <token name="BottomSurfaceInput">0</token>
+          <CoordinateFrame name="CFrame">
+            <X>68.2</X>
+            <Y>48.2</Y>
+            <Z>92.2</Z>
+            <R00>0</R00>
+            <R01>0</R01>
+            <R02>1</R02>
+            <R10>0</R10>
+            <R11>1</R11>
+            <R12>0</R12>
+            <R20>-1</R20>
+            <R21>0</R21>
+            <R22>0</R22>
+          </CoordinateFrame>
+          <bool name="CanCollide">true</bool>
+          <bool name="CastShadow">true</bool>
+          <int name="CollisionGroupId">0</int>
+          <Color3uint8 name="Color3uint8">6512482</Color3uint8>
+          <PhysicalProperties name="CustomPhysicalProperties">
+            <CustomPhysics>false</CustomPhysics>
+          </PhysicalProperties>
+          <token name="formFactorRaw">0</token>
+          <float name="FrontParamA">-0.5</float>
+          <float name="FrontParamB">0.5</float>
+          <token name="FrontSurface">0</token>
+          <token name="FrontSurfaceInput">0</token>
+          <float name="LeftParamA">-0.5</float>
+          <float name="LeftParamB">0.5</float>
+          <token name="LeftSurface">0</token>
+          <token name="LeftSurfaceInput">0</token>
+          <bool name="Locked">false</bool>
+          <bool name="Massless">false</bool>
+          <token name="Material">832</token>
+          <float name="Reflectance">0</float>
+          <float name="RightParamA">-0.5</float>
+          <float name="RightParamB">0.5</float>
+          <token name="RightSurface">0</token>
+          <token name="RightSurfaceInput">0</token>
+          <int name="RootPriority">0</int>
+          <Vector3 name="RotVelocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+          <token name="shape">1</token>
+          <Vector3 name="size">
+            <X>1</X>
+            <Y>1</Y>
+            <Z>5</Z>
+          </Vector3>
+          <BinaryString name="Tags" />
+          <float name="TopParamA">-0.5</float>
+          <float name="TopParamB">0.5</float>
+          <token name="TopSurface">0</token>
+          <token name="TopSurfaceInput">0</token>
+          <float name="Transparency">0</float>
+          <Vector3 name="Velocity">
+            <X>0</X>
+            <Y>0</Y>
+            <Z>0</Z>
+          </Vector3>
+        </Properties>
+        <Item class="Sound" referent="60886">
+          <Properties>
+            <string name="Name">Fire</string>
+            <bool name="Looped">false</bool>
+            <bool name="PlayOnRemove">false</bool>
+            <float name="PlaybackSpeed">1</float>
+            <bool name="Playing">false</bool>
+            <float name="xmlRead_MaxDistance_3">10000</float>
+            <float name="EmitterSize">10</float>
+            <token name="RollOffMode">0</token>
+            <Ref name="SoundGroup">null</Ref>
+            <Content name="SoundId"><null></null></Content>
+            <BinaryString name="Tags" />
+            <double name="TimePosition">0</double>
+            <float name="Volume">1</float>
+          </Properties>
+        </Item>
+        <Item class="SpecialMesh" referent="60887">
+          <Properties>
+            <string name="Name">Mesh</string>
+            <Content name="MeshId">
+              <url>http://www.roblox.com/asset/?id=2806162</url>
+            </Content>
+            <token name="MeshType">5</token>
+            <Vector3 name="Offset">
+              <X>0</X>
+              <Y>0</Y>
+              <Z>0</Z>
+            </Vector3>
+            <Vector3 name="Scale">
+              <X>1</X>
+              <Y>1</Y>
+              <Z>1</Z>
+            </Vector3>
+            <BinaryString name="Tags" />
+            <Content name="TextureId">
+              <null>
+              </null>
+            </Content>
+            <Vector3 name="VertexColor">
+              <X>1</X>
+              <Y>1</Y>
+              <Z>1</Z>
+            </Vector3>
+          </Properties>
+        </Item>
+        <Item class="Sound" referent="60888">
+          <Properties>
+            <string name="Name">Reload</string>
+            <bool name="Looped">false</bool>
+            <bool name="PlayOnRemove">false</bool>
+            <float name="PlaybackSpeed">1</float>
+            <bool name="Playing">false</bool>
+            <float name="xmlRead_MaxDistance_3">10000</float>
+            <float name="EmitterSize">10</float>
+            <token name="RollOffMode">0</token>
+            <Ref name="SoundGroup">null</Ref>
+            <Content name="SoundId"><null></null></Content>
+            <BinaryString name="Tags" />
+            <double name="TimePosition">0</double>
+            <float name="Volume">0.5</float>
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="Script" referent="60889">
+        <Properties>
+          <string name="Name">Gun</string>
+          <bool name="Disabled">false</bool>
+          <Content name="LinkedSource">
+            <null>
+            </null>
+          </Content>
+          <string name="ScriptGuid">{0B0E2F10-6999-4B07-BD60-D7F662AAFFAE}</string>
+          <string name="Source">local Automatic = true
+
+	MagSize=100
+	FireRate=.02
+	Accuracy=.5
+	Dammage=15
+	ReloadTime=5
+	MaxRange=999
+
+
+
+local Module = game.ReplicatedStorage:WaitForChild("GunMod")
+local GunMod = require(Module)
+Module:Clone().Parent = script.Parent
+
+lscript = script
+
+local LaserPart
+local Mesh
+local creator
+local Player = script.Parent
+
+local LastShot = 0
+
+local Tool = lscript.Parent
+local Handle = lscript.Parent:WaitForChild("Handle")
+
+local AmmoTag = Instance.new("IntValue")
+AmmoTag.Name = "Ammo"
+AmmoTag.Parent = Tool
+
+local MaxAmmoTag = Instance.new("IntValue")
+MaxAmmoTag.Name = "MaxAmmo"
+MaxAmmoTag.Value = MagSize
+MaxAmmoTag.Parent = Tool
+
+
+if Automatic then
+	local Tag = Instance.new("BoolValue")
+	Tag.Name = "Auto"
+	Tag.Parent = Tool
+end
+
+lscript.Parent.Equipped:connect(function()
+	local EquiPlayer = game.Players:GetPlayerFromCharacter(lscript.Parent.Parent)
+	if EquiPlayer ~= Player then
+		Player = EquiPlayer
+		
+		if LaserPart == nil then
+			LaserPart=Instance.new("Part")
+			LaserPart.Name="Bullet"
+			LaserPart.Anchored=true
+			LaserPart.CanCollide=false
+			LaserPart.Locked=true
+			LaserPart.Size=Vector3.new(1, 1, 1)
+			LaserPart.TopSurface=0
+			LaserPart.BottomSurface=0	
+			LaserPart.formFactor=0	
+			LaserPart.Material = Enum.Material.Glass
+			LaserPart.Transparency = 0.5
+			LaserPart.Reflectance = 0.3	
+		end
+		
+		LaserPart.Color = Color3.fromRGB(200,0,0)
+
+		if Mesh == nil then
+			Mesh=Instance.new("SpecialMesh", LaserPart)
+			Mesh.MeshType="Brick"
+			Mesh.Name="Mesh"
+			Mesh.Scale=Vector3.new(.2, .2, 1)
+		end
+		
+		if creator == nil then
+			creator=Instance.new("ObjectValue")
+			creator.Name="creator"
+		end
+		creator.Value=Player
+	end
+end)
+
+lscript.Parent.Ammo.Value = MagSize
+
+function Raycast(start,finish,ign) --Returns Part,Position
+local AimVector=(finish-start).unit
+local HitPart,HitPos=game.Workspace:FindPartOnRay(Ray.new(start,AimVector*MaxRange),ign)
+	if HitPart and HitPos then
+		if HitPart.Transparency==1 or HitPart.Name=="Bullet" then
+			HitPart,HitPos=Raycast(HitPos,AimVector*MaxRange,ign)
+		end
+	end
+return HitPart,HitPos
+end
+
+function Damage(Hum)
+	return GunMod.Damage(Hum, Dammage, Player)
+end
+
+function Fire(aim)
+	local RayOrigin = Player.Character.Head.Position
+	local PartOrigin=Handle.Position
+	local FrDist=(PartOrigin-aim).magnitude
+	local spread=Accuracy
+	local FinalAim=Vector3.new((aim.x)+(math.random(-(spread/10)*FrDist,(spread/10)*FrDist)),(aim.y)+(math.random(-(spread/10)*FrDist,(spread/10)*FrDist)),(aim.z)+(math.random(-(spread/10)*FrDist,(spread/10)*FrDist)))
+	local HitPart,HitPos=Raycast(RayOrigin,FinalAim,Player.Character)
+	local BulletLength=(PartOrigin-HitPos).magnitude
+	local CFram=CFrame.new(PartOrigin,HitPos)
+	local Laser1,Laser2=LaserPart:clone(),LaserPart:clone()
+	Laser1.CFrame=CFram*CFrame.new(0,0,-BulletLength*.75)
+	Laser1.Mesh.Scale=Vector3.new(Laser1.Mesh.Scale.x,Laser1.Mesh.Scale.y,BulletLength*.5)
+	Laser2.CFrame=CFram*CFrame.new(0,0,-BulletLength*.25)
+	Laser2.Mesh.Scale=Vector3.new(Laser1.Mesh.Scale.x,Laser1.Mesh.Scale.y,BulletLength*.5)	
+	Laser1.Parent=game.Workspace Laser2.Parent=game.Workspace
+	game.Debris:AddItem(Laser2,.05)
+	game.Debris:AddItem(Laser1,.1)
+	if HitPart then
+	local Hum=HitPart.Parent:FindFirstChild("Humanoid")
+		if not Hum then
+			Hum=HitPart.Parent.Parent:FindFirstChild("Humanoid")
+		end
+		if Hum then
+			return Damage(Hum)
+		end
+	end
+	return true
+end
+
+
+function lscript.Func.OnServerInvoke(Player, Action, Info)
+	if Action == "Reload" then
+		wait(ReloadTime * (1 - lscript.Parent.Ammo.Value/MagSize)) -- Gun reloads faster if you have more ammo
+		lscript.Parent.Ammo.Value = MagSize
+		return true
+	elseif Action == "Fire" then
+		if lscript.Parent.Ammo.Value &gt; 0 then
+			local Hit = Fire(Info)
+			lscript.Parent.Ammo.Value = lscript.Parent.Ammo.Value - 1
+			if Hit then
+				return Hit
+			else
+				return true
+			end
+		else 
+			return false
+		end
+	elseif Action == "Delay" then
+		return FireRate
+	end
+end	
+
+</string>
+          <BinaryString name="Tags" />
+        </Properties>
+        <Item class="RemoteFunction" referent="60890">
+          <Properties>
+            <string name="Name">Func</string>
+            <BinaryString name="Tags" />
+          </Properties>
+        </Item>
+      </Item>
+      <Item class="LocalScript" referent="60891">
+        <Properties>
+          <string name="Name">GunLocal</string>
+          <bool name="Disabled">false</bool>
+          <Content name="LinkedSource">
+            <null>
+            </null>
+          </Content>
+          <string name="ScriptGuid">{09311297-0339-47B2-A9EE-54F6C1BE3F38}</string>
+          <string name="Source">--Decs
+
+--[[_PRINT=function(m)
+local i=Instance.new("StringValue")
+i.Value=m
+i.Parent=game.Workspace.PRINT
+end]]
+
+
+local Module = script.Parent:WaitForChild("GunMod")
+require(Module).localIni(script)</string>
+          <BinaryString name="Tags" />
+        </Properties>
+      </Item>
+    </Item>
+    </roblox>

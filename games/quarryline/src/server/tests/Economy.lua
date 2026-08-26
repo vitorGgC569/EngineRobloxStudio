@@ -55,7 +55,7 @@ end
 
 Testing.scenario("the chain runs at its narrowest link", function(t)
 	local id = spareplot()
-	t.assert(id ~= nil, "no free plot to test on")
+	t:expect(id ~= nil, "no free plot to test on")
 	Line.attach(id)
 
 	--[[
@@ -70,12 +70,30 @@ Testing.scenario("the chain runs at its narrowest link", function(t)
 	}
 
 	local produced, detail = Line.throughput(id, {})
-	t.assert(produced == 0, "a chain with no depot must produce nothing, got " .. produced)
-	t.assert(detail.stages.sell == 0, "the sell stage is the empty one")
+	t:expect(produced == 0, "a chain with no depot must produce nothing, got " .. produced)
+	t:expect(detail.stages.sell == 0, "the sell stage is the empty one")
 
+	--[[
+		A depot alone does not complete anything.
+
+		This asserted that it did, and failed -- correctly. The chain is
+		source, carry, refine, sell, and the plot above has no smelter, so the
+		refine stage is still zero and the narrowest link is still zero. That is
+		the documented rule working, and the assertion was simply wrong about
+		what the rule says.
+
+		Stated properly it is a better test than the one it replaces, because it
+		pins down *which* link is missing rather than just that some link is.
+	]]
 	Plots.built[id]["depot:0:16"] = { machineId = "depot" }
-	local withDepot = Line.throughput(id, {})
-	t.assert(withDepot > 0, "adding a depot must complete the chain")
+	local stillShort, shortDetail = Line.throughput(id, {})
+	t:expect(stillShort == 0, "a chain with no smelter must still produce nothing")
+	t:expect(shortDetail.bottleneck == "refine",
+		"the missing smelter must be named as the bottleneck, got " .. shortDetail.bottleneck)
+
+	Plots.built[id]["smelter:0:24"] = { machineId = "smelter" }
+	local complete = Line.throughput(id, {})
+	t:expect(complete > 0, "all four roles present must complete the chain")
 
 	Plots.built[id] = {}
 	Line.detach(id)
@@ -83,7 +101,7 @@ end)
 
 Testing.scenario("the bottleneck is named, and it is the smallest stage", function(t)
 	local id = spareplot()
-	t.assert(id ~= nil, "no free plot")
+	t:expect(id ~= nil, "no free plot")
 	Line.attach(id)
 
 	-- Six drills, one belt, one smelter, one depot: the belt is deliberately
@@ -101,8 +119,8 @@ Testing.scenario("the bottleneck is named, and it is the smallest stage", functi
 	for _, rate in detail.stages do
 		smallest = math.min(smallest, rate)
 	end
-	t.assert(produced == smallest, "throughput must equal the smallest stage")
-	t.assert(detail.stages[detail.bottleneck] == smallest,
+	t:expect(produced == smallest, "throughput must equal the smallest stage")
+	t:expect(detail.stages[detail.bottleneck] == smallest,
 		"the named bottleneck must be the smallest one")
 
 	Plots.built[id] = {}
@@ -111,7 +129,7 @@ end)
 
 Testing.scenario("a server event multiplies the payout and then stops", function(t)
 	local id = spareplot()
-	t.assert(id ~= nil, "no free plot")
+	t:expect(id ~= nil, "no free plot")
 	Line.attach(id)
 
 	Plots.built[id] = {
@@ -123,15 +141,15 @@ Testing.scenario("a server event multiplies the payout and then stops", function
 
 	local profile = { upgrades = {}, premium = false }
 	local plain = Line.tick(id, profile)
-	t.assert(plain > 0, "the plot must earn with a full chain")
+	t:expect(plain > 0, "the plot must earn with a full chain")
 
 	GlobalEffects.apply("double_coins", 30, "scenario")
 	local doubled = Line.tick(id, profile)
-	t.assert(doubled > plain, "an active event must raise the payout")
+	t:expect(doubled > plain, "an active event must raise the payout")
 
 	GlobalEffects.remove("double_coins")
 	local after = Line.tick(id, profile)
-	t.assert(after == plain, "removing the event must return the payout exactly")
+	t:expect(after == plain, "removing the event must return the payout exactly")
 
 	Plots.built[id] = {}
 	Line.detach(id)
@@ -139,7 +157,7 @@ end)
 
 Testing.scenario("the payout explains itself", function(t)
 	local id = spareplot()
-	t.assert(id ~= nil, "no free plot")
+	t:expect(id ~= nil, "no free plot")
 	Line.attach(id)
 	Plots.built[id] = {
 		["drill:1"] = { machineId = "drill" },
@@ -150,8 +168,8 @@ Testing.scenario("the payout explains itself", function(t)
 
 	Line.tick(id, { upgrades = {}, premium = false })
 	local lines = Line.explain(id)
-	t.assert(#lines >= 2, "an explanation must have a bottleneck and a total")
-	t.assert(string.find(lines[1], "bottleneck") ~= nil,
+	t:expect(#lines >= 2, "an explanation must have a bottleneck and a total")
+	t:expect(string.find(lines[1], "bottleneck") ~= nil,
 		"the first line names the bottleneck: " .. lines[1])
 
 	Plots.built[id] = {}
@@ -174,13 +192,13 @@ Testing.scenario("offline pay is capped both ways", function(t)
 		currentBalance = 1000,
 	})
 
-	t.assert(result.secondsPaid <= 8 * 3600,
+	t:expect(result.secondsPaid <= 8 * 3600,
 		"a week away must be capped to the temporal ceiling")
-	t.assert(result.amount <= 3000,
+	t:expect(result.amount <= 3000,
 		"the payout must not exceed three times the balance, got " .. result.amount)
 
 	local brief = OfflineEarnings.compute(100, 10, { minSeconds = 60 })
-	t.assert(brief.amount == 0, "ten seconds away is not being away")
+	t:expect(brief.amount == 0, "ten seconds away is not being away")
 end)
 
 Testing.scenario("a rebirth wipes everything it says it wipes", function(t)
@@ -194,11 +212,11 @@ Testing.scenario("a rebirth wipes everything it says it wipes", function(t)
 
 	local before = Progress.rebirthBonus(profile)
 	local ok = Progress.doRebirth(nil :: any, profile)
-	t.assert(ok, "a player past the price must be able to rebirth")
-	t.assert(profile.coins == 0, "coins must be wiped")
-	t.assert(next(profile.upgrades) == nil, "upgrades must be wiped")
-	t.assert(profile.life == 1, "the life must advance")
-	t.assert(Progress.rebirthBonus(profile) > before,
+	t:expect(ok, "a player past the price must be able to rebirth")
+	t:expect(profile.coins == 0, "coins must be wiped")
+	t:expect(next(profile.upgrades) == nil, "upgrades must be wiped")
+	t:expect(profile.life == 1, "the life must advance")
+	t:expect(Progress.rebirthBonus(profile) > before,
 		"the whole point is that the next run is faster")
 
 	--[[
@@ -208,7 +226,7 @@ Testing.scenario("a rebirth wipes everything it says it wipes", function(t)
 		loses their lifetime total on rebirth loses every badge they earned —
 		which is the opposite of what rebirth is supposed to feel like.
 	]]
-	t.assert(profile.lifetimeCoins == 10000000, "lifetime earnings are not wiped")
+	t:expect(profile.lifetimeCoins == 10000000, "lifetime earnings are not wiped")
 end)
 
 Testing.scenario("the day rolls over in UTC, for everybody at once", function(t)
@@ -216,9 +234,9 @@ Testing.scenario("the day rolls over in UTC, for everybody at once", function(t)
 	local evening = Clock.dailySeed("shop", 86400 * 100 + 80000)
 	local tomorrow = Clock.dailySeed("shop", 86400 * 101 + 60)
 
-	t.assert(morning == evening, "the seed must not change during a day")
-	t.assert(morning ~= tomorrow, "it must change at the boundary")
-	t.assert(Clock.untilNextDay() > 0, "there is always time until the next day")
+	t:expect(morning == evening, "the seed must not change during a day")
+	t:expect(morning ~= tomorrow, "it must change at the boundary")
+	t:expect(Clock.untilNextDay() > 0, "there is always time until the next day")
 end)
 
 end

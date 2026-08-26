@@ -67,6 +67,19 @@ def _lines(path: Path) -> list[str]:
 # undeclared.
 _DEFINE_BLOCK = re.compile(r"Net\.define\s*\(\s*\{(.*?)\n[ \t]*\}\s*\)", re.S)
 _DEFINE_KEY = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*\{", re.M)
+# `Net.define` handed a variable rather than a table literal.
+#
+# A game with a server and a client has to define the same channels in both
+# VMs — `Net.on` errors on a name the local VM has never seen — and the only
+# sane way to do that is one shared table both sides require. quarryline does
+# exactly that, and this check then reported all fifteen of its channels as
+# undeclared, because it only looked for a literal written inside the
+# `Net.define(` call itself.
+#
+# Fifteen false errors is worse than no check: a doctor people learn to ignore
+# is precisely the failure this tool exists to prevent. So it follows the
+# indirection to wherever the table was actually written.
+_DEFINE_INDIRECT = re.compile(r"Net\.define\s*\(\s*([A-Za-z_][A-Za-z0-9_.]*)\s*\)")
 # The event name is not always the first argument — Net.fire takes the player
 # first, Net.fireNear takes a position and a radius. So: capture the whole call
 # and treat any string literal inside it as a candidate event name.
@@ -83,12 +96,32 @@ def check_net(root: Path, findings: list[Finding]) -> None:
     for path in _sources(root):
         text = _strip_comments(path.read_text(encoding="utf-8", errors="replace"))
 
-        for block in _DEFINE_BLOCK.finditer(text):
-            body = block.group(1)
-            offset = text[: block.start()].count("\n")
+        blocks: list[tuple[str, int]] = [
+            (block.group(1), text[: block.start()].count("\n"))
+            for block in _DEFINE_BLOCK.finditer(text)
+        ]
+
+        # A variable passed to `Net.define` names a table written somewhere in
+        # the project — usually a shared module both VMs require. Take the last
+        # component (`Channels.definitions` → `definitions`) and find where it
+        # was assigned a table, in this file or any other.
+        for indirect in _DEFINE_INDIRECT.finditer(text):
+            leaf = indirect.group(1).rsplit(".", 1)[-1]
+            assignment = re.compile(
+                r"^[ \t]*(?:local[ \t]+)?[A-Za-z_][A-Za-z0-9_]*(?:\.[A-Za-z_][A-Za-z0-9_]*)*\."
+                + re.escape(leaf) + r"[ \t]*=[ \t]*\{(.*?)\n[ \t]*\}",
+                re.S | re.M)
+            for other in _sources(root):
+                other_text = _strip_comments(
+                    other.read_text(encoding="utf-8", errors="replace"))
+                for found in assignment.finditer(other_text):
+                    blocks.append(
+                        (found.group(1), other_text[: found.start()].count("\n")))
+
+        for body, offset in blocks:
             for key in _DEFINE_KEY.finditer(body):
                 line = offset + body[: key.start()].count("\n") + 1
-                declared[key.group(1)] = (path, line)
+                declared.setdefault(key.group(1), (path, line))
 
         for call in _NET_CALL.finditer(text):
             for literal in _STRING_LITERAL.finditer(call.group(1)):
@@ -630,6 +663,55 @@ def check_unknown_globals(root: Path, findings: list[Finding]) -> None:
         )
 
 
+#: `Net` functions that raise if the VM calling them is not the server, and
+#: the client-side call that does the same job.
+SERVER_ONLY_NET = {
+    "fire": "Net.send(name, payload)",
+    "fireAll": "Net.send(name, payload)",
+    "fireExcept": "Net.send(name, payload)",
+    "fireNear": "Net.send(name, payload)",
+    "fireList": "Net.send(name, payload)",
+}
+
+
+def check_client_server_api(root: Path, findings: list[Finding]) -> None:
+    """Client code must not call the server-only half of `Net`.
+
+    `Net.fire` asserts it is on the server and errors otherwise. Called from a
+    LocalScript it therefore does nothing except throw -- and because these
+    calls live inside button handlers and key bindings, the throw happens on
+    click, long after the script loaded cleanly.
+
+    quarryline shipped every one of its controls that way. The Build buttons,
+    the daily claim and the rebirth key all called `Net.fire`, all compiled,
+    all passed the type checker, and none of them had ever sent a single
+    message. The game looked finished and had no working input at all.
+
+    Nothing else catches this: it is a runtime assertion in a closure nobody
+    calls during a test, in a VM the test suite does not run in.
+    """
+    client_dir = root / "src" / "client"
+    if not client_dir.is_dir():
+        return
+
+    for path in sorted(client_dir.rglob("*.lua")):
+        try:
+            text = path.read_text(encoding="utf-8")
+        except OSError:
+            continue
+        for number, line in enumerate(text.splitlines(), start=1):
+            stripped = line.lstrip()
+            if stripped.startswith("--"):
+                continue
+            for name, replacement in SERVER_ONLY_NET.items():
+                if f"Net.{name}(" in line:
+                    findings.append(Finding(
+                        "error", str(path), number,
+                        f"Net.{name} is server-only and errors in a LocalScript; "
+                        f"use {replacement}",
+                    ))
+
+
 def check_asset_ids(root: Path, findings: list[Finding]) -> None:
     """Every asset id in this game must have been loaded successfully once.
 
@@ -694,6 +776,7 @@ CHECKS = (
     check_family_exports,
     check_forge_wiring,
     check_asset_ids,
+    check_client_server_api,
 )
 
 

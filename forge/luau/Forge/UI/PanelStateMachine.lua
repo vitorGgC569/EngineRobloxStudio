@@ -13,18 +13,35 @@ local PanelStateMachine = {}
 export type Status = "closed" | "opening" | "open" | "closing" | "loading" | "loadFailed"
 
 type Self = {
-	status: Status,
+	state: Status,
 	elapsed: number,
 	openTimeout: number,
 	loadTimeout: number,
 	closeTimeout: number,
 }
 
+--[[
+	A field must never share a name with a method on the same table.
+
+	`PanelStateMachine.__index = PanelStateMachine` means an instance looks at itself first, so an
+	instance field called `status` shadows `PanelStateMachine.status` and the method
+	becomes permanently uncallable: `instance:status()` finds the field and
+	tries to call a table.
+
+	Nothing catches it. It compiles, the type checker is content, and the unit
+	specs call the module functions directly rather than through an instance --
+	which is exactly the shape that never reaches the shadow. It surfaced the
+	first time a game called `cycle:hand()` and got "attempt to call a table
+	value", and a scan then found the same collision in four modules.
+
+	The field is renamed rather than the method, because the method is the
+	published surface and the field is private.
+]]
 PanelStateMachine.__index = PanelStateMachine
 
 function PanelStateMachine.new(config: { openTimeout: number?, loadTimeout: number?, closeTimeout: number? }): Self
 	return setmetatable({
-		status = "closed" :: Status,
+		state = "closed" :: Status,
 		elapsed = 0,
 		openTimeout = config.openTimeout or 2,
 		loadTimeout = config.loadTimeout or 6,
@@ -33,7 +50,7 @@ function PanelStateMachine.new(config: { openTimeout: number?, loadTimeout: numb
 end
 
 function PanelStateMachine.status(self: Self): Status
-	return self.status
+	return self.state
 end
 
 local transitions: { [Status]: { open: Status, close: Status } } = {
@@ -46,64 +63,64 @@ local transitions: { [Status]: { open: Status, close: Status } } = {
 }
 
 function PanelStateMachine.request(self: Self, action: string): ()
-	local t = transitions[self.status]
+	local t = transitions[self.state]
 	if not t then
 		return
 	end
 	self.elapsed = 0
 	if action == "open" then
-		self.status = if self.status == "loadFailed" then "opening" else (t.open :: Status)
+		self.state = if self.state == "loadFailed" then "opening" else (t.open :: Status)
 	elseif action == "close" then
-		self.status = t.close :: Status
+		self.state = t.close :: Status
 	end
 end
 
 function PanelStateMachine.dataArrived(self: Self): boolean
-	if self.status ~= "loading" then
+	if self.state ~= "loading" then
 		return false
 	end
-	self.status = "open"
+	self.state = "open"
 	return true
 end
 
 function PanelStateMachine.dataFailed(self: Self): boolean
-	if self.status ~= "loading" then
+	if self.state ~= "loading" then
 		return false
 	end
-	self.status = "loadFailed"
+	self.state = "loadFailed"
 	return true
 end
 
 function PanelStateMachine.animationDone(self: Self): ()
-	if self.status == "opening" then
-		self.status = "loading"
-	elseif self.status == "closing" then
-		self.status = "closed"
+	if self.state == "opening" then
+		self.state = "loading"
+	elseif self.state == "closing" then
+		self.state = "closed"
 	end
 end
 
 -- Timeouts guarantee resolution even when a callback is lost.
 function PanelStateMachine.tick(self: Self, dt: number): { resolved: string? }
-	if self.status == "closed" or self.status == "open" then
+	if self.state == "closed" or self.state == "open" then
 		return {}
 	end
 	self.elapsed += dt
-	local limit = if self.status == "opening"
+	local limit = if self.state == "opening"
 		then self.openTimeout
-		elseif self.status == "closing" then self.closeTimeout
+		elseif self.state == "closing" then self.closeTimeout
 		else self.loadTimeout
 	if self.elapsed < limit then
 		return {}
 	end
-	local before = self.status
+	local before = self.state
 	if before == "loading" then
-		self.status = "loadFailed"
+		self.state = "loadFailed"
 		return { resolved = "load_timeout" }
 	elseif before == "closing" then
-		self.status = "closed"
+		self.state = "closed"
 		return { resolved = "close_timeout" }
 	else
-		self.status = "loading"
+		self.state = "loading"
 		return { resolved = "open_timeout" }
 	end
 end

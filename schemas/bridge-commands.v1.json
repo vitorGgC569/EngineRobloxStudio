@@ -1322,6 +1322,89 @@
         "additionalProperties": false
       }
     },
+    "assets.create_mesh": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "name",
+          "vertices",
+          "triangles"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "vertices": {
+            "type": "array",
+            "minItems": 9,
+            "items": {
+              "type": "number"
+            }
+          },
+          "triangles": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "assetId": {},
+          "contentId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "vertices": {
+            "type": "integer"
+          },
+          "triangles": {
+            "type": "integer"
+          },
+          "moderation": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "blockers": {
+            "type": "array"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
     "assets.insert": {
       "methodVersion": 1,
       "effect": "mutation",
@@ -3949,7 +4032,12 @@
         "additionalProperties": false
       },
       "result": {
-        "$ref": "#/$defs/objectResult"
+        "$ref": "#/$defs/objectResult",
+        "properties": {
+          "note": {
+            "type": "string"
+          }
+        }
       }
     },
     "runtime.errors": {

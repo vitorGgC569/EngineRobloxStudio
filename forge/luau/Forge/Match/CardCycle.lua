@@ -26,10 +26,27 @@ type Self = {
 	rng: Rng.Generator,
 	pile: { string },
 	discard: { string },
-	hand: { string },
+	held: { string },
 	nextCard: string,
 }
 
+--[[
+	A field must never share a name with a method on the same table.
+
+	`CardCycle.__index = CardCycle` means an instance looks at itself first, so an
+	instance field called `hand` shadows `CardCycle.hand` and the method
+	becomes permanently uncallable: `instance:hand()` finds the field and
+	tries to call a table.
+
+	Nothing catches it. It compiles, the type checker is content, and the unit
+	specs call the module functions directly rather than through an instance --
+	which is exactly the shape that never reaches the shadow. It surfaced the
+	first time a game called `cycle:hand()` and got "attempt to call a table
+	value", and a scan then found the same collision in four modules.
+
+	The field is renamed rather than the method, because the method is the
+	published surface and the field is private.
+]]
 CardCycle.__index = CardCycle
 
 local function refillPile(self: Self): boolean
@@ -58,19 +75,19 @@ function CardCycle.new(config: { cards: { string }, handSize: number?, seed: num
 		rng = Rng.xorshift(config.seed),
 		pile = {},
 		discard = {},
-		hand = {},
+		held = {},
 		nextCard = "",
 	}, CardCycle)
 	self.pile = Rng.shuffle(self.rng, table.clone(config.cards))
 	for _ = 1, handSize do
-		table.insert(self.hand, self:drawFromPile())
+		table.insert(self.held, self:drawFromPile())
 	end
 	self.nextCard = self:drawFromPile()
 	return self
 end
 
 function CardCycle.hand(self: Self): { string }
-	return table.clone(self.hand)
+	return table.clone(self.held)
 end
 
 function CardCycle.peek(self: Self): string
@@ -78,17 +95,17 @@ function CardCycle.peek(self: Self): string
 end
 
 function CardCycle.has(self: Self, cardId: string): boolean
-	return table.find(self.hand, cardId) ~= nil
+	return table.find(self.held, cardId) ~= nil
 end
 
 function CardCycle.play(self: Self, cardId: string): PlayResult
-	local index = table.find(self.hand, cardId)
+	local index = table.find(self.held, cardId)
 	assert(index, ("card %q is not in hand"):format(cardId))
-	table.remove(self.hand, index)
+	table.remove(self.held, index)
 	table.insert(self.discard, cardId)
 
 	local drew = self.nextCard
-	table.insert(self.hand, drew)
+	table.insert(self.held, drew)
 	local reshuffled = refillPile(self)
 	self.nextCard = table.remove(self.pile) :: string
 	return { played = cardId, drew = drew, reshuffled = reshuffled }

@@ -6,7 +6,7 @@
     "path": "schemas/bridge-commands.v1.json",
     "schemaVersion": 1,
     "protocol": "rqe.bridge/1",
-    "sha256": "39e3a53fbdf65c73ea60b92dd9bf4fa730e16eb68c5e6d2c8c9435e5a694abc3"
+    "sha256": "26cb7da5ddfc99a8e7f8269a12b96f2cce41fbeb99119903a288b0bb8f5701a9"
   },
   "phases": [
     {
@@ -884,8 +884,13 @@
       "title": "Published asset integration",
       "description": "Builds deterministic bindings from approved asset identities to declarative game targets.",
       "status": "PARTIAL",
-      "validationLevel": "STATICALLY_VALIDATED",
-      "bridgeCommands": [],
+      "validationLevel": "RUNTIME_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "assets.verify",
+          "required": true
+        }
+      ],
       "adapters": [
         {
           "symbol": "rqe.assets.integration:build_integration_bundle",
@@ -902,9 +907,12 @@
         "An approved asset ID can be bound to the wrong semantic target without runtime visual and audio proof."
       ],
       "gaps": [
-        "Automatic source integration followed by Studio load and regression validation is missing."
+        "Automatic source integration is still missing: an id that resolves is not an id that has been wired into a game, and nothing here does the wiring."
       ],
-      "limitations": []
+      "limitations": [],
+      "evidence": [
+        "Verified 188 referenced asset ids against a live Studio through assets.verify: 187 resolve. The one that does not is `rbxassetid://0`, a placeholder in a doc comment. The run also found that the conveyor's tread texture pointed at `textures/SurfacesDefault/metal.png`, a path that does not exist -- the belt had been drawing no texture at all."
+      ]
     },
     {
       "id": "publish.roblox.assets",
@@ -1248,9 +1256,14 @@
       "phase": "assets",
       "title": "Headless mesh authoring through Blender",
       "description": "Executes a validated modelling program in headless Blender and returns an asset package: mesh, five preview renders, topology analysis and a Roblox-rules verdict.",
-      "status": "PARTIAL",
+      "status": "AVAILABLE",
       "validationLevel": "RUNTIME_VALIDATED",
-      "bridgeCommands": [],
+      "bridgeCommands": [
+        {
+          "method": "assets.create_mesh",
+          "required": true
+        }
+      ],
       "adapters": [
         {
           "symbol": "rqe.geometry.worker:GeometryWorker",
@@ -1276,11 +1289,14 @@
       "risks": [
         "Blender is an external dependency; a missing install is a named blocker, not a silent no-op."
       ],
-      "gaps": [
-        "Nothing published: the produced mesh has not been uploaded, so integration remains unproven."
-      ],
+      "gaps": [],
       "limitations": [
-        "Requires Blender 3.6+ and local worker process availability; cannot author soft body or skeletal rigs directly."
+        "Geometry must arrive as vertices and triangles. `CreateAssetAsync` takes an `EditableMesh`, not a model file, so importing a .glb or .fbx remains the Studio 3D Importer -- a person and a dialog.",
+        "Requires the \"CreateAssetAsync Luau API\" beta, the same gate as image publishing.",
+        "Moderation is asynchronous: a published id is not an approved id."
+      ],
+      "evidence": [
+        "Published a five-vertex, six-triangle pyramid built through AssetService:CreateEditableMesh and read it back independently through Open Cloud: assetId 104069383339351, assetType Mesh, creator 5812220258, moderationState Approved."
       ]
     },
     {

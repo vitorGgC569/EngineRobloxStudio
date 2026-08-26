@@ -155,6 +155,16 @@ function SessionCommands.start(params: { [string]: any }): any
 end
 
 --- run.stop: end the simulation and return Studio to edit mode.
+---
+--- Stops a `RunService:Run()` simulation cleanly. It is **not** the way to end a
+--- Play Solo session: `RunService:Stop()` ends the simulation but leaves Studio
+--- in a state where the next F5 is swallowed, and the only cure is restarting
+--- Studio. That cost three restarts in one session before it was named.
+---
+--- Callers wanting a session they can start again should use
+--- `rqe.hub.lifecycle.stop_play_solo`, which sends Shift+F5 to a play session
+--- and reserves this command for a `run` context -- the distinction it already
+--- documents at length.
 function SessionCommands.stop(_params: { [string]: any }): any
 	if not RunService:IsRunning() then
 		return { stopped = false, alreadyStopped = true, context = Runtime.context() }
@@ -166,7 +176,15 @@ function SessionCommands.stop(_params: { [string]: any }): any
 		Errors.raise(Errors.EXEC, "RunService:Stop() was refused: " .. tostring(err))
 	end
 	task.wait(0.2)
-	return { stopped = true, context = Runtime.context(), isRunning = RunService:IsRunning() }
+	return {
+		stopped = true,
+		context = Runtime.context(),
+		isRunning = RunService:IsRunning(),
+		--: Named in the result, not only in a comment, because the caller who
+		--: needs to know is the one about to press F5 and find nothing happens.
+		note = "a Play Solo session stopped this way will not accept F5 again; "
+			.. "use stop_play_solo for a restartable stop",
+	}
 end
 
 local CLIENT_SCRIPT_NAME = "RQEClientBridge"

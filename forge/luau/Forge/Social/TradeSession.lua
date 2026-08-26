@@ -28,7 +28,7 @@ type Self = {
 	a: string,
 	b: string,
 	sides: { [string]: SideState },
-	status: Status,
+	state: Status,
 	cancelReason: string?,
 	dataSaveFailed: boolean,
 	clock: () -> number,
@@ -36,6 +36,23 @@ type Self = {
 	lastOfferAt: { [string]: number },
 }
 
+--[[
+	A field must never share a name with a method on the same table.
+
+	`TradeSession.__index = TradeSession` means an instance looks at itself first, so an
+	instance field called `status` shadows `TradeSession.status` and the method
+	becomes permanently uncallable: `instance:status()` finds the field and
+	tries to call a table.
+
+	Nothing catches it. It compiles, the type checker is content, and the unit
+	specs call the module functions directly rather than through an instance --
+	which is exactly the shape that never reaches the shadow. It surfaced the
+	first time a game called `cycle:hand()` and got "attempt to call a table
+	value", and a scan then found the same collision in four modules.
+
+	The field is renamed rather than the method, because the method is the
+	published surface and the field is private.
+]]
 TradeSession.__index = TradeSession
 
 local function validOffer(offer: Offer?): boolean
@@ -62,7 +79,7 @@ function TradeSession.new(config: { a: string, b: string, cooldownSeconds: numbe
 			[config.a] = { offer = nil, locked = false, confirmed = false },
 			[config.b] = { offer = nil, locked = false, confirmed = false },
 		},
-		status = "open" :: Status,
+		state = "open" :: Status,
 		cancelReason = nil,
 		dataSaveFailed = false,
 		clock = config.clock or os.clock,
@@ -80,7 +97,7 @@ function TradeSession.offer(self: Self, side: string, offer: Offer): (boolean, s
 	if not state then
 		return false, "not_a_party"
 	end
-	if self.status == "cancelled" or self.status == "confirmed" then
+	if self.state == "cancelled" or self.state == "confirmed" then
 		return false, "session_closed"
 	end
 	if state.locked then
@@ -110,7 +127,7 @@ function TradeSession.lock(self: Self, side: string): (boolean, string?)
 	if not state.offer then
 		return false, "no_offer"
 	end
-	if self.status == "cancelled" or self.status == "confirmed" then
+	if self.state == "cancelled" or self.state == "confirmed" then
 		return false, "session_closed"
 	end
 	if self.dataSaveFailed then
@@ -118,7 +135,7 @@ function TradeSession.lock(self: Self, side: string): (boolean, string?)
 	end
 	state.locked = true
 	if self.sides[self.a].locked and self.sides[self.b].locked then
-		self.status = "locked"
+		self.state = "locked"
 	end
 	return true, nil
 end
@@ -128,7 +145,7 @@ function TradeSession.confirm(self: Self, side: string): (boolean, string?)
 	if not state then
 		return false, "not_a_party"
 	end
-	if self.status == "cancelled" or self.status == "confirmed" then
+	if self.state == "cancelled" or self.state == "confirmed" then
 		return false, "session_closed"
 	end
 	if not state.locked then
@@ -136,23 +153,23 @@ function TradeSession.confirm(self: Self, side: string): (boolean, string?)
 	end
 	state.confirmed = true
 	if self.sides[self.a].confirmed and self.sides[self.b].confirmed then
-		self.status = "confirmed"
+		self.state = "confirmed"
 	end
 	return true, nil
 end
 
 function TradeSession.cancel(self: Self, bySide: string?, reason: string?): boolean
-	if self.status == "confirmed" then
+	if self.state == "confirmed" then
 		return false
 	end
-	self.status = "cancelled"
+	self.state = "cancelled"
 	self.cancelReason = reason or (bySide and ("cancelled_by_" .. bySide) or "cancelled")
 	return true
 end
 
 -- The exact transfer list once both sides confirmed; nil otherwise.
 function TradeSession.result(self: Self): { from: string, to: string, give: Offer, take: Offer }?
-	if self.status ~= "confirmed" then
+	if self.state ~= "confirmed" then
 		return nil
 	end
 	local sa, sb = self.sides[self.a], self.sides[self.b]
@@ -165,7 +182,7 @@ function TradeSession.result(self: Self): { from: string, to: string, give: Offe
 end
 
 function TradeSession.status(self: Self): (Status, string?)
-	return self.status, self.cancelReason
+	return self.state, self.cancelReason
 end
 
 return TradeSession

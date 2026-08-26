@@ -228,10 +228,33 @@ class TestCapabilityInventory(FactorySurfaceTests):
         limitations or gaps in it -- exactly the part that decides what to rely
         on."""
 
-        data = self.data("capabilities_explain", {"capabilityId": "assets.geometry.author"})
-        self.assertEqual(data["id"], "assets.geometry.author")
-        self.assertTrue(data["limitations"])
-        self.assertTrue(data["gaps"])
+        # Pick a capability that still has gaps rather than naming one.
+        #
+        # This asserted against `assets.geometry.author` by name, and broke the
+        # day that capability was finished and its gaps were legitimately
+        # emptied -- the catalogue refuses an AVAILABLE capability that still
+        # declares one. A test that fails when the project improves is a test
+        # that argues against improving it.
+        listing = self.data("capabilities_explain", {})
+        with_gaps = [
+            capability_id
+            for status, group in listing["byStatus"].items()
+            if status != "AVAILABLE"
+            for capability_id in group
+        ]
+        self.assertTrue(with_gaps, "no capability is short of complete; nothing to explain")
+
+        chosen = None
+        for capability_id in with_gaps:
+            data = self.data("capabilities_explain", {"capabilityId": capability_id})
+            if data["gaps"] and data["limitations"]:
+                chosen = data
+                break
+
+        self.assertIsNotNone(
+            chosen, "no incomplete capability carries both gaps and limitations")
+        self.assertTrue(chosen["gaps"])
+        self.assertTrue(chosen["limitations"])
 
     def test_the_inventory_groups_by_status(self):
         data = self.data("capabilities_explain", {})

@@ -32,7 +32,7 @@ export type Self = {
 	burst: number,
 	now: Clock,
 	buckets: { [string]: { tokens: number, last: number } },
-	violations: { [string]: number },
+	violationLog: { [string]: number },
 }
 
 function RateLimit.new(options: Options): Self
@@ -43,7 +43,7 @@ function RateLimit.new(options: Options): Self
 		burst = options.burst or options.rate,
 		now = options.now or os.clock,
 		buckets = {},
-		violations = {},
+		violationLog = {},
 	}
 	setmetatable(self, RateLimit)
 	return self
@@ -73,17 +73,17 @@ function RateLimit.try(self: Self, key: string, now: number?): (boolean, number?
 		return true, nil
 	end
 
-	self.violations[key] = (self.violations[key] or 0) + 1
+	self.violationLog[key] = (self.violationLog[key] or 0) + 1
 	return false, (1 - bucket.tokens) / self.rate
 end
 
 function RateLimit.violations(self: Self, key: string): number
-	return self.violations[key] or 0
+	return self.violationLog[key] or 0
 end
 
 function RateLimit.reset(self: Self, key: string): ()
 	self.buckets[key] = nil
-	self.violations[key] = nil
+	self.violationLog[key] = nil
 end
 
 return RateLimit

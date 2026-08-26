@@ -511,4 +511,110 @@ function Assets.verify(params: { [string]: any }): any
 	return { assets = out, count = #refs, passing = passing, complete = finished }
 end
 
+-- ============================== mesh authoring ==============================
+--[[
+	Publish a mesh built from explicit geometry.
+
+	`assets.geometry.author` has sat at PARTIAL with the note "nothing
+	published: the produced mesh has not been uploaded, so integration remains
+	unproven" -- and that was the same sentence attached to image publishing
+	right up until running it revealed two stacked defects in five minutes.
+	This exists so the mesh half stops being a claim.
+
+	Geometry arrives as flat arrays rather than a file. `CreateAssetAsync`
+	takes an `EditableMesh`, not a `.glb`: importing a model file is the Studio
+	3D Importer, which is a person and a dialog. What can be automated is a mesh
+	the engine itself produced, which is the case that matters for generated
+	content.
+]]
+function Assets.createMesh(params: { [string]: any }): any
+	local capabilities = Assets.capabilities()
+	if not capabilities.available then
+		return { status = "BLOCKED", blockers = capabilities.blockers }
+	end
+
+	local name = params.name
+	if type(name) ~= "string" or name == "" then
+		Errors.raise(Errors.BAD_PARAMS, "name is required")
+	end
+
+	local vertices = params.vertices
+	local triangles = params.triangles
+	if type(vertices) ~= "table" or #vertices < 9 or #vertices % 3 ~= 0 then
+		Errors.raise(Errors.BAD_PARAMS,
+			"vertices must be a flat array of x,y,z triples (at least three points)")
+	end
+	if type(triangles) ~= "table" or #triangles < 3 or #triangles % 3 ~= 0 then
+		Errors.raise(Errors.BAD_PARAMS,
+			"triangles must be a flat array of vertex indices in threes")
+	end
+
+	local created, mesh = pcall(function()
+		return (AssetService :: any):CreateEditableMesh({})
+	end)
+	if not created or mesh == nil then
+		return { status = "FAILED", reason = tostring(mesh) }
+	end
+
+	--: One-based indices in, whatever the engine hands back out. The caller
+	--: writes ordinary Lua indices and never learns the engine's ids.
+	local ids: { any } = {}
+	local built, buildError = pcall(function()
+		for index = 1, #vertices, 3 do
+			table.insert(ids, mesh:AddVertex(
+				Vector3.new(vertices[index], vertices[index + 1], vertices[index + 2])))
+		end
+		for index = 1, #triangles, 3 do
+			local a, b, c = triangles[index], triangles[index + 1], triangles[index + 2]
+			if not (ids[a] and ids[b] and ids[c]) then
+				error(string.format("triangle %d references a vertex that was never added", index))
+			end
+			mesh:AddTriangle(ids[a], ids[b], ids[c])
+		end
+	end)
+	if not built then
+		pcall(function() mesh:Destroy() end)
+		return { status = "FAILED", reason = tostring(buildError) }
+	end
+
+	local published, first, second = pcall(function()
+		return (AssetService :: any):CreateAssetAsync(mesh, Enum.AssetType.Mesh, {
+			Name = name,
+			Description = if type(params.description) == "string" then params.description else "",
+		})
+	end)
+	pcall(function() mesh:Destroy() end)
+
+	if not published then
+		return { status = "FAILED", reason = tostring(first) }
+	end
+
+	--: Same shape as the image path: the result comes back before the id, and
+	--: reading them by type rather than by position survives that changing.
+	local assetId, outcome = nil, nil
+	for _, value in { first, second } do
+		if type(value) == "number" then
+			assetId = value
+		elseif typeof(value) == "EnumItem" then
+			outcome = value
+		end
+	end
+	if outcome ~= nil and outcome ~= Enum.CreateAssetResult.Success then
+		return { status = "FAILED", reason = tostring(outcome) }
+	end
+	if assetId == nil then
+		return { status = "FAILED", reason = "upload reported success but returned no asset id" }
+	end
+
+	return {
+		status = "PUBLISHED",
+		assetId = assetId,
+		contentId = "rbxassetid://" .. tostring(assetId),
+		name = name,
+		vertices = #vertices // 3,
+		triangles = #triangles // 3,
+		moderation = "PENDING",
+	}
+end
+
 return Assets

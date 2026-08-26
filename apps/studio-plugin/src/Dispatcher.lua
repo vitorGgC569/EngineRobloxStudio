@@ -43,6 +43,7 @@ local REGISTRY: { [string]: Handler } = {
 	["assets.create_image"] = AssetCommands.createImage,
 	["assets.insert"] = AssetCommands.insert,
 	["assets.verify"] = AssetCommands.verify,
+	["assets.create_mesh"] = AssetCommands.createMesh,
 
 	-- hierarchy
 	["dm.tree"] = DataModelCommands.tree,

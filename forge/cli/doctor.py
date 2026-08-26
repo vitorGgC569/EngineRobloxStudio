@@ -674,6 +674,73 @@ SERVER_ONLY_NET = {
 }
 
 
+_SELF_TYPE = re.compile(r"type Self = \{(.*?)\n\}", re.S)
+
+
+def check_field_method_shadow(root: Path, findings: list[Finding]) -> None:
+    """A field must never share a name with a method on the same table.
+
+    `Thing.__index = Thing` makes an instance look at itself first, so an
+    instance field named `hand` shadows `Thing.hand` and the method becomes
+    permanently uncallable: `instance:hand()` finds the field and tries to call
+    a table.
+
+    Nothing else in this repository catches it. It compiles, the type checker
+    is content, and unit specs call module functions directly rather than
+    through an instance -- which is precisely the shape that never touches the
+    shadow. It surfaced the first time a game called `cycle:hand()`, and a scan
+    then found the same collision in four modules that had shipped for months.
+    """
+    #[[
+    #   Scans the engine as well as the game.
+    #
+    #   Every check here takes a game root, which is right for the checks that
+    #   are about a game. This one is about a Luau idiom, and all four instances
+    #   ever found live in `Forge` -- a check that only looked at the game would
+    #   have reported nothing while the defect sat in the shared library every
+    #   game requires.
+    #]]
+    engine = Path(__file__).resolve().parents[1] / "luau" / "Forge"
+    roots = [root] + ([engine] if engine.is_dir() and engine not in root.parents else [])
+
+    seen: set[Path] = set()
+    for where in roots:
+        for path in sorted(where.rglob("*.lua")):
+            if path in seen:
+                continue
+            seen.add(path)
+            _shadow_one(path, findings)
+
+
+def _shadow_one(path: Path, findings: list[Finding]) -> None:
+    """One module's declared fields against its own instance methods."""
+    try:
+        text = path.read_text(encoding="utf-8", errors="replace")
+    except OSError:
+        return
+
+    block = _SELF_TYPE.search(text)
+    if not block:
+        return
+
+    fields = {
+        line.strip().split(":")[0].strip()
+        for line in block.group(1).splitlines()
+        if ":" in line
+    }
+    methods = set(re.findall(
+        r"function %s\.([A-Za-z_][A-Za-z0-9_]*)\(self" % re.escape(path.stem), text))
+
+    for name in sorted(fields & methods):
+        line = next((n for n, l in enumerate(text.splitlines(), 1)
+                     if ("function %s.%s(self" % (path.stem, name)) in l), 0)
+        findings.append(Finding(
+            "error", str(path), line,
+            f"the field '{name}' shadows the method '{path.stem}.{name}'; "
+            f"instance:{name}() will try to call the field. Rename the field.",
+        ))
+
+
 def check_client_server_api(root: Path, findings: list[Finding]) -> None:
     """Client code must not call the server-only half of `Net`.
 
@@ -777,6 +844,7 @@ CHECKS = (
     check_forge_wiring,
     check_asset_ids,
     check_client_server_api,
+    check_field_method_shadow,
 )
 
 

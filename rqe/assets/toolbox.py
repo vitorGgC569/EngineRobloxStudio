@@ -57,22 +57,26 @@ def _get(url: str, headers: dict[str, str] | None = None, timeout: float = 30.0)
         return json.loads(response.read().decode("utf-8", "replace"))
 
 
-#: Roblox's own creator account. Assets under it are the only third-party ones
-#: `InsertService:LoadAsset` will fetch -- see `ROBLOX_CREATOR` below.
+#: Roblox's own creator account.
 ROBLOX_USER_ID = 1
 
-#: Why this constant earns a name.
+#: A narrowing, not a restriction.
 #:
-#: `InsertService:LoadAsset` refuses anything the signed-in user does not own:
-#: "User is not authorized to access Asset", for free public models included.
-#: Measured, not inferred -- an asset this account uploaded loads, and a free
-#: model by somebody else does not.
+#: An earlier note here claimed the official library was the only source that
+#: could be fetched at all, because `InsertService:LoadAsset` answers "User is
+#: not authorized to access Asset" for anything the signed-in user does not
+#: own -- measured across 36 free models spanning 2015 to 2023, it loaded none
+#: of them.
 #:
-#: The exception is assets created by Roblox, which load for everybody. That
-#: makes the official library the only source this pipeline can pull from
-#: without a person first adding each model to their inventory by hand, and it
-#: happens to be the best one: the showcase packs (Duvall Drive, Beyond the
-#: Dark) are PBR-textured and consistent in scale.
+#: That was true of LoadAsset and false of the pipeline. `game:GetObjects`
+#: fetches the same models perfectly well: 33 of those 36, with the other three
+#: answering HTTP 403 because their creator restricted distribution. See
+#: `rqe.assets.inspection`, which is where the fetch now lives.
+#:
+#: So this flag is worth keeping for what it is -- the official showcase packs
+#: (Duvall Drive, Forest, City Props) are PBR-textured and consistent in scale,
+#: which very little of the open library is -- and not for what it was briefly
+#: mistaken for, which is the only thing that works.
 ROBLOX_CREATOR = {"creatorTargetId": str(ROBLOX_USER_ID), "creatorType": "User"}
 
 

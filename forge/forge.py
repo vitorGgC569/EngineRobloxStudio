@@ -859,8 +859,8 @@ def main(argv: list[str] | None = None) -> int:
                         help="keep models containing scripts; they still need reading before use")
     p_shop.add_argument("--why", action="store_true", help="also print why each rejection was dropped")
     p_shop.add_argument("--official", action="store_true",
-                        help="only assets created by Roblox; the only third-party ones "
-                             "InsertService will load without a manual inventory add")
+                        help="only assets created by Roblox: the showcase packs, which are "
+                             "PBR-textured and consistent in scale")
     p_shop.set_defaults(func=cmd_shop)
 
     p_pack = sub.add_parser("pack", help="insert an asset and list the props inside it")

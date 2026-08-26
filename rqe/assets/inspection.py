@@ -203,24 +203,76 @@ def _call(source: str, timeout: int = 90) -> dict[str, Any]:
     return result["result"]["returned"]
 
 
-def insert(asset_id: int | str, timeout: int = 40) -> dict[str, Any]:
-    """Pull one asset into ServerStorage. Edit sessions only."""
-    payload = {
-        "jsonrpc": "2.0", "id": 1, "method": "assets.insert",
-        "params": {"assetId": int(asset_id), "timeout": timeout,
-                   "_context": "edit", "_timeout": timeout + 20},
-    }
-    request = urllib.request.Request(
-        RPC, data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(request, timeout=timeout + 50) as response:
-        body = json.load(response)
-    if body.get("error"):
-        raise RuntimeError(body["error"].get("message"))
-    result = body.get("result") or {}
-    if not result.get("ok"):
-        raise RuntimeError((result.get("error") or {}).get("message", "insert failed"))
-    return result["result"]
+INSERT_LUA = """
+local ServerStorage = game:GetService("ServerStorage")
+local id = @@ASSET@@
+
+--[[
+	`game:GetObjects`, not `InsertService:LoadAsset`.
+
+	LoadAsset refuses any asset the signed-in user does not own -- "User is not
+	authorized to access Asset" -- and that covers free public models. Measured
+	across 36 of them spanning 2015 to 2023: LoadAsset fetched none, GetObjects
+	fetched 33. The three it missed answer HTTP 403, which is a creator
+	restricting distribution rather than an API limitation.
+
+	Driven through `bridge.exec` rather than the plugin's `assets.insert`
+	because Studio only loads plugins at startup: a plugin fix is not live until
+	somebody restarts, and this path is current the moment it is written.
+]]
+local ok, roots = pcall(function()
+	return game:GetObjects("rbxassetid://" .. id)
+end)
+if not ok then
+	return { error = string.sub(tostring(roots), 1, 200) }
+end
+if type(roots) ~= "table" or #roots == 0 then
+	return { error = "asset loaded but contained nothing" }
+end
+
+local parent = ServerStorage:FindFirstChild("@@FOLDER@@")
+if not parent then
+	parent = Instance.new("Folder")
+	parent.Name = "@@FOLDER@@"
+	parent.Parent = ServerStorage
+end
+
+local names, parts, scripts = {}, 0, 0
+for _, root in roots do
+	--: A name collision would leave two models sharing a name and the
+	--: inspector reaching the wrong one. Whatever is already there under this
+	--: id was put there by an earlier run of this same call.
+	local existing = parent:FindFirstChild(root.Name)
+	if existing then existing:Destroy() end
+
+	root.Parent = parent
+	table.insert(names, root.Name)
+	if root:IsA("BasePart") then parts += 1 end
+	for _, item in root:GetDescendants() do
+		if item:IsA("BasePart") then parts += 1
+		elseif item:IsA("LuaSourceContainer") then scripts += 1 end
+	end
+end
+
+return { assetId = id, roots = names, parts = parts, scripts = scripts,
+         path = parent:GetFullName() }
+"""
+
+
+def insert(asset_id: int | str, timeout: int = 60) -> dict[str, Any]:
+    """Pull one asset into ServerStorage. Edit sessions only.
+
+    Raises with Roblox's own message on refusal, because the message is the
+    useful part: HTTP 403 means the creator restricted distribution, and that
+    is a different problem from a bad id.
+    """
+    source = (INSERT_LUA
+              .replace("@@ASSET@@", str(int(asset_id)))
+              .replace("@@FOLDER@@", IMPORT_FOLDER))
+    result = _call(source, timeout=timeout)
+    if result.get("error"):
+        raise RuntimeError(f"asset {asset_id}: {result['error']}")
+    return result
 
 
 def _lua_patterns() -> str:

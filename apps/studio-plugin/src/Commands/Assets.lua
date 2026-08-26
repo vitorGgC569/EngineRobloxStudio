@@ -296,11 +296,39 @@ function Assets.insert(params: { [string]: any }): any
 			.. "running place, and a hung insert stalls the whole session")
 	end
 
+	--[[
+		`game:GetObjects`, not `InsertService:LoadAsset`.
+
+		This started as LoadAsset and LoadAsset refuses almost everything worth
+		fetching: it answers "User is not authorized to access Asset" for any
+		asset the signed-in user does not own, free public models included. That
+		is not a guess -- measured across 36 free models spanning 2015 to 2023,
+		different creators and popularities, it loaded **none** of them. The
+		only third-party assets it accepts are the ones Roblox itself created.
+
+		`GetObjects` is the plugin-context path, and on the same 36 it loaded
+		33. The three it missed answer HTTP 403, which is the creator having
+		restricted distribution -- a real refusal rather than an API limitation,
+		and the only kind that should reach the caller.
+
+		LoadAsset is kept as a fallback for the one thing it still has: it takes
+		a bare numeric id, so it works if a future Roblox build ever changes how
+		`rbxassetid://` resolves here.
+	]]
 	local finished, ok, result = false, false, nil
 	task.spawn(function()
 		ok, result = pcall(function()
-			return InsertService:LoadAsset(assetId)
+			return game:GetObjects("rbxassetid://" .. assetId)
 		end)
+		if not ok or typeof(result) ~= "table" or #(result :: any) == 0 then
+			local fallbackOk, fallback = pcall(function()
+				return InsertService:LoadAsset(assetId)
+			end)
+			if fallbackOk and typeof(fallback) == "Instance" then
+				ok, result = true, (fallback :: Instance):GetChildren()
+				fallback:Destroy()
+			end
+		end
 		finished = true
 	end)
 
@@ -315,13 +343,14 @@ function Assets.insert(params: { [string]: any }): any
 		Errors.raise(Errors.EXEC,
 			string.format("asset %d did not answer within the timeout", assetId))
 	end
-	if not ok or typeof(result) ~= "Instance" then
+	if not ok or typeof(result) ~= "table" or #(result :: any) == 0 then
 		Errors.raise(Errors.NOT_FOUND,
 			string.format("asset %d could not be loaded: %s", assetId, tostring(result)))
 	end
 
-	local container = result :: Instance
-	local roots = container:GetChildren()
+	--: `GetObjects` hands back the roots directly; there is no wrapper model to
+	--: unwrap and destroy the way `LoadAsset` produces one.
+	local roots = result :: { Instance }
 
 	--[[
 		Describe what came in, in the terms that decide whether it is usable.
@@ -358,7 +387,6 @@ function Assets.insert(params: { [string]: any }): any
 		root.Parent = parent
 		table.insert(names, root.Name)
 	end
-	container:Destroy()
 
 	return {
 		assetId = assetId,

@@ -1,0 +1,18 @@
+{
+  "id": "forge-brownout-play",
+  "description": "Start a fresh session of the exact build and attach to a real player before any capture. Proves the place runs and can be stood in; makes no claim about the core loop.",
+  "requires": {
+    "playSession": true,
+    "clientBridge": true
+  },
+  "steps": [
+    {
+      "attach": {
+        "timeout": 240
+      },
+      "fatal": true,
+      "comment": "capture only once the bridge controls a real player"
+    }
+  ],
+  "releaseEvidence": []
+}

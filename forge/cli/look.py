@@ -99,13 +99,18 @@ def aim(at: tuple[float, float, float], distance: float = 60,
     """
     x, y, z = at
     try:
+        #: `lookAt`, not `target`. This said `target` for weeks; the schema
+        #: rejected every call, the except below swallowed it, and `forge look`
+        #: quietly photographed wherever the camera was last left -- twice
+        #: returning byte-identical frames for two different subjects. An aim
+        #: that fails now says so.
         _call("camera.set", {
             "position": [x + distance * 0.7, y + height, z + distance * 0.7],
-            "target": [x, y, z],
+            "lookAt": [x, y, z],
         })
         return True
-    except LookError:
-        # Not fatal: an unaimed shot of the right window still beats no shot.
+    except LookError as error:
+        print(f"  ! camera not aimed: {error}", file=sys.stderr)
         return False
 
 

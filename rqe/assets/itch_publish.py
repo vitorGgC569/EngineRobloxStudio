@@ -589,17 +589,28 @@ _ITCH_HEADER = '''--!strict
 		local id = Itch.pick("tree", seed)
 		local model = game:GetService("InsertService"):LoadAsset(id)
 
-	`textured` is the field that matters when choosing. A model published from
-	a `.glb` carries its images inside the asset; one published from an `.fbx`
-	does not, because an FBX names its texture by relative path and the upload
-	is a single file. Both are here; only one of them has colour.
+	`textured` is the field that matters when choosing, and it is measured
+	rather than inferred: every asset here was loaded once in Studio and its
+	descendants counted. The obvious inference -- a `.glb` embeds its images,
+	an `.fbx` names them by relative path and so arrives grey -- is sound about
+	file formats and was wrong about 144 of these 295 assets, because a GLB
+	whose materials are plain untextured colours converts to a bare MeshPart
+	and the colour does not survive the import.
+
+	So do not restore the guess. If `textured` is false, nothing in the asset
+	carries colour and the caller has to supply it.
+
+	`meshes` is how many MeshParts came out. One means a single welded shape,
+	which is what you get from a GLB that lost its materials; several means the
+	pack modelled parts separately, and their names are often meaningful
+	(`house5_door1`, `house5_windows`) in a way that a tint pass can use.
 
 	Every entry keeps the pack and author it came from. CC0 asks for no credit
 	-- the provenance is for the question "what is this and where did it come
 	from", which is asked long after the answer stops being obvious.
 
-	%(count)d models across %(topics)d topics, %(textured)d of them textured.
-	Published %(when)s.
+	%(count)d models across %(topics)d topics, %(textured)d of them carrying
+	colour of their own. Published %(when)s.
 ]]
 
 local ItchAssets = {}
@@ -608,7 +619,7 @@ ItchAssets.count = %(count)d
 
 export type Entry = {
 	id: number, name: string, topic: string,
-	textured: boolean, pack: string, author: string,
+	textured: boolean, meshes: number, pack: string, author: string,
 }
 
 ItchAssets.models = ({
@@ -698,26 +709,76 @@ def _lua_str(value: Any) -> str:
     return '"' + str(value or "").replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
-def export_lua(published: Path | None = None) -> tuple[Path, int]:
+AUDIT = Path("artifacts/itch-texture-audit.json")
+
+
+def _measured(audit: Path | None = None) -> dict[str, Any]:
+    """What Studio found inside each published asset, keyed by asset id.
+
+    Written by loading all of them once and counting what came out. Empty when
+    the audit has not been run, which drops `textured` back to the guess below
+    -- so `export_lua` says loudly when that happens.
+    """
+    path = Path(audit) if audit else AUDIT
+    if not path.exists():
+        return {}
+    try:
+        book = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return {}
+    return {k: v for k, v in book.items()
+            if isinstance(v, dict) and "error" not in v}
+
+
+def export_lua(published: Path | None = None,
+               audit: Path | None = None) -> tuple[Path, int]:
     """Write the published assets as a Luau module a game can read."""
     source = Path(published) if published else PUBLISHED
     book = json.loads(source.read_text(encoding="utf-8"))
     live = [v for v in (book.get("assets") or {}).values() if v.get("assetId")]
+    measured = _measured(audit)
 
     rows = []
     textured = 0
+    guessed = 0
     for entry in sorted(live, key=lambda e: (e.get("topic") or "", e["assetId"])):
         member = Path(entry.get("member") or "")
-        #: A GLB packs its images into the asset; an FBX cannot, because the
-        #: upload is one file and the texture is beside it.
-        has_colour = member.suffix.lower() == ".glb"
+
+        #: Measured, not inferred.
+        #:
+        #: This read `member.suffix == ".glb"`, on the reasoning that a GLB
+        #: packs its images into the asset and an FBX cannot. The reasoning is
+        #: right; the conclusion was wrong 144 times in 295. A GLB whose
+        #: materials are untextured colours converts to a bare MeshPart, and
+        #: the colour does not survive the import. The flag claimed 221
+        #: textured models; loading all 295 in Studio found 89.
+        #:
+        #: It was also confident about exactly the topics that fill a frame --
+        #: house, tree, castle, rock, all claimed, all grey -- so the first
+        #: world built on it came out white while the manifest said otherwise.
+        found = measured.get(str(entry["assetId"]))
+        if found:
+            has_colour = bool(found.get("textures") or found.get("surfaces")
+                              or found.get("tinted"))
+            meshes = int(found.get("meshes") or 0)
+        else:
+            has_colour = member.suffix.lower() == ".glb"
+            meshes = 0
+            guessed += 1
         textured += 1 if has_colour else 0
+
         rows.append(
             f"\t{{ id = {entry['assetId']}, name = {_lua_str(entry.get('displayName'))}, "
             f"topic = {_lua_str(entry.get('topic'))}, "
             f"textured = {'true' if has_colour else 'false'}, "
+            f"meshes = {meshes}, "
             f"pack = {_lua_str(entry.get('pack'))}, "
             f"author = {_lua_str(entry.get('author'))} }},")
+
+    if guessed:
+        print(f"  ! {guessed} of {len(live)} assets are not in the audit; their "
+              f"`textured` is guessed from the file extension, which is wrong "
+              f"about half the time. Re-run the Studio audit.")
 
     topics = {e.get("topic") for e in live if e.get("topic")}
     LUA_PATH.parent.mkdir(parents=True, exist_ok=True)

@@ -515,13 +515,60 @@ def cmd_catalogue(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_watch(args: argparse.Namespace) -> int:
+    """Rebuild and reload whenever the game or the engine changes."""
+    import sys as _sys
+
+    _sys.path.insert(0, str(REPO_ROOT))
+    from forge.cli import watch as watcher
+    from rqe.hub import lifecycle
+    from rqe.hub.client import StudioBridge
+
+    root = _resolve(args.project)
+    place = root / f"{root.name}.rbxlx"
+    archive = REPO_ROOT / ".tmp" / "studio-recovery"
+    archive.mkdir(parents=True, exist_ok=True)
+    bridge = StudioBridge("http://127.0.0.1:8790")
+
+    def rebuild() -> bool:
+        build = argparse.Namespace(project=args.project, output=None)
+        return cmd_build(build) == 0
+
+    def reload_studio() -> dict:
+        return lifecycle.restart_for_bridge(place, archive, bridge=bridge,
+                                            wait_seconds=args.timeout)
+
+    try:
+        watcher.run(root, REPO_ROOT / "forge" / "luau", rebuild, reload_studio,
+                    poll=args.poll)
+    except KeyboardInterrupt:
+        print("\nstopped")
+    return 0
+
+
 # ============================ asset verification ============================
 def cmd_assets(args: argparse.Namespace) -> int:
     """Load every asset id this project references and record the verdict."""
     from forge.cli import assetcheck
 
-    roots = [REPO_ROOT / "games", REPO_ROOT / "forge" / "luau"]
+    #[[
+    #   Scope to the named game, because the docstring always claimed to.
+    #
+    #   This scanned `games/` entire -- every project in the repository -- while
+    #   saying "this project". A game with nine clean ids was reported against
+    #   forty-six, failed on thirty-three belonging to other people's games, and
+    #   paid fifteen minutes to find that out.
+    #
+    #   The engine is always in scope: a game uses it, so its ids are the
+    #   game's problem too.
+    #]]
+    if args.game:
+        roots = [_resolve(args.game), REPO_ROOT / "forge" / "luau"]
+    else:
+        roots = [REPO_ROOT / "games", REPO_ROOT / "forge" / "luau"]
     refs = sorted(assetcheck.scan(roots))
+    scope = args.game or "every game"
+    print(f"{len(refs)} asset ids referenced by {scope}")
     if not refs:
         print("no asset ids referenced")
         return 0
@@ -999,8 +1046,18 @@ def main(argv: list[str] | None = None) -> int:
     p_cat.add_argument("--show", type=int, default=20)
     p_cat.set_defaults(func=cmd_catalogue)
 
+    p_watch = sub.add_parser("watch", help="rebuild and reload Studio on every source change")
+    p_watch.add_argument("project")
+    p_watch.add_argument("--poll", type=float, default=1.0,
+                         help="seconds between checks (default 1)")
+    p_watch.add_argument("--timeout", type=float, default=240.0,
+                         help="how long to wait for Studio to reconnect")
+    p_watch.set_defaults(func=cmd_watch)
+
     p_assets = sub.add_parser("assets", help="verify every asset id by loading it in Studio")
     p_assets.add_argument("step", nargs="?", default="verify", choices=("scan", "verify"))
+    p_assets.add_argument("game", nargs="?",
+                          help="scope to one project; omit to scan every game in the repo")
     p_assets.set_defaults(func=cmd_assets)
 
     p_pose = sub.add_parser("pose", help="preview an animation clip on a rig, in edit mode")

@@ -230,7 +230,30 @@ def verify(refs: list[str]) -> dict:
         "passing": sum(1 for r in results.values() if r.get("ok")),
         "assets": results,
     }
+    #[[
+    #   Merge, do not overwrite.
+    #
+    #   The registry is one file for the whole repository and this rewrote it
+    #   from whatever set of ids the current run happened to look at. Verify one
+    #   game and every other game's verdicts vanished -- and the release gate
+    #   reads this file, so a gate that is per-game by name failed a clean game
+    #   on ids belonging to projects it had never heard of.
+    #
+    #   Fresh verdicts win; older ones for ids this run did not examine are
+    #   kept rather than silently deleted.
+    #]]
     REGISTRY.parent.mkdir(parents=True, exist_ok=True)
+    merged: dict[str, Any] = {}
+    if REGISTRY.exists():
+        try:
+            merged = (json.loads(REGISTRY.read_text(encoding="utf-8")).get("assets")
+                      or {})
+        except (json.JSONDecodeError, OSError):
+            merged = {}
+    merged.update(registry["assets"])
+    registry["assets"] = merged
+    registry["count"] = len(merged)
+    registry["passing"] = sum(1 for v in merged.values() if v.get("ok"))
     REGISTRY.write_text(json.dumps(registry, indent=2, ensure_ascii=False), encoding="utf-8")
     return registry
 

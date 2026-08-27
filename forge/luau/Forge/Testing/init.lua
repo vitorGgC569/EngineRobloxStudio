@@ -60,6 +60,18 @@ export type Case = {
 	fn: (any) -> (),
 	timeout: number?,
 	tags: { string }?,
+	--[[
+		A precondition. Returns true when the scenario can meaningfully run.
+
+		Without this a scenario that cannot run has two options and both lie: it
+		fails, blaming the game for a fixture that was not ready, or it passes
+		having asserted nothing. The second is how "every lamp is lit correctly"
+		went green against a world containing zero lamps.
+
+		A scenario whose `requires` returns false is reported **skipped**, which
+		is neither pass nor fail and is counted separately.
+	]]
+	requires: (() -> (boolean, string?))?,
 }
 
 local cases: { Case } = {}
@@ -89,6 +101,7 @@ function Testing.scenario(name: string, fn: (any) -> (), options: any?)
 		fn = fn,
 		timeout = opts.timeout,
 		tags = opts.tags,
+		requires = opts.requires,
 	})
 end
 
@@ -251,6 +264,49 @@ function Context:expectNear(actual: number, expected: number, tolerance: number,
 	end
 end
 
+--[[
+	Prove there is something to assert about, then return it.
+
+	The failure this exists to stop: a scenario reads "every lamp is lit
+	correctly", iterates a list, finds nothing to iterate, and passes. It
+	asserted nothing and reported success -- and it reports success loudest
+	exactly when the world failed to build, which is when a green suite is most
+	dangerous.
+
+	`expectSome` makes the population itself an assertion. Put it before the
+	loop and an empty world fails the test instead of flattering it.
+
+		local lamps = ctx:expectSome(Lighting.all(), 1, "lamps")
+		for _, lamp in lamps do ctx:expect(lamp.lit, "lamp is lit") end
+]]
+function Context:expectSome(items: { any }, minimum: number?, label: string?): { any }
+	local floor = minimum or 1
+	local count = #items
+	self.checks += 1
+	if count < floor then
+		table.insert(self.failures, string.format(
+			"expected at least %d %s, found %d -- nothing to assert about",
+			floor, label or "items", count))
+	end
+	return items
+end
+
+--[[
+	Sample a value now, so a later assertion can compare against it.
+
+	The other half of the racing problem. A suite that runs beside a live game
+	measures a moving target: one scenario here failed a correct game because a
+	12Hz tick had already banked the resource between the action and the
+	measurement. Capturing before acting turns "is it 5" into "did it go up by
+	1", which is true regardless of what the tick did in between.
+]]
+function Context:baseline(read: () -> any): () -> any
+	local before = read()
+	return function()
+		return before
+	end
+end
+
 function Context:expectAlive(model: Model, message: string?)
 	self:expect(Combat.isAlive(model), message or (model.Name .. " should be alive"))
 end
@@ -294,12 +350,39 @@ function Testing.run(filter: string?): { [string]: any }
 	currentContainer = stage
 
 	local results = {}
-	local passed, failed, timedOut = 0, 0, 0
+	local passed, failed, timedOut, skipped = 0, 0, 0, 0
 	local startedAt = os.clock()
 
 	for _, case in cases do
 		if filter and not case.name:lower():find(filter:lower(), 1, true) then
 			continue
+		end
+
+		--[[
+			Preconditions first, before a context exists.
+
+			A scenario that cannot run must not be given the chance to assert
+			nothing and call it a pass. Skipping is recorded with the reason, so
+			a suite reading 12 passed / 4 skipped can never be mistaken for 16
+			green -- which is the whole point of having the third state.
+		]]
+		if case.requires then
+			local ok, met, why = pcall(case.requires)
+			if not ok then
+				met, why = false, "precondition errored: " .. tostring(met)
+			end
+			if not met then
+				skipped += 1
+				table.insert(results, {
+					name = case.name,
+					status = "skipped",
+					checks = 0,
+					failures = {},
+					reason = why or "precondition not met",
+					seconds = 0,
+				})
+				continue
+			end
 		end
 
 		local ctx = newContext(case.name, stage)
@@ -353,10 +436,14 @@ function Testing.run(filter: string?): { [string]: any }
 	currentContainer = nil
 
 	return {
-		total = passed + failed + timedOut,
+		total = passed + failed + timedOut + skipped,
 		passed = passed,
 		failed = failed,
 		timedOut = timedOut,
+		--: Its own number, never folded into `passed`. A suite that reports
+		--: only a pass count cannot distinguish "all green" from "most did not
+		--: run", and those are opposite pieces of news.
+		skipped = skipped,
 		seconds = math.floor((os.clock() - startedAt) * 1000) / 1000,
 		results = results,
 		ok = failed == 0 and timedOut == 0,

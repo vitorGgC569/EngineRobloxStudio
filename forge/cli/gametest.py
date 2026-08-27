@@ -127,16 +127,28 @@ def render(report: dict) -> str:
     lines = []
     for result in report.get("results", []):
         status = result["status"]
-        mark = {"passed": "OK  ", "failed": "FAIL", "error": "ERR ", "timeout": "HANG"}.get(status, "?   ")
+        mark = {"passed": "OK  ", "failed": "FAIL", "error": "ERR ",
+                "timeout": "HANG", "skipped": "SKIP"}.get(status, "?   ")
         lines.append(f"  {mark} {result['name']}  ({result['checks']} checks, {result['seconds']}s)")
+        #: A skip's reason is the whole content of the result. Printing the
+        #: line without it says a scenario did not run and not why, which is
+        #: the least useful half.
+        if result.get("reason"):
+            lines.append(f"         {result['reason']}")
         for failure in result.get("failures") or []:
             lines.append(f"         {failure}")
         if result.get("error"):
             lines.append(f"         {result['error']}")
 
     lines.append("")
-    lines.append(
-        f"  {report.get('passed', 0)} passed, {report.get('failed', 0)} failed, "
-        f"{report.get('timedOut', 0)} hung, in {report.get('seconds', 0)}s"
-    )
+    skipped = report.get("skipped", 0)
+    summary = (f"  {report.get('passed', 0)} passed, {report.get('failed', 0)} failed, "
+               f"{report.get('timedOut', 0)} hung")
+    if skipped:
+        #: Never folded into the pass count. A suite reading "12 passed" when
+        #: four never ran is the report telling a comfortable lie.
+        summary += f", {skipped} skipped"
+    lines.append(summary + f", in {report.get('seconds', 0)}s")
+    if skipped:
+        lines.append(f"  {skipped} scenario(s) could not run; a skip is not a pass")
     return "\n".join(lines)

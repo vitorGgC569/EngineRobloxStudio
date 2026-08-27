@@ -48,6 +48,30 @@ class BridgeError(RuntimeError):
 
 
 
+def live_place() -> str | None:
+    """Which place the connected Studio session has open, if any.
+
+    Used to refuse a suite run attributed to the wrong project: the report this
+    module reads comes from whatever is running, and nothing inside it says
+    which game produced it.
+
+    Goes through the same subprocess transport as `_call` rather than opening
+    its own HTTP connection -- one way in, so a change of hub address or auth
+    does not leave a second path quietly broken.
+    """
+    proc = subprocess.run(
+        [sys.executable, str(REPO / "rqe.py"), "studio", "call", "bridge.ping",
+         "--params", "{}", "--timeout", "10"],
+        capture_output=True, text=True, timeout=40, cwd=str(REPO),
+    )
+    try:
+        envelope = json.loads(proc.stdout.strip() or proc.stderr.strip())
+    except json.JSONDecodeError:
+        return None
+    #: `place` rides on the envelope beside the result, not inside it.
+    return envelope.get("place")
+
+
 def run(filter_text: str | None = None, timeout: int = 240) -> dict:
     """Read the report the running game published.
 

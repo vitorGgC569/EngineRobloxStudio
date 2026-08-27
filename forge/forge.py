@@ -301,7 +301,7 @@ def cmd_engine(args: argparse.Namespace) -> int:
 # =============================== the store ==================================
 def cmd_toolbox(args: argparse.Namespace) -> int:
     """Harvest and curate Creator Store models through a live Studio."""
-    from cli import toolbox
+    from forge.cli import toolbox
 
     if args.step in ("harvest", "all"):
         report = toolbox.harvest()
@@ -518,7 +518,7 @@ def cmd_catalogue(args: argparse.Namespace) -> int:
 # ============================ asset verification ============================
 def cmd_assets(args: argparse.Namespace) -> int:
     """Load every asset id this project references and record the verdict."""
-    from cli import assetcheck
+    from forge.cli import assetcheck
 
     roots = [REPO_ROOT / "games", REPO_ROOT / "forge" / "luau"]
     refs = sorted(assetcheck.scan(roots))
@@ -543,7 +543,7 @@ def cmd_assets(args: argparse.Namespace) -> int:
 # ============================== pose preview ================================
 def cmd_pose(args: argparse.Namespace) -> int:
     """Pose a rig from a clip in the open place and report the result."""
-    from cli import pose
+    from forge.cli import pose
 
     report = pose.preview(args.clip, samples=args.samples, duration=args.duration,
                           rig_type=args.rig)
@@ -554,7 +554,7 @@ def cmd_pose(args: argparse.Namespace) -> int:
 # ============================== scene round trip ============================
 def cmd_scene(args: argparse.Namespace) -> int:
     """Move a scene between a live session and the repository."""
-    from cli import scene as scenes
+    from forge.cli import scene as scenes
 
     try:
         if args.step == "list":
@@ -580,7 +580,26 @@ def cmd_scene(args: argparse.Namespace) -> int:
 # ============================== live gameplay ===============================
 def cmd_gametest(args: argparse.Namespace) -> int:
     """Run the game's own scenarios inside the open Studio session."""
-    from cli import gametest
+    from forge.cli import gametest
+
+    #[[
+    #   The game argument is checked, not decoration.
+    #
+    #   The suite reads a report the *running* game published, so it always
+    #   answers about whatever Studio has open. Naming a project that is not
+    #   the one open used to be impossible to express and is now caught: a
+    #   green suite attributed to the wrong game is worse than no suite.
+    #]]
+    if args.game:
+        root = _resolve(args.game)
+        try:
+            place = gametest.live_place()
+        except Exception:  # noqa: BLE001 - the run below reports it properly
+            place = None
+        if place and root.name.lower() not in str(place).lower():
+            print(f"gametest: Studio has '{place}' open, not '{root.name}'.")
+            print("          Open that place, or drop the argument to test what is open.")
+            return 1
 
     try:
         report = gametest.run(args.filter)
@@ -594,7 +613,7 @@ def cmd_gametest(args: argparse.Namespace) -> int:
 # ============================== api index ===================================
 def cmd_api(args: argparse.Namespace) -> int:
     """Describe the engine as JSON, or print one module's surface."""
-    from cli import apiindex
+    from forge.cli import apiindex
 
     if args.module:
         print(apiindex.render_module(args.module))
@@ -608,7 +627,7 @@ def cmd_api(args: argparse.Namespace) -> int:
 # ================================ publishing ================================
 def cmd_publish(args: argparse.Namespace) -> int:
     """Upload the built place as a new version of a Roblox experience."""
-    from cli import publish as pub
+    from forge.cli import publish as pub
 
     try:
         if args.check:
@@ -637,7 +656,7 @@ def cmd_publish(args: argparse.Namespace) -> int:
 # ============================== runnable examples ===========================
 def cmd_example(args: argparse.Namespace) -> int:
     """Run the engine's own examples inside Studio."""
-    from cli import example as ex
+    from forge.cli import example as ex
 
     try:
         report = ex.run(args.module)
@@ -653,7 +672,7 @@ def cmd_example(args: argparse.Namespace) -> int:
 # ================================ asset upload ==============================
 def cmd_upload(args: argparse.Namespace) -> int:
     """Upload a local file to Roblox and register the id it comes back with."""
-    from cli import upload as up
+    from forge.cli import upload as up
 
     try:
         record = up.upload(Path(args.path), args.user, name=args.name,
@@ -679,7 +698,7 @@ def cmd_quality(args: argparse.Namespace) -> int:
     proves a game works; the RQE measures whether it is any good, and until
     now neither knew the other existed.
     """
-    from cli import quality
+    from forge.cli import quality
 
     try:
         descriptor, contract = quality.generate(args.game)
@@ -708,7 +727,7 @@ def cmd_look(args: argparse.Namespace) -> int:
     Every visual defect in this project was found by a person looking at a
     screen and none of them by a test. This is the agent doing the looking.
     """
-    from cli import look
+    from forge.cli import look
 
     try:
         if args.tour:
@@ -730,8 +749,8 @@ def cmd_look(args: argparse.Namespace) -> int:
 
 def cmd_analytics(args: argparse.Namespace) -> int:
     """Read the telemetry back out of the DataStore it was written into."""
-    from cli import analytics
-    from cli import publish as pub
+    from forge.cli import analytics
+    from forge.cli import publish as pub
 
     try:
         fetched = analytics.fetch(args.game, days=args.days)
@@ -788,7 +807,7 @@ def cmd_kit(args: argparse.Namespace) -> int:
     The half of the mining that was never done: everything so far was code, and
     code alone builds grey boxes.
     """
-    from cli import kit
+    from forge.cli import kit
 
     try:
         if args.step == "list":
@@ -999,6 +1018,11 @@ def main(argv: list[str] | None = None) -> int:
     p_scene.set_defaults(func=cmd_scene)
 
     p_gt = sub.add_parser("gametest", help="run gameplay scenarios inside the live game")
+    #: Positional, like every other command here. It took `--filter` alone, so
+    #: `forge gametest mygame` -- the spelling the skill documents and the one
+    #: every sibling command uses -- was rejected as an unrecognised argument.
+    p_gt.add_argument("game", nargs="?",
+                      help="the project to test; defaults to whatever the live session has open")
     p_gt.add_argument("--filter", default=None, help="only scenarios whose name contains this")
     p_gt.set_defaults(func=cmd_gametest)
 

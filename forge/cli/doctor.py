@@ -54,6 +54,23 @@ def _strip_comments(text: str) -> str:
 
 
 def _lines(path: Path) -> list[str]:
+    """Source lines with comments blanked out, line numbers intact.
+
+    This used to return the file verbatim, and five checks matched against it.
+    So a doc block explaining that `RenderStepped` is client-only was itself
+    reported as an error for using RenderStepped on the server -- twice, once
+    for the block comment and once for a line comment repeating it.
+
+    A checker that flags its own documentation is a checker people stop
+    reading. Anything that genuinely needs the comments can use `_raw_lines`;
+    nothing does yet, which is the point.
+    """
+    return _strip_comments(
+        path.read_text(encoding="utf-8", errors="replace")).splitlines()
+
+
+def _raw_lines(path: Path) -> list[str]:
+    """Source lines exactly as written, comments included."""
     return path.read_text(encoding="utf-8", errors="replace").splitlines()
 
 
@@ -798,7 +815,15 @@ def check_asset_ids(root: Path, findings: list[Finding]) -> None:
     failing a fresh checkout that has never been near a Studio would make the
     check something people route around.
     """
-    from cli import assetcheck
+    #: Absolute, not the bare `cli` this used to import.
+    #:
+    #: `from cli import ...` only resolves when `forge/` happens to be on the
+    #: path, which is true when forge.py is the entry point and false whenever
+    #: doctor is imported as `forge.cli.doctor` -- from a test, from another
+    #: tool, from anything but the CLI. The check then failed with "No module
+    #: named 'cli'" and was reported as a note, so a real asset check quietly
+    #: never ran and said so in language nobody reads as "this did not run".
+    from forge.cli import assetcheck
 
     registry = assetcheck.load_registry()
     references = assetcheck.scan([root])

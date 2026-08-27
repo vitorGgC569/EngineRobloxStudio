@@ -33,6 +33,7 @@ from __future__ import annotations
 
 import base64
 import json
+import time
 import os
 from pathlib import Path
 from typing import Any
@@ -81,6 +82,12 @@ def describe(path: Path | None = None) -> dict[str, Any]:
         "keyLength": len(raw),
         "hasSessionToken": token is not None,
     }
+    #: The only honest answer to "does this credential work" is a request.
+    #: `describe` stays offline by design -- it is what a log may keep -- so
+    #: liveness is `check()`, below, and is never inferred from the token.
+    out["note"] = ("sessionTokenExpiresAt describes the bundled session token, "
+                   "not the API key. Use check() to learn whether Open Cloud "
+                   "accepts this credential.")
     if token:
         try:
             jwt = base64.b64decode(token + "==").decode("utf-8", "replace")
@@ -88,7 +95,24 @@ def describe(path: Path | None = None) -> dict[str, Any]:
                 base64.urlsafe_b64decode(jwt.split(".")[1] + "==").decode("utf-8", "replace"))
             out["ownerId"] = payload.get("ownerId")
             out["audience"] = payload.get("aud")
-            out["expiresAt"] = payload.get("exp")
+            #[[
+            #   Named for what it is, which is not what it was called.
+            #
+            #   This was `expiresAt`, and every reader took it to mean the
+            #   credential's expiry. It is the expiry of the *session token*
+            #   bundled alongside the API key -- a different thing with a
+            #   different lifetime. Open Cloud validates the key; a stale
+            #   session token does not stop a request.
+            #
+            #   The consequence was a diagnostic that said the credential had
+            #   expired a fortnight ago while it was answering HTTP 200, which
+            #   is worse than saying nothing: it sends whoever reads it to
+            #   rotate a key that works.
+            #]]
+            out["sessionTokenExpiresAt"] = payload.get("exp")
+            expiry = payload.get("exp")
+            if isinstance(expiry, (int, float)):
+                out["sessionTokenExpired"] = expiry < time.time()
             # The embedded prefix must match the front of the file, or this has
             # been edited into a state where the credential and the description
             # of it disagree -- worth knowing before a request goes out.
@@ -96,6 +120,53 @@ def describe(path: Path | None = None) -> dict[str, Any]:
         except Exception:
             out["sessionTokenReadable"] = False
     return out
+
+
+def check(path: Path | None = None, timeout: float = 15.0) -> dict[str, Any]:
+    """Ask Open Cloud whether it accepts this credential.
+
+    One request, no secret in the result. This exists because `describe` cannot
+    answer the question everybody actually asks it -- a key file can be
+    perfectly well-formed and revoked, and a bundled session token can be long
+    expired while the key it travels with works fine.
+
+    401 means the key is rejected. 403 means it authenticates and lacks a
+    scope, which is a different problem with a different fix, so they are
+    reported apart rather than both as "failed".
+    """
+    import urllib.error
+    import urllib.request
+
+    source = _locate(path)
+    if source is None:
+        return {"found": False, "ok": False,
+                "searched": [str(p) for p in DEFAULT_LOCATIONS]}
+
+    key = source.read_text(encoding="utf-8").strip()
+    #: A cheap authenticated endpoint. Any 2xx proves the key is live; the body
+    #: is irrelevant and deliberately not read.
+    request = urllib.request.Request(
+        "https://apis.roblox.com/cloud/v2/universes/0",
+        headers={"x-api-key": key})
+    try:
+        with urllib.request.urlopen(request, timeout=timeout) as response:
+            return {"found": True, "ok": True, "status": response.status}
+    except urllib.error.HTTPError as error:
+        #: 400/404 on a nonsense universe id still proves authentication
+        #: happened -- an unauthenticated request never reaches validation.
+        authenticated = error.code not in (401, 403)
+        return {
+            "found": True,
+            "ok": authenticated,
+            "status": error.code,
+            "meaning": {
+                401: "rejected: the key is wrong, revoked or expired",
+                403: "authenticated, but missing a scope for this call",
+            }.get(error.code, "authenticated (the id in the probe is not real)"),
+        }
+    except (urllib.error.URLError, OSError) as error:
+        return {"found": True, "ok": False, "status": None,
+                "meaning": f"could not reach Open Cloud: {error}"}
 
 
 def _locate(path: Path | None = None) -> Path | None:

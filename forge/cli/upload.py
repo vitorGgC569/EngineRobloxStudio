@@ -64,7 +64,7 @@ def load_key() -> str:
     Shared with `publish`, and for the same reason: the key is never accepted
     as an argument, so it appears in no command line and no shell history.
     """
-    from cli import publish
+    from forge.cli import publish
 
     return publish.load_key()
 

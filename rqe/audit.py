@@ -59,7 +59,7 @@ def run_audit(root: str | Path) -> AuditReport:
         category="gameplay",
         status="PASS" if agent_session.get("status") == "PASS" else "FAIL",
         severity="critical",
-        message="Agente completou o fluxo humano de compra" if agent_session.get("status") == "PASS" else "Agente não conseguiu completar o fluxo humano",
+        message="the agent completed the human purchase flow" if agent_session.get("status") == "PASS" else "the agent could not complete the human flow",
         details={"scenario": agent_session.get("scenario"), "stepsExecuted": agent_session.get("stepsExecuted"), "actionRecords": agent_session.get("actionRecords", [])},
         source="game-agent-bridge",
         validation_level="NOT_VALIDATED",

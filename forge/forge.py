@@ -463,6 +463,19 @@ def cmd_catalogue(args: argparse.Namespace) -> int:
         return 1
 
     catalogue = json.loads(sweeper.CATALOGUE.read_text(encoding="utf-8"))
+    if args.review:
+        #: The bucket that is worth a person's attention rather than a game's
+        #: trust: the scanner opened these and could not clear them alone.
+        for piece in catalogue.get("review") or []:
+            mark = "BLOCKED" if piece.get("blocked") else "read   "
+            print(f"  {mark} {piece['id']:<15} {piece['name'][:34]:36} "
+                  f"{piece['topic'][:16]:18} {piece.get('scripts', 0)} scripts")
+            for name in piece.get("blocked") or []:
+                print(f"          -> {name}")
+            for name in sorted(set(piece.get("suspicious") or [])):
+                print(f"          ~  {name}")
+        return 0
+
     assets = catalogue.get("assets") or []
 
     if args.kind:
@@ -962,6 +975,8 @@ def main(argv: list[str] | None = None) -> int:
     p_cat.add_argument("--clean", action="store_true",
                        help="only assets with nothing at all to report")
     p_cat.add_argument("--summary", action="store_true", help="counts per kind and topic")
+    p_cat.add_argument("--review", action="store_true",
+                       help="assets the scanner could not clear on its own")
     p_cat.add_argument("--show", type=int, default=20)
     p_cat.set_defaults(func=cmd_catalogue)
 

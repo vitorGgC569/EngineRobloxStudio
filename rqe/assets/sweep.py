@@ -184,8 +184,16 @@ def _write(results: list[dict[str, Any]], stats: dict[str, int],
     Called on every checkpoint, not only at the end. The first full run wrote
     once, at the end, and lost 112 assets of work when the session dropped
     before it got there.
+
+    Three buckets, not two. `assets` is what a game may use unread. `review` is
+    what the scanner opened and could not clear on its own -- a script it wants
+    a person to read. Those must not be filed with the approved, and burying
+    them among the rejected would hide the most interesting results the sweep
+    produces: a working conveyor whose script turns out to be four lines of
+    velocity.
     """
     keepers = [r for r in results if r.get("verdict") in ("ok", "caveats")]
+    review = [r for r in results if r.get("verdict") in ("read-it", "blocked")]
     catalogue = {
         "$comment": (
             "Creator Store assets that passed a metadata filter and were then "
@@ -193,10 +201,12 @@ def _write(results: list[dict[str, Any]], stats: dict[str, int],
             "means usable with the notes attended to, usually unanchored parts. "
             "Everything here was opened -- the counts are measured, not claimed."),
         "sweptAt": time.strftime("%Y-%m-%d"),
-        "stats": stats | {"kept": len(keepers), "seconds": round(time.time() - started)},
+        "stats": stats | {"kept": len(keepers), "review": len(review), "seconds": round(time.time() - started)},
         "topics": {k: list(v) for k, v in TOPICS.items() if k in chosen},
         "assets": sorted(keepers, key=lambda r: (r["kind"], r["topic"], -r["score"])),
-        "rejected": [r for r in results if r.get("verdict") not in ("ok", "caveats")],
+        "review": sorted(review, key=lambda r: (r["kind"], r["topic"], -r["score"])),
+        "rejected": [r for r in results
+                     if r.get("verdict") not in ("ok", "caveats", "read-it", "blocked")],
     }
     CATALOGUE.parent.mkdir(parents=True, exist_ok=True)
     CATALOGUE.write_text(json.dumps(catalogue, indent=1, ensure_ascii=False) + "\n",
@@ -206,7 +216,7 @@ def _write(results: list[dict[str, Any]], stats: dict[str, int],
 
 def run(kinds: list[str] | None = None, per_topic: int = 20,
         open_top: int = 4, discard_every: int = 25, resume: bool = True,
-        progress: Any = print) -> dict[str, Any]:
+        allow_scripts: bool = False, progress: Any = print) -> dict[str, Any]:
     """Sweep every topic, and return what survived both stages.
 
     `open_top` is the throttle that makes this affordable: a topic's results are
@@ -225,7 +235,9 @@ def run(kinds: list[str] | None = None, per_topic: int = 20,
     if resume and CATALOGUE.exists():
         try:
             previous = json.loads(CATALOGUE.read_text(encoding="utf-8"))
-            results = (previous.get("assets") or []) + (previous.get("rejected") or [])
+            results = ((previous.get("assets") or [])
+                       + (previous.get("review") or [])
+                       + (previous.get("rejected") or []))
             seen = {r["id"] for r in results if r.get("opened")}
             if seen:
                 progress(f"  resuming; {len(seen)} already opened")
@@ -251,7 +263,8 @@ def run(kinds: list[str] | None = None, per_topic: int = 20,
     for kind in chosen:
         for topic, role in TOPICS[kind].items():
             try:
-                shortlisted = toolbox.shortlist(topic, role=role, limit=per_topic)
+                shortlisted = toolbox.shortlist(topic, role=role, limit=per_topic,
+                                                allow_scripts=allow_scripts)
             except Exception as error:  # noqa: BLE001 - one topic must not end the sweep
                 progress(f"  {kind}/{topic}: search failed ({error})")
                 continue
@@ -358,9 +371,12 @@ export type Piece = {
 	parts: number, triangles: number, unanchored: number, verdict: string,
 }
 
-StoreAssets.pieces: { Piece } = {
+--: Annotated by cast, not by declaration: Luau takes a type on a `local` but
+--: not on a table field, and `StoreAssets.pieces: { Piece } = {` is a parse
+--: error rather than a type error -- it fails at load, not at check.
+StoreAssets.pieces = ({
 %(entries)s
-}
+} :: any) :: { Piece }
 '''
 
 _LUA_FOOTER = '''

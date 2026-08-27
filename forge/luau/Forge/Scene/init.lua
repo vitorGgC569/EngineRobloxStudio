@@ -245,9 +245,47 @@ end
 -- ================================ loading ===================================
 -- Public because Streaming drives placements one at a time rather than
 -- loading a whole scene at once.
+--[[
+	Asset ids beginning `prop:` come from the baked store catalogue.
+
+	Placement was expressible only for things registered in `Assets`, so a
+	catalogued prop -- the 30-odd rocks, crates and machines read out of real
+	store models -- could be generated in a loop and never *placed*. The report
+	put it exactly: the platform knows how to generate and not how to put that
+	rock in that spot.
+
+	`prop:` is the whole bridge. `scene:add("prop:rock", CFrame.new(...))` now
+	means what it looks like, persists through `toJson` like any other
+	placement, and comes back on load.
+
+	Required inside the function rather than at the top: `Catalog` pulls in
+	`StoreProps`, which builds lookup tables at load, and a scene that never
+	places a prop should not pay for that.
+]]
+local PROP_PREFIX = "prop:"
+
 function SceneClass:materialise(placement: any)
 	local opts = placement.options
-	local instance = Assets.spawn(placement.asset, placement.cframe, self._container, opts)
+
+	local instance
+	if string.sub(placement.asset, 1, #PROP_PREFIX) == PROP_PREFIX then
+		local Prop = require(script.Parent.Catalog).Prop
+		instance = Prop.build(string.sub(placement.asset, #PROP_PREFIX + 1),
+			placement.cframe, {
+				parent = self._container,
+				scale = opts.scale,
+				targetHeight = opts.targetHeight,
+				targetSize = opts.targetSize,
+				anchored = opts.anchored,
+				canCollide = opts.canCollide,
+			})
+		if not instance then
+			warn(string.format("[Scene] no baked prop for %q", placement.asset))
+		end
+	else
+		instance = Assets.spawn(placement.asset, placement.cframe, self._container, opts)
+	end
+
 	if not instance then
 		return nil
 	end

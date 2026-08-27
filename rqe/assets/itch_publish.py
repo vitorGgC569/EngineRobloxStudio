@@ -193,16 +193,28 @@ def select(meshes: list[dict[str, Any]], per_topic: int = 4,
            skip_variants: bool = True) -> list[dict[str, Any]]:
     """The best few per topic. Strategy three: enough to build a game with.
 
-    Preference order inside a topic: `.fbx` first because it is what Roblox
-    ingests most reliably, then smaller files, because a 12 MB prop and a
-    200 KB prop of the same thing are the same prop and one of them costs
-    forty times as much to load.
+    **`.glb` first, and this is the whole difference between a coloured model
+    and a grey one.** An FBX references its texture by relative path; Open
+    Cloud receives one file and cannot resolve `../textures/atlas.png`, so
+    every FBX upload arrives untextured. A `.glb` carries its images inside the
+    file.
+
+    Measured rather than assumed, by inserting both back into Studio: the GLB
+    of a KayKit character came in with 8 parts and 7 textures; the FBX uploads
+    came in with 0. This function used to sort `.fbx` first, which is why the
+    first few dozen published assets are colourless.
+
+    After format, smaller files win: a 12 MB prop and a 200 KB prop of the same
+    thing are the same prop, and one of them costs forty times as much to load.
     """
     words = _topic_words()
     by_topic: dict[str, list[dict[str, Any]]] = {}
     seen_bases: dict[str, set[str]] = {}
 
-    ordered = sorted(meshes, key=lambda m: (m["suffix"] != ".fbx", m["size"]))
+    #: `.gltf` sits between the two: it embeds nothing but at least names its
+    #: buffers, so it is worth more than a bare FBX and less than a GLB.
+    rank = {".glb": 0, ".gltf": 1, ".fbx": 2}
+    ordered = sorted(meshes, key=lambda m: (rank.get(m["suffix"], 3), m["size"]))
     for mesh in ordered:
         if mesh["size"] > MAX_BYTES:
             continue

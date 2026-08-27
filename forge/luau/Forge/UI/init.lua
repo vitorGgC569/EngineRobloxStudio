@@ -97,21 +97,151 @@ end
 UI.corner = corner
 UI.stroke = stroke
 
-function UI.panel(parent: Instance, options: any?): Frame
+--[[
+	Skins: real artwork behind a widget, when the catalogue has some.
+
+	A flat panel with a stroke is a respectable default and it is still what
+	you get by asking for nothing. But a project that has published a UI pack
+	wants the pack's frame, and the difference between "an agent drew a
+	rectangle" and "somebody designed this" is mostly that one image.
+
+	Applied as a child `ImageLabel` filling the widget rather than by changing
+	what the widget *is*. Layout, sizing and every existing caller are then
+	untouched: a skin is a backdrop, and where the catalogue has no frame for
+	the role nothing happens and the flat background stays.
+
+	Nine-slice, always. A 96-pixel border stretched across a 600-pixel panel is
+	a blur; sliced, the corners draw at their own size and only the middle
+	stretches. The rect is measured off the artwork by the publisher, because
+	which pixels are the border is not recoverable from the uploaded asset.
+]]
+local catalogue: any = nil
+local catalogueChecked = false
+
+local function skinBook(): any
+	if not catalogueChecked then
+		catalogueChecked = true
+		local module = script:FindFirstChild("ItchIcons")
+		if module and module:IsA("ModuleScript") then
+			local ok, loaded = pcall(require, module)
+			catalogue = if ok then loaded else nil
+		end
+	end
+	return catalogue
+end
+
+--: Returns whether it skinned, so a caller can decide what to do with the
+--: flat background it was otherwise going to draw.
+--: Second return says whether the art fills its own middle. Half the panel
+--: frames in these packs are overlay borders drawn with a transparent centre,
+--: and a widget that clears its own fill for one of those has no surface left
+--: -- which is exactly how the first skinned HUD came out invisible.
+--: Set an ImageLabel's own image and slice rect from the catalogue, for when
+--: the widget *is* the picture. A panel takes this form; a labelled button
+--: cannot, because a TextButton has Text and an ImageButton does not.
+function UI.dress(image: any, role: string, state: string?): (boolean, boolean, boolean)
+	local book = skinBook()
+	if not book or not book.skin then
+		return false, false, false
+	end
+	local took, opaque, dark = book.skin(image, role, state)
+	return took == true, opaque == true, dark == true
+end
+
+function UI.skin(widget: GuiObject, role: string, state: string?): (boolean, boolean, boolean)
+	local book = skinBook()
+	if not book or not book.skin then
+		return false, false, false
+	end
+
+	local found = widget:FindFirstChild("Skin")
+	local image = if found and found:IsA("ImageLabel")
+		then found :: ImageLabel
+		else Instance.new("ImageLabel")
+	image.Name = "Skin"
+	image.Size = UDim2.fromScale(1, 1)
+	image.BackgroundTransparency = 1
+	--[[
+		One below the widget, not zero.
+
+		`mount` sets `ZIndexBehavior.Sibling`, under which ZIndex is compared
+		**globally** rather than within a parent. A flat zero therefore does not
+		mean "behind my own contents", it means "behind everything in the
+		interface" -- including a modal scrim at 20. Every skinned button inside
+		an open panel had its face drawn under the dim, which read as a button
+		whose art had failed to load rather than as a layering mistake.
+	]]
+	--: Followed, not copied once. A caller that raises the widget's ZIndex
+	--: after building it -- which is how anything gets above a scrim -- would
+	--: otherwise leave its own skin behind at the old depth.
+	local function follow()
+		image.ZIndex = math.max(widget.ZIndex - 1, 0)
+	end
+	follow()
+	if not image:FindFirstChild("ZFollow") then
+		local marker = Instance.new("BoolValue")
+		marker.Name = "ZFollow"
+		marker.Parent = image
+		widget:GetPropertyChangedSignal("ZIndex"):Connect(follow)
+	end
+	image.Parent = widget
+
+	local took, opaque, dark = book.skin(image, role, state)
+	if not took then
+		image:Destroy()
+		return false, false, false
+	end
+	return true, opaque == true, dark == true
+end
+
+--[[
+	A panel is a Frame, or an ImageLabel when it is skinned.
+
+	Not a Frame with an image child, which is what this did first and what
+	broke it: a `UIListLayout` on the panel lays out **every** visible
+	GuiObject under it, and the skin is one. It took the first row at full
+	width and pushed the real contents out of the panel -- a top bar whose
+	frame was drawn in one place and whose readouts were laid out beside it,
+	off the edge, which is the sort of thing only a screenshot shows.
+
+	Roblox has no "ignore this child" flag for a layout, so making the
+	background *be* the container is the fix. It is also simpler: one instance,
+	and the layout's children are only ever content.
+
+	Both are `GuiObject`, so callers cannot tell and nothing downstream changes.
+]]
+function UI.panel(parent: Instance, options: any?): GuiObject
 	local o = options or {}
-	local f = Instance.new("Frame")
+
+	local f: any = nil
+	local dressed, solid = false, false
+	if o.skin then
+		local candidate = Instance.new("ImageLabel")
+		dressed, solid = UI.dress(candidate, o.skin, o.skinState)
+		if dressed then
+			f = candidate
+		else
+			candidate:Destroy()
+		end
+	end
+	if not f then
+		f = Instance.new("Frame")
+	end
+
 	f.Name = o.name or "Panel"
 	f.Size = o.size or UDim2.fromOffset(240, 120)
 	f.Position = o.pos or UDim2.fromOffset(0, 0)
 	f.AnchorPoint = o.anchor or Vector2.zero
 	f.BackgroundColor3 = o.color or T.color.panel
-	f.BackgroundTransparency = o.transparency or 0.08
+	--: Only an opaque frame replaces the fill. An overlay border keeps it, and
+	--: reads as a border *on* a panel, which is what it was drawn to be.
+	f.BackgroundTransparency = if solid then 1 else (o.transparency or 0.08)
 	f.BorderSizePixel = 0
 	f.Visible = o.visible ~= false
 	f.Parent = parent
 
 	corner(f, o.radius or T.radius.md)
-	if o.stroke ~= false then
+	if o.stroke ~= false and not dressed then
 		stroke(f, o.strokeColor or T.color.stroke)
 	end
 	if o.padding then
@@ -261,26 +391,82 @@ function UI.button(parent: Instance, text: string, options: any?): TextButton
 	b.TextColor3 = o.textColor or T.color.text
 	b.Parent = parent
 
+	--: Opt-in, like the panel's. Defaulting it on would put itch button faces
+	--: behind every button in every game that already has its own art, without
+	--: anybody asking for it or being told.
+	local role = if type(o.skin) == "string" then o.skin
+		elseif o.skin == true then "button"
+		else nil
+	local skinned, solid, dark = false, false, false
+	if role then
+		skinned, solid, dark = UI.skin(b, role, "normal")
+	end
+	if solid then
+		b.BackgroundTransparency = 1
+		--[[
+			The label's colour is re-decided, and overriding the caller here is
+			deliberate.
+
+			A caller picks text to read against the fill it asked for. A skin
+			replaces that fill with artwork the caller has never seen, so the
+			choice it made is about a background that no longer exists. This
+			one was black text chosen for an accent-blue button, landing on a
+			face drawn white-outside-black-inside: the label was still there,
+			still the right string, and completely invisible.
+
+			The interior's luminance is measured at publish time, so the widget
+			can answer this rather than the caller guessing.
+		]]
+		b.TextColor3 = if dark then T.color.text else T.color.bg
+	end
+
 	corner(b, o.radius or T.radius.sm)
-	local s = stroke(b, o.strokeColor or T.color.stroke)
+	local s = if skinned then nil else stroke(b, o.strokeColor or T.color.stroke)
 
 	local base = b.BackgroundColor3
 	local hover = base:Lerp(Color3.new(1, 1, 1), 0.12)
 
+	--[[
+		Two ways to show a press, and which one is right depends on the art.
+
+		Unskinned, the background lightens and the stroke sharpens. Skinned,
+		the *face swaps* -- to whatever the pack drew for `hover` and
+		`pressed`, falling back to the normal face where it drew none. Tinting
+		a drawn button lighter looks like a rendering fault; swapping to the
+		artist's own hover state looks like the pack intended.
+	]]
 	b.MouseEnter:Connect(function()
+		if skinned then
+			UI.skin(b, role :: string, "hover")
+			return
+		end
 		TweenService:Create(b, TweenInfo.new(0.12), { BackgroundColor3 = hover }):Play()
-		TweenService:Create(s, TweenInfo.new(0.12), { Transparency = 0 }):Play()
+		if s then
+			TweenService:Create(s, TweenInfo.new(0.12), { Transparency = 0 }):Play()
+		end
 	end)
 	b.MouseLeave:Connect(function()
+		if skinned then
+			UI.skin(b, role :: string, "normal")
+			return
+		end
 		TweenService:Create(b, TweenInfo.new(0.16), { BackgroundColor3 = base }):Play()
-		TweenService:Create(s, TweenInfo.new(0.16), { Transparency = 0.35 }):Play()
+		if s then
+			TweenService:Create(s, TweenInfo.new(0.16), { Transparency = 0.35 }):Play()
+		end
 	end)
 	-- press feedback: 60ms of scale is the difference between a button that
 	-- responds and one that feels broken
 	b.MouseButton1Down:Connect(function()
+		if skinned then
+			UI.skin(b, role :: string, "pressed")
+		end
 		TweenService:Create(b, TweenInfo.new(0.06), { Size = (o.size or UDim2.fromOffset(140, 34)) - UDim2.fromOffset(4, 4) }):Play()
 	end)
 	b.MouseButton1Up:Connect(function()
+		if skinned then
+			UI.skin(b, role :: string, "normal")
+		end
 		TweenService:Create(b, TweenInfo.new(0.12, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Size = o.size or UDim2.fromOffset(140, 34) }):Play()
 	end)
 

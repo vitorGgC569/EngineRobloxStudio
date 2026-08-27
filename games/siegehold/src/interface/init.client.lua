@@ -141,8 +141,15 @@ local bar = UI.panel(screen, {
 	anchor = Vector2.new(0.5, 0),
 	pos = UDim2.new(0.5, 0, 0, T.space.sm),
 	radius = T.radius.lg,
-	padding = T.space.md,
+	--: Wider than the flat panel needed: a drawn frame's border eats into the
+	--: box, and at `md` the first readout was clipped by it -- "WAVE" rendered
+	--: as "AVE".
+	padding = T.space.lg,
 	transparency = 0.06,
+	--: The pack's own panel frame, nine-sliced to this width. Falls through to
+	--: the flat fill above wherever the catalogue has no frame, so this is safe
+	--: to ask for before anything has been published.
+	skin = "panel",
 })
 
 local barRow = UI.list(bar, { horizontal = true, gap = T.space.lg,
@@ -273,6 +280,7 @@ local sheet = UI.panel(screen, {
 	radius = T.radius.lg,
 	transparency = 0.02,
 	visible = false,
+	skin = "panel",
 })
 sheet.ZIndex = 21
 
@@ -416,6 +424,7 @@ local function railButton(key: string, title: string, token: string,
 		name = key,
 		size = UDim2.fromOffset(RAIL_BUTTON, RAIL_BUTTON),
 		radius = T.radius.md,
+		skin = "button",
 		onClick = function()
 			toggleSheet(key, title)
 		end,
@@ -513,6 +522,8 @@ builders.daily = function(parent: Instance): number
 			color = if isNext then T.color.panelAlt else T.color.panel,
 			strokeColor = if isNext then T.color.gold else T.color.stroke,
 			transparency = 0.05,
+			skin = "slot",
+			skinState = if isNext then "hover" else "normal",
 		})
 		cell.LayoutOrder = day
 		cell.ZIndex = 23
@@ -548,6 +559,7 @@ builders.daily = function(parent: Instance): number
 		color = if available then T.color.accent else T.color.panelAlt,
 		textColor = if available then T.color.bg else T.color.textDim,
 		textSize = T.text.md,
+		skin = "button",
 		onClick = function()
 			if not available or not claim.Active then
 				return

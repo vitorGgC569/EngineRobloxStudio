@@ -269,6 +269,128 @@ def grid(image: dict[str, Any], cells: tuple[int, ...] = (16, 24, 32, 48, 64)
     return best
 
 
+# ------------------------------------------------------------------ nine-slice
+
+#[[
+#   Where a frame stops being a corner and starts being a repeat.
+#
+#   A panel, a button face or a window border is useless at one size. Roblox
+#   stretches them correctly with `ScaleType = Slice` and a `SliceCenter` rect,
+#   which needs four inset numbers -- and those are a property of the artwork,
+#   not something a caller can be asked for.
+#
+#   So they are measured, by finding the tileable middle and taking the
+#   distance from it to each edge. The middle is the run of columns around the
+#   centre that are all identical to the centre column -- that is what "this
+#   part may be stretched" means, and it is exactly what the eye reads as the
+#   flat side of a frame.
+#
+#   The obvious version of this test does not work, and it is worth recording
+#   why: scanning in from the left for the first column that equals its
+#   neighbour returns **1** for almost every real asset, because packs ship art
+#   with a transparent one-pixel margin and two transparent columns are equal.
+#   Measured on a real button set, that version reported an inset of 1 on all
+#   fourteen files it was tried against.
+#
+#   Returns nothing when there is no such run. That is the honest answer for a
+#   circle, an illustration or an icon -- none of which are nine-slices -- and
+#   it is far better than a plausible number: a wrong inset stretches the
+#   corner of every panel in a game and reads as a rendering bug.
+#]]
+
+def _columns_equal(pixels: Any, width: int, height: int, a: int, b: int) -> bool:
+    for y in range(height):
+        if pixels[a, y] != pixels[b, y]:
+            return False
+    return True
+
+
+def _rows_equal(pixels: Any, width: int, height: int, a: int, b: int) -> bool:
+    for x in range(width):
+        if pixels[x, a] != pixels[x, b]:
+            return False
+    return True
+
+
+def slice_insets(data: bytes) -> dict[str, int] | None:
+    """The four nine-slice insets of a frame image, measured, or None.
+
+    Opens the image, which is why this is not run over the whole inventory:
+    52,000 decodes is an afternoon. It runs on the few hundred that were
+    selected as frames.
+    """
+    try:
+        from PIL import Image
+    except ImportError:
+        return None
+
+    import io
+    try:
+        with Image.open(io.BytesIO(data)) as image:
+            image = image.convert("RGBA")
+            width, height = image.size
+            #: A frame smaller than this has no middle to tile.
+            if width < 12 or height < 12:
+                return None
+            pixels = image.load()
+
+            centre_x, centre_y = width // 2, height // 2
+
+            left = centre_x
+            while left > 0 and _columns_equal(pixels, width, height,
+                                              left - 1, centre_x):
+                left -= 1
+            right = centre_x
+            while right < width - 1 and _columns_equal(pixels, width, height,
+                                                       right + 1, centre_x):
+                right += 1
+
+            top = centre_y
+            while top > 0 and _rows_equal(pixels, width, height,
+                                          top - 1, centre_y):
+                top -= 1
+            bottom = centre_y
+            while bottom < height - 1 and _rows_equal(pixels, width, height,
+                                                      bottom + 1, centre_y):
+                bottom += 1
+    except Exception:  # noqa: BLE001 - a pack ships broken files; skip them
+        return None
+
+    #: A run that reaches both edges means the image is uniform in that axis --
+    #: a gradient strip, a solid fill, an icon. Nothing to slice.
+    if left == 0 and right == width - 1:
+        return None
+    if top == 0 and bottom == height - 1:
+        return None
+    #: And a middle thinner than two pixels is not a middle; stretching it
+    #: magnifies a single row of pixels across the whole panel.
+    if right - left < 2 or bottom - top < 2:
+        return None
+
+    #[[
+    #   Whether the middle is solid, which decides how the frame may be used.
+    #
+    #   Half the panel art in these packs is drawn with a *transparent* centre:
+    #   it is an overlay border meant to sit on top of whatever is behind it.
+    #   The other half is a filled plate. They are not interchangeable, and
+    #   nothing in the filename says which one you have.
+    #
+    #   Measured because guessing produced an invisible HUD. The top bar was
+    #   skinned with a transparent-centre frame and its own fill was cleared,
+    #   which left the readouts floating over the world with no surface at all.
+    #]]
+    red, green, blue, centre_alpha = pixels[centre_x, centre_y]
+    #: Rec. 709 luma, so a caller can pick text that reads against the face.
+    #: A button drawn white-outside-black-inside took black label text chosen
+    #: for the flat accent fill it replaced, and the label vanished.
+    luma = (0.2126 * red + 0.7152 * green + 0.0722 * blue) / 255.0
+
+    return {"left": int(left), "top": int(top),
+            "right": int(right + 1), "bottom": int(bottom + 1),
+            "opaque": bool(centre_alpha > 200),
+            "dark": bool(luma < 0.5)}
+
+
 # ------------------------------------------------------------------ meaning
 
 #[[
@@ -526,6 +648,119 @@ def select(images: list[dict[str, Any]], per_token: int = 3,
     return chosen
 
 
+# ------------------------------------------------------------------ furniture
+
+#: What a HUD is made of besides glyphs. Keyed by role, because a caller wants
+#: "the panel background" and "the button face", not a filename.
+FRAME_ROLES: dict[str, tuple[str, ...]] = {
+    "panel": ("panel", "window", "frame", "board", "dialog", "popup", "menu"),
+    "button": ("button", "btn"),
+    "bar": ("bar", "gauge", "meter", "progress", "slider"),
+    "tab": ("tab", "ribbon", "banner", "header", "title"),
+    "slot": ("slot", "cell", "inventory", "socket"),
+    "tooltip": ("tooltip", "speech", "balloon", "callout"),
+}
+
+#: Words that mark a variant of a face rather than a different face. A pack
+#: ships `Button_Normal`, `Button_Hover`, `Button_Pressed`; all three are
+#: wanted, and they are wanted *together* so a button can have states.
+STATE_WORDS = {
+    "normal": "normal", "default": "normal", "idle": "normal", "up": "normal",
+    "hover": "hover", "highlight": "hover", "focus": "hover", "over": "hover",
+    "pressed": "pressed", "press": "pressed", "active": "pressed",
+    "click": "pressed", "down": "pressed",
+    "disabled": "disabled", "inactive": "disabled", "locked": "disabled",
+}
+
+
+def frame_role(stem: str) -> tuple[str, str] | None:
+    """The role and state a frame filename names, or None.
+
+    Longest word wins, same rule as `classify`, for the same reason: `panel`
+    and `button` both appear in `panel_button_frame` and the longer one is
+    almost always the subject.
+    """
+    words = set(_words(stem))
+    if not words:
+        return None
+    best: tuple[int, str] | None = None
+    for role, terms in FRAME_ROLES.items():
+        for term in terms:
+            if term in words and (best is None or len(term) > best[0]):
+                best = (len(term), role)
+    if not best:
+        return None
+    state = "normal"
+    for word in words:
+        if word in STATE_WORDS:
+            state = STATE_WORDS[word]
+            break
+    return best[1], state
+
+
+def select_frames(images: list[dict[str, Any]], per_role: int = 6,
+                  progress: Any = print) -> list[dict[str, Any]]:
+    """Panels, button faces and bars that measure as real nine-slices.
+
+    Each candidate is opened and measured; anything without a tileable middle
+    is dropped rather than published with a guessed inset. That is most of
+    them -- circles, glossy renders and illustrations are not nine-slices --
+    and the ones that survive are the ones a HUD can actually be built from at
+    any size.
+    """
+    candidates = []
+    for image in images:
+        if image["suffix"] != ".png":
+            continue
+        if not (24 <= image["width"] <= 512 and 12 <= image["height"] <= 512):
+            continue
+        role = frame_role(image["stem"])
+        if not role:
+            continue
+        candidates.append({**image, "role": role[0], "state": role[1]})
+
+    #: Smaller first. A 96px panel border carries the same design as a 512px
+    #: one and costs a fraction of the texture memory at the same crispness,
+    #: because a nine-slice never scales its corners.
+    candidates.sort(key=lambda i: (i["role"], i["state"], i["width"] * i["height"]))
+
+    chosen: list[dict[str, Any]] = []
+    taken: dict[tuple[str, str], int] = {}
+    #: Packs republish each other constantly, so the same `Slider_Blue_Grabber`
+    #: turns up in three of them. Keyed on name and size rather than on bytes:
+    #: a re-export differs byte for byte and is still the same picture.
+    seen: set[tuple[str, int, int]] = set()
+    measured = refused = 0
+
+    for image in candidates:
+        slot = (image["role"], image["state"])
+        if taken.get(slot, 0) >= per_role:
+            continue
+        fingerprint = (image["stem"].lower(), image["width"], image["height"])
+        if fingerprint in seen:
+            continue
+        seen.add(fingerprint)
+        try:
+            with zipfile.ZipFile(image["archive"]) as bundle:
+                data = bundle.read(image["member"])
+        except (zipfile.BadZipFile, OSError, KeyError):
+            continue
+        insets = slice_insets(data)
+        if not insets:
+            refused += 1
+            continue
+        measured += 1
+        taken[slot] = taken.get(slot, 0) + 1
+        chosen.append({**image, "shape": "frame", "slice": insets,
+                       "topic": f"{image['role']}.{image['state']}"})
+
+    progress(f"  {len(chosen)} frames from {len(candidates)} candidates "
+             f"({refused} refused: no tileable middle)")
+    for slot, count in sorted(taken.items()):
+        progress(f"    {slot[0]}.{slot[1]}: {count}")
+    return chosen
+
+
 # ------------------------------------------------------------------ publish
 
 def publish(chosen: list[dict[str, Any]], creator_user_id: str = "5812220258",
@@ -572,7 +807,21 @@ def publish(chosen: list[dict[str, Any]], creator_user_id: str = "5812220258",
             continue
 
         payload = {
-            "assetType": "Decal",
+            #[[
+            #   `Image`, not `Decal`, and the difference is total.
+            #
+            #   Open Cloud accepts both and reports both Approved and Active.
+            #   A Decal id does not render: put one on a part beside the same
+            #   artwork uploaded as an Image and the Decal shows the part's own
+            #   colour through while the Image shows the picture. 367 assets
+            #   went up as Decals, every one of them approved, none of them
+            #   usable, and the UI built on them was invisible.
+            #
+            #   `forge/cli/upload.py` has said `Image` since it was written --
+            #   "what Open Cloud accepts, and what it calls each one". Reading
+            #   it would have cost a minute.
+            #]]
+            "assetType": "Image",
             "displayName": _display_name(image),
             "description": _description(image),
             "creationContext": {
@@ -658,6 +907,12 @@ def _provenance(image: dict[str, Any]) -> dict[str, Any]:
         "height": image.get("height"),
         "shape": image.get("shape") or shape(image),
         "grid": image.get("grid"),
+        #: Measured before the upload and carried through, because it cannot be
+        #: recovered afterwards: the published asset is pixels, and which of
+        #: them are the border is not in them.
+        "slice": image.get("slice"),
+        "role": image.get("role"),
+        "state": image.get("state"),
         "topic": image.get("topic"),
     }
 
@@ -713,6 +968,9 @@ export type Entry = {
 	token: string?, id: number, kind: string,
 	width: number, height: number,
 	cell: number?, across: number?, down: number?,
+	sliceLeft: number?, sliceTop: number?,
+	sliceRight: number?, sliceBottom: number?,
+	opaque: boolean?, dark: boolean?,
 	pack: string, author: string,
 }
 
@@ -722,9 +980,26 @@ ItchIcons.entries = ({
 '''
 
 _FOOTER = '''
+--[[
+	Icons win the token; sheets only hold it if nothing else does.
+
+	Both kinds carry a token -- a crosshair sheet classifies as `action.close`
+	as readily as a loose cross does -- and the first entry used to win, which
+	made the answer depend on asset id ordering. When a sheet won, `get`
+	returned it with a zero rect, and a caller asking for a close glyph got a
+	256-pixel grid of ninety crosshairs stretched across its button.
+
+	Sheets are still reachable by `cell`, which is the only way they were ever
+	meant to be drawn.
+]]
 local byToken: { [string]: Entry } = {}
 for _, entry in ItchIcons.entries do
-	if entry.token and not byToken[entry.token] then
+	if entry.token and entry.kind == "icon" and not byToken[entry.token] then
+		byToken[entry.token] = entry
+	end
+end
+for _, entry in ItchIcons.entries do
+	if entry.token and entry.kind ~= "frame" and not byToken[entry.token] then
 		byToken[entry.token] = entry
 	end
 end
@@ -791,6 +1066,104 @@ function ItchIcons.apply(label: any, token: string): boolean
 	return true
 end
 
+--[[
+	The furniture: panels, button faces, bars, slots, tabs.
+
+	Kept apart from icons because they are used differently. An icon is drawn
+	at its own size; a frame is *stretched* to whatever the layout needs, and
+	stretching it correctly needs the nine-slice rect measured off the artwork.
+
+	Roles are `panel`, `button`, `bar`, `slot`, `tab`, `tooltip`; states are
+	`normal`, `hover`, `pressed`, `disabled`. A missing state falls back to
+	`normal`, so a caller can ask for `button.hover` in a pack that never drew
+	one and get the normal face rather than an empty rectangle.
+]]
+--[[
+	Solid-centred frames first.
+
+	Half the panel art in these packs is drawn with a transparent middle: it is
+	an overlay border, meant to sit on top of something else. The other half is
+	a filled plate. Nothing in the filename distinguishes them, so the centre
+	pixel's alpha is measured at publish time and recorded here.
+
+	Taking whichever came first produced an invisible HUD: the top bar was
+	skinned with an overlay border and cleared its own fill, leaving the
+	readouts floating over the world with no surface behind them.
+]]
+local byFrame: { [string]: Entry } = {}
+
+--[[
+	Solid centre first, then the largest.
+
+	Size is not a cost question here, which is what the publisher assumed when
+	it kept the smallest of each role. A nine-slice never scales its corners,
+	so a 32x32 pixel-art button face stretched across a 450-pixel bar draws its
+	one-pixel border and nothing else -- the Claim button came out as an empty
+	white outline with the label lost inside it. A 192x64 face carries to any
+	width because its border has somewhere to be.
+]]
+local function better(candidate: Entry, held: Entry?): boolean
+	if not held then
+		return true
+	end
+	if (candidate.opaque == true) ~= (held.opaque == true) then
+		return candidate.opaque == true
+	end
+	return candidate.width * candidate.height > held.width * held.height
+end
+
+for _, entry in ItchIcons.entries do
+	if entry.kind == "frame" and entry.token
+			and better(entry, byFrame[entry.token]) then
+		byFrame[entry.token] = entry
+	end
+end
+
+function ItchIcons.frame(role: string, state: string?): Entry?
+	return byFrame[role .. "." .. (state or "normal")] or byFrame[role .. ".normal"]
+end
+
+--[[
+	Dress an ImageLabel or ImageButton as a nine-slice frame.
+
+	`ScaleType.Slice` with `SliceCenter` is what keeps a 96-pixel panel border
+	crisp on a 600-pixel panel: the corners are drawn at their own size and
+	only the middle stretches. Without it the same image scaled up is a blur
+	with rounded corners the wrong radius.
+
+	Returns false when the catalogue has no frame for that role, so a caller
+	can keep its flat-colour panel instead of showing nothing.
+]]
+--: Returns whether it skinned *and* whether the art fills its own middle, so
+--: a caller can decide whether to keep the background it was going to draw.
+--: Returns whether it skinned, whether the art fills its own middle, and
+--: whether that middle is dark -- which is what a caller needs to choose text
+--: that can be read against it.
+function ItchIcons.skin(label: any, role: string, state: string?): (boolean, boolean, boolean)
+	local entry = ItchIcons.frame(role, state)
+	if not entry then
+		return false, false, false
+	end
+	label.Image = "rbxassetid://" .. entry.id
+	label.ScaleType = Enum.ScaleType.Slice
+	label.SliceCenter = Rect.new(
+		entry.sliceLeft or 0, entry.sliceTop or 0,
+		entry.sliceRight or entry.width, entry.sliceBottom or entry.height)
+	--: The art carries its own colour; tinting it white leaves it as drawn.
+	label.ImageColor3 = Color3.new(1, 1, 1)
+	label.BackgroundTransparency = 1
+	return true, entry.opaque == true, entry.dark == true
+end
+
+function ItchIcons.frames(): { string }
+	local out = {}
+	for token in byFrame do
+		table.insert(out, token)
+	end
+	table.sort(out)
+	return out
+end
+
 function ItchIcons.tokens(): { string }
 	local out = {}
 	for token in byToken do
@@ -815,6 +1188,7 @@ function ItchIcons.describe(): { [string]: any }
 		entries = #ItchIcons.entries,
 		tokens = #ItchIcons.tokens(),
 		sheets = #ItchIcons.sheets(),
+		frames = #ItchIcons.frames(),
 	}
 end
 
@@ -852,11 +1226,20 @@ def export_lua(published: Path | None = None) -> tuple[Path, int]:
             gridfields = (f"cell = {int(cell['cell'])}, "
                           f"across = {int(cell['across'])}, "
                           f"down = {int(cell['down'])}, ")
+        cut = entry.get("slice") or {}
+        slicefields = ""
+        if cut:
+            slicefields = (f"sliceLeft = {int(cut['left'])}, "
+                           f"sliceTop = {int(cut['top'])}, "
+                           f"sliceRight = {int(cut['right'])}, "
+                           f"sliceBottom = {int(cut['bottom'])}, "
+                           f"opaque = {'true' if cut.get('opaque') else 'false'}, "
+                           f"dark = {'true' if cut.get('dark') else 'false'}, ")
         rows.append(
             f"\t{{ {token}id = {entry['assetId']}, kind = {_lua_str(kind)}, "
             f"width = {int(entry.get('width') or 0)}, "
             f"height = {int(entry.get('height') or 0)}, "
-            f"{gridfields}"
+            f"{gridfields}{slicefields}"
             f"pack = {_lua_str(entry.get('pack'))}, "
             f"author = {_lua_str(entry.get('author'))} }},")
 

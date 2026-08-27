@@ -212,6 +212,26 @@ def bake(picks: list[dict[str, Any]], max_parts: int = MAX_PARTS,
         if spec is None:
             continue
 
+        #[[
+        #   The proportion gate again, now against measured geometry.
+        #
+        #   `pick_from_catalogue` applies it earlier using the size the sweep
+        #   recorded, and that size came from a Model whose pivot was often
+        #   rotated -- so a prop lying on its side measured upright and walked
+        #   straight through. Five of sixteen topics ended up with a
+        #   wall-shaped variant that way.
+        #
+        #   The baked extents are the world-axis box, computed from the parts
+        #   in the frame the rebuild uses. They are the number worth judging.
+        #]]
+        extents = spec.get("extents") or [0, 0, 0]
+        wrong = _shape_wrong(extents, row.get("topic"), row.get("role", "prop"))
+        if wrong:
+            failed.append({"id": row["id"], "name": row.get("name"),
+                           "error": f"baked shape rejected: {wrong}"})
+            progress(f"  {row.get('topic')}/{spec['name'][:24]}: {wrong}")
+            continue
+
         specs[str(row["id"])] = {
             "id": row["id"],
             "name": spec["name"],
@@ -308,6 +328,39 @@ def _proportioned(row: dict[str, Any]) -> str | None:
         flat = footprint / max(min(x, z), 0.01)
         if flat > MAX_ASPECT:
             return f"{flat:.0f}:1 in plan; a strip rather than a prop"
+    return None
+
+
+def _shape_wrong(extents: list[float], topic: str | None, role: str) -> str | None:
+    """Why these measured extents are the wrong shape, or None if they are fine.
+
+    The same rules `_proportioned` applies to catalogue metadata, applied to
+    geometry that has actually been read. Kept as its own function because the
+    two callers have different inputs and only one of them has the truth.
+    """
+    x, y, z = (extents + [0, 0, 0])[:3]
+    if not (x and y and z):
+        return None
+
+    footprint = max(x, z)
+    limit = ROLE_FOOTPRINT.get(role, ROLE_FOOTPRINT["prop"])
+    if footprint > limit:
+        return f"{footprint:.0f} studs in plan, over the {role} limit of {limit}"
+
+    tall = ROLE_HEIGHT.get(role, ROLE_HEIGHT["prop"])
+    if y > tall:
+        return f"{y:.0f} studs tall, over the {role} limit of {tall}"
+
+    if (topic or "").lower() not in LINEAR_TOPICS:
+        #: Flat as well as long. A prop four times wider than it is tall is a
+        #: slab, and scaling a slab to a height is what produced a 48-stud wall
+        #: through the middle of a map.
+        flatness = footprint / max(y, 0.01)
+        if flatness > 4.0:
+            return f"{flatness:.0f}:1 wide to tall; a slab rather than a prop"
+        aspect = footprint / max(min(x, z), 0.01)
+        if aspect > MAX_ASPECT:
+            return f"{aspect:.0f}:1 in plan; a strip rather than a prop"
     return None
 
 

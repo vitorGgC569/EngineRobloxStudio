@@ -11,12 +11,12 @@
 	scale is `Size / MeshSize`, because a FileMesh renders at its own natural
 	size and ignores the Part's.
 
-	28 props across 16 topics. Baked 2026-08-26.
+	32 props across 16 topics. Baked 2026-08-27.
 ]]
 
 local StoreProps = {}
 
-StoreProps.count = 28
+StoreProps.count = 32
 
 StoreProps.props = {
 	{
@@ -36,14 +36,6 @@ StoreProps.props = {
 		extents = { 3.9894, 4.418, 3.9894 },
 		parts = {
 			{ cf = { 0, 0, 0, 0, 1, 0, 1, -0, 0, 0, 0, -1 }, size = { 4.418, 3.9894, 3.9894 }, color = { 27, 42, 53 }, material = "WoodPlanks" },
-		},
-	},
-	{
-		id = 8647777369, name = "Bush",
-		topic = "bush", kind = "shared",
-		extents = { 10.4851, 1.9438, 2.2434 },
-		parts = {
-			{ cf = { 0, 0, 0, -1, 0, -0, 0, 1, -0, 0, -0, -1 }, size = { 10.4851, 1.9438, 2.2434 }, color = { 80, 109, 84 }, material = "Slate", transparency = 0.2, mesh = "rbxassetid://742757197", texture = "rbxassetid://743209937", scale = { 2.4677, 3.3743, 3.3743 } },
 		},
 	},
 	{
@@ -69,6 +61,38 @@ StoreProps.props = {
 		extents = { 16, 1, 4 },
 		parts = {
 			{ cf = { 0, 0, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0 }, size = { 4, 1, 16 }, color = { 205, 205, 205 }, material = "Plastic" },
+		},
+	},
+	{
+		id = 18405270867, name = "Model",
+		topic = "conveyor", kind = "tycoon",
+		extents = { 3.5, 2.75, 14.5 },
+		parts = {
+			{ cf = { -1.625, 1.125, 0, 0, -1, 0, 1, 0, 0, 0, 0, 1 }, size = { 0.5, 0.25, 14 }, color = { 163, 162, 165 }, material = "Metal" },
+			{ cf = { 0, 0.875, -6.875, -1, 0, 0, 0, 0, -1, 0, -1, 0 }, size = { 3, 0.75, 0.5 }, color = { 27, 42, 53 }, material = "Metal", shape = "Cylinder" },
+			{ cf = { -1.5, 0.8751, -6.875, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 0.5, 0.5, 0.5 }, color = { 27, 42, 53 }, material = "Metal", shape = "Ball" },
+			{ cf = { 0, 1.1255, -5.9545, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 3, 0.001, 0.091 }, color = { 163, 162, 165 }, material = "Plastic" },
+			{ cf = { 0, 1.1255, -5.9545, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 3, 0.001, 0.091 }, color = { 163, 162, 165 }, material = "Plastic" },
+			{ cf = { -1.5, 0.8751, 6.875, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 0.5, 0.5, 0.5 }, color = { 27, 42, 53 }, material = "Metal", shape = "Ball" },
+			{ cf = { 0, 1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 3, 0.25, 14 }, color = { 27, 42, 53 }, material = "Metal" },
+			{ cf = { 0, -0.375, -0.5, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 3, 2, 13 }, color = { 163, 162, 165 }, material = "Metal" },
+			{ cf = { 0, 0.75, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 3.5, 0.25, 14 }, color = { 163, 162, 165 }, material = "Metal" },
+			{ cf = { 1.625, 1.125, 0, 0, -1, 0, 1, 0, 0, 0, 0, 1 }, size = { 0.5, 0.25, 14 }, color = { 163, 162, 165 }, material = "Metal" },
+			{ cf = { 1.5, 0.8751, -6.875, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 0.5, 0.5, 0.5 }, color = { 27, 42, 53 }, material = "Metal", shape = "Ball" },
+			{ cf = { 0, 1.1255, 6.0455, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 3, 0.001, 0.091 }, color = { 163, 162, 165 }, material = "Plastic" },
+			{ cf = { 0, 1.1255, 5.0455, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 3, 0.001, 0.091 }, color = { 163, 162, 165 }, material = "Plastic" },
+			{ cf = { 0, 1.1255, 4.0455, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 3, 0.001, 0.091 }, color = { 163, 162, 165 }, material = "Plastic" },
+			{ cf = { 0, 1.1255, 3.0455, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 3, 0.001, 0.091 }, color = { 163, 162, 165 }, material = "Plastic" },
+			{ cf = { 0, 1.1255, 2.0455, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 3, 0.001, 0.091 }, color = { 163, 162, 165 }, material = "Plastic" },
+			{ cf = { 0, 1.1255, 1.0455, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 3, 0.001, 0.091 }, color = { 163, 162, 165 }, material = "Plastic" },
+			{ cf = { 0, 1.1255, 0.0455, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 3, 0.001, 0.091 }, color = { 163, 162, 165 }, material = "Plastic" },
+			{ cf = { 0, 1.1255, -0.9545, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 3, 0.001, 0.091 }, color = { 163, 162, 165 }, material = "Plastic" },
+			{ cf = { 0, 1.1255, -1.9545, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 3, 0.001, 0.091 }, color = { 163, 162, 165 }, material = "Plastic" },
+			{ cf = { 0, 1.1255, -2.9545, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 3, 0.001, 0.091 }, color = { 163, 162, 165 }, material = "Plastic" },
+			{ cf = { 0, 1.1255, -3.9545, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 3, 0.001, 0.091 }, color = { 163, 162, 165 }, material = "Plastic" },
+			{ cf = { 0, 1.1255, -4.9545, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 3, 0.001, 0.091 }, color = { 163, 162, 165 }, material = "Plastic" },
+			{ cf = { 1.5, 0.8751, 6.875, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 0.5, 0.5, 0.5 }, color = { 27, 42, 53 }, material = "Metal", shape = "Ball" },
+			{ cf = { 0, 0.875, 6.875, -1, 0, 0, 0, 0, -1, 0, -1, 0 }, size = { 3, 0.75, 0.5 }, color = { 27, 42, 53 }, material = "Metal", shape = "Cylinder" },
 		},
 	},
 	{
@@ -133,6 +157,45 @@ StoreProps.props = {
 		},
 	},
 	{
+		id = 14408455045, name = "Tycoon Dropper",
+		topic = "dropper", kind = "tycoon",
+		extents = { 4.534, 10.703, 8.6498 },
+		parts = {
+			{ cf = { -0, -4.082, -1.8947, 0, 0, -1, 0, 1, 0, 1, 0, 0 }, size = { 3.8086, 0.7254, 3.8086 }, color = { 17, 17, 17 }, material = "Metal" },
+			{ cf = { 0, 1.4495, -1.8312, 0, 0, -1, 0, 1, 0, 1, 0, 0 }, size = { 2.5935, 0.9068, 2.7204 }, color = { 27, 42, 53 }, material = "Metal" },
+			{ cf = { 0.9068, 2.6648, -0.4325, 0, 0, -1, -0.7071, 0.7071, 0, 0.7071, 0.7071, 0 }, size = { 2.7204, 4.8786, 0.9068 }, color = { 27, 42, 53 }, material = "Metal" },
+			{ cf = { -0.9068, -1.2709, -1.8402, 0, 0, -1, 0, 1, 0, 1, 0, 0 }, size = { 2.6116, 4.534, 0.9068 }, color = { 27, 42, 53 }, material = "Metal" },
+			{ cf = { 0, -1.2709, -1.8402, 0, 0, -1, 0, 1, 0, 1, 0, 0 }, size = { 2.6116, 4.534, 0.9068 }, color = { 44, 202, 0 }, material = "Neon" },
+			{ cf = { 0, -4.8981, -1.8947, 0, 0, -1, 0, 1, 0, 1, 0, 0 }, size = { 4.534, 0.9068, 4.534 }, color = { 0, 255, 0 }, material = "Neon" },
+			{ cf = { 0, 5.2605, 1.6793, 0, 0, 1, -0.0002, -1, 0, 1, -0.0002, 0 }, size = { 2.6976, 0.1814, 0.9068 }, color = { 38, 255, 0 }, material = "Neon" },
+			{ cf = { 0, 1.4463, -3.042, 0, 0, -1, -0.9996, -0.0297, 0, -0.0297, 0.9996, 0 }, size = { 0.9061, 0.1814, 0.9068 }, color = { 0, 255, 0 }, material = "Neon" },
+			{ cf = { 0, -3.9913, -1.8402, 0, 0, -1, 0, 1, 0, 1, 0, 0 }, size = { 2.6116, 0.9068, 2.7204 }, color = { 27, 42, 53 }, material = "Metal" },
+			{ cf = { 0.9068, -1.2709, -1.8402, 0, 0, -1, 0, 1, 0, 1, 0, 0 }, size = { 2.6116, 4.534, 0.9068 }, color = { 27, 42, 53 }, material = "Metal" },
+			{ cf = { 0, 4.0088, 2.3979, 0, 0, -1, 1, 0, 0, 0, -1, 0 }, size = { 2.6841, 4.1804, 2.7204 }, color = { 27, 42, 53 }, material = "Metal" },
+			{ cf = { -0.9068, 2.6681, -0.4293, 0, 0, -1, -0.7071, 0.7071, 0, 0.7071, 0.7071, 0 }, size = { 2.7204, 4.8695, 0.9068 }, color = { 27, 42, 53 }, material = "Metal" },
+			{ cf = { 0, 2.6648, -0.4325, 0, 0, -1, -0.7071, 0.7071, 0, 0.7071, 0.7071, 0 }, size = { 2.7204, 4.8786, 0.9068 }, color = { 0, 255, 0 }, material = "Neon" },
+			{ cf = { -0.0113, 2.241, 3.1103, 0, 0, -1, 0, 1, 0, 1, 0, 0 }, size = { 2.0947, 0.8705, 2.0856 }, color = { 223, 223, 222 }, material = "Glass" },
+		},
+	},
+	{
+		id = 4831942116, name = "Farm Fence",
+		topic = "fence", kind = "shared",
+		extents = { 24.6, 6, 1 },
+		parts = {
+			{ cf = { 5.5, 1.5, 0, 0, -1, 0, 1, 0, 0, 0, 0, 1 }, size = { 1, 10, 1 }, color = { 124, 92, 70 }, material = "Wood" },
+			{ cf = { -5.5001, 1.5, 0, 0, -1, 0, 1, 0, 0, 0, 0, 1 }, size = { 1, 10, 1 }, color = { 124, 92, 70 }, material = "Wood" },
+			{ cf = { 11.9, 1.5, 0, 0, -1, 0, 1, 0, 0, 0, 0, 1 }, size = { 1, 0.8, 1 }, color = { 124, 92, 70 }, material = "Wood" },
+			{ cf = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 1, 6, 1 }, color = { 124, 92, 70 }, material = "Wood" },
+			{ cf = { -5.5001, -0.5, 0, -0, -1, 0, 1, -0, 0, -0, 0, 1 }, size = { 1, 10, 1 }, color = { 124, 92, 70 }, material = "Wood" },
+			{ cf = { -11, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 1, 6, 1 }, color = { 124, 92, 70 }, material = "Wood" },
+			{ cf = { 5.5, -0.5, 0, 0, -1, 0, 1, 0, 0, 0, 0, 1 }, size = { 1, 10, 1 }, color = { 124, 92, 70 }, material = "Wood" },
+			{ cf = { 11, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 1, 6, 1 }, color = { 124, 92, 70 }, material = "Wood" },
+			{ cf = { -11.9, 1.5, 0, 0, -1, 0, 1, 0, 0, 0, 0, 1 }, size = { 1, 0.8, 1 }, color = { 124, 92, 70 }, material = "Wood" },
+			{ cf = { -11.9, -0.5, 0, 0, -1, 0, 1, 0, 0, 0, 0, 1 }, size = { 1, 0.8, 1 }, color = { 124, 92, 70 }, material = "Wood" },
+			{ cf = { 11.9, -0.5, 0, 0, -1, 0, 1, 0, 0, 0, 0, 1 }, size = { 1, 0.8, 1 }, color = { 124, 92, 70 }, material = "Wood" },
+		},
+	},
+	{
 		id = 8096967434, name = "Part",
 		topic = "fence", kind = "shared",
 		extents = { 0.1919, 11.7563, 12.9289 },
@@ -182,34 +245,20 @@ StoreProps.props = {
 		},
 	},
 	{
-		id = 1023235874, name = "Terrible Furnace",
-		topic = "furnace", kind = "tycoon",
-		extents = { 4.8, 0.8, 4.8 },
-		parts = {
-			{ cf = { -0, -0.1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 4, 0.2, 4 }, color = { 175, 221, 255 }, material = "SmoothPlastic", reflectance = 0.68 },
-			{ cf = { 2.2, -0.3, 2.2, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 0.4, 0.2, 0.4 }, color = { 159, 161, 172 }, material = "Cobblestone" },
-			{ cf = { 2.2, 0.1, 2.2, 0, 0, 1, -1, 0, 0, 0, -1, 0 }, size = { 0.6, 0.4, 0.4 }, color = { 159, 161, 172 }, material = "Cobblestone", shape = "Cylinder" },
-			{ cf = { -2.2, 0, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0 }, size = { 4, 0.8, 0.4 }, color = { 159, 161, 172 }, material = "Cobblestone" },
-			{ cf = { -0, 0, 2.2, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 4, 0.8, 0.4 }, color = { 159, 161, 172 }, material = "Cobblestone" },
-			{ cf = { -2.2, -0.3, -2.2, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 0.4, 0.2, 0.4 }, color = { 159, 161, 172 }, material = "Cobblestone" },
-			{ cf = { -2.2, 0.1, -2.2, 0, 0, 1, -1, 0, 0, 0, -1, 0 }, size = { 0.6, 0.4, 0.4 }, color = { 159, 161, 172 }, material = "Cobblestone", shape = "Cylinder" },
-			{ cf = { -2.2, 0.1, 2.2, 0, 0, 1, -1, 0, 0, 0, -1, 0 }, size = { 0.6, 0.4, 0.4 }, color = { 159, 161, 172 }, material = "Cobblestone", shape = "Cylinder" },
-			{ cf = { -2.2, -0.3, 2.2, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 0.4, 0.2, 0.4 }, color = { 159, 161, 172 }, material = "Cobblestone" },
-			{ cf = { 2.2, -0.3, -2.2, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 0.4, 0.2, 0.4 }, color = { 159, 161, 172 }, material = "Cobblestone" },
-			{ cf = { -0, -0.3, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 4, 0.2, 4 }, color = { 175, 221, 255 }, material = "SmoothPlastic", reflectance = 0.68 },
-			{ cf = { -0, 0, -2.2, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 4, 0.8, 0.4 }, color = { 159, 161, 172 }, material = "Cobblestone" },
-			{ cf = { 2.2, 0.1, -2.2, 0, 0, 1, -1, 0, 0, 0, -1, 0 }, size = { 0.6, 0.4, 0.4 }, color = { 159, 161, 172 }, material = "Cobblestone", shape = "Cylinder" },
-			{ cf = { -0, 0.1, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 4, 0.2, 4 }, color = { 151, 0, 0 }, material = "SmoothPlastic", transparency = 0.45 },
-			{ cf = { 2.2, 0, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0 }, size = { 4, 0.8, 0.4 }, color = { 159, 161, 172 }, material = "Cobblestone" },
-		},
-	},
-	{
 		id = 10699357872, name = "Furnace",
 		topic = "furnace", kind = "tycoon",
 		extents = { 2, 2, 2.1 },
 		parts = {
 			{ cf = { -0, -0.75, 1, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 1.2, 0.5, 0.1 }, color = { 163, 162, 165 }, material = "Plastic", transparency = 1 },
 			{ cf = { 0, 0, -0.05, 0, 0, 1, 0, 1, 0, -1, 0, 0 }, size = { 2, 2, 2 }, color = { 139, 140, 143 }, material = "Slate" },
+		},
+	},
+	{
+		id = 18636660035, name = "Generator",
+		topic = "generator", kind = "tycoon",
+		extents = { 8.0816, 11.8765, 24.2383 },
+		parts = {
+			{ cf = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 8.0816, 11.8765, 24.2383 }, color = { 163, 162, 165 }, material = "Concrete", mesh = "rbxassetid://18636659594", texture = "rbxassetid://18636659762", scale = { 0.05, 0.05, 0.05 } },
 		},
 	},
 	{
@@ -230,17 +279,6 @@ StoreProps.props = {
 		},
 	},
 	{
-		id = 4942886390, name = "Camping Log Seat",
-		topic = "log", kind = "shared",
-		extents = { 8.08, 1.2, 2.5 },
-		parts = {
-			{ cf = { 2.5, 0.4, 0.2499, -1, 0, 0, 0, 1, 0, 0, 0, -1 }, size = { 2, 0.4, 2 }, color = { 163, 162, 165 }, material = "Plastic", transparency = 1 },
-			{ cf = { -2.5, 0.4, 0.2499, -1, 0, 0, 0, 1, 0, 0, 0, -1 }, size = { 2, 0.4, 2 }, color = { 163, 162, 165 }, material = "Plastic", transparency = 1 },
-			{ cf = { 0, 0.05, -0.1501, 0, 0, 1, 0, 1, 0, -1, 0, 0 }, size = { 2, 1.1, 8.08 }, color = { 204, 142, 105 }, material = "Wood" },
-			{ cf = { -0, -0.0128, -0.1501, 0, 0, 1, 0, 1, 0, -1, 0, 0 }, size = { 2.2, 1.1743, 8 }, color = { 105, 64, 40 }, material = "Wood" },
-		},
-	},
-	{
 		id = 106056572, name = "Gold Ore",
 		topic = "ore", kind = "tycoon",
 		extents = { 1, 1, 1 },
@@ -258,6 +296,24 @@ StoreProps.props = {
 		},
 	},
 	{
+		id = 12816488659, name = "Model",
+		topic = "ore", kind = "tycoon",
+		extents = { 7.3036, 5.4583, 5.9945 },
+		parts = {
+			{ cf = { 0.9674, 1.516, 1.626, 1, 0, 0, 0, 0.5402, -0.8415, 0, 0.8415, 0.5402 }, size = { 1.0229, 0.7456, 1.0755 }, color = { 17, 17, 17 }, material = "Plastic", mesh = "rbxassetid://2128760908", scale = { 0.0055, 0.0039, 0.0057 } },
+			{ cf = { 2.8074, 1.23, 0.146, 0.5906, 0.5347, -0.6044, 0, 0.749, 0.6626, 0.807, -0.3913, 0.4423 }, size = { 1.0229, 0.7456, 1.0755 }, color = { 17, 17, 17 }, material = "Plastic", mesh = "rbxassetid://2128760908", scale = { 0.0055, 0.0039, 0.0057 } },
+			{ cf = { -2.193, 1.0863, 1.7695, 0.9063, -0.3837, -0.1773, -0.0634, 0.2913, -0.9545, 0.4179, 0.8763, 0.2397 }, size = { 1.0229, 0.7456, 1.0755 }, color = { 17, 17, 17 }, material = "Plastic", mesh = "rbxassetid://2128760908", scale = { 0.0055, 0.0039, 0.0057 } },
+			{ cf = { -0.506, 2.0752, 0.5129, 1, 0, 0, 0, 0.5402, -0.8415, 0, 0.8415, 0.5402 }, size = { 1.0229, 0.7456, 1.0755 }, color = { 17, 17, 17 }, material = "Plastic", mesh = "rbxassetid://2128760908", scale = { 0.0055, 0.0039, 0.0057 } },
+			{ cf = { 1.0796, -0.1859, -0.103, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 5.1444, 5.0865, 5.3071 }, color = { 99, 95, 98 }, material = "Plastic", mesh = "rbxassetid://2128761993", scale = { 0.0269, 0.0252, 0.0288 } },
+			{ cf = { -0.3223, 1.4026, -1.179, 0.9998, -0.0116, 0.0131, 0, 0.749, 0.6626, -0.0175, -0.6625, 0.7488 }, size = { 0.2729, 0.7456, 0.2455 }, color = { 4, 175, 236 }, material = "Metal", mesh = "rbxassetid://2128760908", scale = { 0.0015, 0.0039, 0.0013 } },
+			{ cf = { -0.3326, 1.206, -1.262, 1, 0, 0, 0, 0.749, 0.6626, 0, -0.6626, 0.749 }, size = { 1.0229, 0.7456, 1.0755 }, color = { 4, 175, 236 }, material = "Plastic", mesh = "rbxassetid://2128760908", scale = { 0.0055, 0.0039, 0.0057 } },
+			{ cf = { -0.4073, 1.2226, -1.461, 0.9998, -0.0116, 0.0131, 0, 0.749, 0.6626, -0.0175, -0.6625, 0.7488 }, size = { 0.2729, 0.7456, 0.2455 }, color = { 4, 175, 236 }, material = "Metal", mesh = "rbxassetid://2128760908", scale = { 0.0015, 0.0039, 0.0013 } },
+			{ cf = { -1.8466, 1.453, -1.324, 1, 0, 0, 0, 0.9157, 0.4019, 0, -0.4019, 0.9157 }, size = { 1.0229, 0.7456, 1.0755 }, color = { 17, 17, 17 }, material = "Plastic", mesh = "rbxassetid://2128760908", scale = { 0.0055, 0.0039, 0.0057 } },
+			{ cf = { -0.7253, -0.0299, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 5.8529, 5.0326, 5.9945 }, color = { 99, 95, 98 }, material = "Plastic", mesh = "rbxassetid://2128760908", scale = { 0.0317, 0.0265, 0.0318 } },
+			{ cf = { 0.8697, 1.5322, -2.0701, 0.5757, 0.354, -0.7371, 0.3861, 0.6769, 0.6267, 0.7207, -0.6454, 0.253 }, size = { 1.0229, 0.7456, 1.0755 }, color = { 17, 17, 17 }, material = "Plastic", mesh = "rbxassetid://2128760908", scale = { 0.0055, 0.0039, 0.0057 } },
+		},
+	},
+	{
 		id = 13759820658, name = "Pickaxe",
 		topic = "pickaxe", kind = "tycoon",
 		extents = { 5.8166, 6, 0.9365 },
@@ -271,6 +327,14 @@ StoreProps.props = {
 		extents = { 2, 2, 10.6 },
 		parts = {
 			{ cf = { 0, 0, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0 }, size = { 10.6, 2, 2 }, color = { 163, 162, 165 }, material = "Plastic", mesh = "http://www.roblox.com/asset/?id=92574938", texture = "http://www.roblox.com/asset/?id=92574747", scale = { 3, 3, 3 } },
+		},
+	},
+	{
+		id = 1539940172, name = ".5Pipe5studs",
+		topic = "pipe", kind = "tycoon",
+		extents = { 0.5, 0.5, 5 },
+		parts = {
+			{ cf = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 0.5, 0.5, 5 }, color = { 163, 162, 165 }, material = "Plastic", mesh = "rbxassetid://1513949754", scale = { 2.1089, 2.1089, 5 } },
 		},
 	},
 	{
@@ -324,6 +388,15 @@ StoreProps.props = {
 			{ cf = { 4.125, 10.4375, 0.5625, 1, 0, 0, 0, 0.9848, -0.1736, 0, 0.1736, 0.9848 }, size = { 2.5, 0.125, 0.625 }, color = { 255, 255, 255 }, material = "Neon" },
 			{ cf = { 4.125, 10.375, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 2.5, 0.25, 1.75 }, color = { 163, 162, 165 }, material = "Plastic", transparency = 1 },
 			{ cf = { 0, 0, 0, 1, 0, 0, 0, 1, 0, 0, 0, 1 }, size = { 12, 22, 2 }, color = { 163, 162, 165 }, material = "Plastic", mesh = "rbxassetid://498788302", texture = "rbxassetid://498788336", scale = { 0.1633, 0.1578, 0.1737 } },
+		},
+	},
+	{
+		id = 14212653287, name = "Street Lamp",
+		topic = "street lamp", kind = "shared",
+		extents = { 1.7789, 16.3681, 1.6625 },
+		parts = {
+			{ cf = { 0, -0.0007, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0 }, size = { 1.6625, 16.3681, 1.7789 }, color = { 27, 42, 53 }, material = "Grass", mesh = "rbxassetid://2492718189", scale = { 0.0116, 0.0162, 0.0108 } },
+			{ cf = { 0.0012, 5.8979, 0, 0, 0, 1, 0, 1, 0, -1, 0, 0 }, size = { 1.56, 2.0618, 1.5584 }, color = { 204, 142, 105 }, material = "Neon", mesh = "rbxassetid://2492713048", scale = { 0.0114, 0.0162, 0.0103 } },
 		},
 	},
 	{

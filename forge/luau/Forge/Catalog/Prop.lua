@@ -36,6 +36,10 @@ local StoreProps = require(script.Parent.StoreProps)
 
 local Prop = {}
 
+--: One warning per missing topic. A placement loop asks a thousand times and
+--: the first answer is the whole story.
+local warnedTopics: { [string]: boolean } = {}
+
 local MATERIALS: { [string]: Enum.Material } = {}
 for _, material in Enum.Material:GetEnumItems() do
 	MATERIALS[material.Name] = material
@@ -66,6 +70,22 @@ export type Options = {
 		Ignored when the prop has no measured height.
 	]]
 	targetHeight: number?,
+	--[[
+		A ceiling on how wide `targetHeight` may make it.
+
+		Defaults to four times the target height. Exists because scaling a flat
+		prop to a height multiplies its footprint by the same factor, and a
+		furnace 0.8 studs tall asked to stand 8 became 48 studs across.
+	]]
+	maxFootprint: number?,
+	--[[
+		Fit the whole prop inside this, on its longest axis.
+
+		Use instead of `targetHeight` when what matters is that it fits a slot
+		rather than that it stands a given height. The two are mutually
+		exclusive; this one wins.
+	]]
+	targetSize: number?,
 	name: string?,
 	parent: Instance?,
 }
@@ -137,11 +157,44 @@ function Prop.build(which: string, at: CFrame?, settings0: Options?): Model?
 	local collide = settings.canCollide == true
 
 	local scale = settings.scale or 1
-	local height = spec.extents and spec.extents[2] or 0
-	if settings.targetHeight and height > 0.01 then
-		--: The requested scale still applies, as a variation around the target
-		--: rather than as the target itself.
+	local extents = spec.extents or { 0, 0, 0 }
+	local height = extents[2] or 0
+	local footprint = math.max(extents[1] or 0, extents[3] or 0)
+
+	if settings.targetSize then
+		--[[
+			Fit the whole prop in a box, whichever axis is longest.
+
+			The right request when what matters is that the thing fits
+			somewhere -- a slot, a shelf, a cell -- rather than that it stands
+			a particular height.
+		]]
+		local longest = math.max(extents[1] or 0, height, extents[3] or 0)
+		if longest > 0.01 then
+			scale = (settings.targetSize / longest) * scale
+		end
+	elseif settings.targetHeight and height > 0.01 then
+		--[[
+			Scale to a height, but never at any cost to the footprint.
+
+			This was `targetHeight / height` alone, and height alone is a
+			terrible handle on a flat prop. A furnace measuring 4.8 x 0.8 x 4.8
+			asked to stand 8 studs tall scaled by ten and came back a 48-stud
+			wall through the middle of the map -- correct by the arithmetic and
+			absurd by every other measure.
+
+			So the footprint is bounded too. `maxFootprint` defaults to four
+			times the requested height, which is generous for anything upright
+			and still refuses to turn a pancake into a plaza. The requested
+			scale applies as a variation around the target rather than as the
+			target itself.
+		]]
 		scale = (settings.targetHeight / height) * scale
+
+		local limit = settings.maxFootprint or settings.targetHeight * 4
+		if footprint > 0.01 and footprint * scale > limit then
+			scale = limit / footprint
+		end
 	end
 
 	local model = Instance.new("Model")
@@ -161,7 +214,22 @@ function Prop.build(which: string, at: CFrame?, settings0: Options?): Model?
 	end
 
 	if primary then
-		model.PrimaryPart = primary
+		--[[
+			No PrimaryPart, deliberately.
+
+			`WorldPivot` is ignored while a Model has a PrimaryPart -- the part's
+			own CFrame wins. So setting both, as this did, left every prop
+			pivoted to whichever part happened to be built first, which for a
+			store model is frequently rotated.
+
+			The damage was not to placement, which `PivotTo` still got right.
+			It was to measurement: `GetExtentsSize` reports the box *oriented to
+			the pivot*, so a storage tank whose true world box is 18.8 x 8.4 x
+			8.4 measured 8.4 x 18.8 x 8.4, and an audit written against that
+			number concluded the bake was wrong when the bake was right.
+
+			`PivotTo` and `GetPivot` need no PrimaryPart. Nothing here welds.
+		]]
 
 		--[[
 			An upright pivot at the model's own centre.
@@ -245,6 +313,21 @@ end
 function Prop.place(topic: string, seed: number, on: Vector3, options: Options?): Model?
 	local specs = StoreProps.byTopic(topic)
 	if #specs == 0 then
+		--[[
+			Say so, once, rather than returning nil into a placement loop.
+
+			A silent nil here is how a world ends up with 17 props where 190
+			were asked for: the loop skips, the count never mentions it, and the
+			topic was misspelled or was never baked. Warned rather than raised
+			because one absent topic should not take a world build down --
+			but it must not be invisible either.
+		]]
+		if not warnedTopics[topic] then
+			warnedTopics[topic] = true
+			warn(string.format(
+				"[Prop] no baked props under topic %q -- placement skipped. Known: %s",
+				topic, table.concat(StoreProps.topics(), ", ")))
+		end
 		return nil
 	end
 	local spec = specs[(math.floor(math.abs(seed)) % #specs) + 1]

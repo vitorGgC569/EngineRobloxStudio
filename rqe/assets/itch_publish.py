@@ -414,3 +414,63 @@ def _write(records: dict[str, Any], uploaded: int, skipped: int, failed: int,
     PUBLISHED.write_text(json.dumps(book, indent=1, ensure_ascii=False) + "\n",
                          encoding="utf-8")
     return book
+
+
+def follow(per_topic: int = 4, root: Path = ROOT, idle_rounds: int = 3,
+           pause: float = 60.0, delay: float = DELAY,
+           progress: Any = print) -> dict[str, Any]:
+    """Publish as packs land, instead of waiting for the download to finish.
+
+    Thirty gigabytes takes hours; the meshes inside the first pack are
+    publishable the moment it lands. So this re-reads the inventory each round
+    and uploads whatever the selection now reaches that has not gone up yet.
+
+    `publish` already skips anything with an assetId in the manifest, so a
+    round costs a re-scan and nothing else when there is nothing new. The
+    manifest is the only coordination between the two jobs -- there is no
+    shared state, no lock, and no assumption about which finishes first.
+
+    Stops after `idle_rounds` consecutive rounds that publish nothing, which is
+    what "the download finished and the selection is exhausted" looks like from
+    here without needing to inspect the other job.
+    """
+    total_uploaded = 0
+    idle = 0
+    started = time.time()
+    round_number = 0
+
+    while idle < idle_rounds:
+        round_number += 1
+        book = inventory(root, progress=lambda _m: None)
+        chosen = select(book["meshes"], per_topic=per_topic)
+
+        #: What this round would add, before doing it -- so an idle round is
+        #: recognised without paying for a publish pass to discover it.
+        known: set[str] = set()
+        if PUBLISHED.exists():
+            try:
+                known = {k for k, v in (json.loads(
+                    PUBLISHED.read_text(encoding="utf-8")).get("assets") or {}).items()
+                    if v.get("assetId")}
+            except (OSError, json.JSONDecodeError):
+                known = set()
+        pending = [m for m in chosen
+                   if f"{Path(m['archive']).name}::{m['member']}" not in known]
+
+        progress(f"\nround {round_number}: {book['archives']} packs, "
+                 f"{len(chosen)} selected, {len(pending)} new")
+
+        if not pending:
+            idle += 1
+            progress(f"  nothing new ({idle}/{idle_rounds} idle rounds)")
+            time.sleep(pause)
+            continue
+
+        idle = 0
+        result = publish(pending, delay=delay, progress=progress)
+        total_uploaded += result["uploaded"]
+        progress(f"  round {round_number}: +{result['uploaded']} published, "
+                 f"{result['failed']} failed, {total_uploaded} total")
+
+    return {"rounds": round_number, "uploaded": total_uploaded,
+            "seconds": round(time.time() - started)}

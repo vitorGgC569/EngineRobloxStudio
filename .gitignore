@@ -80,3 +80,9 @@ _shot.py
 
 # Studio holds this while a place is open; it is machine state, not source.
 *.rbxlx.lock
+
+# Real credentials live here. Never tracked, whatever the extension.
+.secrets/
+
+# 30 GB of third-party packs. Sourced by rqe.assets.itch_download, never tracked.
+assets/itch/

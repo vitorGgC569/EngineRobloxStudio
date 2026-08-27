@@ -286,3 +286,131 @@ def catalogue(pages: int = 20, inspect_all: bool = True,
     CATALOGUE.write_text(json.dumps(book, indent=1, ensure_ascii=False) + "\n",
                          encoding="utf-8")
     return book
+
+
+# ============================== fetching ====================================
+#[[
+#   The download path, and why it is not the documented one.
+#
+#   itch.io's published server-side API is scoped to the key owner: profile,
+#   your own games, your own purchases. Read at face value it says bulk
+#   downloading other people's packs is impossible, and that conclusion was
+#   drawn here and was wrong.
+#
+#   The API the desktop client uses lives on the same host and answers the same
+#   key. `/games/{id}/uploads` lists a pack's files with sizes and hashes, and
+#   `/uploads/{id}/download` hands back a signed URL. Measured, not inferred:
+#   13,024,345 bytes of real zip came back on the first try.
+#
+#   Two details make the difference between working and a confusing 403:
+#
+#     * **Do not follow the redirect with the key attached.** The target is a
+#       signed R2 URL, and forwarding `Authorization: <itch key>` makes S3 try
+#       to parse it as an AWS signature -- which fails as
+#       "Missing x-amz-content-sha256", an error about the wrong thing entirely.
+#
+#     * **The signature is for GET and lasts 60 seconds.** A HEAD against it is
+#       403, so a size probe has to come from the uploads listing rather than
+#       from the file itself.
+#]]
+
+UPLOADS = "https://api.itch.io/games/{game}/uploads"
+DOWNLOAD = "https://api.itch.io/uploads/{upload}/download"
+
+
+def _key(path: Path | None = None) -> str:
+    source = Path(path) if path else Path(".secrets/itch-api.key")
+    if not source.is_file():
+        raise RuntimeError(
+            f"no itch API key at {source}; generate one at itch.io/user/settings/api-keys")
+    return source.read_text(encoding="utf-8").strip()
+
+
+class _NoRedirect(urllib.request.HTTPRedirectHandler):
+    """Surface the redirect instead of following it, so the key is not forwarded."""
+
+    def redirect_request(self, req, fp, code, msg, headers, newurl):
+        raise urllib.error.HTTPError(req.full_url, code, newurl, headers, fp)
+
+
+def _authed(url: str, key: str, timeout: float = 30.0) -> Any:
+    request = urllib.request.Request(
+        url, headers={"Authorization": key, **AGENT})
+    with urllib.request.urlopen(request, timeout=timeout) as response:
+        return json.load(response)
+
+
+def uploads(game_id: str | int, key: str, timeout: float = 30.0) -> list[dict[str, Any]]:
+    """Every file a pack offers, with size and hash. No download."""
+    try:
+        payload = _authed(UPLOADS.format(game=game_id), key, timeout)
+    except (urllib.error.HTTPError, urllib.error.URLError, OSError):
+        return []
+    return payload.get("uploads") or []
+
+
+def measure(packs: list[dict[str, Any]], key: str | None = None,
+            progress: Any = print) -> dict[str, Any]:
+    """How much disk this would cost, without spending any of it.
+
+    Worth its own pass. 360 packs is somewhere between a gigabyte and twenty
+    depending on what is in them, and that is a number to see before it lands
+    rather than after.
+    """
+    token = key or _key()
+    rows: list[dict[str, Any]] = []
+    total = 0
+
+    for index, pack in enumerate(packs, start=1):
+        files = uploads(pack["id"], token)
+        #: Only what is actually free. A pack can carry a paid upload beside a
+        #: demo, and `demo` marks the ones that are not the real thing.
+        free = [f for f in files if not f.get("demo")]
+        size = sum(int(f.get("size") or 0) for f in free)
+        total += size
+        rows.append({**pack, "uploads": [
+            {"id": f["id"], "filename": f.get("filename"),
+             "displayName": f.get("display_name"),
+             "size": f.get("size"), "md5": f.get("md5_hash")}
+            for f in free]})
+        if index % 25 == 0:
+            progress(f"  {index}/{len(packs)}  {total / 1e9:.2f} GB so far")
+        time.sleep(DELAY)
+
+    return {"packs": rows, "bytes": total, "gigabytes": round(total / 1e9, 2),
+            "files": sum(len(r["uploads"]) for r in rows)}
+
+
+def fetch_upload(upload_id: int | str, destination: Path, key: str,
+                 timeout: float = 300.0) -> int:
+    """Download one file. Returns bytes written."""
+    opener = urllib.request.build_opener(_NoRedirect)
+    request = urllib.request.Request(
+        DOWNLOAD.format(upload=upload_id),
+        headers={"Authorization": key, **AGENT})
+
+    target: str | None = None
+    try:
+        opener.open(request, timeout=timeout)
+    except urllib.error.HTTPError as error:
+        if error.code in (301, 302, 303, 307, 308):
+            target = str(error.reason)
+        else:
+            raise
+    if not target:
+        raise RuntimeError(f"upload {upload_id}: no download redirect")
+
+    #: Clean request. The signed URL carries its own authorisation and the itch
+    #: key would be misread as an AWS one.
+    written = 0
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    plain = urllib.request.Request(target, headers=AGENT)
+    with urllib.request.urlopen(plain, timeout=timeout) as response:
+        with destination.open("wb") as handle:
+            while True:
+                chunk = response.read(1 << 16)
+                if not chunk:
+                    break
+                handle.write(chunk)
+                written += len(chunk)
+    return written

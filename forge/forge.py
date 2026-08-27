@@ -611,6 +611,48 @@ def cmd_sounds(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_itch(args: argparse.Namespace) -> int:
+    """Discover free 3D packs on itch.io and read what each one permits."""
+    import sys as _sys
+
+    _sys.path.insert(0, str(REPO_ROOT))
+    from rqe.assets import itch
+
+    if args.step == "collect":
+        book = itch.catalogue(pages=args.pages)
+        print(f"\n{book['count']} packs -> {itch.CATALOGUE}")
+        for verdict, count in sorted(book["byVerdict"].items(), key=lambda x: -x[1]):
+            print(f"  {verdict:26} {count}")
+        return 0
+
+    if not itch.CATALOGUE.exists():
+        print("no catalogue yet. run: python forge/forge.py itch collect")
+        return 1
+
+    book = json.loads(itch.CATALOGUE.read_text(encoding="utf-8"))
+    packs = book.get("packs") or []
+    if args.verdict:
+        packs = [p for p in packs
+                 if (p.get("licence") or {}).get("verdict") == args.verdict]
+
+    for pack in packs[: args.show]:
+        licence = pack.get("licence") or {}
+        names = ",".join(licence.get("names") or []) or "-"
+        print(f"  [{licence.get('verdict', '?'):22}] {names:10} "
+              f"{pack['title'][:38]:40} {str(pack.get('author'))[:18]}")
+        print(f"        {pack['url']}")
+
+    print(f"\n{len(packs)} shown of {book.get('count', 0)}")
+    if not args.verdict:
+        for verdict, count in sorted(book.get("byVerdict", {}).items(),
+                                     key=lambda x: -x[1]):
+            print(f"  {verdict:26} {count}")
+    #: Said every time, because it is the thing that gets forgotten between
+    #: downloading something and putting it on a CDN under your own name.
+    print("\n  free to download is not free to republish; only 'cc0' is clear")
+    return 0
+
+
 # ============================ asset verification ============================
 def cmd_assets(args: argparse.Namespace) -> int:
     """Load every asset id this project references and record the verdict."""
@@ -1131,6 +1173,14 @@ def main(argv: list[str] | None = None) -> int:
     p_sounds.add_argument("--per-role", type=int, default=3,
                           help="how many candidates to keep per role")
     p_sounds.set_defaults(func=cmd_sounds)
+
+    p_itch = sub.add_parser("itch", help="free 3D packs on itch.io, with what each permits")
+    p_itch.add_argument("step", nargs="?", default="show", choices=("collect", "show"))
+    p_itch.add_argument("--pages", type=int, default=25,
+                        help="listing pages to walk (36 packs each)")
+    p_itch.add_argument("--verdict", help="only packs with this licence verdict, e.g. cc0")
+    p_itch.add_argument("--show", type=int, default=25)
+    p_itch.set_defaults(func=cmd_itch)
 
     p_assets = sub.add_parser("assets", help="verify every asset id by loading it in Studio")
     p_assets.add_argument("step", nargs="?", default="verify", choices=("scan", "verify"))

@@ -14,10 +14,11 @@ So the work here is not conversion. It is choosing, pacing, and remembering.
 Choosing
 --------
 
-A single pack holds seventy meshes; three hundred and sixty hold something like
-twenty-five thousand. Most of that is variants -- the same crate in four
-colours, the same tree at three levels of detail. Publishing all of it costs
-fourteen hours and fills an account with near-duplicates nobody can search.
+A single pack holds seventy meshes; the 360 downloaded hold 39,462. Most of
+that is variants -- the same crate in four colours, the same tree at three
+levels of detail -- and deduplicating by shape leaves about 12,400. At the
+measured twelve seconds an upload takes, publishing all of it is 41 hours and
+fills an account with near-duplicates nobody can search.
 
 `select` takes the best few per topic, using the same topic vocabulary the
 store sweep uses, and skips things that look like variants of something already
@@ -61,10 +62,17 @@ PUBLISHED = Path("forge/kits/itch-published.json")
 ASSETS_URL = "https://apis.roblox.com/assets/v1/assets"
 OPERATION_URL = "https://apis.roblox.com/assets/v1/operations/{op}"
 
-#: Open Cloud takes these directly as `Model`. `.obj` needs a material file
-#: beside it and `.blend` is not an interchange format, so neither is offered
-#: here even though the packs carry both.
-UPLOADABLE = (".fbx", ".glb", ".gltf")
+#: Open Cloud takes these directly as `Model`.
+#:
+#: `.gltf` was here and had to come out. It is JSON that *references* its
+#: buffers and textures as separate files, so a single-file upload hands Roblox
+#: a document pointing at things that are not there: 20 failures against 1
+#: success, every one of them "Failed to parse the uploaded file". A `.glb` is
+#: the same format with everything packed in, and works.
+#:
+#: `.obj` needs its `.mtl` beside it for the same reason, and `.blend` is not
+#: an interchange format at all. The packs carry both and neither is offered.
+UPLOADABLE = (".fbx", ".glb")
 
 #: Seconds between uploads. Open Cloud answers 429 under load, and a publisher
 #: that races into throttling finishes later than one that waits.
@@ -211,15 +219,40 @@ def select(meshes: list[dict[str, Any]], per_topic: int = 4,
     by_topic: dict[str, list[dict[str, Any]]] = {}
     seen_bases: dict[str, set[str]] = {}
 
-    #: `.gltf` sits between the two: it embeds nothing but at least names its
-    #: buffers, so it is worth more than a bare FBX and less than a GLB.
-    rank = {".glb": 0, ".gltf": 1, ".fbx": 2}
+    #: GLB first for colour, FBX second because it at least parses. An earlier
+    #: version ranked `.gltf` above `.fbx` on the reasoning that it "names its
+    #: buffers" -- exactly backwards, since naming a file Roblox never receives
+    #: is worse than shipping no texture at all.
+    rank = {".glb": 0, ".fbx": 1}
     ordered = sorted(meshes, key=lambda m: (rank.get(m["suffix"], 3), m["size"]))
+
+    #[[
+    #   FBX only where no coloured option exists for that topic at all.
+    #
+    #   Ranking alone still let a topic with two GLBs fill its remaining two
+    #   slots with FBX, which publishes grey props beside coloured ones for the
+    #   same thing -- the worst of both, because the grey ones are what a
+    #   search surfaces half the time.
+    #
+    #   So a topic that has any textured mesh anywhere uses only those, even if
+    #   that means fewer than `per_topic`. Falling back is for topics with no
+    #   possibility of colour, which on the current inventory is six of them.
+    #]]
+    coloured_topics: set[str] = set()
+    for mesh in ordered:
+        if mesh["suffix"] == ".glb":
+            topic = classify(mesh["stem"], words)
+            if topic:
+                coloured_topics.add(topic)
     for mesh in ordered:
         if mesh["size"] > MAX_BYTES:
             continue
         topic = classify(mesh["stem"], words)
         if not topic:
+            continue
+
+        #: The rule: colour where colour is possible.
+        if mesh["suffix"] == ".fbx" and topic in coloured_topics:
             continue
 
         bucket = by_topic.setdefault(topic, [])
@@ -380,8 +413,23 @@ def publish(chosen: list[dict[str, Any]], creator_user_id: str = "5812220258",
             }
         else:
             failed += 1
-            records[marker] = {"error": "operation did not resolve to an asset",
-                               "operation": state.get("operationId"), **_source(mesh)}
+            #[[
+            #   Roblox says why. Read it.
+            #
+            #   This recorded "operation did not resolve to an asset" for every
+            #   failure, while the operation carried
+            #   `error.message = "Failed to parse the uploaded file"` -- the one
+            #   fact that identified the cause. Twenty-one failures looked like
+            #   a timeout and were a format that cannot work.
+            #]]
+            detail = resolved.get("error") or {}
+            records[marker] = {
+                "error": (detail.get("message")
+                          or ("upload did not finish within the poll window"
+                              if not resolved.get("done")
+                              else "operation resolved without an asset")),
+                "code": detail.get("code"),
+                "operation": state.get("operationId"), **_source(mesh)}
 
         since_write += 1
         if since_write >= 5:

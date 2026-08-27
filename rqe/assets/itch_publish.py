@@ -247,6 +247,11 @@ def select(meshes: list[dict[str, Any]], per_topic: int = 4,
     for mesh in ordered:
         if mesh["size"] > MAX_BYTES:
             continue
+        #: A zero-byte member is a packing accident, not a model. Roblox
+        #: answers "Cannot import file with no mesh content", which is true and
+        #: costs an upload and a poll to hear.
+        if mesh["size"] == 0:
+            continue
         topic = classify(mesh["stem"], words)
         if not topic:
             continue
@@ -476,6 +481,25 @@ def _write(records: dict[str, Any], uploaded: int, skipped: int, failed: int,
     return book
 
 
+#: Refusals that will not change on a retry. Roblox is describing the file,
+#: not the moment -- a throttle or a dropped connection is transient and worth
+#: another go; a mesh with no geometry in it is not.
+TERMINAL_ERRORS = (
+    "no mesh content",
+    "failed to parse",
+    "unreadable",
+    "too large",
+)
+
+
+def _terminal(error: Any) -> bool:
+    """Is this failure about the file rather than the attempt?"""
+    if not error:
+        return False
+    lowered = str(error).lower()
+    return any(phrase in lowered for phrase in TERMINAL_ERRORS)
+
+
 def follow(per_topic: int = 4, root: Path = ROOT, idle_rounds: int = 3,
            pause: float = 60.0, delay: float = DELAY,
            progress: Any = print) -> dict[str, Any]:
@@ -506,16 +530,28 @@ def follow(per_topic: int = 4, root: Path = ROOT, idle_rounds: int = 3,
 
         #: What this round would add, before doing it -- so an idle round is
         #: recognised without paying for a publish pass to discover it.
-        known: set[str] = set()
+        #[[
+        #   Settled, not merely published.
+        #
+        #   This asked only whether an entry had an assetId, so a file Roblox
+        #   permanently refuses stayed "pending" for ever: the loop never went
+        #   idle, and it spent ninety rounds re-uploading the same four broken
+        #   meshes -- two of them zero bytes -- once a minute.
+        #
+        #   A terminal refusal is an answer. Retrying it is not diligence, it is
+        #   a loop that does not know how to stop.
+        #]]
+        settled: set[str] = set()
         if PUBLISHED.exists():
             try:
-                known = {k for k, v in (json.loads(
-                    PUBLISHED.read_text(encoding="utf-8")).get("assets") or {}).items()
-                    if v.get("assetId")}
+                for marker, record in (json.loads(
+                        PUBLISHED.read_text(encoding="utf-8")).get("assets") or {}).items():
+                    if record.get("assetId") or _terminal(record.get("error")):
+                        settled.add(marker)
             except (OSError, json.JSONDecodeError):
-                known = set()
+                settled = set()
         pending = [m for m in chosen
-                   if f"{Path(m['archive']).name}::{m['member']}" not in known]
+                   if f"{Path(m['archive']).name}::{m['member']}" not in settled]
 
         progress(f"\nround {round_number}: {book['archives']} packs, "
                  f"{len(chosen)} selected, {len(pending)} new")

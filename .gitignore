@@ -77,3 +77,6 @@ forge/kits/*/.converted/
 # Scratch helper for capturing Studio windows during UI investigation.
 # Reproducible and not part of the engine.
 _shot.py
+
+# Studio holds this while a place is open; it is machine state, not source.
+*.rbxlx.lock

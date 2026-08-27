@@ -53,6 +53,19 @@ export type Options = {
 	--: Multiplied through every part's size and offset, so a prop scales as one
 	--: object rather than as a pile of parts that drift apart.
 	scale: number?,
+	--[[
+		Scale to a height in studs instead, whatever the model's own size.
+
+		The reason this exists: a blind multiplier assumes every model was
+		authored at a sensible size and none of them were. A baked ore chunk
+		measures one stud and a storage tank measures nineteen; asking for both
+		at `scale = 1.3` gives an invisible pebble and a tower. Asking for both
+		at `targetHeight = 4` gives two props that look like they belong in the
+		same yard.
+
+		Ignored when the prop has no measured height.
+	]]
+	targetHeight: number?,
 	name: string?,
 	parent: Instance?,
 }
@@ -113,16 +126,23 @@ end
 	first. Nil when nothing matches -- a missing prop is a real answer and
 	should not be an error that takes a world build down with it.
 ]]
-function Prop.build(which: string, at: CFrame?, options: Options?): Model?
+function Prop.build(which: string, at: CFrame?, settings0: Options?): Model?
 	local spec = StoreProps.get(which)
 	if not spec then
 		return nil
 	end
 
-	local settings = options or {}
-	local scale = settings.scale or 1
+	local settings = settings0 or {}
 	local anchored = settings.anchored ~= false
 	local collide = settings.canCollide == true
+
+	local scale = settings.scale or 1
+	local height = spec.extents and spec.extents[2] or 0
+	if settings.targetHeight and height > 0.01 then
+		--: The requested scale still applies, as a variation around the target
+		--: rather than as the target itself.
+		scale = (settings.targetHeight / height) * scale
+	end
 
 	local model = Instance.new("Model")
 	model.Name = settings.name or spec.name
@@ -142,6 +162,46 @@ function Prop.build(which: string, at: CFrame?, options: Options?): Model?
 
 	if primary then
 		model.PrimaryPart = primary
+
+		--[[
+			An upright pivot at the model's own centre.
+
+			Without this the pivot is inherited from `PrimaryPart`, which is
+			whichever part happened to be first and is frequently rotated. Two
+			things go wrong then, and both were measured rather than guessed:
+			`PivotTo` lands the whole prop rotated by that part's angle, and
+			`GetExtentsSize` -- which reports the box *oriented to the pivot* --
+			answers with the axes permuted, so a crate asked to stand five studs
+			tall reported fourteen.
+
+			Setting `WorldPivot` explicitly makes placement mean what it says and
+			makes the model measure the way it looks.
+		]]
+		local lowX, lowY, lowZ = math.huge, math.huge, math.huge
+		local highX, highY, highZ = -math.huge, -math.huge, -math.huge
+		for _, part in model:GetChildren() do
+			if part:IsA("BasePart") then
+				local cf, size = part.CFrame, part.Size
+				local rx, ry, rz = cf.RightVector, cf.UpVector, cf.LookVector
+				--: Half-extent of an oriented box on each world axis.
+				local hx = math.abs(rx.X) * size.X + math.abs(ry.X) * size.Y
+					+ math.abs(rz.X) * size.Z
+				local hy = math.abs(rx.Y) * size.X + math.abs(ry.Y) * size.Y
+					+ math.abs(rz.Y) * size.Z
+				local hz = math.abs(rx.Z) * size.X + math.abs(ry.Z) * size.Y
+					+ math.abs(rz.Z) * size.Z
+				hx, hy, hz = hx * 0.5, hy * 0.5, hz * 0.5
+				local at = cf.Position
+				lowX = math.min(lowX, at.X - hx) highX = math.max(highX, at.X + hx)
+				lowY = math.min(lowY, at.Y - hy) highY = math.max(highY, at.Y + hy)
+				lowZ = math.min(lowZ, at.Z - hz) highZ = math.max(highZ, at.Z + hz)
+			end
+		end
+		if lowX < math.huge then
+			model.WorldPivot = CFrame.new(
+				(lowX + highX) * 0.5, (lowY + highY) * 0.5, (lowZ + highZ) * 0.5)
+		end
+
 		if at then
 			model:PivotTo(at)
 		end
@@ -190,8 +250,12 @@ function Prop.place(topic: string, seed: number, on: Vector3, options: Options?)
 	local spec = specs[(math.floor(math.abs(seed)) % #specs) + 1]
 
 	local settings = options or {}
+	local natural = spec.extents and spec.extents[2] or 0
 	local scale = settings.scale or 1
-	local height = (spec.extents and spec.extents[2] or 0) * scale
+	if settings.targetHeight and natural > 0.01 then
+		scale = (settings.targetHeight / natural) * scale
+	end
+	local height = natural * scale
 	--: Sunk very slightly, so a prop with an uneven base does not stand on a
 	--: visible seam of terrain.
 	local lift = height * 0.5 - math.min(height * 0.08, 0.6)

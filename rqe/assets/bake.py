@@ -65,9 +65,21 @@ for _, child in folder:GetChildren() do
 end
 if not root then return { error = "nothing with geometry in the import" } end
 
---: Everything is expressed relative to the model's own pivot, so a placed prop
---: lands where it is put rather than where its author happened to build it.
-local origin = root:IsA("BasePart") and root.CFrame or root:GetPivot()
+--[[
+	Relative to the pivot's *position*, with its rotation discarded.
+
+	Everything is expressed relative to the model's own pivot so a placed prop
+	lands where it is put rather than where its author happened to build it --
+	but only the translation. Keeping the pivot's rotation expresses every part
+	in a frame the rebuild does not reproduce, and the model comes back rotated:
+	a crate baked this way returned 6.33 x 12.75 x 4.48 for a spec that recorded
+	12.75 x 4.48 x 6.33, which is the same box lying on its side.
+
+	Stripping the rotation keeps each part's world orientation, which is what
+	the author actually built and what the rebuild lays out.
+]]
+local pivot = root:IsA("BasePart") and root.CFrame or root:GetPivot()
+local origin = CFrame.new(pivot.Position)
 
 local parts = {}
 local items = root:IsA("BasePart") and { root } or root:GetDescendants()
@@ -110,11 +122,41 @@ for _, p in items do
 	end
 end
 
-local size = root:IsA("BasePart") and root.Size or root:GetExtentsSize()
+--[[
+	Extents measured from the parts, not from `GetExtentsSize`.
+
+	`Model:GetExtentsSize()` returns the bounding box **oriented to the model's
+	pivot**, and the rebuild lays parts out on world axes. Recording one and
+	reproducing the other is why a crate asked to stand five studs tall came
+	back at fourteen: its recorded height was another axis of the same box.
+
+	So the box is accumulated here in the frame the rebuild actually uses. A
+	rotated part contributes its rotated half-extents to each axis, which is the
+	sum of its own half-sizes weighted by the absolute rotation terms -- the
+	standard world-AABB of an oriented box.
+]]
+local lowX, lowY, lowZ = math.huge, math.huge, math.huge
+local highX, highY, highZ = -math.huge, -math.huge, -math.huge
+for _, row in parts do
+	local c, sz = row.cf, row.size
+	local hx = math.abs(c[4]) * sz[1] + math.abs(c[5]) * sz[2] + math.abs(c[6]) * sz[3]
+	local hy = math.abs(c[7]) * sz[1] + math.abs(c[8]) * sz[2] + math.abs(c[9]) * sz[3]
+	local hz = math.abs(c[10]) * sz[1] + math.abs(c[11]) * sz[2] + math.abs(c[12]) * sz[3]
+	hx, hy, hz = hx * 0.5, hy * 0.5, hz * 0.5
+	lowX = math.min(lowX, c[1] - hx) highX = math.max(highX, c[1] + hx)
+	lowY = math.min(lowY, c[2] - hy) highY = math.max(highY, c[2] + hy)
+	lowZ = math.min(lowZ, c[3] - hz) highZ = math.max(highZ, c[3] + hz)
+end
+
+local extents = { 0, 0, 0 }
+if #parts > 0 then
+	extents = { highX - lowX, highY - lowY, highZ - lowZ }
+end
+
 return {
 	name = root.Name,
 	parts = parts,
-	extents = { size.X, size.Y, size.Z },
+	extents = extents,
 	truncated = #parts >= @@MAX@@,
 }
 """

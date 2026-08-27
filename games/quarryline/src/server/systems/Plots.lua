@@ -32,6 +32,8 @@ local Debug = Forge.Debug
 local Mark = Forge.Mark
 local Material = Forge.Material
 local Catalog = Forge.Catalog
+local Prop = Catalog.Prop
+local Rng = Forge.Core.Rng
 local Boot = Forge.Core.Boot
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
@@ -76,6 +78,71 @@ end
 	SurfaceGui so an unowned plot is legible from across the map without
 	anything having to render text at that distance.
 ]]
+--[[
+	Yard clutter around the edge of a plot.
+
+	A plot is a slab, and a slab reads as a slab however big it is. This is what
+	makes it read as somebody's yard instead: crates and barrels stacked at the
+	back, a storage tank in a corner, pipe run along the rim.
+
+	**Outside the buildable square, never inside it.** The grid is what the
+	player places machines on, and a decorative crate sitting on a cell is
+	either an obstruction or -- worse -- something they try to remove and
+	cannot. Everything here sits past the floor edge, on the rim.
+
+	**The front stays clear.** The road runs along -Z and that is the side a
+	player walks in from; furnishing it would mean walking around your own
+	scenery to reach your own plot.
+
+	Deterministic from the plot index, so plot three looks like plot three every
+	time the world is built and two players standing on neighbouring plots do
+	not see the same arrangement twice.
+]]
+local function dressPlot(model: Model, index: number, origin: Vector3, size: number)
+	local stream = Rng.stream("plot.dress." .. index)
+	local edge = size * 0.5 + 4
+
+	--: Back corners and the back edge. Weighted to the topics a working site
+	--: would actually have lying about, not to what looks prettiest.
+	--: Heights, not multipliers. These models were authored at wildly different
+	--: scales -- a baked ore chunk is one stud and a storage tank is nineteen --
+	--: so asking for a size is the only way to get a yard that looks composed.
+	local spots = {
+		{ x = -edge, z = -edge, topic = "storage tank", height = 14 },
+		{ x = edge, z = -edge, topic = "generator", height = 6 },
+		{ x = -edge * 0.35, z = -edge, topic = "crate", height = 5 },
+		{ x = edge * 0.35, z = -edge, topic = "barrel", height = 4 },
+		{ x = -edge, z = 0, topic = "pipe", height = 3 },
+		{ x = edge, z = 0, topic = "crate", height = 4 },
+		{ x = -edge, z = edge * 0.45, topic = "barrel", height = 4 },
+		{ x = edge, z = edge * 0.45, topic = "ore", height = 4 },
+	}
+
+	local placed = 0
+	for slot, spot in spots do
+		--: A quarter of the slots stay empty, varying per plot. A perimeter
+		--: with every position filled reads as a fence rather than as clutter.
+		if stream:number(0, 1) < 0.25 then
+			continue
+		end
+
+		local at = origin + Vector3.new(spot.x, 0, spot.z)
+		local prop = Prop.place(spot.topic, index * 131 + slot * 17, at, {
+			targetHeight = spot.height,
+			--: Variation around the target rather than instead of it.
+			scale = stream:number(0.85, 1.2),
+			--: Solid, unlike the scattered scenery: these sit where a player
+			--: walks and reading as furniture means stopping them.
+			canCollide = true,
+			parent = model,
+		})
+		if prop then
+			placed += 1
+		end
+	end
+	return placed
+end
+
 local function buildPlot(index: number, container: Instance): Model
 	local size = Config.plots.size
 	local origin = Config.plots.origin + Vector3.new((index - 1) * Config.plots.spacing, 0, 0)
@@ -142,6 +209,8 @@ local function buildPlot(index: number, container: Instance): Model
 	claim.Color = Color3.fromRGB(210, 176, 96)
 	claim.Material = Enum.Material.Neon
 	claim.Parent = model
+
+	dressPlot(model, index, origin, size)
 
 	model.PrimaryPart = floor
 	model.Parent = container

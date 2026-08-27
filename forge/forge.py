@@ -546,6 +546,46 @@ def cmd_watch(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_eyeball(args: argparse.Namespace) -> int:
+    """Measure captures for the defects that are arithmetic on pixels.
+
+    Named for what it substitutes for and does not replace. Three defects
+    shipped past a clean doctor, clean types and sixteen green scenarios, and
+    two of them were a histogram: ground brighter than the lamps, and a frame
+    clipped to white.
+    """
+    import sys as _sys
+
+    _sys.path.insert(0, str(REPO_ROOT))
+    from rqe.pixel_vision import metrics_report
+
+    directory = Path(args.directory)
+    if not directory.is_dir():
+        print(f"no such capture directory: {directory}")
+        return 1
+
+    report = metrics_report(directory)
+    if not report["count"]:
+        print(f"no .png captures in {directory}")
+        return 1
+
+    worst = 5
+    for name, shot in report["shots"].items():
+        graded = shot["graded"]
+        low = [f"{k} {v['grade']}/5" for k, v in graded.items() if v["grade"] <= 2]
+        flag = "!" if low else " "
+        print(f" {flag} {name}")
+        for criterion, verdict in graded.items():
+            worst = min(worst, verdict["grade"])
+            mark = "  <-" if verdict["grade"] <= 2 else "    "
+            print(f"      {criterion:9} {verdict['grade']}/5  {verdict['rationale']}{mark}")
+
+    print(f"\n{report['count']} captures, worst grade {worst}/5")
+    if args.strict and worst <= 2:
+        return 1
+    return 0
+
+
 # ============================ asset verification ============================
 def cmd_assets(args: argparse.Namespace) -> int:
     """Load every asset id this project references and record the verdict."""
@@ -1053,6 +1093,13 @@ def main(argv: list[str] | None = None) -> int:
     p_watch.add_argument("--timeout", type=float, default=240.0,
                          help="how long to wait for Studio to reconnect")
     p_watch.set_defaults(func=cmd_watch)
+
+    p_eye = sub.add_parser("eyeball", help="measure captures for exposure, lighting and density")
+    p_eye.add_argument("directory", nargs="?", default=".tmp/captures",
+                       help="directory of .png captures (default .tmp/captures)")
+    p_eye.add_argument("--strict", action="store_true",
+                       help="exit non-zero when anything grades 2 or below")
+    p_eye.set_defaults(func=cmd_eyeball)
 
     p_assets = sub.add_parser("assets", help="verify every asset id by loading it in Studio")
     p_assets.add_argument("step", nargs="?", default="verify", choices=("scan", "verify"))

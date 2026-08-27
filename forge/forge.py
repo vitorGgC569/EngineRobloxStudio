@@ -586,6 +586,31 @@ def cmd_eyeball(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_sounds(args: argparse.Namespace) -> int:
+    """Collect a bank of sounds every game can actually play."""
+    import sys as _sys
+
+    _sys.path.insert(0, str(REPO_ROOT))
+    from rqe.assets import soundbank
+
+    if args.step == "show":
+        if not soundbank.BANK_PATH.exists():
+            print("no bank yet. run: python forge/forge.py sounds collect")
+            return 1
+        book = json.loads(soundbank.BANK_PATH.read_text(encoding="utf-8"))
+        for role, entries in sorted((book.get("roles") or {}).items()):
+            mark = " " if entries else "!"
+            names = ", ".join(e["name"][:24] for e in entries) or "nothing found"
+            print(f" {mark} {role:18} {names}")
+        print(f"\n{book.get('rolesCovered')}/{book.get('rolesTotal')} roles covered")
+        return 0
+
+    book = soundbank.collect(per_role=args.per_role)
+    path, covered = soundbank.export_lua(book)
+    print(f"\n{covered}/{book['rolesTotal']} roles covered -> {path}")
+    return 0
+
+
 # ============================ asset verification ============================
 def cmd_assets(args: argparse.Namespace) -> int:
     """Load every asset id this project references and record the verdict."""
@@ -1100,6 +1125,12 @@ def main(argv: list[str] | None = None) -> int:
     p_eye.add_argument("--strict", action="store_true",
                        help="exit non-zero when anything grades 2 or below")
     p_eye.set_defaults(func=cmd_eyeball)
+
+    p_sounds = sub.add_parser("sounds", help="collect audio a game can actually play")
+    p_sounds.add_argument("step", nargs="?", default="show", choices=("collect", "show"))
+    p_sounds.add_argument("--per-role", type=int, default=3,
+                          help="how many candidates to keep per role")
+    p_sounds.set_defaults(func=cmd_sounds)
 
     p_assets = sub.add_parser("assets", help="verify every asset id by loading it in Studio")
     p_assets.add_argument("step", nargs="?", default="verify", choices=("scan", "verify"))

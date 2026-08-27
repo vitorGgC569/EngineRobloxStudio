@@ -46,7 +46,40 @@ CATALOGUE = Path("forge/kits/itch-assets.json")
 
 #: itch.io's own paginator, which its infinite scroll calls. The HTML page has
 #: no API and no feed; this is the same data its front end reads.
-BROWSE = "https://itch.io/game-assets/free/tag-3d?page={page}&format=json"
+BROWSE = "https://itch.io/game-assets/free/{tag}?page={page}&format=json"
+
+#: What this module was written against, and still the default.
+TAG_3D = ("tag-3d",)
+
+#[[
+#   What a UI hunt walks instead.
+#
+#   Icons are not one tag. itch.io lets the creator choose, and the same pack
+#   of sixty button glyphs is filed under `tag-user-interface` by one author
+#   and `tag-icons` by the next -- so hunting a single tag finds a fraction of
+#   what is there. These are walked in turn and de-duplicated by pack URL,
+#   which is why `discover` takes a sequence rather than a string.
+#
+#   `tag-2d` is deliberately absent. It is mostly character sprites and
+#   tilesets, which are a different job from a button glyph, and it is large
+#   enough to drown the result.
+#
+#   Every tag below was probed before being listed. `tag-ui` is not one of
+#   them: it returns HTML rather than JSON, because itch has no such tag and
+#   serves a search page instead. That failure is silent in the paginator --
+#   the JSON parse raises, the walker logs and moves on -- so an unchecked tag
+#   here reads as "that subject has no free packs" rather than as a typo.
+#]]
+TAGS_UI = (
+    "tag-user-interface",
+    "tag-icons",
+    "tag-gui",
+    "tag-buttons",
+    "tag-hud",
+    "tag-interface",
+    "tag-menu",
+    "tag-inventory",
+)
 
 #: Honest about what this is. A scraper that pretends to be a browser is a
 #: scraper whose operator does not want to be asked about it.
@@ -102,25 +135,69 @@ FORBIDS_REDIST = (
 )
 
 
-def _get(url: str, timeout: float = 30.0) -> bytes:
+def _get(url: str, timeout: float = 30.0, tries: int = 4) -> bytes:
+    """Fetch, waiting out a rate limit rather than treating it as an answer.
+
+    itch.io answers 429 under load, and the paginator's caller cannot tell that
+    apart from "the listing ended" -- so one 429 on the first page of a tag
+    used to discard the whole tag. It cost `tag-gui` entirely on a live sweep:
+    zero packs reported, nothing wrong with the tag.
+
+    Backs off 5, 10, 20 seconds. A 429 is the server asking for less, and the
+    right response to being asked for less is to wait, not to retry harder.
+    """
     request = urllib.request.Request(url, headers=AGENT)
-    with urllib.request.urlopen(request, timeout=timeout) as response:
-        return response.read()
+    pause = 5.0
+    for attempt in range(tries):
+        try:
+            with urllib.request.urlopen(request, timeout=timeout) as response:
+                return response.read()
+        except urllib.error.HTTPError as error:
+            #: 429 and 5xx are worth waiting for. A 404 is an answer.
+            if error.code != 429 and error.code < 500:
+                raise
+            if attempt == tries - 1:
+                raise
+            time.sleep(pause)
+            pause *= 2
+    raise urllib.error.URLError(f"gave up on {url} after {tries} tries")
 
 
-def discover(pages: int = 10, progress: Any = print) -> list[dict[str, Any]]:
-    """Walk the free 3D listing and return one row per pack.
+def discover(pages: int = 10, progress: Any = print,
+             tags: tuple[str, ...] = TAG_3D) -> list[dict[str, Any]]:
+    """Walk the free listings for these tags and return one row per pack.
 
     Reading only. No pack page is fetched and nothing is downloaded.
+
+    Several tags because a subject is rarely filed under one of them, and
+    de-duplicated across all of them by pack URL: the overlap between
+    `tag-icons` and `tag-user-interface` is large and a pack counted twice
+    would be downloaded twice.
+
+    Each row carries the tag it was found under, because "which listing did
+    this come from" is the question asked when a hunt returns something
+    unexpected, and it is unanswerable afterwards.
     """
     found: list[dict[str, Any]] = []
     seen: set[str] = set()
 
+    for tag in tags:
+        before = len(found)
+        _walk(tag, pages, found, seen, progress)
+        if len(tags) > 1:
+            progress(f"  {tag}: {len(found) - before} new "
+                     f"({len(found)} across {tags.index(tag) + 1} tags)")
+
+    return found
+
+
+def _walk(tag: str, pages: int, found: list[dict[str, Any]],
+          seen: set[str], progress: Any) -> None:
     for page in range(1, pages + 1):
         try:
-            payload = json.loads(_get(BROWSE.format(page=page)))
+            payload = json.loads(_get(BROWSE.format(tag=tag, page=page)))
         except (urllib.error.URLError, OSError, json.JSONDecodeError) as error:
-            progress(f"  page {page}: {error}")
+            progress(f"  {tag} page {page}: {error}")
             break
 
         content = payload.get("content") or ""
@@ -154,15 +231,14 @@ def discover(pages: int = 10, progress: Any = print) -> list[dict[str, Any]]:
                 #: Absent means free outright; a value means "name your price",
                 #: which is still downloadable at zero but is somebody asking.
                 "suggestedPrice": unescape(price.group(1)).strip() if price else None,
+                "tag": tag,
             })
             added += 1
 
-        progress(f"  page {page}: {added} packs ({len(found)} total)")
+        progress(f"  {tag} page {page}: {added} packs ({len(found)} total)")
         if payload.get("num_items", 0) == 0:
             break
         time.sleep(DELAY)
-
-    return found
 
 
 def read_licence(text: str) -> dict[str, Any]:
@@ -247,13 +323,18 @@ def inspect(pack: dict[str, Any], timeout: float = 30.0) -> dict[str, Any]:
 
 
 def catalogue(pages: int = 20, inspect_all: bool = True,
-              progress: Any = print) -> dict[str, Any]:
-    """Discover free 3D packs and read what each one permits.
+              progress: Any = print, tags: tuple[str, ...] = TAG_3D,
+              out: Path | None = None) -> dict[str, Any]:
+    """Discover free packs under these tags and read what each one permits.
 
     Two passes because they cost differently: the listing is one request per 36
     packs, and reading terms is one request per pack. Both are paced.
+
+    `out` keeps hunts apart. A UI sweep written over `itch-assets.json` would
+    destroy the 3D catalogue that 295 published models were selected from, and
+    "the file the last run happened to write" is not a thing to build on.
     """
-    packs = discover(pages=pages, progress=progress)
+    packs = discover(pages=pages, progress=progress, tags=tags)
     progress(f"\n{len(packs)} packs found; reading terms")
 
     rows: list[dict[str, Any]] = []
@@ -278,13 +359,15 @@ def catalogue(pages: int = 20, inspect_all: bool = True,
             "look. Free to download is not free to republish, and uploading a "
             "mesh to Roblox's Creator Store is republishing."),
         "collectedAt": time.strftime("%Y-%m-%d"),
+        "tags": list(tags),
         "packs": rows,
         "count": len(rows),
         "byVerdict": by_verdict,
     }
-    CATALOGUE.parent.mkdir(parents=True, exist_ok=True)
-    CATALOGUE.write_text(json.dumps(book, indent=1, ensure_ascii=False) + "\n",
-                         encoding="utf-8")
+    destination = Path(out) if out else CATALOGUE
+    destination.parent.mkdir(parents=True, exist_ok=True)
+    destination.write_text(json.dumps(book, indent=1, ensure_ascii=False) + "\n",
+                           encoding="utf-8")
     return book
 
 

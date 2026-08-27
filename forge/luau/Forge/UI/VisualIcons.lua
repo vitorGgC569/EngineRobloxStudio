@@ -96,9 +96,19 @@ end
 --[[
 	Set an image control from a token. Returns whether it found real art.
 
-	The return value is the point. A blank square is the failure this module
-	exists to prevent and it is invisible at a glance, so a caller that would
-	rather show a text label can ask instead of guessing.
+	The return value is the loud failure, and it is why this does *not* assert
+	the way `get` does. `get` returns a string and has no other channel, so an
+	unknown token there has to throw. `apply` answers the question directly,
+	and a caller that asked "did you find art" has already said what it will do
+	if the answer is no.
+
+	Asserting here cost a whole interface. A HUD asked for `economy.gift`,
+	which no game had registered; the assert took the LocalScript down at the
+	first rail button, and everything after it -- two more buttons, three
+	panels, the round-result card, the toasts -- was never built. Studio logged
+	nothing a server-side check could see, the modules compiled, the doctor was
+	clean, and the only symptom was a screenshot with one dark square where a
+	rail should be.
 ]]
 function VisualIcons.apply(label: any, token: string): boolean
 	local drawn = fromCatalogue(token)
@@ -110,11 +120,10 @@ function VisualIcons.apply(label: any, token: string): boolean
 	end
 
 	local asset = REGISTRY[token]
-	assert(asset, ("unknown icon token %q"):format(token))
-	label.Image = asset
+	label.Image = asset or PLACEHOLDER
 	label.ImageRectOffset = Vector2.zero
 	label.ImageRectSize = Vector2.zero
-	return asset ~= PLACEHOLDER
+	return asset ~= nil and asset ~= PLACEHOLDER
 end
 
 --[[

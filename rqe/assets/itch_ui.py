@@ -346,7 +346,10 @@ TOKENS: dict[str, tuple[str, ...]] = {
     # fighting
     "combat.sword": ("sword", "blade", "attack"),
     "combat.shield": ("shield", "defence", "defense", "block", "guard"),
-    "combat.bow": ("bow", "arrow", "archery"),
+    #: No `arrow`. In a UI pack it means a direction glyph essentially always,
+    #: and because `arrow` is longer than `down` the longest-term rule handed
+    #: `Arrow_Down` to archery -- 574 navigation chevrons filed as weapons.
+    "combat.bow": ("bow", "archery", "quiver"),
     "combat.potion": ("potion", "flask", "elixir", "vial"),
     "combat.armor": ("armor", "armour", "helmet", "helm"),
     "combat.speed": ("speed", "boots", "haste", "run"),
@@ -426,6 +429,32 @@ def _words(stem: str) -> list[str]:
             out.append(" ")
         out.append(char.lower() if char.isalnum() else " ")
     return [w for w in "".join(out).split() if w]
+
+
+# ------------------------------------------------------------------ sourcing
+
+CATALOGUE = Path("forge/kits/itch-ui.json")
+
+
+def redistributable(catalogue: Path | None = None,
+                    limit: int | None = None) -> list[dict[str, Any]]:
+    """The packs whose own page says they may be republished.
+
+    `cc0` only. Not "free", which on itch means free to download and says
+    nothing about redistribution -- and uploading art to Roblox's Creator Store
+    *is* redistribution: it lands on Roblox's CDN under this account and
+    becomes usable by others.
+
+    `needs-reading` and `terms-present-unread` are excluded on purpose. They
+    are the packs where a person has to look, and a pipeline that treats "I
+    could not tell" as "yes" is a pipeline that republishes somebody's work
+    against their terms at scale.
+    """
+    source = Path(catalogue) if catalogue else CATALOGUE
+    book = json.loads(source.read_text(encoding="utf-8"))
+    packs = [p for p in book.get("packs") or []
+             if (p.get("licence") or {}).get("verdict") == "cc0"]
+    return packs[:limit] if limit else packs
 
 
 # ------------------------------------------------------------------ selecting

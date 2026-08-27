@@ -149,13 +149,37 @@ function Save.store(name: string, template: { [string]: any }, options: { [strin
 		return "profile_" .. tostring(userId)
 	end
 
+	--[[
+		Where a memory-mode profile actually lives.
+
+		This did not exist, and its absence made the whole degraded mode a lie.
+		`acquire` began `if not persistent then return end` -- returning from
+		the *inner* function, so `claimed` stayed nil, `load` read that as a
+		failed read, retried three times and returned nil. Every game in an
+		unpublished place therefore had no profile at all, while the warning
+		above told the developer it was "running in memory".
+
+		Nothing caught it because nothing called `load`. It surfaced the first
+		time a feature needed a profile to exist -- a daily login streak -- and
+		it surfaced as a button reading "come back tomorrow" on a new save.
+	]]
+	local memory: { [number]: { [string]: any } } = {}
+
 	--- Take the lock and read the data in one atomic transaction.
 	local function acquire(userId: number): ({ [string]: any }?, string?)
 		local claimed: { [string]: any }? = nil
 		local refusal: string? = nil
 
+		--: No lock and no transaction, because there is no second server to
+		--: race with. The table is the store.
+		if not persistent then
+			local data = memory[userId] or clone(template)
+			reconcile(data, template)
+			memory[userId] = data
+			return data, nil
+		end
+
 		local ok, failure = pcall(function()
-			if not persistent then return end
 			dataStore:UpdateAsync(key(userId), function(record)
 				local now = os.time()
 				if record ~= nil and not lockIsMine(record) and not lockIsStale(record, now) then
@@ -229,8 +253,18 @@ function Save.store(name: string, template: { [string]: any }, options: { [strin
 		if profile == nil or not profile.active then
 			return false
 		end
+		--: Memory mode writes to the table `acquire` reads from, so a profile
+		--: saved and loaded again inside one session round-trips. It still
+		--: does not survive a restart, and the warning at construction is the
+		--: only promise made about that.
+		if not persistent then
+			memory[profile.userId] = profile.data
+			profile.saves += 1
+			statistics.saves += 1
+			return true
+		end
+
 		local ok, failure = pcall(function()
-			if not persistent then return end
 			dataStore:UpdateAsync(key(profile.userId), function(record)
 				if record ~= nil and not lockIsMine(record) then
 					-- The lock moved on. Writing now would overwrite whatever the

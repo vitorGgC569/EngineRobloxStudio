@@ -86,3 +86,7 @@ _shot.py
 
 # 30 GB of third-party packs. Sourced by rqe.assets.itch_download, never tracked.
 assets/itch/
+#: The UI packs, for the same reason as the meshes above: 4.78 GB of other
+#: people's zips. What the repository keeps is the manifest that says which
+#: pack each published asset came from, not the pack.
+assets/itch-ui/

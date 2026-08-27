@@ -1,364 +1,789 @@
 --!strict
--- Interface: a HUD bound to the systems, and screens that read them.
---
--- The version this replaces built one row with two labels and called it a HUD.
--- Before that it built nothing at all, because it passed "horizontal" to a
--- function that takes "row" and took the whole LocalScript down on its first
--- line -- so the game ran with no interface and the only symptom was an empty
--- screenshot.
---
--- What a HUD has to do, in the order a player needs it:
---
--- **Say what changed.** A number that moves when you act is most of what
--- "the game is responding" feels like. Every readout here is driven by an
--- attribute the server owns; the client never keeps its own copy, because a
--- client that does disagrees with the ledger the moment anything is spent, and
--- it always disagrees in the player's favour on screen.
---
--- **Say what is happening now, and nothing else.** Wave, integrity and currency
--- during a round; the result when the round ends. A HUD that shows everything
--- shows nothing.
---
--- **Survive the device it lands on.** Anchored to safe areas rather than to
--- screen edges, and sized in token steps rather than pixels, so a phone with a
--- notch and a desktop at 1440p both get a readable layout.
---
--- Every colour, size and spacing comes from the token set. A HUD that picks its
--- own is a second design system that drifts from the world's.
+--[[
+	Interface — the whole UI, built from Forge's generalist widgets.
+
+	Nothing here draws a Frame by hand. Every surface is `UI.panel`, every
+	readout `UI.label`, every meter `UI.bar`, every icon a token through
+	`VisualIcons`. That is a constraint on purpose: if the engine's widgets
+	cannot express a real game's interface, the honest way to find out is to
+	build one out of them and look at it -- not to add a thirteenth widget to
+	the engine because this one screen wanted one.
+
+	What a HUD has to do, in the order a player needs it
+	---------------------------------------------------
+
+	**Say what changed.** Every readout is driven by an attribute the server
+	owns. The client keeps no copy: a client that does disagrees with the
+	ledger the moment anything is spent, and it always disagrees in the
+	player's favour on screen.
+
+	**Say what is happening now, and nothing else.** Wave, integrity and cash
+	are always up. Everything else is behind a rail button, because a HUD that
+	shows everything shows nothing.
+
+	**Survive the device it lands on.** Roblox owns the top-left corner and, on
+	a phone, both bottom corners -- the menu button, the joystick, the jump
+	button. So the bar is top-centre and the rail is centre-right, the two
+	regions nothing else claims. Sizes come from `UI.theme.space`, and one
+	`UIScale` driven by viewport width keeps a 1440p desktop and a 375pt phone
+	both legible.
+
+	Why the panels share one frame
+	------------------------------
+
+	One panel is open at a time and they occupy the same rectangle. Two open
+	panels on a phone is two panels a thumb cannot reach past, and the dim
+	behind an open one is how a player knows the world is still there and
+	still running.
+]]
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local GuiService = game:GetService("GuiService")
+local UserInputService = game:GetService("UserInputService")
 
-local WorldKit = require(ReplicatedStorage.WorldKit)
-local TokenData = require(ReplicatedStorage.Shared.TokenData)
-local CoreLoop = require(ReplicatedStorage.Shared.CoreLoop)
+local Forge = require(ReplicatedStorage:WaitForChild("Forge"))
+local Wire = require(ReplicatedStorage.Shared.Wire)
+local Tiers = require(ReplicatedStorage.Shared.Tiers)
+local Catalogue = require(ReplicatedStorage.Shared.Catalogue)
 
-local tokens = WorldKit.Tokens.define(TokenData)
+local UI = Forge.UI
+local Icons = Forge.UI.VisualIcons
+local T = UI.theme
+
+Wire.install()
+
 local player = Players.LocalPlayer
-local gui = player:WaitForChild("PlayerGui")
-
 local Interface = {}
 
--- Safe area, not screen edge. The top inset is where a phone puts its notch and
--- Roblox puts its own chrome, and a HUD pinned to 0,0 sits under both.
-local inset = GuiService:GetGuiInset()
+-- ============================== groundwork ==================================
+--[[
+	`ignoreInset = false`, and no manual inset anywhere.
 
-local hud = WorldKit.Ui.screen(gui, "HUD", { enabled = true })
+	`UI.mount` defaults to ignoring the inset, so the first version read
+	`GuiService:GetGuiInset()` once at startup and added it by hand. That call
+	returns **zero** until Roblox's own topbar has loaded, which on this client
+	it had not -- so the bar was pinned eight pixels from the true top of the
+	screen, directly under the Roblox menu and chat buttons. The desktop
+	screenshot looked fine because Studio draws that chrome elsewhere.
 
---------------------------------------------------------------------- readouts
+	Letting Roblox own the inset is both simpler and correct on every device,
+	including the ones whose inset changes after launch.
+]]
+local screen = UI.mount("Siegehold", { displayOrder = 10, ignoreInset = false })
 
--- A shelf, not four floating labels.
---
--- The readouts used to be drawn straight onto the scene: over a bright
--- sky the numbers vanished, over a dark wall the glyphs did, and four
--- separate elements at the same weight gave the eye nothing to land on
--- first. One contained surface is one thing to glance at.
-local top = WorldKit.Ui.shelf(tokens, hud, {
+--[[
+	One scale for the whole interface, from the viewport width.
+
+	Roblox does not scale GUI for you, so a bar sized in offsets is a
+	comfortable 460px on a desktop and most of a phone's width. Driving a
+	single `UIScale` preserves every widget's proportions and its relationship
+	to the touch targets, which per-widget breakpoints do not.
+]]
+local scaler = Instance.new("UIScale")
+scaler.Parent = screen
+
+local function rescale()
+	local camera = workspace.CurrentCamera
+	if not camera then
+		return
+	end
+	--[[
+		Floors at 0.8, and that number is a touch target, not a taste.
+
+		The scale multiplies everything under it, buttons included. Measured on
+		a 1093px viewport the rail buttons came back 44x44 from a declared 52 --
+		exactly Roblox's minimum -- and a narrower screen would have taken them
+		below it. With RAIL_BUTTON at 56 and this floor at 0.8, the worst case
+		is 44.8, so the smallest phone still gets a target a thumb can hit.
+	]]
+	scaler.Scale = math.clamp(camera.ViewportSize.X / 1280, 0.8, 1.15)
+end
+rescale()
+if workspace.CurrentCamera then
+	workspace.CurrentCamera:GetPropertyChangedSignal("ViewportSize"):Connect(rescale)
+end
+
+local touch = UserInputService.TouchEnabled and not UserInputService.KeyboardEnabled
+
+local function number(value: any): number
+	return tonumber(value) or 0
+end
+
+local function money(value: number): string
+	if value >= 1e6 then
+		return string.format("%.1fM", value / 1e6)
+	elseif value >= 1e3 then
+		return string.format("%.1fK", value / 1e3)
+	end
+	return string.format("%d", math.floor(value))
+end
+
+--: Every readout binds to an attribute rather than polling. The label is the
+--: state and the server is the truth; nothing here holds a copy.
+local function bind(attribute: string, apply: (any) -> ())
+	apply(player:GetAttribute(attribute))
+	player:GetAttributeChangedSignal(attribute):Connect(function()
+		apply(player:GetAttribute(attribute))
+	end)
+end
+
+-- ================================ top bar ===================================
+--[[
+	One shelf, three readouts, in the order they are needed.
+
+	Wave first because it is what is about to change; integrity in the middle
+	because it is the stake and the widest element earns the centre; cash last
+	because it is consulted, not watched.
+]]
+local bar = UI.panel(screen, {
 	name = "TopBar",
+	size = UDim2.fromOffset(452, 56),
 	anchor = Vector2.new(0.5, 0),
-	position = UDim2.new(0.5, 0, 0, inset.Y + tokens:space("base")),
-	size = UDim2.new(0, 0, 0, 0),
-	gap = "tight",
+	pos = UDim2.new(0.5, 0, 0, T.space.sm),
+	radius = T.radius.lg,
+	padding = T.space.md,
+	transparency = 0.06,
 })
 
---- One readout, bound to a player attribute the server writes.
----
---- Returns the label so a caller can flash it: a number that changes without
---- announcing itself is a number a player misses while looking elsewhere.
-local function readout(caption: string, attribute: string, fallback: string, icon: string?): TextLabel
-	local group = WorldKit.Ui.chip(tokens, top, {
-		name = caption, icon = icon, value = fallback,
-		step = "title",
+local barRow = UI.list(bar, { horizontal = true, gap = T.space.lg,
+	vAlign = Enum.VerticalAlignment.Center })
+barRow.SortOrder = Enum.SortOrder.LayoutOrder
+
+--: A readout is a quiet caption over a loud value. The caption is what stops
+--: a bare number from being a riddle.
+local function readout(parent: Instance, caption: string, width: number,
+                       order: number): TextLabel
+	local holder = UI.panel(parent, {
+		name = caption,
+		size = UDim2.fromOffset(width, 36),
+		stroke = false,
+		transparency = 1,
 	})
-	local label = group:FindFirstChild("Text", true)
-	for _, child in ipairs(group:GetDescendants()) do
-		if child:IsA("TextLabel") and child.Text == fallback then
-			label = child
-			break
+	holder.LayoutOrder = order
+
+	UI.label(holder, caption, {
+		size = T.text.xs,
+		color = T.color.textDim,
+		font = T.font.bold,
+		frameSize = UDim2.new(1, 0, 0, 12),
+	})
+	return UI.label(holder, "-", {
+		name = "Value",
+		size = T.text.lg,
+		font = T.font.bold,
+		frameSize = UDim2.new(1, 0, 0, 24),
+		pos = UDim2.fromOffset(0, 12),
+	})
+end
+
+local waveValue = readout(bar, "WAVE", 52, 1)
+bind("wave", function(value)
+	waveValue.Text = string.format("%d", math.max(number(value), 1))
+end)
+
+--: Integrity is a bar *and* a number. The bar is read at a glance, the number
+--: when it matters, and neither substitutes for the other.
+local integrityHolder = UI.panel(bar, {
+	name = "Integrity", size = UDim2.fromOffset(196, 36),
+	stroke = false, transparency = 1,
+})
+integrityHolder.LayoutOrder = 2
+UI.label(integrityHolder, "INTEGRITY", {
+	size = T.text.xs, color = T.color.textDim, font = T.font.bold,
+	frameSize = UDim2.new(1, 0, 0, 12),
+})
+local integrityBar = UI.bar(integrityHolder, {
+	size = UDim2.new(1, 0, 0, 16),
+	pos = UDim2.fromOffset(0, 16),
+	color = T.color.good,
+})
+local integrityText = UI.label(integrityHolder, "", {
+	size = T.text.xs, font = T.font.bold, align = Enum.TextXAlignment.Right,
+	frameSize = UDim2.new(1, -6, 0, 16), pos = UDim2.fromOffset(0, 16), z = 5,
+})
+
+bind("integrity", function(value)
+	local alpha = math.clamp(number(value) / 100, 0, 1)
+	integrityBar:set(alpha)
+	integrityText.Text = string.format("%d%%", math.floor(alpha * 100))
+	--: Colour carries the same information as the length, for everyone who
+	--: cannot compare two lengths at a glance.
+	integrityBar.fill.BackgroundColor3 = if alpha > 0.5 then T.color.good
+		elseif alpha > 0.25 then T.color.warning
+		else T.color.danger
+end)
+
+local cashHolder = UI.panel(bar, {
+	name = "Cash", size = UDim2.fromOffset(116, 36),
+	stroke = false, transparency = 1,
+})
+cashHolder.LayoutOrder = 3
+UI.label(cashHolder, "CASH", {
+	size = T.text.xs, color = T.color.textDim, font = T.font.bold,
+	frameSize = UDim2.new(1, 0, 0, 12),
+})
+local coin = Instance.new("ImageLabel")
+coin.Name = "Coin"
+coin.BackgroundTransparency = 1
+coin.Size = UDim2.fromOffset(18, 18)
+coin.Position = UDim2.fromOffset(0, 15)
+coin.ZIndex = 3
+coin.Parent = cashHolder
+--: `apply`, not `.Image = get(...)`. Most icon art is a sprite sheet, and a
+--: caller that assigns only the id shows the whole sheet where it wanted one
+--: glyph. The return says whether real art was found.
+local hasCoin = Icons.apply(coin, "economy.coin")
+coin.Visible = hasCoin
+
+local cashValue = UI.label(cashHolder, "0", {
+	size = T.text.lg, font = T.font.bold, color = T.color.gold,
+	frameSize = UDim2.new(1, if hasCoin then -22 else 0, 0, 24),
+	pos = UDim2.fromOffset(if hasCoin then 22 else 0, 12),
+})
+bind("cash", function(value)
+	cashValue.Text = money(number(value))
+end)
+
+-- ================================ panels ====================================
+--: Declared here because `showSheet` below closes over it and the panel itself
+--: is built further down. A `local` written after the closure is a *different*
+--: variable: the closure would read a global, find nil, and the guard would
+--: silently never fire.
+local result: Frame
+
+--: The dim behind an open panel. Not decoration: it says the world is still
+--: there and still running, and it catches the tap that closes.
+local scrim = Instance.new("TextButton")
+scrim.Name = "Scrim"
+scrim.Size = UDim2.fromScale(1, 1)
+scrim.BackgroundColor3 = Color3.new(0, 0, 0)
+scrim.BackgroundTransparency = 0.45
+scrim.BorderSizePixel = 0
+scrim.Text = ""
+scrim.AutoButtonColor = false
+scrim.Visible = false
+scrim.ZIndex = 20
+scrim.Parent = screen
+
+local sheet = UI.panel(screen, {
+	name = "Sheet",
+	size = UDim2.fromOffset(468, 300),
+	anchor = Vector2.new(0.5, 0.5),
+	pos = UDim2.fromScale(0.5, 0.5),
+	radius = T.radius.lg,
+	transparency = 0.02,
+	visible = false,
+})
+sheet.ZIndex = 21
+
+local sheetTitle = UI.label(sheet, "", {
+	name = "Title", size = T.text.lg, font = T.font.title,
+	frameSize = UDim2.new(1, -96, 0, 30),
+	pos = UDim2.fromOffset(T.space.lg, T.space.md), z = 22,
+})
+
+local body = UI.panel(sheet, {
+	name = "Body",
+	size = UDim2.new(1, -T.space.lg * 2, 1, -76),
+	pos = UDim2.fromOffset(T.space.lg, 60),
+	stroke = false, transparency = 1,
+})
+body.ZIndex = 22
+
+local open: string? = nil
+
+--: Set once the rail exists; `closeSheet` runs before it is built.
+local setRailVisible: (boolean) -> () = function() end
+
+local function closeSheet()
+	open = nil
+	sheet.Visible = false
+	scrim.Visible = false
+	setRailVisible(true)
+end
+
+local closeButton = UI.button(sheet, "", {
+	name = "Close",
+	size = UDim2.fromOffset(36, 36),
+	anchor = Vector2.new(1, 0),
+	pos = UDim2.new(1, -T.space.md, 0, T.space.md),
+	radius = T.radius.sm,
+	onClick = closeSheet,
+})
+closeButton.ZIndex = 23
+do
+	local glyph = Instance.new("ImageLabel")
+	glyph.BackgroundTransparency = 1
+	glyph.Size = UDim2.fromOffset(18, 18)
+	glyph.AnchorPoint = Vector2.new(0.5, 0.5)
+	glyph.Position = UDim2.fromScale(0.5, 0.5)
+	glyph.ZIndex = 24
+	glyph.Parent = closeButton
+	--: The one place a missing icon must not leave an empty button. Falling
+	--: back to a text cross keeps the close affordance whatever the catalogue
+	--: happens to hold.
+	if not Icons.apply(glyph, "action.close") then
+		glyph:Destroy()
+		closeButton.Text = "\u{00D7}"
+		closeButton.TextSize = T.text.xl
+	end
+end
+
+scrim.MouseButton1Click:Connect(closeSheet)
+
+local function clearBody()
+	for _, child in body:GetChildren() do
+		if not child:IsA("UIListLayout") and not child:IsA("UIPadding") then
+			child:Destroy()
 		end
 	end
+end
 
-	local function refresh()
-		local value = player:GetAttribute(attribute)
-		if value == nil or label == nil then
-			return
-		end
-		local text = if type(value) == "number" then tostring(math.floor(value)) else tostring(value)
-		if (label :: TextLabel).Text ~= text then
-			(label :: TextLabel).Text = text
-			-- The flash. Feedback for a change the player did not cause is what
-			-- makes income legible; without it a rising number is wallpaper.
-			WorldKit.Ui.animate(tokens, label, "quick", "standard", {
-				TextTransparency = 0,
+local builders: { [string]: (Instance) -> number } = {}
+
+local function showSheet(key: string, title: string)
+	--: And the reverse: no panel opens over a finished round. Both directions
+	--: are needed or the same collision comes back from the other side.
+	if result.Visible then
+		return
+	end
+	open = key
+	sheetTitle.Text = title
+	clearBody()
+	local build = builders[key]
+	--: Each builder reports the height its content needs and the sheet takes
+	--: it. A fixed sheet is either padded with dead space for the short panel
+	--: or clipping the tall one, and both look like a mistake.
+	local height = if build then build(body) else 180
+
+	--[[
+		Width from the viewport, not a constant.
+
+		468 is comfortable on a desktop and wider than a phone. Measured at a
+		455px viewport the sheet reached within 40px of both edges and the
+		centre-right rail sat *underneath* it -- three buttons half-hidden
+		behind a panel, both of them tappable. A desktop screenshot showed
+		none of that.
+	]]
+	local camera = workspace.CurrentCamera
+	local available = if camera then camera.ViewportSize.X else 1280
+	local width = math.min(468, (available / math.max(scaler.Scale, 0.1)) - 48)
+	sheet.Size = UDim2.fromOffset(math.max(width, 300),
+		math.clamp(height + 76, 180, 440))
+
+	--: And the rail goes away while a panel is up. It is redundant then -- the
+	--: scrim and the close button both dismiss -- and hiding it removes the
+	--: collision at every width instead of only the narrow ones.
+	setRailVisible(false)
+	sheet.Visible = true
+	scrim.Visible = true
+end
+
+local function toggleSheet(key: string, title: string)
+	if open == key then
+		closeSheet()
+		return
+	end
+	showSheet(key, title)
+end
+
+-- ================================ the rail ==================================
+--[[
+	Centre-right, because it is the only edge nothing else owns.
+
+	Bottom-left is the joystick, bottom-right the jump button, top-left the
+	Roblox menu. A rail in any of those is a rail a thumb fights with, and a
+	desktop screenshot will never show you that.
+]]
+local RAIL_BUTTON = 56
+
+local rail = UI.panel(screen, {
+	name = "Rail",
+	size = UDim2.fromOffset(RAIL_BUTTON, 4),
+	anchor = Vector2.new(1, 0.5),
+	pos = UDim2.new(1, -T.space.lg, 0.5, 0),
+	stroke = false, transparency = 1,
+})
+rail.AutomaticSize = Enum.AutomaticSize.Y
+UI.list(rail, { gap = T.space.sm, hAlign = Enum.HorizontalAlignment.Center })
+
+local badges: { [string]: Frame } = {}
+
+local function railButton(key: string, title: string, token: string,
+                          fallback: string, order: number)
+	--: Sized so it is still 44 after the smallest scale. See `rescale`.
+	local button = UI.button(rail, "", {
+		name = key,
+		size = UDim2.fromOffset(RAIL_BUTTON, RAIL_BUTTON),
+		radius = T.radius.md,
+		onClick = function()
+			toggleSheet(key, title)
+		end,
+	})
+	button.LayoutOrder = order
+
+	local glyph = Instance.new("ImageLabel")
+	glyph.BackgroundTransparency = 1
+	glyph.Size = UDim2.fromOffset(26, 26)
+	glyph.AnchorPoint = Vector2.new(0.5, 0.5)
+	glyph.Position = UDim2.fromScale(0.5, 0.5)
+	glyph.ZIndex = 3
+	glyph.Parent = button
+	if not Icons.apply(glyph, token) then
+		glyph:Destroy()
+		button.Text = fallback
+		button.TextSize = T.text.xs
+	end
+
+	--: A badge, hidden until something is waiting. A dot that is always there
+	--: is a dot nobody looks at.
+	local badge = Instance.new("Frame")
+	badge.Name = "Badge"
+	badge.Size = UDim2.fromOffset(12, 12)
+	badge.AnchorPoint = Vector2.new(1, 0)
+	badge.Position = UDim2.new(1, -4, 0, 4)
+	badge.BackgroundColor3 = T.color.danger
+	badge.BorderSizePixel = 0
+	badge.Visible = false
+	badge.ZIndex = 4
+	badge.Parent = button
+	UI.corner(badge, T.radius.pill)
+	badges[key] = badge
+
+	return button
+end
+
+setRailVisible = function(visible: boolean)
+	rail.Visible = visible
+end
+
+railButton("daily", "Daily Reward", "economy.gift", "DAY", 1)
+railButton("shop", "Towers", "nav.shop", "TOWERS", 2)
+railButton("progress", "Progression", "status.trophy", "TIER", 3)
+
+bind("dailyReady", function(value)
+	local badge = badges.daily
+	if badge then
+		badge.Visible = value == true
+	end
+end)
+
+-- ============================== daily panel =================================
+builders.daily = function(parent: Instance): number
+	local ok, snapshot = pcall(function()
+		return Forge.Net.request("dailyState")
+	end)
+	if not ok or type(snapshot) ~= "table" then
+		local line = UI.label(parent, "The calendar could not be read.", {
+			color = T.color.textDim, wrap = true,
+			frameSize = UDim2.new(1, 0, 0, 40),
+		})
+		line.ZIndex = 23
+		return 60
+	end
+
+	local streakLine = UI.label(parent, string.format(
+		"Streak <b>%d</b>  ·  claim every day to keep it", snapshot.streak or 0), {
+		size = T.text.sm, color = T.color.textDim,
+		frameSize = UDim2.new(1, 0, 0, 20),
+	})
+	streakLine.ZIndex = 23
+
+	--: A row of seven, so the shape of the week is visible and the jump on day
+	--: seven is something a player can see coming. The same numbers in a list
+	--: carry the information and none of the pull.
+	local grid = UI.panel(parent, {
+		size = UDim2.new(1, 0, 0, 92),
+		pos = UDim2.fromOffset(0, 28),
+		stroke = false, transparency = 1,
+	})
+	grid.ZIndex = 23
+	UI.list(grid, { horizontal = true, gap = T.space.xs })
+
+	local cycleLength = snapshot.cycleLength or 7
+	for day = 1, cycleLength do
+		local entry = (snapshot.cycle or {})[day] or {}
+		local isNext = snapshot.available == true and day == snapshot.nextDay
+		local claimed = snapshot.available ~= true and day == snapshot.nextDay
+
+		local cell = UI.panel(grid, {
+			name = "Day" .. day,
+			size = UDim2.fromOffset(56, 88),
+			radius = T.radius.sm,
+			color = if isNext then T.color.panelAlt else T.color.panel,
+			strokeColor = if isNext then T.color.gold else T.color.stroke,
+			transparency = 0.05,
+		})
+		cell.LayoutOrder = day
+		cell.ZIndex = 23
+
+		UI.label(cell, "DAY " .. day, {
+			size = T.text.xs, align = Enum.TextXAlignment.Center,
+			color = if isNext then T.color.gold else T.color.textDim,
+			font = T.font.bold, frameSize = UDim2.new(1, 0, 0, 14),
+			pos = UDim2.fromOffset(0, 10), z = 24,
+		})
+		UI.label(cell, money(entry.cash or 0), {
+			size = T.text.md, align = Enum.TextXAlignment.Center,
+			color = if isNext then T.color.text else T.color.textDim,
+			font = T.font.bold, frameSize = UDim2.new(1, 0, 0, 22),
+			pos = UDim2.fromOffset(0, 34), z = 24,
+		})
+		if claimed then
+			UI.label(cell, "claimed", {
+				size = T.text.xs, align = Enum.TextXAlignment.Center,
+				color = T.color.good, frameSize = UDim2.new(1, 0, 0, 14),
+				pos = UDim2.fromOffset(0, 62), z = 24,
 			})
 		end
 	end
 
-	player:GetAttributeChangedSignal(attribute):Connect(refresh)
-	refresh()
-	return label :: TextLabel
+	local available = snapshot.available == true
+	local claim: TextButton
+	claim = UI.button(parent, if available
+			then "Claim day " .. tostring(snapshot.nextDay)
+			else "Come back tomorrow", {
+		size = UDim2.new(1, 0, 0, 44),
+		pos = UDim2.fromOffset(0, 134),
+		color = if available then T.color.accent else T.color.panelAlt,
+		textColor = if available then T.color.bg else T.color.textDim,
+		textSize = T.text.md,
+		onClick = function()
+			if not available or not claim.Active then
+				return
+			end
+			--: Dead the instant it is pressed. A claim button that stays live
+			--: through the round trip is one that gets pressed four times, and
+			--: only the server refusing the other three keeps that from being
+			--: an exploit.
+			claim.Active = false
+			claim.Text = "Claiming\u{2026}"
+			local sent, result = pcall(function()
+				return Forge.Net.request("dailyClaim")
+			end)
+			if sent and type(result) == "table" and result.ok then
+				--: Redrawn from the server's new answer rather than patched
+				--: locally, so what the panel shows is what the server holds.
+				showSheet("daily", "Daily Reward")
+			else
+				claim.Text = if type(result) == "table" and result.reason
+					then tostring(result.reason)
+					else "Could not claim"
+				claim.Active = true
+			end
+		end,
+	})
+	claim.ZIndex = 23
+	claim.Active = available
+
+	return 190
 end
 
-readout("cash", "cash", "0", "currency")
-readout("wave", "wave", "-", "wave")
-readout("integrity", "integrity", "100", "integrity")
-readout("tier", "nextTier", "-", "tier")
+-- =============================== shop panel =================================
+builders.shop = function(parent: Instance): number
+	local scroll = Instance.new("ScrollingFrame")
+	scroll.Size = UDim2.new(1, 0, 1, -32)
+	scroll.BackgroundTransparency = 1
+	scroll.BorderSizePixel = 0
+	scroll.ScrollBarThickness = 4
+	scroll.ScrollBarImageColor3 = T.color.stroke
+	scroll.CanvasSize = UDim2.new()
+	scroll.AutomaticCanvasSize = Enum.AutomaticSize.Y
+	scroll.ZIndex = 23
+	scroll.Parent = parent
+	UI.list(scroll, { gap = T.space.sm })
 
--- Integrity as a proportion as well as a number.
---
--- A bare 62 is only meaningful against a maximum the player has to
--- remember. A bar is the shape of the question they are actually asking,
--- and its colour carries the urgency faster than the digits do.
-local integrityMeter = WorldKit.Ui.meter(tokens, hud, {
-	name = "IntegrityMeter",
-	anchor = Vector2.new(0.5, 0),
-	-- Centred and wide enough to read as a bar. Left at the default it
-	-- took its own 168px at a fixed offset and sat under the first chip
-	-- instead of under the shelf.
-	position = UDim2.new(0.5, 0, 0, inset.Y + tokens:space("base") * 4),
-	size = UDim2.fromOffset(240, tokens:space("tight")),
-	fraction = 1,
+	local cash = number(player:GetAttribute("cash"))
+	local shown = 0
+	for _, entry in Catalogue do
+		if entry.role ~= "melee" and entry.role ~= "ranged" then
+			continue
+		end
+		shown += 1
+		if shown > 10 then
+			break
+		end
+		local cost = math.max(math.floor((entry.power or 10) * 5), 1)
+		local affordable = cash >= cost
+
+		local row = UI.panel(scroll, {
+			size = UDim2.new(1, -8, 0, 52),
+			radius = T.radius.sm,
+			transparency = 0.06,
+		})
+		row.LayoutOrder = shown
+		row.ZIndex = 23
+
+		UI.label(row, entry.name, {
+			size = T.text.sm, font = T.font.bold,
+			frameSize = UDim2.new(1, -116, 0, 18),
+			pos = UDim2.fromOffset(T.space.md, 8), z = 24,
+		})
+		UI.label(row, string.format("%s  ·  tier %d", entry.role, entry.tier or 1), {
+			size = T.text.xs, color = T.color.textDim,
+			frameSize = UDim2.new(1, -116, 0, 16),
+			pos = UDim2.fromOffset(T.space.md, 26), z = 24,
+		})
+		--: Priced against the balance the player can see, and dimmed when they
+		--: cannot afford it. A price with no balance beside it answers nothing.
+		UI.label(row, money(cost), {
+			size = T.text.md, font = T.font.bold,
+			align = Enum.TextXAlignment.Right,
+			color = if affordable then T.color.gold else T.color.textDim,
+			frameSize = UDim2.new(0, 96, 1, 0),
+			anchor = Vector2.new(1, 0),
+			pos = UDim2.new(1, -T.space.md, 0, 0), z = 24,
+		})
+	end
+
+	--: Said plainly rather than implied by an inert row. Towers are raised in
+	--: the world, not bought from a menu, and a shop that looks buyable and is
+	--: not is worse than one that explains itself.
+	local note = UI.label(parent, "Towers are raised at the plinths in the world. "
+		.. "This is what the wave budget can reach.", {
+		size = T.text.xs, color = T.color.textDim, wrap = true,
+		frameSize = UDim2.new(1, 0, 0, 28),
+		anchor = Vector2.new(0, 1),
+		pos = UDim2.new(0, 0, 1, 0),
+	})
+	note.ZIndex = 24
+
+	return 340
+end
+
+-- ============================ progression panel =============================
+builders.progress = function(parent: Instance): number
+	local tierId = player:GetAttribute("tierId")
+	local nextTier = player:GetAttribute("nextTier")
+	local nextCost = number(player:GetAttribute("nextCost"))
+	local cash = number(player:GetAttribute("cash"))
+
+	local current = "Unranked"
+	for _, tier in Tiers do
+		if tier.id == tierId then
+			current = tier.displayName
+		end
+	end
+
+	local heading = UI.label(parent, current, {
+		size = T.text.xl, font = T.font.title,
+		frameSize = UDim2.new(1, 0, 0, 34),
+	})
+	heading.ZIndex = 23
+
+	local sub = UI.label(parent, if nextTier
+			then "Next: " .. tostring(nextTier)
+			else "Highest tier reached", {
+		size = T.text.sm, color = T.color.textDim,
+		frameSize = UDim2.new(1, 0, 0, 20),
+		pos = UDim2.fromOffset(0, 36),
+	})
+	sub.ZIndex = 23
+
+	if nextCost > 0 then
+		local meter = UI.bar(parent, {
+			size = UDim2.new(1, 0, 0, 16),
+			pos = UDim2.fromOffset(0, 64),
+			color = T.color.gold,
+		})
+		meter:set(math.clamp(cash / nextCost, 0, 1))
+		meter.holder.ZIndex = 23
+
+		local amounts = UI.label(parent,
+			string.format("%s / %s", money(cash), money(nextCost)), {
+			size = T.text.sm, align = Enum.TextXAlignment.Right,
+			frameSize = UDim2.new(1, 0, 0, 18),
+			pos = UDim2.fromOffset(0, 86),
+		})
+		amounts.ZIndex = 23
+	end
+
+	--: The truth about how this game advances, stated. The server buys tiers
+	--: the moment the balance covers them, so a button here would be a lie
+	--: about who decides.
+	local note = UI.label(parent, "Tiers are claimed automatically as soon as you "
+		.. "can afford them. Income scales with the tier you hold.", {
+		size = T.text.xs, color = T.color.textDim, wrap = true,
+		frameSize = UDim2.new(1, 0, 0, 40),
+		pos = UDim2.fromOffset(0, 114),
+	})
+	note.ZIndex = 23
+
+	return 160
+end
+
+-- ============================== round result ================================
+--: The one thing allowed to take the screen. A round ending is the only moment
+--: the player is not doing something, and the only one worth interrupting.
+result = UI.panel(screen, {
+	name = "Result",
+	size = UDim2.fromOffset(320, 120),
+	anchor = Vector2.new(0.5, 0.5),
+	pos = UDim2.fromScale(0.5, 0.42),
+	radius = T.radius.lg,
+	visible = false,
 })
-player:GetAttributeChangedSignal("integrity"):Connect(function()
-	local value = tonumber(player:GetAttribute("integrity")) or 0
-	WorldKit.Ui.meterSet(tokens, integrityMeter, value / 100)
-end)
+result.ZIndex = 30
+local resultTitle = UI.label(result, "", {
+	size = T.text.xl, font = T.font.title, align = Enum.TextXAlignment.Center,
+	frameSize = UDim2.new(1, 0, 0, 40), pos = UDim2.fromOffset(0, 24), z = 31,
+})
+local resultLine = UI.label(result, "", {
+	size = T.text.sm, color = T.color.textDim,
+	align = Enum.TextXAlignment.Center,
+	frameSize = UDim2.new(1, 0, 0, 20), pos = UDim2.fromOffset(0, 66), z = 31,
+})
 
--- Narrow screens get a tighter bar.
---
--- Measured on a 760x940 capture, which is the first phone-width evidence
--- this HUD was ever looked at on: the four readouts reached the toast the
--- platform draws top-right, and a 375px phone has half again less room.
--- The gap and the glyphs both come down, so the bar keeps its hierarchy
--- instead of wrapping into two rows of unrelated numbers.
-local layout = top:FindFirstChildOfClass("UIListLayout")
-local function fit()
-	local camera = workspace.CurrentCamera
-	if camera == nil then
+bind("sessionState", function(value)
+	if value == nil then
+		result.Visible = false
 		return
 	end
-	local narrow = camera.ViewportSize.X < 820
-	if layout ~= nil then
-		-- Still a real gap. Tightening this to `tight` was the first
-		-- attempt and it made the bar unreadable: the groups touched and
-		-- the readouts ran together as "4940Tier3". Spacing was never
-		-- what was crowding the bar -- the type size was.
-		layout.Padding = UDim.new(0, tokens:space(narrow and "base" or "loose"))
+	local state = tostring(value)
+	if state == "ACTIVE" then
+		result.Visible = false
+		return
 	end
-	local step = narrow and "body" or "title"
-	for _, item in ipairs(top:GetDescendants()) do
-		if item:GetAttribute("RQEIcon") ~= nil then
-			local side = tokens:text(step)
-			local frame = item :: Frame
-			frame.Size = UDim2.fromOffset(side, side)
-		elseif item:IsA("TextLabel") and item.Name == "Amount" then
-			local label = item :: TextLabel
-			label.TextSize = tokens:text(step)
-		end
-	end
-end
+	local won = state == "WON"
+	resultTitle.Text = if won then "Held" else "Overrun"
+	resultTitle.TextColor3 = if won then T.color.good else T.color.danger
+	resultLine.Text = string.format("Wave %d", number(player:GetAttribute("wave")))
+	--[[
+		The result takes the screen alone.
 
-if workspace.CurrentCamera ~= nil then
-	workspace.CurrentCamera
-		:GetPropertyChangedSignal("ViewportSize"):Connect(fit)
-end
-fit()
-
--- Audited at the size it ended up, not the size it was designed at. An icon
--- that passes at 32px and fails at 20 is the failure the goal names, and it
--- only appears after `fit` has run.
-for _, problem in ipairs(WorldKit.Ui.audit(gui)) do
-	warn("[siegehold] ui narrow: " .. problem)
-end
-
---------------------------------------------------------- objective and result
-
--- What to do next, one line, bottom centre. A player who has to open a menu to
--- find out what the game wants has already stopped playing.
-local objective = WorldKit.Ui.panel(tokens, hud, {
-	name = "Objective",
-	anchor = Vector2.new(0.5, 1),
-	position = UDim2.new(0.5, 0, 1, -tokens:space("loose")),
-	size = UDim2.new(0, 0, 0, 0),
-})
-objective.AutomaticSize = Enum.AutomaticSize.XY
-local objectiveText = WorldKit.Ui.text(tokens, objective, "body", CoreLoop[1] or "play")
-
--- Victory and defeat, which every genre has and none of them can leave to text
--- in the output window.
-local banner = WorldKit.Ui.panel(tokens, hud, {
-	name = "Result",
-	anchor = Vector2.new(0.5, 0.5),
-	position = UDim2.fromScale(0.5, 0.42),
-	size = UDim2.new(0, 0, 0, 0),
-})
-banner.AutomaticSize = Enum.AutomaticSize.XY
-banner.Visible = false
-local bannerText = WorldKit.Ui.text(tokens, banner, "display", "")
-
-function Interface.announce(kind: string, message: string)
-	bannerText.Text = message
-	bannerText.TextColor3 = tokens:color(
-		if kind == "victory" then "accentSuccess"
-		elseif kind == "defeat" then "accentDanger"
-		else "neutralLight")
-	banner.Visible = true
-	if kind ~= "victory" and kind ~= "defeat" then
-		task.delay(2.5, function()
-			banner.Visible = false
-		end)
-	end
-end
-
--- The session tells the HUD, rather than the HUD polling it. One announcement
--- per event means the wave counter and the banner can never disagree about
--- which wave it is.
-local events = ReplicatedStorage:FindFirstChild("RQEClientChannel")
-player:GetAttributeChangedSignal("sessionState"):Connect(function()
-	local state = player:GetAttribute("sessionState")
-	if state == "VICTORY" then
-		WorldKit.Audio.play("victory")
-		Interface.announce("victory", "Held")
-	elseif state == "DEFEAT" then
-		WorldKit.Audio.play("defeat")
-		Interface.announce("defeat", "Fallen")
-	elseif state == "ACTIVE" then
-		objectiveText.Text = CoreLoop[math.min(2, #CoreLoop)] or "defend"
-	end
+		It sat at ZIndex 30 over a sheet at 21 and simply won, so opening the
+		daily panel after a lost round drew "Overrun" across the middle of it:
+		the title unreadable, five of the seven day cells behind it, and both
+		surfaces looking broken. Two things claiming the centre is not a
+		layering problem to be solved with a bigger number -- one of them has
+		to yield, and the round ending outranks a menu.
+	]]
+	closeSheet()
+	result.Visible = true
 end)
 
---------------------------------------------------------------------- screens
-
---- One screen per template, hidden until asked for, each carrying its empty
---- state. The first session is the one where every list is empty, and a screen
---- designed only populated is the one a new player sees broken.
-function Interface.build(name: string): ScreenGui
-	local screen = WorldKit.Ui.screen(gui, name, { enabled = false, displayOrder = 10 })
-	local panel = WorldKit.Ui.panel(tokens, screen, {
-		anchor = Vector2.new(0.5, 0.5),
-		position = UDim2.fromScale(0.5, 0.5),
+-- ================================ feedback ==================================
+--: Server-sent, because "cash changed" and "you were paid for a seven-day
+--: streak" want different presentation, and an attribute change cannot tell
+--: them apart.
+Forge.Net.on("notice", function(payload: any)
+	if type(payload) ~= "table" or type(payload.text) ~= "string" then
+		return
+	end
+	UI.toast(payload.text, {
+		color = if payload.kind == "daily" then T.color.gold else T.color.text,
 	})
-	WorldKit.Ui.text(tokens, panel, "title", name)
+end)
 
-	if name == "hud" then
-		for index, step in ipairs(CoreLoop) do
-			WorldKit.Ui.text(tokens, panel, "body", index .. ". " .. step)
-		end
-	elseif name == "upgrade_tree" then
-		WorldKit.Ui.text(tokens, panel, "body",
-			"Build on a prepared foundation to raise your income.")
-	else
-		WorldKit.Ui.text(tokens, panel, "body", "Nothing here yet.")
-	end
-
-	-- Every screen closes. A screen with no way out is a screen a controller
-	-- player is trapped in.
-	local close = WorldKit.Ui.button(tokens, panel, "Close")
-	close.Activated:Connect(function()
-		screen.Enabled = false
-	end)
-	return screen
+function Interface.describe(): { [string]: any }
+	return {
+		scale = scaler.Scale,
+		touch = touch,
+		openPanel = open,
+		icons = Icons.describe(),
+	}
 end
 
-local SCREENS = { "hud", "settings", "upgrade_tree" }
-local screens: { [string]: ScreenGui } = {}
-for _, name in ipairs(SCREENS) do
-	screens[name] = Interface.build(name)
-end
-
--- A way in.
---
--- The screens above were built, wired and left unreachable: every one of
--- them is created with `Enabled = false` and nothing ever set it true. A
--- menu a player cannot open is the same as a menu nobody wrote, and it is
--- also why no capture of this game had a screen open in it.
---
--- Bottom right, one target, sized from the token scale so it stays within reach of a
--- thumb on a phone and does not swell on a desktop.
-local opener = WorldKit.Ui.stack(tokens, hud, "column", {
-	name = "Menu",
-	anchor = Vector2.new(1, 1),
-	position = UDim2.new(1, -tokens:space("base"), 1, -tokens:space("base")),
-	size = UDim2.fromOffset(0, 0),
-	gap = "tight",
-})
-opener.AutomaticSize = Enum.AutomaticSize.XY
-opener.BackgroundTransparency = 1
-
-for _, name in ipairs(SCREENS) do
-	local screen = screens[name]
-	if screen == nil then
-		continue
-	end
-	local label = string.gsub(name, "_", " ")
-	local button = WorldKit.Ui.button(tokens, opener, label)
-	button.Activated:Connect(function()
-		-- One at a time. Two overlapping panels is the state a player
-		-- cannot get out of without knowing which close button is on top.
-		for other, gui in pairs(screens) do
-			gui.Enabled = other == name and not screen.Enabled
-		end
-	end)
-end
-
---- Open a screen by name, for anything that is not a finger.
----
---- The capture tooling needs it: the goal asks for evidence with the UI
---- open, and driving a click through VirtualInputManager to get there is a
---- lot of machinery to prove a panel exists.
-function Interface.open(name: string): boolean
-	local screen = screens[name]
-	if screen == nil then
-		return false
-	end
-	for other, gui in pairs(screens) do
-		gui.Enabled = other == name
-	end
-	return true
-end
-
--- Reachable from the client bridge, which cannot require a LocalScript.
---
--- One BindableFunction per screen rather than one taking a name: the bridge
--- command that invokes these accepts a single `argument` and no array, so a
--- function keyed by name failed schema validation before it reached Studio.
--- A capture step that has to guess an encoding is one that quietly stops
--- producing evidence.
-for _, name in ipairs(SCREENS) do
-	local request = Instance.new("BindableFunction")
-	request.Name = "RQEOpen_" .. name
-	request.OnInvoke = function()
-		return Interface.open(name)
-	end
-	request.Parent = gui
-
-	-- And a way back out, for the same reason: a capture step that opens a
-	-- screen has to be able to close it, or every later shot is taken
-	-- through it.
-	local closer = Instance.new("BindableFunction")
-	closer.Name = "RQEClose_" .. name
-	closer.OnInvoke = function()
-		local screen = screens[name]
-		if screen == nil then
-			return false
-		end
-		screen.Enabled = false
-		return true
-	end
-	closer.Parent = gui
-end
-
--- Reachable from the client bridge, which cannot require a LocalScript.
-
--- Audited rather than assumed. `Ui.audit` reports text below the legibility
--- distance the token set declares -- the failure nobody sees on a desktop
--- monitor and every phone player sees immediately.
-for _, problem in ipairs(WorldKit.Ui.audit(gui)) do
-	warn("[siegehold] ui: " .. problem)
-end
-
-print(string.format("[siegehold] interface: %d readouts, %d screens",
-	4, #SCREENS))
+Forge.Debug.probe("interface", Interface.describe)
 
 return Interface

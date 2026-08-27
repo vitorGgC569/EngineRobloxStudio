@@ -18,10 +18,16 @@
       },
       "Behaviours": {
         "$path": "../../roblox/lib/Behaviours"
+      },
+      "Forge": {
+        "$path": "../../forge/luau/Forge"
       }
     },
     "ServerScriptService": {
       "$className": "ServerScriptService",
+      "$properties": {
+        "LoadStringEnabled": true
+      },
       "Gameplay": {
         "$path": "src/gameplay"
       },

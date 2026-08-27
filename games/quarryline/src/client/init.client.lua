@@ -249,7 +249,14 @@ UI.label(shop, "BUILD", {
 	and not by price. A shop sorted by cost teaches a player to buy the cheap
 	thing twice; a shop sorted by the chain teaches them what a chain is.
 ]]
-local ORDER = { "drill", "belt", "smelter", "depot" }
+local ORDER = {
+	"drill", "belt", "smelter", "depot",
+	--: Tiers after the base row rather than interleaved: a player reads the
+	--: chain first and the ladder second, and a shop that opens on twelve
+	--: buttons teaches neither.
+	"drill_mk2", "belt_mk2", "smelter_mk2", "depot_mk2",
+	"drill_mk3", "belt_mk3", "smelter_mk3", "depot_mk3",
+}
 
 --: Kept so the affordability pass can dim what the player cannot buy.
 local shopRows: { { button: TextButton, price: number, machine: any } } = {}

@@ -28,6 +28,7 @@ local Debug = Forge.Debug
 local World = Forge.World
 local Visual = Forge.Visual
 local Material = Forge.Material
+local Prop = Forge.Catalog.Prop
 local Mark = Forge.Mark
 local Rng = Forge.Core.Rng
 local Boot = Forge.Core.Boot
@@ -201,18 +202,52 @@ end
 
 -- ================================== scenery =================================
 --[[
-	Boulders, so the floor is not a featureless disc.
+	Real props, so the floor is not a field of grey boxes.
 
-	Scattered off the plots and off the path between them: scenery a player
-	walks into is scenery they resent. This is the smallest amount of dressing
-	that stops the place reading as a prototype.
+	This used to place ninety `Part` boulders with a randomised size and a grey
+	tint. It was the cheapest dressing that stopped the place reading as a
+	prototype, and it read as ninety grey boxes, because that is what it was.
+
+	They come from `Catalog.Prop` now: geometry read out of Creator Store models
+	that were fetched, opened and scanned, then baked to data so a live game can
+	rebuild them without `InsertService`.
+
+	The mix is deliberate. Rocks carry a quarry, but a floor of nothing but
+	rocks reads as rubble rather than as a place -- trees give the eye
+	something with height to measure the bowl against, and bushes and logs
+	break up the ground plane at a scale between the two.
 ]]
+
+--: Weighted so rocks dominate and the rest punctuate. Weights, not counts, so
+--: changing the total does not require re-balancing the mix.
+local SCENERY = {
+	{ topic = "rock", weight = 46, scale = { 0.8, 2.2 }, shadowAbove = 9 },
+	{ topic = "tree", weight = 22, scale = { 0.7, 1.4 }, shadowAbove = 0 },
+	{ topic = "bush", weight = 18, scale = { 0.9, 1.8 }, shadowAbove = math.huge },
+	{ topic = "log", weight = 14, scale = { 0.8, 1.6 }, shadowAbove = math.huge },
+}
+
+local function pickScenery(roll: number)
+	local total = 0
+	for _, entry in SCENERY do
+		total += entry.weight
+	end
+	local cursor = roll * total
+	for _, entry in SCENERY do
+		cursor -= entry.weight
+		if cursor <= 0 then
+			return entry
+		end
+	end
+	return SCENERY[1]
+end
+
 local function scatterRocks(field: any, container: Instance)
 	local half, centre = Ground.extent()
 	local stream = Rng.stream("quarry.rocks")
 	local placed = 0
 
-	for _ = 1, 90 do
+	for index = 1, 110 do
 		local x = centre + stream:number(-half + 40, half - 40)
 		local z = stream:number(-half + 40, half - 40)
 
@@ -226,22 +261,31 @@ local function scatterRocks(field: any, container: Instance)
 			continue
 		end
 
-		local size = stream:number(3, 11)
-		local rock = Instance.new("Part")
-		rock.Name = "Boulder"
-		rock.Size = Vector3.new(size, size * stream:number(0.6, 1.1), size * stream:number(0.7, 1.2))
-		rock.CFrame = CFrame.new(ground + Vector3.new(0, rock.Size.Y * 0.35, 0))
-			* CFrame.Angles(stream:number(-0.2, 0.2), stream:number(0, 6.28), stream:number(-0.2, 0.2))
-		rock.Anchored = true
-		rock.Color = Color3.fromRGB(
-			stream:int(96, 126), stream:int(92, 118), stream:int(86, 108))
-		rock.Material = Enum.Material.Rock
-		-- No shadow on the small stuff: ninety scattered props each casting one
-		-- is a measurable share of a frame for detail nobody looks at.
-		rock.CastShadow = size > 7
-		rock.Parent = container
+		local entry = pickScenery(stream:number(0, 1))
+		local scale = stream:number(entry.scale[1], entry.scale[2])
+		local prop = Prop.place(entry.topic, index * 7919 + placed, ground, {
+			scale = scale,
+			--: Scenery is looked at, not walked into. Collision on a hundred
+			--: props is a hundred more things the broadphase sorts every frame,
+			--: for the benefit of a player who wanted to walk past a bush.
+			canCollide = false,
+			parent = container,
+		})
+		if not prop then
+			continue
+		end
 
-		Mark.root(rock, "rock")
+		--: Shadows only on the big silhouettes. A hundred scattered props each
+		--: casting one is a measurable share of a frame for detail nobody looks
+		--: at -- the same discipline the boulders had, kept.
+		local castShadow = scale * 8 > entry.shadowAbove
+		for _, part in prop:GetDescendants() do
+			if part:IsA("BasePart") then
+				part.CastShadow = castShadow
+			end
+		end
+
+		Mark.root(prop, entry.topic)
 		placed += 1
 	end
 

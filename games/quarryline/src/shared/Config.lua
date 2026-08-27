@@ -11,12 +11,20 @@ return {
 	--[[
 		The plot grid.
 
-		Six plots of forty studs, laid in a row with a gap wide enough that two
-		neighbours cannot see each other's conveyors as one line. A tycoon whose
-		plots read as a single factory is a tycoon where nobody knows what they
-		own.
+		Six plots laid in a row with a gap wide enough that two neighbours
+		cannot see each other's conveyors as one line. A tycoon whose plots read
+		as a single factory is a tycoon where nobody knows what they own.
+
+		**On the size.** This was forty studs, and forty studs is eight
+		characters across -- a patio, not a factory floor. A player standing on
+		it could see the whole thing without turning, which leaves a tycoon with
+		nothing to grow into and makes every machine on it read as a toy.
+
+		112 is twenty characters across. It is deliberately more room than the
+		starting machines need: an empty corner is the thing a tycoon is *for*,
+		and a plot that looks full at the start has nowhere to go.
 	]]
-	plots = { count = 6, size = 40, spacing = 64, origin = Vector3.new(0, 12, 0) },
+	plots = { count = 6, size = 112, spacing = 150, origin = Vector3.new(0, 12, 0) },
 
 	--[[
 		The tick the whole economy runs on.

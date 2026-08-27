@@ -237,6 +237,29 @@ if not parent then
 	parent.Parent = ServerStorage
 end
 
+--[[
+	Geometry first.
+
+	`GetObjects` hands back everything the asset contains at top level, and for
+	plenty of models that includes a `ThumbnailCamera` the uploader left in, or
+	a loose `Script`. A caller taking `roots[1]` then asks a Camera for its
+	extents and a Script for its pivot -- which is exactly how two bakes failed
+	before this sort existed.
+
+	Stable within each group, so the author's own ordering survives.
+]]
+local ordered = {}
+for _, root in roots do table.insert(ordered, root) end
+table.sort(ordered, function(a, b)
+	local aGeom = a:IsA("Model") or a:IsA("BasePart")
+	local bGeom = b:IsA("Model") or b:IsA("BasePart")
+	if aGeom ~= bGeom then
+		return aGeom
+	end
+	return false
+end)
+roots = ordered
+
 local names, parts, scripts = {}, 0, 0
 for _, root in roots do
 	--: A name collision would leave two models sharing a name and the

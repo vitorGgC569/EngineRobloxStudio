@@ -87,6 +87,68 @@ Content.machines = {
 }
 
 --[[
+	Tiers, so there is somewhere to go.
+
+	Every machine above was the only one of its kind: you bought a drill, and
+	that was the drill you had for ever. The shop showed four buttons at the
+	first minute and the same four at the hundredth, which is a factory with no
+	second act.
+
+	Each machine now has two better versions, generated from one ratio rather
+	than written out, so the shape of the curve is visible and tunable in one
+	place instead of scattered across twelve tables.
+
+	**Price climbs faster than output**, and that is the whole design. At x9
+	price for x3 output, a tier is never a straight upgrade -- it is worth it
+	only once your throughput can feed it, which is what makes layout and order
+	a decision rather than a formality. A tycoon where the next tier is always
+	simply better is a tycoon that plays itself.
+]]
+local TIERS = {
+	{ suffix = "_mk2", label = "II", price = 9, output = 3, draw = 2.5 },
+	{ suffix = "_mk3", label = "III", price = 9, output = 3, draw = 2.5 },
+}
+
+do
+	local base = {}
+	for id, machine in Content.machines do
+		base[id] = machine
+	end
+
+	for id, machine in base do
+		local price, output, draw = machine.price, machine.output, machine.draw
+		for _, tier in TIERS do
+			price = math.floor(price * tier.price)
+			output = math.floor(output * tier.output)
+			draw = math.max(1, math.floor(draw * tier.draw))
+
+			local upgraded = {}
+			for key, value in machine do
+				upgraded[key] = value
+			end
+			--: From the base machine's label, never the previous tier's -- each
+			--: tier is built from the one below it, so appending to `machine`
+			--: gives "Drill II III".
+			upgraded.label = base[id].label .. " " .. tier.label
+			upgraded.price = price
+			upgraded.output = output
+			upgraded.draw = draw
+			upgraded.tier = tier.label
+			upgraded.baseId = id
+			--: A better machine is a bigger machine. Same footprint would make
+			--: a fully upgraded plot look identical to a starting one, and the
+			--: point of a tycoon is that you can see what somebody has built.
+			upgraded.footprintX = machine.footprintX + 1
+			upgraded.footprintZ = machine.footprintZ + 1
+			upgraded.colour = machine.colour:Lerp(Color3.fromRGB(255, 232, 150), 0.35)
+
+			Content.machines[id .. tier.suffix] = upgraded
+			machine = upgraded
+		end
+	end
+end
+
+--[[
 	The upgrade tree.
 
 	A directed graph rather than a list, because the interesting choice in a

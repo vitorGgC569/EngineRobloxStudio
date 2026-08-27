@@ -174,7 +174,11 @@ function Plots.start()
 		]]
 		local half = Config.plots.size / 2
 		Plots.grids[id] = GridPlacement.new({
-			cellSize = 4,
+			--: Seven, not four. A cell is the unit every machine is measured
+			--: in, so it is the real lever on how big anything reads: at four,
+			--: a two-by-two drill was eight studs and stood knee-high to the
+			--: player who built it.
+			cellSize = 7,
 			bounds = { minX = -half, maxX = half, minZ = -half, maxZ = half },
 			items = Content.gridItems(),
 		})

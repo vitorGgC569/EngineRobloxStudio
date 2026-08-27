@@ -588,6 +588,17 @@ builders.daily = function(parent: Instance): number
 	claim.ZIndex = 23
 	claim.Active = available
 
+	--: Temporary: the label is present and invisible and three hypotheses
+	--: about why were wrong. Reading the values the widget actually ended up
+	--: with beats a fourth guess.
+	local skin = claim:FindFirstChild("Skin")
+	Forge.Debug.info(string.format(
+		"claim: text=%q colour=%s size=%d z=%d skin=%s skinZ=%s image=%s",
+		claim.Text, tostring(claim.TextColor3), claim.TextSize, claim.ZIndex,
+		tostring(skin ~= nil),
+		if skin then tostring(skin.ZIndex) else "-",
+		if skin and skin:IsA("ImageLabel") then skin.Image else "-"))
+
 	return 190
 end
 

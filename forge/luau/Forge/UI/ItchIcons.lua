@@ -26,7 +26,7 @@
 	than guessed: a wrong grid shows every icon as a quarter of itself plus a
 	sliver of its neighbour, and looks deliberate.
 
-	308 whole icons across 77 tokens, and 59 sheets
+	348 whole icons across 77 tokens, and 59 sheets
 	holding 9133 cells. Published 2026-08-27.
 ]]
 
@@ -127,21 +127,42 @@ ItchIcons.entries = ({
 	{ token = "action.upgrade", id = 123791345572555, kind = "icon", width = 24, height = 24, pack = "Ninja-Adventure---Asset-Pack", author = "pixel-boy" },
 	{ token = "action.upgrade", id = 136452334543264, kind = "icon", width = 24, height = 24, pack = "Ninja-Adventure---Asset-Pack", author = "pixel-boy" },
 	{ token = "bar.normal", id = 115382407477272, kind = "frame", width = 32, height = 32, sliceLeft = 4, sliceTop = 4, sliceRight = 28, sliceBottom = 28, opaque = true, dark = false, pack = "Godot-Retro-Theme-Space-Worm", author = "Softwave" },
+	{ token = "bar.normal", id = 123058514184833, kind = "frame", width = 304, height = 19, sliceLeft = 8, sliceTop = 7, sliceRight = 297, sliceBottom = 12, opaque = true, dark = true, pack = "Free-Pro-UI-Light-Minimalism", author = "Wenrexa" },
 	{ token = "bar.normal", id = 128509060569099, kind = "frame", width = 96, height = 32, sliceLeft = 46, sliceTop = 11, sliceRight = 50, sliceBottom = 21, opaque = true, dark = true, pack = "Basic-Buttons-Asset-Pack", author = "Ordinary-Bumblebee" },
 	{ token = "bar.normal", id = 73311043995043, kind = "frame", width = 32, height = 32, sliceLeft = 1, sliceTop = 1, sliceRight = 31, sliceBottom = 31, opaque = true, dark = true, pack = "Godot-Retro-Theme-Space-Worm", author = "Softwave" },
 	{ token = "bar.normal", id = 78063640411862, kind = "frame", width = 96, height = 32, sliceLeft = 46, sliceTop = 11, sliceRight = 50, sliceBottom = 21, opaque = true, dark = true, pack = "Basic-Buttons-Asset-Pack", author = "Ordinary-Bumblebee" },
 	{ token = "bar.normal", id = 86321450446636, kind = "frame", width = 96, height = 32, sliceLeft = 11, sliceTop = 11, sliceRight = 96, sliceBottom = 21, opaque = false, dark = true, pack = "Basic-Buttons-Asset-Pack", author = "Ordinary-Bumblebee" },
+	{ token = "bar.normal", id = 87385537112010, kind = "frame", width = 304, height = 19, sliceLeft = 8, sliceTop = 7, sliceRight = 297, sliceBottom = 12, opaque = true, dark = true, pack = "Free-Pro-UI-Light-Minimalism", author = "Wenrexa" },
+	{ token = "bar.normal", id = 93621495895671, kind = "frame", width = 288, height = 68, sliceLeft = 18, sliceTop = 18, sliceRight = 270, sliceBottom = 42, opaque = true, dark = false, pack = "Farm-Puzzle-Animals-graphics-pack", author = "Cosmo-Myzrail-Gorynych" },
+	{ token = "bar.normal", id = 96134391721854, kind = "frame", width = 288, height = 68, sliceLeft = 18, sliceTop = 18, sliceRight = 270, sliceBottom = 42, opaque = true, dark = false, pack = "Farm-Puzzle-Animals-graphics-pack", author = "Cosmo-Myzrail-Gorynych" },
+	{ token = "bar.normal", id = 97471391421989, kind = "frame", width = 306, height = 23, sliceLeft = 10, sliceTop = 10, sliceRight = 157, sliceBottom = 13, opaque = false, dark = false, pack = "Free-UI-Hologram-Interface", author = "Wenrexa" },
 	{ token = "bar.normal", id = 97738320133346, kind = "frame", width = 32, height = 32, sliceLeft = 2, sliceTop = 2, sliceRight = 30, sliceBottom = 30, opaque = true, dark = true, pack = "Godot-Retro-Theme-Space-Worm", author = "Softwave" },
 	{ token = "button.disabled", id = 102350385291862, kind = "frame", width = 359, height = 162, sliceLeft = 20, sliceTop = 29, sliceRight = 339, sliceBottom = 122, opaque = true, dark = false, pack = "Hyper-Casual-UI---Free", author = "MadFireOn" },
 	{ token = "button.disabled", id = 88992266223732, kind = "frame", width = 359, height = 162, sliceLeft = 20, sliceTop = 29, sliceRight = 339, sliceBottom = 123, opaque = true, dark = true, pack = "Hyper-Casual-UI---Free", author = "MadFireOn" },
 	{ token = "button.disabled", id = 94432440413221, kind = "frame", width = 359, height = 162, sliceLeft = 20, sliceTop = 29, sliceRight = 339, sliceBottom = 123, opaque = true, dark = true, pack = "Hyper-Casual-UI---Free", author = "MadFireOn" },
 	{ token = "button.disabled", id = 96663864289798, kind = "frame", width = 359, height = 162, sliceLeft = 20, sliceTop = 29, sliceRight = 339, sliceBottom = 122, opaque = true, dark = false, pack = "Hyper-Casual-UI---Free", author = "MadFireOn" },
+	{ token = "button.normal", id = 101663625970297, kind = "frame", width = 405, height = 102, sliceLeft = 15, sliceTop = 15, sliceRight = 390, sliceBottom = 87, opaque = true, dark = false, pack = "Assets-Free-UI-KIT-White-5-Panels-Buttons", author = "Wenrexa" },
+	{ token = "button.normal", id = 101931799113256, kind = "frame", width = 325, height = 102, sliceLeft = 15, sliceTop = 15, sliceRight = 310, sliceBottom = 87, opaque = true, dark = false, pack = "Assets-Free-UI-KIT-White-5-Panels-Buttons", author = "Wenrexa" },
+	{ token = "button.normal", id = 107500132684096, kind = "frame", width = 500, height = 500, sliceLeft = 250, sliceTop = 248, sliceRight = 260, sliceBottom = 254, opaque = true, dark = false, pack = "Simple-Buttons-GUI-Kit", author = "Azilla" },
+	{ token = "button.normal", id = 110780983116492, kind = "frame", width = 384, height = 128, sliceLeft = 16, sliceTop = 16, sliceRight = 368, sliceBottom = 112, opaque = true, dark = false, pack = "UI-Pack", author = "Kenney-Assets" },
 	{ token = "button.normal", id = 115800583219842, kind = "frame", width = 32, height = 32, sliceLeft = 10, sliceTop = 14, sliceRight = 29, sliceBottom = 17, opaque = true, dark = true, pack = "Buttons-Pixel-Art", author = "Chotto-Inc" },
 	{ token = "button.normal", id = 116335233410070, kind = "frame", width = 32, height = 32, sliceLeft = 15, sliceTop = 16, sliceRight = 22, sliceBottom = 19, opaque = true, dark = true, pack = "Buttons-Pixel-Art", author = "Chotto-Inc" },
 	{ token = "button.normal", id = 119972723177964, kind = "frame", width = 32, height = 32, sliceLeft = 14, sliceTop = 7, sliceRight = 18, sliceBottom = 23, opaque = true, dark = true, pack = "Buttons-Pixel-Art", author = "Chotto-Inc" },
+	{ token = "button.normal", id = 122473162662481, kind = "frame", width = 256, height = 271, sliceLeft = 27, sliceTop = 28, sliceRight = 229, sliceBottom = 228, opaque = true, dark = false, pack = "Hyper-Casual-UI---Free", author = "MadFireOn" },
+	{ token = "button.normal", id = 124126994913444, kind = "frame", width = 96, height = 32, sliceLeft = 10, sliceTop = 14, sliceRight = 86, sliceBottom = 17, opaque = true, dark = true, pack = "Basic-Buttons-Asset-Pack", author = "Ordinary-Bumblebee" },
+	{ token = "button.normal", id = 130506999428358, kind = "frame", width = 500, height = 500, sliceLeft = 250, sliceTop = 249, sliceRight = 260, sliceBottom = 252, opaque = true, dark = false, pack = "Simple-Buttons-GUI-Kit", author = "Azilla" },
 	{ token = "button.normal", id = 75202498547371, kind = "frame", width = 32, height = 32, sliceLeft = 5, sliceTop = 4, sliceRight = 27, sliceBottom = 26, opaque = true, dark = true, pack = "Buttons-Pixel-Art", author = "Chotto-Inc" },
 	{ token = "button.normal", id = 78712640685606, kind = "frame", width = 32, height = 32, sliceLeft = 13, sliceTop = 12, sliceRight = 19, sliceBottom = 18, opaque = true, dark = false, pack = "Buttons-Pixel-Art", author = "Chotto-Inc" },
+	{ token = "button.normal", id = 78880528349069, kind = "frame", width = 384, height = 128, sliceLeft = 16, sliceTop = 52, sliceRight = 367, sliceBottom = 104, opaque = true, dark = false, pack = "UI-Pack", author = "Kenney-Assets" },
+	{ token = "button.normal", id = 80313838294899, kind = "frame", width = 256, height = 271, sliceLeft = 27, sliceTop = 28, sliceRight = 229, sliceBottom = 228, opaque = true, dark = false, pack = "Hyper-Casual-UI---Free", author = "MadFireOn" },
+	{ token = "button.normal", id = 82821319051683, kind = "frame", width = 61, height = 61, sliceLeft = 2, sliceTop = 3, sliceRight = 57, sliceBottom = 58, opaque = true, dark = false, pack = "Godot-Retro-Theme-Space-Worm", author = "Softwave" },
 	{ token = "button.normal", id = 86860407516670, kind = "frame", width = 32, height = 32, sliceLeft = 15, sliceTop = 16, sliceRight = 22, sliceBottom = 19, opaque = true, dark = true, pack = "Buttons-Pixel-Art", author = "Chotto-Inc" },
+	{ token = "button.normal", id = 87561487174416, kind = "frame", width = 281, height = 64, sliceLeft = 29, sliceTop = 32, sliceRight = 250, sliceBottom = 41, opaque = true, dark = false, pack = "Free-Pro-UI-Light-Minimalism", author = "Wenrexa" },
+	{ token = "button.normal", id = 89489161197794, kind = "frame", width = 61, height = 61, sliceLeft = 2, sliceTop = 3, sliceRight = 57, sliceBottom = 58, opaque = true, dark = false, pack = "Godot-Retro-Theme-Space-Worm", author = "Softwave" },
+	{ token = "button.normal", id = 89661256908691, kind = "frame", width = 281, height = 64, sliceLeft = 29, sliceTop = 32, sliceRight = 250, sliceBottom = 41, opaque = true, dark = false, pack = "Free-Pro-UI-Light-Minimalism", author = "Wenrexa" },
+	{ token = "button.normal", id = 90977552591672, kind = "frame", width = 90, height = 88, sliceLeft = 33, sliceTop = 32, sliceRight = 57, sliceBottom = 58, opaque = true, dark = true, pack = "RPG-UI-Set-1---Diablo-Style", author = "Foozle" },
+	{ token = "button.normal", id = 93625805941100, kind = "frame", width = 61, height = 61, sliceLeft = 7, sliceTop = 6, sliceRight = 55, sliceBottom = 45, opaque = true, dark = true, pack = "Assets-Free-Interface-UI-Dark-Miko", author = "Wenrexa" },
+	{ token = "button.normal", id = 99390479471495, kind = "frame", width = 61, height = 61, sliceLeft = 14, sliceTop = 12, sliceRight = 48, sliceBottom = 38, opaque = true, dark = true, pack = "Assets-Free-Interface-UI-Dark-Miko", author = "Wenrexa" },
 	{ token = "button.pressed", id = 112603793160252, kind = "frame", width = 32, height = 32, sliceLeft = 10, sliceTop = 16, sliceRight = 29, sliceBottom = 19, opaque = true, dark = true, pack = "Buttons-Pixel-Art", author = "Chotto-Inc" },
 	{ token = "button.pressed", id = 139850270134185, kind = "frame", width = 32, height = 32, sliceLeft = 13, sliceTop = 14, sliceRight = 19, sliceBottom = 20, opaque = true, dark = false, pack = "Buttons-Pixel-Art", author = "Chotto-Inc" },
 	{ token = "button.pressed", id = 70378831326727, kind = "frame", width = 32, height = 32, sliceLeft = 5, sliceTop = 6, sliceRight = 27, sliceBottom = 28, opaque = true, dark = true, pack = "Buttons-Pixel-Art", author = "Chotto-Inc" },
@@ -274,16 +295,34 @@ ItchIcons.entries = ({
 	{ token = "nav.shop", id = 76886859261599, kind = "icon", width = 140, height = 110, pack = "Lucid-Icons", author = "Leo-Red" },
 	{ token = "nav.shop", id = 80389677490210, kind = "icon", width = 128, height = 111, pack = "Free-UI-Hologram-Interface", author = "Wenrexa" },
 	{ token = "panel.normal", id = 103234480758685, kind = "frame", width = 48, height = 48, sliceLeft = 10, sliceTop = 10, sliceRight = 38, sliceBottom = 38, opaque = false, dark = true, pack = "Fantasy-UI-Borders", author = "Kenney-Assets" },
+	{ token = "panel.normal", id = 104967273034270, kind = "frame", width = 320, height = 332, sliceLeft = 70, sliceTop = 111, sliceRight = 250, sliceBottom = 223, opaque = true, dark = false, pack = "Farm-Puzzle-Animals-graphics-pack", author = "Cosmo-Myzrail-Gorynych" },
+	{ token = "panel.normal", id = 106758474303309, kind = "frame", width = 320, height = 240, sliceLeft = 154, sliceTop = 118, sliceRight = 320, sliceBottom = 125, opaque = false, dark = false, pack = "COMPLETE-AND-FREE-PSX-UI-USER-INTERFACE", author = "ROHHSA-ASSET-STORE" },
 	{ token = "panel.normal", id = 107808064262762, kind = "frame", width = 48, height = 48, sliceLeft = 8, sliceTop = 8, sliceRight = 40, sliceBottom = 40, opaque = false, dark = true, pack = "Fantasy-UI-Borders", author = "Kenney-Assets" },
+	{ token = "panel.normal", id = 108050431801581, kind = "frame", width = 300, height = 58, sliceLeft = 71, sliceTop = 16, sliceRight = 292, sliceBottom = 50, opaque = true, dark = false, pack = "Ninja-Adventure---Asset-Pack", author = "pixel-boy" },
+	{ token = "panel.normal", id = 117946217961225, kind = "frame", width = 367, height = 283, sliceLeft = 34, sliceTop = 88, sliceRight = 331, sliceBottom = 264, opaque = true, dark = false, pack = "Assets-Free-UI-KIT-White-5-Panels-Buttons", author = "Wenrexa" },
 	{ token = "panel.normal", id = 122368209414035, kind = "frame", width = 48, height = 48, sliceLeft = 13, sliceTop = 12, sliceRight = 35, sliceBottom = 36, opaque = true, dark = true, pack = "Lucifer---RPG-UI", author = "Foozle" },
+	{ token = "panel.normal", id = 130537899243617, kind = "frame", width = 335, height = 410, sliceLeft = 31, sliceTop = 32, sliceRight = 297, sliceBottom = 379, opaque = true, dark = false, pack = "Free-Pro-UI-Light-Minimalism", author = "Wenrexa" },
+	{ token = "panel.normal", id = 131050906614415, kind = "frame", width = 335, height = 410, sliceLeft = 31, sliceTop = 32, sliceRight = 297, sliceBottom = 379, opaque = true, dark = false, pack = "Free-Pro-UI-Light-Minimalism", author = "Wenrexa" },
 	{ token = "panel.normal", id = 73202875550992, kind = "frame", width = 32, height = 32, sliceLeft = 3, sliceTop = 3, sliceRight = 28, sliceBottom = 28, opaque = true, dark = false, pack = "Godot-Retro-Theme-Space-Worm", author = "Softwave" },
+	{ token = "panel.normal", id = 77831912200436, kind = "frame", width = 320, height = 240, sliceLeft = 138, sliceTop = 119, sliceRight = 320, sliceBottom = 125, opaque = false, dark = false, pack = "COMPLETE-AND-FREE-PSX-UI-USER-INTERFACE", author = "ROHHSA-ASSET-STORE" },
+	{ token = "panel.normal", id = 79671904640434, kind = "frame", width = 300, height = 58, sliceLeft = 71, sliceTop = 16, sliceRight = 292, sliceBottom = 50, opaque = true, dark = false, pack = "Ninja-Adventure---Asset-Pack", author = "pixel-boy" },
 	{ token = "panel.normal", id = 84129984343509, kind = "frame", width = 24, height = 24, sliceLeft = 4, sliceTop = 6, sliceRight = 20, sliceBottom = 16, opaque = true, dark = false, pack = "Jayros-Menu-Sample-for-GB-Studio-4.2.0", author = "Jayro-Jones" },
+	{ token = "panel.normal", id = 84962070500399, kind = "frame", width = 256, height = 256, sliceLeft = 125, sliceTop = 125, sliceRight = 131, sliceBottom = 131, opaque = true, dark = false, pack = "1000-Input-Prompts", author = "Meritite-Union" },
+	{ token = "panel.normal", id = 86286516670094, kind = "frame", width = 455, height = 298, sliceLeft = 13, sliceTop = 147, sliceRight = 442, sliceBottom = 155, opaque = true, dark = true, pack = "Assets-Free-Interface-UI-Dark-Miko", author = "Wenrexa" },
+	{ token = "panel.normal", id = 86348643884899, kind = "frame", width = 192, height = 192, sliceLeft = 8, sliceTop = 8, sliceRight = 184, sliceBottom = 184, opaque = true, dark = false, pack = "Basic-Buttons-Asset-Pack", author = "Ordinary-Bumblebee" },
 	{ token = "panel.normal", id = 87322148879564, kind = "frame", width = 32, height = 32, sliceLeft = 3, sliceTop = 3, sliceRight = 28, sliceBottom = 28, opaque = false, dark = true, pack = "Godot-Retro-Theme-Space-Worm", author = "Softwave" },
+	{ token = "panel.normal", id = 90323766767673, kind = "frame", width = 98, height = 131, sliceLeft = 41, sliceTop = 36, sliceRight = 57, sliceBottom = 73, opaque = true, dark = true, pack = "Lucifer---RPG-UI", author = "Foozle" },
+	{ token = "panel.normal", id = 93582171799554, kind = "frame", width = 160, height = 166, sliceLeft = 34, sliceTop = 56, sliceRight = 126, sliceBottom = 111, opaque = true, dark = false, pack = "Farm-Puzzle-Animals-graphics-pack", author = "Cosmo-Myzrail-Gorynych" },
+	{ token = "panel.normal", id = 97223930649774, kind = "frame", width = 336, height = 222, sliceLeft = 19, sliceTop = 19, sliceRight = 317, sliceBottom = 203, opaque = true, dark = false, pack = "Assets-Free-UI-KIT-White-5-Panels-Buttons", author = "Wenrexa" },
+	{ token = "panel.normal", id = 98331210470099, kind = "frame", width = 355, height = 298, sliceLeft = 13, sliceTop = 147, sliceRight = 342, sliceBottom = 155, opaque = true, dark = true, pack = "Assets-Free-Interface-UI-Dark-Miko", author = "Wenrexa" },
 	{ token = "slot.hover", id = 134203760534814, kind = "frame", width = 414, height = 309, sliceLeft = 15, sliceTop = 15, sliceRight = 399, sliceBottom = 231, opaque = true, dark = true, pack = "RenPy-Credits-Screen-UI-Templates", author = "Gaming-Variety-Potato" },
 	{ token = "slot.normal", id = 107715690739157, kind = "frame", width = 57, height = 62, sliceLeft = 12, sliceTop = 17, sliceRight = 40, sliceBottom = 46, opaque = true, dark = false, pack = "Free-Pro-UI-Light-Minimalism", author = "Wenrexa" },
+	{ token = "slot.normal", id = 117150533065746, kind = "frame", width = 320, height = 240, sliceLeft = 117, sliceTop = 0, sliceRight = 320, sliceBottom = 127, opaque = false, dark = false, pack = "COMPLETE-AND-FREE-PSX-UI-USER-INTERFACE", author = "ROHHSA-ASSET-STORE" },
+	{ token = "slot.normal", id = 127487481815802, kind = "frame", width = 320, height = 240, sliceLeft = 115, sliceTop = 0, sliceRight = 320, sliceBottom = 129, opaque = false, dark = false, pack = "COMPLETE-AND-FREE-PSX-UI-USER-INTERFACE", author = "ROHHSA-ASSET-STORE" },
 	{ token = "slot.normal", id = 130219827615719, kind = "frame", width = 57, height = 62, sliceLeft = 12, sliceTop = 11, sliceRight = 45, sliceBottom = 46, opaque = true, dark = false, pack = "Free-Pro-UI-Light-Minimalism", author = "Wenrexa" },
 	{ token = "slot.normal", id = 83661970062049, kind = "frame", width = 57, height = 62, sliceLeft = 12, sliceTop = 17, sliceRight = 40, sliceBottom = 46, opaque = true, dark = false, pack = "Free-Pro-UI-Light-Minimalism", author = "Wenrexa" },
 	{ token = "slot.normal", id = 85988405819921, kind = "frame", width = 57, height = 62, sliceLeft = 12, sliceTop = 17, sliceRight = 40, sliceBottom = 46, opaque = true, dark = true, pack = "Free-Pro-UI-Light-Minimalism", author = "Wenrexa" },
+	{ token = "slot.normal", id = 95129722353177, kind = "frame", width = 414, height = 309, sliceLeft = 15, sliceTop = 15, sliceRight = 399, sliceBottom = 231, opaque = true, dark = true, pack = "RenPy-Credits-Screen-UI-Templates", author = "Gaming-Variety-Potato" },
 	{ token = "slot.normal", id = 96512905408712, kind = "frame", width = 57, height = 62, sliceLeft = 12, sliceTop = 17, sliceRight = 40, sliceBottom = 46, opaque = true, dark = false, pack = "Free-Pro-UI-Light-Minimalism", author = "Wenrexa" },
 	{ token = "slot.normal", id = 98785339654511, kind = "frame", width = 57, height = 62, sliceLeft = 12, sliceTop = 17, sliceRight = 40, sliceBottom = 46, opaque = true, dark = false, pack = "Free-Pro-UI-Light-Minimalism", author = "Wenrexa" },
 	{ token = "social.chat", id = 104279535757482, kind = "icon", width = 192, height = 96, pack = "FREE-Magical-Scrolls-and-Tomes---115-Pack", author = "Polyy.AI" },
@@ -361,6 +400,7 @@ ItchIcons.entries = ({
 	{ token = "status.xp", id = 121599621106796, kind = "icon", width = 63, height = 63, pack = "Free-Pro-UI-Light-Minimalism", author = "Wenrexa" },
 	{ token = "status.xp", id = 126249471560866, kind = "icon", width = 63, height = 63, pack = "Free-Pro-UI-Light-Minimalism", author = "Wenrexa" },
 	{ token = "tab.hover", id = 103259478890722, kind = "frame", width = 32, height = 32, sliceLeft = 3, sliceTop = 3, sliceRight = 29, sliceBottom = 29, opaque = true, dark = false, pack = "Godot-Retro-Theme-Space-Worm", author = "Softwave" },
+	{ token = "tab.normal", id = 104029489120468, kind = "frame", width = 256, height = 256, sliceLeft = 118, sliceTop = 123, sliceRight = 225, sliceBottom = 148, opaque = false, dark = true, pack = "1000-Input-Prompts", author = "Meritite-Union" },
 	{ token = "tab.normal", id = 128820723894399, kind = "frame", width = 32, height = 32, sliceLeft = 3, sliceTop = 3, sliceRight = 29, sliceBottom = 29, opaque = true, dark = false, pack = "Godot-Retro-Theme-Space-Worm", author = "Softwave" },
 	{ token = "tab.normal", id = 135601317577095, kind = "frame", width = 32, height = 32, sliceLeft = 4, sliceTop = 3, sliceRight = 28, sliceBottom = 29, opaque = true, dark = false, pack = "Godot-Retro-Theme-Space-Worm", author = "Softwave" },
 	{ token = "tab.normal", id = 137182615968102, kind = "frame", width = 168, height = 22, sliceLeft = 84, sliceTop = 9, sliceRight = 88, sliceBottom = 12, opaque = true, dark = false, pack = "Tiny-RPG---Dragon-Regalia-GUI", author = "tiopalada" },
@@ -534,12 +574,31 @@ local byFrame: { [string]: Entry } = {}
 	white outline with the label lost inside it. A 192x64 face carries to any
 	width because its border has somewhere to be.
 ]]
+--[[
+	Then dark, because the engine's theme is dark.
+
+	Skinning a *container* changes the colour context of everything inside it,
+	and that is not something the container can fix per child: a light panel
+	arrived and the title went white-on-white, the day labels vanished into the
+	plate, and every one of those labels was correctly using `UI.theme` -- for
+	the dark surface it was written against.
+
+	Two ways out. Propagate "this surface is light" so every label picks its
+	own contrast, or pick art that matches the theme already. The second costs
+	one comparison and no changes anywhere else, and a project with a light
+	theme flips this line rather than rewriting its labels.
+]]
+local PREFER_DARK = true
+
 local function better(candidate: Entry, held: Entry?): boolean
 	if not held then
 		return true
 	end
 	if (candidate.opaque == true) ~= (held.opaque == true) then
 		return candidate.opaque == true
+	end
+	if (candidate.dark == true) ~= (held.dark == true) then
+		return (candidate.dark == true) == PREFER_DARK
 	end
 	return candidate.width * candidate.height > held.width * held.height
 end

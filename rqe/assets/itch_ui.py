@@ -13,7 +13,7 @@ better outcome anyway: ninety icons as one asset is one HTTP fetch and one
 texture, against ninety of each. So the job here is not "find the loose PNGs",
 it is:
 
-  * upload the sheet as one `Decal`,
+  * upload the sheet as one `Image`,
   * work out the grid,
   * and record the offset and size of every cell, so a caller asks for
     `ui.close` and gets an image plus a rectangle.
@@ -27,8 +27,11 @@ the next one, which is worse than nothing because it looks deliberate.
 What gets uploaded
 ------------------
 
-`Decal` is the assetType. Roblox re-encodes on upload; PNG with alpha survives,
-which is the whole point for an icon.
+`Image` is the assetType, and the distinction is not cosmetic: Open Cloud also
+accepts `Decal`, reports it Approved and Active, and hands back an id that
+**does not render**. 367 assets went up that way before a part with one of each
+side by side showed the difference. Roblox re-encodes on upload; PNG with alpha
+survives, which is the whole point for an icon.
 
 Loose icons are still preferred where a pack ships them, because a cell of a
 sheet can only be as good as the grid detection and a loose file needs none.
@@ -698,15 +701,29 @@ def frame_role(stem: str) -> tuple[str, str] | None:
     return best[1], state
 
 
-def select_frames(images: list[dict[str, Any]], per_role: int = 6,
+def select_frames(images: list[dict[str, Any]], per_role: int = 16,
+                  per_pack: int = 2,
                   progress: Any = print) -> list[dict[str, Any]]:
     """Panels, button faces and bars that measure as real nine-slices.
 
     Each candidate is opened and measured; anything without a tileable middle
     is dropped rather than published with a guessed inset. That is most of
     them -- circles, glossy renders and illustrations are not nine-slices --
-    and the ones that survive are the ones a HUD can actually be built from at
-    any size.
+    and the ones that survive are the ones a HUD can be built from at any size.
+
+    Two rules here were wrong on the first pass and both came from treating an
+    upload as expensive:
+
+    **Smallest first.** The reasoning was that a nine-slice never scales its
+    corners, so a 32px border is as crisp as a 512px one for less memory. True,
+    and it ignored that a 32px *button face* has a one-pixel border and a
+    two-pixel middle: stretched across a 450-pixel bar it draws a thin outline
+    and nothing else. The Claim button came out as an empty white rectangle.
+
+    **Six per role, no cap per pack.** One generous pack filled every
+    `button.normal` slot with six near-identical 32px faces, so there was no
+    larger alternative to fall back to. A cap per pack forces the variety that
+    makes the preference in `ItchIcons` mean anything.
     """
     candidates = []
     for image in images:
@@ -719,13 +736,14 @@ def select_frames(images: list[dict[str, Any]], per_role: int = 6,
             continue
         candidates.append({**image, "role": role[0], "state": role[1]})
 
-    #: Smaller first. A 96px panel border carries the same design as a 512px
-    #: one and costs a fraction of the texture memory at the same crispness,
-    #: because a nine-slice never scales its corners.
-    candidates.sort(key=lambda i: (i["role"], i["state"], i["width"] * i["height"]))
+    #: Largest first, so the fallback ladder in `ItchIcons` starts from art
+    #: with a border big enough to survive being stretched.
+    candidates.sort(key=lambda i: (i["role"], i["state"],
+                                   -(i["width"] * i["height"])))
 
     chosen: list[dict[str, Any]] = []
     taken: dict[tuple[str, str], int] = {}
+    from_pack: dict[tuple[str, str, str], int] = {}
     #: Packs republish each other constantly, so the same `Slider_Blue_Grabber`
     #: turns up in three of them. Keyed on name and size rather than on bytes:
     #: a re-export differs byte for byte and is still the same picture.
@@ -735,6 +753,9 @@ def select_frames(images: list[dict[str, Any]], per_role: int = 6,
     for image in candidates:
         slot = (image["role"], image["state"])
         if taken.get(slot, 0) >= per_role:
+            continue
+        pack_slot = (image["role"], image["state"], str(image.get("pack")))
+        if from_pack.get(pack_slot, 0) >= per_pack:
             continue
         fingerprint = (image["stem"].lower(), image["width"], image["height"])
         if fingerprint in seen:
@@ -751,6 +772,7 @@ def select_frames(images: list[dict[str, Any]], per_role: int = 6,
             continue
         measured += 1
         taken[slot] = taken.get(slot, 0) + 1
+        from_pack[pack_slot] = from_pack.get(pack_slot, 0) + 1
         chosen.append({**image, "shape": "frame", "slice": insets,
                        "topic": f"{image['role']}.{image['state']}"})
 
@@ -1102,12 +1124,31 @@ local byFrame: { [string]: Entry } = {}
 	white outline with the label lost inside it. A 192x64 face carries to any
 	width because its border has somewhere to be.
 ]]
+--[[
+	Then dark, because the engine's theme is dark.
+
+	Skinning a *container* changes the colour context of everything inside it,
+	and that is not something the container can fix per child: a light panel
+	arrived and the title went white-on-white, the day labels vanished into the
+	plate, and every one of those labels was correctly using `UI.theme` -- for
+	the dark surface it was written against.
+
+	Two ways out. Propagate "this surface is light" so every label picks its
+	own contrast, or pick art that matches the theme already. The second costs
+	one comparison and no changes anywhere else, and a project with a light
+	theme flips this line rather than rewriting its labels.
+]]
+local PREFER_DARK = true
+
 local function better(candidate: Entry, held: Entry?): boolean
 	if not held then
 		return true
 	end
 	if (candidate.opaque == true) ~= (held.opaque == true) then
 		return candidate.opaque == true
+	end
+	if (candidate.dark == true) ~= (held.dark == true) then
+		return (candidate.dark == true) == PREFER_DARK
 	end
 	return candidate.width * candidate.height > held.width * held.height
 end

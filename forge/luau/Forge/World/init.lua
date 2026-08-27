@@ -204,6 +204,10 @@ export type PaintConfig = {
 	   ten voxels of height instead of fifty, which is the difference between a
 	   world that generates in eight seconds and one that generates in forty.
 ]]
+--: Roblox refuses terrain outside this on either axis; `WriteVoxels` throws
+--: rather than clipping. The real bound, and the only one `paint` should apply.
+local TERRAIN_LIMIT = 32000
+
 function World.paint(field: any, config: PaintConfig?)
 	local cfg = config or {}
 	local res = cfg.resolution or 4
@@ -232,7 +236,11 @@ function World.paint(field: any, config: PaintConfig?)
 	local chunksZ = math.ceil((maxZ - minZ) / chunkStuds)
 	local total = chunksX * chunksZ
 	local done = 0
-	local startClock = os.clock()
+	--: Attempted, wrote, and had nothing to write are three different numbers.
+	--: Reporting only the first is what let a world of air look painted.
+	local written, skipped = 0, 0
+	local began = os.clock()
+	local startClock = began
 	local budget = (cfg.budgetMs or 8) / 1000
 
 	for cx = 0, chunksX - 1 do
@@ -268,8 +276,27 @@ function World.paint(field: any, config: PaintConfig?)
 				slopes[i] = sRow
 			end
 
-			local yLow = math.max(0, math.floor(minH) - 12)
-			local yHigh = math.ceil(math.max(maxH, seaLevel == -math.huge and maxH or seaLevel) + res * 2)
+			--[[
+				How deep to write, and why this is no longer clamped at zero.
+
+				This read `math.max(0, math.floor(minH) - 12)`, which floored
+				the bottom of every write at Y=0. Roblox terrain spans ±32000,
+				so that floor did nothing for a world above sea level and broke
+				every world below it: with `minH` and `maxH` both negative,
+				`yLow` came out *above* `yHigh`, the region had no volume, the
+				`ny > 0` guard below skipped the write, and the chunk was
+				counted as done anyway.
+
+				The result was a whole world reported as painted and made
+				entirely of air -- props landing on nothing, spawns over the
+				void, and a progress callback saying every chunk was written.
+
+				Bounded by the terrain limits instead, which is the real
+				constraint: `WriteVoxels` throws outside them.
+			]]
+			local yLow = math.max(-TERRAIN_LIMIT, math.floor(minH) - 12)
+			local yHigh = math.min(TERRAIN_LIMIT,
+				math.ceil(math.max(maxH, seaLevel == -math.huge and maxH or seaLevel) + res * 2))
 
 			local region = Region3.new(Vector3.new(x0, yLow, z0), Vector3.new(x1, yHigh, z1)):ExpandToGrid(res)
 			local dims = region.Size / res
@@ -313,6 +340,16 @@ function World.paint(field: any, config: PaintConfig?)
 				end
 
 				terrain:WriteVoxels(region, res, materials, occupancy)
+				written += 1
+			else
+				--[[
+					A chunk with no volume writes nothing.
+
+					It used to be counted as done regardless, which is how a
+					world of air reported "256 chunks written". A caller cannot
+					assert on a number that counts attempts.
+				]]
+				skipped += 1
 			end
 
 			done += 1
@@ -326,7 +363,25 @@ function World.paint(field: any, config: PaintConfig?)
 		end
 	end
 
-	return { chunks = total, seconds = os.clock() - startClock }
+	--[[
+		What actually happened, not what was planned.
+
+		`chunks` was `total` -- the number of chunks the loop intended to visit
+		-- and `seconds` was measured from `startClock`, which the budget loop
+		resets on every yield, so it reported the time since the last yield
+		rather than the duration of the paint.
+
+		`written` is the number a caller should assert on. `skipped` being
+		equal to `total` means the field never intersected the region that was
+		painted, which is a configuration error and not a success.
+	]]
+	return {
+		chunks = written,
+		attempted = total,
+		written = written,
+		skipped = skipped,
+		seconds = os.clock() - began,
+	}
 end
 
 -- ================================ scatter ===================================

@@ -16,9 +16,11 @@ to destroy the data behind it.
 
 from __future__ import annotations
 
+import json
 import os
 import shutil
 import subprocess
+import sys
 import time
 from datetime import datetime, timezone
 from pathlib import Path
@@ -82,6 +84,82 @@ def stop_studio(wait_seconds: float = 15.0) -> dict[str, Any]:
             return {"stopped": True, "wasRunning": True}
         time.sleep(0.5)
     return {"stopped": False, "wasRunning": True, "reason": "process did not exit in time"}
+
+
+#: Where the hub listens. Matches `rqe.py studio serve`'s default.
+HUB_URL = "http://127.0.0.1:8790"
+
+
+def hub_alive(url: str = HUB_URL, timeout: float = 3.0) -> bool:
+    """Is the bridge hub answering?"""
+    import urllib.error
+    import urllib.request
+
+    payload = json.dumps({"jsonrpc": "2.0", "id": 1,
+                          "method": "bridge.ping", "params": {}}).encode()
+    request = urllib.request.Request(
+        url.rstrip("/") + "/rpc", data=payload,
+        headers={"Content-Type": "application/json"})
+    try:
+        with urllib.request.urlopen(request, timeout=timeout):
+            return True
+    except urllib.error.HTTPError:
+        #: An error *response* still proves something is listening, which is
+        #: the only question being asked here.
+        return True
+    except (urllib.error.URLError, OSError):
+        return False
+
+
+def ensure_hub(root: Path | str | None = None, url: str = HUB_URL,
+               wait_seconds: float = 25.0) -> dict[str, Any]:
+    """Start the bridge hub if nothing is answering, and wait for it.
+
+    The hub is long-running infrastructure and the documentation says to leave
+    it up, which is exactly why its absence is so disorienting: every command
+    fails with connection refused and none of them mention the hub. It has
+    died mid-session -- taking a whole restart flow with it -- and the recovery
+    was to notice and start it by hand.
+
+    Nothing here kills it: `stop_studio` targets the Studio image only. This is
+    for the case where it is already gone, so a restart can carry on instead of
+    stopping to be rescued.
+    """
+    if hub_alive(url):
+        return {"started": False, "alive": True}
+
+    #: Walk up for `rqe.py` rather than assuming a depth. A caller passes the
+    #: place file, the repo root, or nothing, and all three should work.
+    base = Path(root).resolve() if root else Path.cwd().resolve()
+    if base.is_file():
+        base = base.parent
+    entry = None
+    for candidate in (base, *base.parents):
+        if (candidate / "rqe.py").is_file():
+            entry = candidate / "rqe.py"
+            break
+    if entry is None:
+        return {"started": False, "alive": False,
+                "reason": f"no rqe.py at or above {base}; pass root="}
+    base = entry.parent
+
+    #: Detached, so it outlives the caller the way a hub started by hand does.
+    subprocess.Popen(
+        [sys.executable, str(entry), "studio", "serve"],
+        cwd=str(base),
+        stdout=subprocess.DEVNULL,
+        stderr=subprocess.DEVNULL,
+        creationflags=getattr(subprocess, "DETACHED_PROCESS", 0),
+    )
+
+    deadline = time.monotonic() + wait_seconds
+    while time.monotonic() < deadline:
+        if hub_alive(url):
+            return {"started": True, "alive": True,
+                    "seconds": round(wait_seconds - (deadline - time.monotonic()), 1)}
+        time.sleep(0.5)
+    return {"started": True, "alive": False,
+            "reason": f"hub did not answer within {wait_seconds}s"}
 
 
 def archive_recovery_files(archive_root: Path) -> dict[str, Any]:
@@ -450,32 +528,73 @@ def stop_play_solo(bridge: Any | None = None, wait_seconds: float = 30.0) -> dic
                     # than not pinning at all.
                     bridge.pinned_session = None
 
-    user32, _hwnd, title = _focus_studio()
-
     VK_SHIFT, VK_F5 = 0x10, 0x74
-    user32.keybd_event(VK_SHIFT, 0, 0, 0)
-    user32.keybd_event(VK_F5, 0, 0, 0)
-    user32.keybd_event(VK_F5, 0, 2, 0)
-    user32.keybd_event(VK_SHIFT, 0, 2, 0)
 
-    result: dict[str, Any] = {"keySent": "Shift+F5", "focusedWindow": title}
+    def press() -> str:
+        """Focus Studio and send Shift+F5. Returns the window it landed on."""
+        user32, _hwnd, window = _focus_studio()
+        user32.keybd_event(VK_SHIFT, 0, 0, 0)
+        user32.keybd_event(VK_F5, 0, 0, 0)
+        user32.keybd_event(VK_F5, 0, 2, 0)
+        user32.keybd_event(VK_SHIFT, 0, 2, 0)
+        return window
+
+    title = press()
+    result: dict[str, Any] = {"keySent": "Shift+F5", "focusedWindow": title,
+                              "attempts": 1}
     if stopped_over_bridge is not None:
         result["runStop"] = stopped_over_bridge
     if bridge is None:
         return result
 
+    #[[
+    #    Retry the keystroke, do not send it once and hope.
+    #
+    #    This sent Shift+F5 a single time and then waited out the whole timeout
+    #    watching for the session to disappear. When Studio is mid-frame, busy
+    #    compiling, or briefly not the foreground window, the key is simply
+    #    lost -- and the call then reported `stopped: false` forty seconds later
+    #    having done nothing since the first second.
+    #
+    #    Studio ignores synthesised messages that are not sent to a focused
+    #    window, so a lost keystroke is not rare; it is the normal outcome of
+    #    pressing at a bad moment. Pressing again every few seconds costs
+    #    nothing and turns a coin-flip into a certainty.
+    #]]
+    live: list[dict[str, Any]] = []
     deadline = time.monotonic() + wait_seconds
+    next_press = time.monotonic() + 4.0
     while time.monotonic() < deadline:
         try:
             sessions = bridge.status().get("sessions", [])
         except Exception:
             sessions = []
-        if not [item for item in sessions if item.get("context") in {"run", "server", "client"}]:
+        live = [item for item in sessions
+                if item.get("context") in {"run", "server", "client"}]
+        if not live:
             result["stopped"] = True
             return result
+
+        if time.monotonic() >= next_press:
+            title = press()
+            result["attempts"] += 1
+            result["focusedWindow"] = title
+            next_press = time.monotonic() + 4.0
         time.sleep(1.0)
 
+    #: Say what was still there. `stopped: false` on its own tells a caller
+    #: that something went wrong and nothing about what to do next.
     result["stopped"] = False
+    result["stillRunning"] = [
+        {"session": item.get("session"), "context": item.get("context"),
+         "place": item.get("place")}
+        for item in live
+    ]
+    result["hint"] = (
+        "Shift+F5 was sent {n} times to '{w}' and the session outlived it. "
+        "If the window named there is not Studio, focus is going elsewhere; "
+        "otherwise restart_for_bridge() ends it unconditionally."
+    ).format(n=result["attempts"], w=title)
     return result
 
 
@@ -650,8 +769,8 @@ def start_play_solo(bridge: Any | None = None, wait_seconds: float = 90.0, resta
 
 
 def restart_for_bridge(
-    place: Path,
-    archive_root: Path,
+    place: Path | str,
+    archive_root: Path | str,
     bridge: Any | None = None,
     wait_seconds: float = 180.0,
     background: bool = True,
@@ -660,8 +779,20 @@ def restart_for_bridge(
 
     With a ``bridge`` the call returns only once the plugin has handshaken, so
     the caller knows Studio is genuinely ready rather than merely launched.
+
+    Paths are coerced rather than demanded. This is the first call in the
+    documented restart flow, and it used to raise ``TypeError`` on a plain
+    string -- which every example of a path in a shell or a JSON payload is.
+    Refusing the obvious spelling of an argument at the entry point to a
+    workflow is a defect in the workflow, not in the caller.
     """
+    place = Path(place)
+    archive_root = Path(archive_root)
     steps: dict[str, Any] = {}
+
+    #: Before anything else: a restart that talks to a dead hub fails at every
+    #: step for a reason none of the steps name.
+    steps["hub"] = ensure_hub(place)
 
     # Snapshot first: the Studio about to be killed may still be connected, and
     # its session lingers for a while afterwards. Waiting for "any session"

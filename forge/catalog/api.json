@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-08-25T12:49:39+00:00",
+  "generatedAt": "2026-08-27T16:05:23+00:00",
   "engine": "Forge",
-  "modules": 213,
-  "functions": 1481,
+  "modules": 230,
+  "functions": 1595,
   "examples": [
     "Access",
     "Anim",
@@ -153,6 +153,11 @@
       "functions": 4
     },
     {
+      "name": "Bank",
+      "summary": "Bank — sounds every game can play, so no game starts mute",
+      "functions": 3
+    },
+    {
       "name": "BehaviorTree",
       "summary": "BehaviorTree — minimal SEQUENCE / FALLBACK tree with RUNNING status",
       "functions": 5
@@ -205,7 +210,7 @@
     {
       "name": "Catalog",
       "summary": "Catalog — Creator Store models this project has verified",
-      "functions": 7
+      "functions": 13
     },
     {
       "name": "ClassRegistry",
@@ -238,8 +243,13 @@
       "functions": 6
     },
     {
+      "name": "Companion",
+      "summary": "Companion — things that follow you, and stay readable while they do",
+      "functions": 2
+    },
+    {
       "name": "Core",
-      "summary": "!strict Core — primitives with no Roblox opinions in them",
+      "summary": "Core — primitives with no Roblox opinions in them",
       "functions": 0
     },
     {
@@ -403,6 +413,11 @@
       "functions": 6
     },
     {
+      "name": "Formation",
+      "summary": "Formation — where each follower stands, relative to whoever it follows",
+      "functions": 3
+    },
+    {
       "name": "Formula",
       "summary": "Formula — an immutable, renderable chain of arithmetic operations",
       "functions": 2
@@ -485,7 +500,7 @@
     {
       "name": "IncomeTracker",
       "summary": "IncomeTracker — a moving window of per-sample deltas for rate displays",
-      "functions": 4
+      "functions": 6
     },
     {
       "name": "Input",
@@ -518,6 +533,16 @@
       "functions": 27
     },
     {
+      "name": "ItchAssets",
+      "summary": "ItchAssets — CC0 models published to this account, grouped by topic",
+      "functions": 4
+    },
+    {
+      "name": "Leaderboard",
+      "summary": "Leaderboard — persistent cross-server rankings that reset cleanly",
+      "functions": 10
+    },
+    {
       "name": "LiveConfig",
       "summary": "LiveConfig — runtime tuning without republishing",
       "functions": 3
@@ -533,6 +558,11 @@
       "functions": 5
     },
     {
+      "name": "Luck",
+      "summary": "Luck — shifting the odds toward the rare end, without breaking the economy",
+      "functions": 6
+    },
+    {
       "name": "Mark",
       "summary": "Mark — tell the Quality Engine what it is looking at",
       "functions": 10
@@ -545,7 +575,12 @@
     {
       "name": "Material",
       "summary": "Material — physically based surfaces",
-      "functions": 11
+      "functions": 16
+    },
+    {
+      "name": "Meander",
+      "summary": "Meander — what a follower does while nothing is happening",
+      "functions": 2
     },
     {
       "name": "Migrator",
@@ -658,9 +693,19 @@
       "functions": 0
     },
     {
+      "name": "Place",
+      "summary": "Place — put a catalogue model in the world so it looks like it belongs",
+      "functions": 10
+    },
+    {
       "name": "Platform",
       "summary": "Platform — is this game actually playable on the device in front of you? `Input` already abstracts keyboard, gamepad and touch, and a test asserts every action ",
       "functions": 7
+    },
+    {
+      "name": "PlaytimeLadder",
+      "summary": "PlaytimeLadder — rewards for time spent, without paying people to be absent",
+      "functions": 12
     },
     {
       "name": "PlotAllocator",
@@ -696,6 +741,11 @@
       "name": "PromoCodes",
       "summary": "PromoCodes — one-shot promotional redemptions with conditions",
       "functions": 2
+    },
+    {
+      "name": "Prop",
+      "summary": "Prop — rebuild a Creator Store model from baked geometry",
+      "functions": 4
     },
     {
       "name": "QualityTierSelector",
@@ -779,8 +829,8 @@
     },
     {
       "name": "Rng",
-      "summary": "Rng — deterministic random helpers shared by Forge families",
-      "functions": 4
+      "summary": "Rng — seeded randomness in named streams",
+      "functions": 18
     },
     {
       "name": "RoundMachine",
@@ -791,6 +841,11 @@
       "name": "Save",
       "summary": "Save — player profiles that survive, migrate and do not corrupt",
       "functions": 10
+    },
+    {
+      "name": "Scale",
+      "summary": "Scale — how big a thing of this kind should be, in studs",
+      "functions": 3
     },
     {
       "name": "Scene",
@@ -868,6 +923,11 @@
       "functions": 3
     },
     {
+      "name": "Stance",
+      "summary": "Stance — what the shooter is doing, and what that costs in accuracy",
+      "functions": 4
+    },
+    {
       "name": "State",
       "summary": "State — the session's own truth, and who is allowed to see it",
       "functions": 0
@@ -888,6 +948,16 @@
       "functions": 9
     },
     {
+      "name": "StoreAssets",
+      "summary": "StoreAssets — Creator Store assets that were fetched, opened and read",
+      "functions": 4
+    },
+    {
+      "name": "StoreProps",
+      "summary": "StoreProps — geometry read out of real Creator Store models",
+      "functions": 3
+    },
+    {
       "name": "StrafeJump",
       "summary": "StrafeJump — quake-style air acceleration",
       "functions": 2
@@ -901,6 +971,11 @@
       "name": "StunController",
       "summary": "StunController — stackable stun timers keyed by caller-chosen ids",
       "functions": 6
+    },
+    {
+      "name": "Sway",
+      "summary": "Sway — the small motions that make a held weapon feel held",
+      "functions": 5
     },
     {
       "name": "SystemMailbox",
@@ -930,12 +1005,17 @@
     {
       "name": "Testing",
       "summary": "Testing — assertions about a game that is actually running",
-      "functions": 20
+      "functions": 22
     },
     {
       "name": "ThroughputLedger",
       "summary": "ThroughputLedger — idempotent count of live dropped items",
       "functions": 5
+    },
+    {
+      "name": "Tint",
+      "summary": "Tint — colour for imported meshes that arrived without any",
+      "functions": 3
     },
     {
       "name": "TradeSession",
@@ -990,6 +1070,11 @@
     {
       "name": "UpgradeTree",
       "summary": "UpgradeTree — a pure DAG of repeatable upgrades behind prerequisite gates",
+      "functions": 7
+    },
+    {
+      "name": "Validate",
+      "summary": "Validate — deciding whether to believe a client that says it fired",
       "functions": 7
     },
     {
@@ -1112,7 +1197,7 @@
     {
       "name": "AI",
       "file": "forge/luau/Forge/AI/init.lua",
-      "lines": 21,
+      "lines": 46,
       "summary": "AI — crowd and companion intelligence for Forge games. Pure decision layers over injected world probes: personality brains (TraitBrain), cheap kinematic locomotion (GroundLocomotion), bubble separation (CrowdSeparation), client pose blending (SnapshotInterp), sight/hearing memory (Perception) and weighted spawn specs (MobCatalog). The engine answers \"what is true\"; these modules decide what to do.",
       "examples": [],
       "functions": [],
@@ -2041,7 +2126,7 @@
     {
       "name": "Anim",
       "file": "forge/luau/Forge/Anim/init.lua",
-      "lines": 795,
+      "lines": 820,
       "summary": "Anim — layered procedural animation with markers. Why not AnimationTrack and rbxassetid ------------------------------------- Authored animation needs the Animation Editor and an upload, which means a human in a GUI for every timing change. That is fine for a studio and fatal for an agent: the one thing that most needs iteration becomes the one thing that cannot be iterated. Here a clip is *data*. It works on R6 and R15, it needs no asset, and — the part that actually matters — it carries its own MARKERS. The frame a sword becomes dangerous lives in the same table as the pose that swings it. Move the pose, the hit window moves with it. That is what makes combat timing tunable without touching combat logic. This does not replace authored animation. When you have a real animator, keep the clip names and the marker names and swap the pose source; every system that listened for \"hit\" still works. Track convention (degrees) -------------------------- swing   forward/back — the primary axis of a limb spread  outward, away from the body twist   rotation about the limb's own axis, or torso yaw Usage -----",
       "examples": [
         "local anim = Anim.new(character)\nanim:setLocomotion(Anim.profiles.grounded)\nanim:onMarker(function(clip, marker) ... end)",
@@ -3144,6 +3229,45 @@
       "describes": false
     },
     {
+      "name": "Bank",
+      "file": "forge/luau/Forge/Audio/Bank.lua",
+      "lines": 140,
+      "summary": "Bank — sounds every game can play, so no game starts mute. Generated by `rqe.assets.soundbank`; rewritten on collection, so do not edit it. Feed it straight to `Audio.defineMany`: Every id is Roblox's own audio. That is not a quality preference, it is the only category that reliably plays: **user uploads have been private by default since 2022**, so most ids a search returns will not load in your place -- and a sound that does not load is silence, not an error, which is the worst way for an asset to fail. Each was confirmed against the web API as an approved Audio asset before it was written here. 17 of 20 roles covered. Collected 2026-08-27.",
+      "examples": [
+        "Forge.Audio.defineMany(Forge.Audio.Bank.specs())"
+      ],
+      "functions": [
+        {
+          "name": "Bank.specs",
+          "signature": "Bank.specs()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "Every role as `Audio.define` specs, ready to hand over whole. One sound per role -- the first, which is the best match the search found. A game wanting variety reads `Bank.roles` and picks its own.",
+          "examples": [],
+          "line": 103
+        },
+        {
+          "name": "Bank.forRole",
+          "signature": "Bank.forRole(role: string)",
+          "kind": "function",
+          "returns": "{ any }",
+          "summary": ": Every id filed under a role, for a game that wants to vary them.",
+          "examples": [],
+          "line": 124
+        },
+        {
+          "name": "Bank.covered",
+          "signature": "Bank.covered()",
+          "kind": "function",
+          "returns": "{ string }",
+          "summary": "",
+          "examples": [],
+          "line": 128
+        }
+      ],
+      "describes": false
+    },
+    {
       "name": "BehaviorTree",
       "file": "forge/luau/Forge/AI/BehaviorTree.lua",
       "lines": 76,
@@ -3637,7 +3761,7 @@
     {
       "name": "Camera",
       "file": "forge/luau/Forge/Camera/init.lua",
-      "lines": 359,
+      "lines": 384,
       "summary": "Camera — where the player is looking, and who decides. Forge had no camera at all. `Feel` shakes one and that was the entire surface, which means every game built on this engine had Roblox's default follow camera and no way to tell a story with it: no cutscene, no shoulder framing for a shot, no pull-back when something big arrives. The design is one idea: **modes stack, and the highest priority wins.** A cutscene does not have to know what the aim mode was doing, and the aim mode does not have to be cancelled — it is simply outranked, and returns the moment the cutscene releases. Anything else turns into a pile of booleans that eventually disagree. --- Why this fights Roblox's camera, and how ----------------------------- The default camera script writes `Camera.CFrame` every frame during the `Camera` render step. Anything written before that is overwritten, which is a mistake this project has already made once with an animator. So this binds *after* that step, and when a mode takes over it sets `CameraType = Scriptable` so Roblox stops writing at all. Releasing every mode hands control back rather than leaving the camera frozen where the last one left it, which is the other classic bug: a cutscene that ends and never gives the player their view back.",
       "examples": [
         "Camera.mode(\"shoulder\", { priority = 10, ... })   -- while aiming\nCamera.mode(\"cutscene\", { priority = 100, ... })  -- during a scene"
@@ -3825,7 +3949,7 @@
     {
       "name": "CardCycle",
       "file": "forge/luau/Forge/Match/CardCycle.lua",
-      "lines": 98,
+      "lines": 115,
       "summary": "CardCycle — deterministic deck / hand / next-card rotation. The Clash-style hand is four cards plus a preview of the fifth; playing a card slides `next` into the hand and pulls a fresh preview. When the draw pile runs dry the discard reshuffles with the same seeded stream, so two clients replaying the same seed see identical cycles forever.",
       "examples": [
         "local cycle = CardCycle.new({ cards = deckIds, handSize = 4, seed = 7 })\nlocal result = cycle:play(cycle:hand()[1])"
@@ -3838,7 +3962,7 @@
           "returns": "string",
           "summary": "",
           "examples": [],
-          "line": 47
+          "line": 64
         },
         {
           "name": "CardCycle.new",
@@ -3847,7 +3971,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 52
+          "line": 69
         },
         {
           "name": "CardCycle.hand",
@@ -3856,7 +3980,7 @@
           "returns": "{ string }",
           "summary": "",
           "examples": [],
-          "line": 72
+          "line": 89
         },
         {
           "name": "CardCycle.peek",
@@ -3865,7 +3989,7 @@
           "returns": "string",
           "summary": "",
           "examples": [],
-          "line": 76
+          "line": 93
         },
         {
           "name": "CardCycle.has",
@@ -3874,7 +3998,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 80
+          "line": 97
         },
         {
           "name": "CardCycle.play",
@@ -3883,7 +4007,7 @@
           "returns": "PlayResult",
           "summary": "",
           "examples": [],
-          "line": 84
+          "line": 101
         }
       ],
       "describes": false
@@ -3928,7 +4052,7 @@
     {
       "name": "Catalog",
       "file": "forge/luau/Forge/Catalog/init.lua",
-      "lines": 402,
+      "lines": 585,
       "summary": "Catalog — Creator Store models this project has verified. Generated by `forge toolbox curate`. Do not hand-edit; regenerate it. Where these came from matters as much as what they are. They are not search results: each one was taken from a pack that Roblox developers actually use, found by reading the developer forum, and the pack's creator, licence and source thread travel with every piece. Most of them are Synty — a professional low-poly studio whose packs Roblox paid to release free, under an official Roblox account. Every entry was loaded inside Studio, measured and scanned. `parts`, `meshes` and `size` are readings off the real thing after insertion, not descriptions. Every entry has no scripts, because anything carrying one was refused rather than stripped: free-model scripts are the most common way a Roblox game gets backdoored, and deciding automatically which ones a model \"needs\" is exactly how that ships. An id absent from this file has not been checked, and `Assets` refuses it.",
       "examples": [
         "local Catalog = Forge.Catalog",
@@ -3981,13 +4105,67 @@
           "line": 295
         },
         {
+          "name": "Catalog.mountKit",
+          "signature": "Catalog.mountKit(container: Instance?)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "",
+          "examples": [],
+          "line": 397
+        },
+        {
+          "name": "Catalog.kitNames",
+          "signature": "Catalog.kitNames()",
+          "kind": "function",
+          "returns": "{ string }",
+          "summary": "",
+          "examples": [],
+          "line": 408
+        },
+        {
+          "name": "Catalog.fromKit",
+          "signature": "Catalog.fromKit(name: string, className: string?)",
+          "kind": "function",
+          "returns": "Instance?",
+          "summary": "",
+          "examples": [],
+          "line": 445
+        },
+        {
+          "name": "Catalog.kitShelf",
+          "signature": "Catalog.kitShelf(category: string)",
+          "kind": "function",
+          "returns": "{ string }",
+          "summary": "What is on one shelf of the harvest. The harvester writes into `harvest/<category>/`, so the folder name *is* the category and asking the kit is cheaper and truer than keeping a manifest in Luau that drifts from the files on disk.",
+          "examples": [],
+          "line": 479
+        },
+        {
+          "name": "Catalog.kitShelves",
+          "signature": "Catalog.kitShelves()",
+          "kind": "function",
+          "returns": "{ string }",
+          "summary": "- Every category any mounted kit has anything on.",
+          "examples": [],
+          "line": 494
+        },
+        {
+          "name": "Catalog.kitPieces",
+          "signature": "Catalog.kitPieces(limit: number?)",
+          "kind": "function",
+          "returns": "{ string }",
+          "summary": ": Everything a kit holds, as ids you can pass to `fromKit`.",
+          "examples": [],
+          "line": 512
+        },
+        {
           "name": "Catalog.load",
           "signature": "Catalog.load(entry: any)",
           "kind": "function",
           "returns": "Instance?",
           "summary": "",
           "examples": [],
-          "line": 375
+          "line": 528
         },
         {
           "name": "Catalog.describe",
@@ -3996,7 +4174,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 388
+          "line": 550
         }
       ],
       "describes": true
@@ -4493,7 +4671,7 @@
     {
       "name": "Combat",
       "file": "forge/luau/Forge/Combat/init.lua",
-      "lines": 733,
+      "lines": 758,
       "summary": "Combat — mechanism for hurting things. Never policy about what hurting means. The distinction is the whole design. Combat knows how to find what is in front of a sword, how to run a damage number through a chain of modifiers, how to keep a status effect ticking and how to fly a projectile. It does not know what armour is, whether crits exist, or how your game scales damage by level — you install those as modifiers, and they compose. Then a hit is: Modifiers run in ascending order. Order is explicit because \"armour before or after crit\" changes balance and should never be an accident of table iteration.",
       "examples": [
         "Combat.addModifier(\"armor\", 100, function(ctx)\nlocal armor = ctx.target:GetAttribute(\"Armor\") or 0\nctx.amount *= 100 / (100 + armor)\nend)",
@@ -4832,10 +5010,44 @@
       "describes": false
     },
     {
+      "name": "Companion",
+      "file": "forge/luau/Forge/Companion/init.lua",
+      "lines": 121,
+      "summary": "Companion — things that follow you, and stay readable while they do. Pets, drones, hired workers, a bodyguard, a squad. The genre changes and the problems do not: where does each one stand, what does it do while nothing is happening, and how does it get there without fighting physics. Generalised from a shipped simulator, which is where the parts that are not obvious come from: * followers are sorted **small to front** and spaced by their own * the idle wander waits on the **leader's** stillness, not the follower's, * crowding is resolved by **pushing targets apart**, never by collision, Three things that system knew and this deliberately does not do -------------------------------------------------------------- **No physics.** The version this comes from began as one cloned script per follower driving unanchored parts on the server, and its own config carries the warning: several active at once \"tanks server FPS\". Formation maths returns offsets; moving something is the caller's, on the client, where a cosmetic follower belongs. **No teleport watchdog here.** That system needed one -- followers fell off the map, and the comment records it as a bug that survived ten months. A watchdog belongs to whatever owns the parts, because only that knows what \"lost\" means for its own world. **No ownership of what a follower *is*.** Its power, its rarity, its inventory slot: that is the game's, and a follow system that also owned those would be a pet system rather than a companion one.",
+      "examples": [
+        "local Companion = Forge.Companion",
+        "local slots = Companion.Formation.resolve(followers, { mode = \"risers\" })\nlocal dx, dz = Companion.Meander.step(state, dt, stillFor, busy)",
+        "footprint, so one large member does not eclipse or shoulder the rest;",
+        "and surrenders the instant the leader moves;",
+        "so the mover keeps sole control of the parts."
+      ],
+      "functions": [
+        {
+          "name": "Companion.place",
+          "signature": "Companion.place(followers: { any }, clock: number, config: any?)",
+          "kind": "function",
+          "returns": "{ any }",
+          "summary": "Every slot for a group, with the bob and the crowding already applied. The one call a mover needs per frame. Kept here rather than in `Formation` because it composes three ideas that are separately useful and separately testable.",
+          "examples": [],
+          "line": 96
+        },
+        {
+          "name": "Companion.describe",
+          "signature": "Companion.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 113
+        }
+      ],
+      "describes": true
+    },
+    {
       "name": "Core",
       "file": "forge/luau/Forge/Core/init.lua",
-      "lines": 15,
-      "summary": "!strict Core — primitives with no Roblox opinions in them. Everything here is testable without a DataModel, which is why it is separate.",
+      "lines": 30,
+      "summary": "Core — primitives with no Roblox opinions in them. Everything here is testable without a DataModel, which is why it is separate. If a module in this folder reaches for a service, it is in the wrong folder. Every file beside this one is listed below, deliberately by hand. Four of them were not, and the omission is invisible until something asks: `Boot` sat on disk, compiled, specced and unreachable, and the first game written against it died on `attempt to index nil with 'declareMany'`. A folder is not an index.",
       "examples": [],
       "functions": [],
       "describes": false
@@ -4908,7 +5120,7 @@
     {
       "name": "CrossServerService",
       "file": "forge/luau/Forge/LiveOps/CrossServerService.lua",
-      "lines": 90,
+      "lines": 93,
       "summary": "CrossServerService — MessagingService binding for global channels. Publishes only messages that CrossServerChannels validated, and on receive re-validates the envelope before handing it to subscribers — a malicious or stale message never reaches game code. Subscriptions auto-cleanup via the returned disconnect.",
       "examples": [],
       "functions": [
@@ -4919,7 +5131,7 @@
           "returns": "any",
           "summary": "",
           "examples": [],
-          "line": 29
+          "line": 32
         },
         {
           "name": "CrossServerService.publishRadio",
@@ -4928,7 +5140,7 @@
           "returns": "(boolean, string?)",
           "summary": "",
           "examples": [],
-          "line": 39
+          "line": 42
         },
         {
           "name": "CrossServerService.publishShout",
@@ -4937,7 +5149,7 @@
           "returns": "(boolean, string?)",
           "summary": "",
           "examples": [],
-          "line": 50
+          "line": 53
         },
         {
           "name": "CrossServerService.subscribe",
@@ -4946,7 +5158,7 @@
           "returns": "() -> ()",
           "summary": "Subscribe; handler receives ONLY envelopes that still validate.",
           "examples": [],
-          "line": 62
+          "line": 65
         }
       ],
       "describes": false
@@ -5942,7 +6154,7 @@
     {
       "name": "Economy",
       "file": "forge/luau/Forge/Economy/init.lua",
-      "lines": 24,
+      "lines": 49,
       "summary": "Economy — numbers, formulas, wallets and income for incremental games. Four pure modules with no engine dependencies:",
       "examples": [
         "Economy.BigNumber      scientific-notation big numbers with suffix format\nEconomy.Formula        immutable arithmetic chains, renderable\nEconomy.Balance        multi-currency wallet with atomic debits\nEconomy.IncomeEngine   cached aggregation of passive income",
@@ -5954,7 +6166,7 @@
     {
       "name": "Editor",
       "file": "forge/luau/Forge/Editor/init.lua",
-      "lines": 757,
+      "lines": 782,
       "summary": "Editor — the authoring surface over a Scene. Two callers, one API. A person clicking in the overlay and an agent calling `Editor.place(\"Prop.Barrel\", cf)` go through exactly the same operations, which is the only way the UI and the automation can stay in agreement. The server is the only mutator. Editor operations arrive as one rate-limited event and are refused unless the sender is authorised — an editor reachable by any client is a griefing tool, and \"we will remember to gate it later\" is how that ships. Undo is real: every operation records its inverse before applying. A place undoes to a delete, a move undoes to the previous CFrame.",
       "examples": [
         "Editor.open(scene)\nEditor.place(\"Prop.Barrel\", CFrame.new(10, 3, 0))\nEditor.select(placement)\nEditor.nudge(Vector3.new(4, 0, 0))\nEditor.rotate(45)\nEditor.undo()\nlocal json = Editor.save()"
@@ -7305,6 +7517,47 @@
       "describes": false
     },
     {
+      "name": "Formation",
+      "file": "forge/luau/Forge/Companion/Formation.lua",
+      "lines": 361,
+      "summary": "Formation — where each follower stands, relative to whoever it follows. Generalised from a shipped pet system ------------------------------------- This is the slot maths from a live simulator's follow system, with the pets taken out. A follower is anything that trails a leader in a readable group: pets, drones, hired workers, a squad of guards. The rules are the same and none of them are obvious. What the shipped version knows that a first attempt does not: * **Small in front, large behind.** Sorting by footprint stops a huge * **Formation is a shape, not a queue.** `conga` reads as a train, * **Height needs a per-size correction.** A follower scaled up keeps the Nothing here touches an Instance. It answers \"where should follower `i` of `n` stand\", and the driver moves things.",
+      "examples": [
+        "follower from eclipsing the three small ones and from shouldering them\nout of frame. Gaps scale with each neighbour's radius rather than being\na constant, because a constant that suits a rabbit hides an ent.",
+        "`risers` as a marching block, `arc` as a cradle around the leader.\nWhich one is right depends on how many there are and how wide they are,\nwhich is why the shape is chosen per call rather than configured once.",
+        "flat formation height, so large ones end up hovering and a few tall\nones sink as they bob. The shipped config carries a class default of\n-1.5 studs for large followers and per-species overrides on top -- one\ntall model needed +2 rather than a drop."
+      ],
+      "functions": [
+        {
+          "name": "Formation.resolve",
+          "signature": "Formation.resolve(followers: { Follower }, config: Config?)",
+          "kind": "function",
+          "returns": "{ Slot }",
+          "summary": "Where everyone stands, in the leader's own space. Returned in the caller's original order, not the sorted one: the caller holds its followers in a stable list and wants slot `i` to belong to follower `i`. Sorting is an internal decision about who stands where.",
+          "examples": [],
+          "line": 282
+        },
+        {
+          "name": "Formation.bob",
+          "signature": "Formation.bob(index: number, clock: number, amplitude: number?, period: number?)",
+          "kind": "function",
+          "returns": "number",
+          "summary": "A gentle bob, shared by everyone but out of phase. One oscillator for the whole group makes them rise and fall as a single object, which reads as a lift rather than as living things. Offsetting each by its index is the cheapest possible desync.",
+          "examples": [],
+          "line": 313
+        },
+        {
+          "name": "Formation.separate",
+          "signature": "Formation.separate(slots: { Slot }, minimum: number?)",
+          "kind": "function",
+          "returns": "{ Slot }",
+          "summary": "How far to nudge two followers that are standing on each other. Deliberately a push on their *targets* rather than a collision: the mover then walks them apart on its own terms, and nothing fights the physics engine for control of the same part. The shipped system is explicit that this is why -- \"not via collisions -- they move away from each other so the other system can take over\".",
+          "examples": [],
+          "line": 331
+        }
+      ],
+      "describes": false
+    },
+    {
       "name": "Formula",
       "file": "forge/luau/Forge/Economy/Formula.lua",
       "lines": 217,
@@ -8300,10 +8553,13 @@
     {
       "name": "IncomeTracker",
       "file": "forge/luau/Forge/Progression/IncomeTracker.lua",
-      "lines": 80,
-      "summary": "IncomeTracker — a moving window of per-sample deltas for rate displays. Feed it income snapshots (`:sample(balance)`) and read `:average()` to show \"$X per tick\" without ever storing full history; only the last `windowSize` deltas are kept. The first sample is a baseline and contributes no delta. Pure bookkeeping: no clock, no scheduling — sampling cadence belongs to the caller, so the window means \"per sample\", whatever that sample is.",
+      "lines": 192,
+      "summary": "IncomeTracker — a moving window of per-sample deltas for rate displays. Feed it income snapshots (`:sample(balance)`) and read `:average()` to show \"$X per tick\" without ever storing full history; only the last `windowSize` deltas are kept. The first sample is a baseline and contributes no delta. Pure bookkeeping: no clock, no scheduling -- sampling cadence belongs to the caller, so the window means \"per sample\", whatever that sample is. What a shipped tycoon learned about this ---------------------------------------- A live simulator's income display samples every two seconds over a window of twenty, waits a full minute before showing anything, discards negative deltas, and wipes itself on several specific events. Each of those guards against a way this display goes wrong, and none of them are obvious until it does: * **Spending is not negative income.** A player buying an upgrade drops * **A fresh window lies.** The first few samples of a session -- or the * **Some events invalidate the whole history.** Rebirth, prestige, a One deliberate divergence: the shipped version divides the delta by its sample interval and then divides the mean by that interval a second time, so the number it displays is a fraction of the true rate. `rate()` divides once. If you are porting from that code and the numbers look larger here, this is why, and the number here is the correct one.",
       "examples": [
-        "local tracker = IncomeTracker.new({ windowSize = 20 })\nRunService.Heartbeat:Connect(function()\ntracker:sample(getBalance())\nlabel.Text = math.floor(tracker:average()) .. \" /s\"\nend)"
+        "local tracker = IncomeTracker.new({ interval = 2, warmupSeconds = 60 })\nwhile task.wait(2) do\ntracker:sample(getBalance())\nlabel.Text = tracker:ready() and (math.floor(tracker:rate()) .. \"/s\") or \"--\"\nend",
+        "their balance, and a raw delta window reads that as earning less than\nnothing. `ignoreNegative` (on by default) drops those samples rather\nthan averaging them in, so the number means \"what I earn\" rather than\n\"how my balance moved\".",
+        "first after a layout change -- average over almost no history and swing\nwildly. The shipped version waits sixty seconds before it will show a\nnumber at all. `ready()` is that gate; a display that shows \"--\" for a\nminute is better than one that shows a number that is wrong.",
+        "gift, anything that discontinuously changes earning rate: the samples\nfrom before it describe a player who no longer exists. Call `reset()`\non those. It is not enough to let the window age out, because a window\nis forty seconds of a player being told the wrong thing."
       ],
       "functions": [
         {
@@ -8313,34 +8569,52 @@
           "returns": "Tracker",
           "summary": "",
           "examples": [],
-          "line": 38
+          "line": 88
         },
         {
           "name": "IncomeTracker.sample",
           "signature": "IncomeTracker.sample(self: Tracker, value: number)",
           "kind": "function",
-          "returns": null,
-          "summary": "",
+          "returns": "number?",
+          "summary": "Record a balance. Returns the delta that was kept, or nil if it was discarded -- which a caller can use to tell \"earned nothing\" from \"spent\".",
           "examples": [],
-          "line": 50
+          "line": 114
         },
         {
           "name": "IncomeTracker.average",
           "signature": "IncomeTracker.average(self: Tracker)",
           "kind": "function",
           "returns": "number",
-          "summary": "",
+          "summary": ": Mean delta per sample. Zero with no history, which reads the same as : \"earning nothing\" -- use `ready()` when the difference matters.",
           "examples": [],
-          "line": 61
+          "line": 137
+        },
+        {
+          "name": "IncomeTracker.rate",
+          "signature": "IncomeTracker.rate(self: Tracker)",
+          "kind": "function",
+          "returns": "number",
+          "summary": "Income per second. Requires `interval`; without one there is no way to know what a sample is worth in time, and guessing would produce a confidently wrong number.",
+          "examples": [],
+          "line": 155
+        },
+        {
+          "name": "IncomeTracker.ready",
+          "signature": "IncomeTracker.ready(self: Tracker)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "Whether enough history exists for the average to mean anything. Separate from the average itself so a display can show \"--\" rather than a number it will have to contradict a few seconds later.",
+          "examples": [],
+          "line": 169
         },
         {
           "name": "IncomeTracker.reset",
           "signature": "IncomeTracker.reset(self: Tracker)",
           "kind": "function",
           "returns": null,
-          "summary": "",
+          "summary": "Throw the history away. Call this on anything that discontinuously changes earning rate: rebirth, prestige, a gift, a sacrifice, a layout wipe. The window is a description of a player's income, and after one of those it describes a player who no longer exists. The warmup restarts too, deliberately: the first samples after a rebirth are exactly as unrepresentative as the first samples after a join.",
           "examples": [],
-          "line": 73
+          "line": 184
         }
       ],
       "describes": false
@@ -9074,6 +9348,157 @@
       "describes": true
     },
     {
+      "name": "ItchAssets",
+      "file": "forge/luau/Forge/Catalog/ItchAssets.lua",
+      "lines": 421,
+      "summary": "ItchAssets — CC0 models published to this account, grouped by topic. Generated by `rqe.assets.itch_publish`; rewritten on every export. These are published Roblox Models, not baked geometry, so they load through `InsertService:LoadAsset` at runtime rather than being rebuilt from parts. That works here for the reason it fails for store models generally: the signed-in account owns them, because it published them. `textured` is the field that matters when choosing, and it is measured rather than inferred: every asset here was loaded once in Studio and its descendants counted. The obvious inference -- a `.glb` embeds its images, an `.fbx` names them by relative path and so arrives grey -- is sound about file formats and was wrong about 144 of these 295 assets, because a GLB whose materials are plain untextured colours converts to a bare MeshPart and the colour does not survive the import. So do not restore the guess. If `textured` is false, nothing in the asset carries colour and the caller has to supply it. `meshes` is how many MeshParts came out. One means a single welded shape, which is what you get from a GLB that lost its materials; several means the pack modelled parts separately, and their names are often meaningful (`house5_door1`, `house5_windows`) in a way that a tint pass can use. Every entry keeps the pack and author it came from. CC0 asks for no credit -- the provenance is for the question \"what is this and where did it come from\", which is asked long after the answer stops being obvious. 295 models across 67 topics, 89 of them carrying colour of their own. Published 2026-08-27.",
+      "examples": [
+        "local Itch = Forge.Catalog.ItchAssets\nlocal id = Itch.pick(\"tree\", seed)\nlocal model = game:GetService(\"InsertService\"):LoadAsset(id)"
+      ],
+      "functions": [
+        {
+          "name": "ItchAssets.byTopic",
+          "signature": "ItchAssets.byTopic(topic: string)",
+          "kind": "function",
+          "returns": "{ Entry }",
+          "summary": "",
+          "examples": [],
+          "line": 365
+        },
+        {
+          "name": "ItchAssets.topics",
+          "signature": "ItchAssets.topics()",
+          "kind": "function",
+          "returns": "{ string }",
+          "summary": "",
+          "examples": [],
+          "line": 369
+        },
+        {
+          "name": "ItchAssets.pick",
+          "signature": "ItchAssets.pick(topic: string, seed: number, texturedOnly: boolean?)",
+          "kind": "function",
+          "returns": "number?",
+          "summary": "One model's id from a topic, chosen by a seed. Seeded rather than random so a world generated twice is the same world -- the thing that makes a layout something you can author against instead of something you re-roll until it looks right. `texturedOnly` skips the grey ones. Worth passing wherever a prop is the subject rather than the backdrop.",
+          "examples": [],
+          "line": 388
+        },
+        {
+          "name": "ItchAssets.describe",
+          "signature": "ItchAssets.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 408
+        }
+      ],
+      "describes": true
+    },
+    {
+      "name": "Leaderboard",
+      "file": "forge/luau/Forge/LiveOps/Leaderboard.lua",
+      "lines": 335,
+      "summary": "Leaderboard — persistent cross-server rankings that reset cleanly. `Movement.Scoreboard` ranks the players in one match. This ranks everyone who has ever played, across every server, and survives restarts. They solve different problems and neither substitutes for the other. Generalised from a shipped game's leaderboard service. Four of its decisions are the difference between a board that works and one that quietly eats a game's DataStore budget. You cannot clear an OrderedDataStore. So do not try. --------------------------------------------------- There is no \"delete everything\" call, and walking the keys to remove them costs a request per player and races every server still writing. The shipped answer is to **stop reading the old store and start reading a new one**: the store's name carries the start of the current round, so rotation is a string change. It is atomic, it is free, and the abandoned stores age out on their own and are never read again. This is the single most useful thing in this file. Write only what changed ----------------------- A player whose score has not moved does not need writing. Without this check every server burns its write budget re-publishing identical numbers, and DataStore throttling is invisible until the board stops updating. Read a hundred, show ten, name ten ---------------------------------- Resolving a user id to a name is its own request. A board that fetches a hundred entries and names all of them makes ninety calls nobody sees. Names are resolved for the visible rows only, and the shipped comment says why it mattered: it keeps the refresh cost bounded as the game grows. Zero is not a rank ------------------ On a competitive board a score of zero is removed rather than written, so the board does not fill with every player who has ever loaded in and done nothing. On a lifetime-total board zero is a real value and is kept, which is why it is a per-board setting rather than a rule.",
+      "examples": [
+        "local board = Leaderboard.define(\"weekly_coins\", {\nstore = \"coins\",\nrotate = \"weekly\",\ndisplay = 10,\n})",
+        "Leaderboard.submit(board, player.UserId, coins)\nlocal top = Leaderboard.top(board)"
+      ],
+      "functions": [
+        {
+          "name": "Leaderboard.roundStart",
+          "signature": "Leaderboard.roundStart(rotate: (string | number)?, now: number?)",
+          "kind": "function",
+          "returns": "number?",
+          "summary": "When the current round began, as a unix timestamp. Floored to the period so every server in the game computes the same value from its own clock without any of them agreeing first. That is what makes rotation work across servers with no coordination at all.",
+          "examples": [],
+          "line": 105
+        },
+        {
+          "name": "Leaderboard.storeName",
+          "signature": "Leaderboard.storeName(board: any, now: number?)",
+          "kind": "function",
+          "returns": "string",
+          "summary": "The store name for a board right now. The whole rotation mechanism: append the round to the name, and a new round is a new store. Nothing is deleted, nothing is migrated, and the reset is atomic because it is a string.",
+          "examples": [],
+          "line": 123
+        },
+        {
+          "name": "Leaderboard.define",
+          "signature": "Leaderboard.define(id: string, config: Config?)",
+          "kind": "function",
+          "returns": "any",
+          "summary": "",
+          "examples": [],
+          "line": 132
+        },
+        {
+          "name": "Leaderboard.get",
+          "signature": "Leaderboard.get(id: string)",
+          "kind": "function",
+          "returns": "any?",
+          "summary": "",
+          "examples": [],
+          "line": 147
+        },
+        {
+          "name": "Leaderboard.submit",
+          "signature": "Leaderboard.submit(board: any, userId: number, value: number, now: number?)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "Publish one player's score. Returns whether a write actually happened, which is the number worth watching: a board that writes on every call is a board about to be throttled.",
+          "examples": [],
+          "line": 173
+        },
+        {
+          "name": "Leaderboard.refresh",
+          "signature": "Leaderboard.refresh(board: any, force: boolean?, now: number?)",
+          "kind": "function",
+          "returns": "{ any }",
+          "summary": "Read the board, using the cache unless it has gone stale. `force` skips the cache; use it after something that must show immediately, not on a timer.",
+          "examples": [],
+          "line": 232
+        },
+        {
+          "name": "Leaderboard.top",
+          "signature": "Leaderboard.top(board: any, count: number?)",
+          "kind": "function",
+          "returns": "{ any }",
+          "summary": ": The visible rows, named and ordered.",
+          "examples": [],
+          "line": 279
+        },
+        {
+          "name": "Leaderboard.rankOf",
+          "signature": "Leaderboard.rankOf(board: any, userId: number)",
+          "kind": "function",
+          "returns": "number?",
+          "summary": "Where one player stands, or nil if they are not in the fetched depth. Nil is a real answer and not an error: a board reads the top hundred, and most players in a large game are not in it. A game that needs an exact rank for everybody needs a different data structure, not a deeper page.",
+          "examples": [],
+          "line": 296
+        },
+        {
+          "name": "Leaderboard.secondsRemaining",
+          "signature": "Leaderboard.secondsRemaining(board: any, now: number?)",
+          "kind": "function",
+          "returns": "number?",
+          "summary": ": Seconds until the current round ends, for a countdown. Nil when the board : does not rotate.",
+          "examples": [],
+          "line": 307
+        },
+        {
+          "name": "Leaderboard.describe",
+          "signature": "Leaderboard.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 318
+        }
+      ],
+      "describes": true
+    },
+    {
       "name": "LiveConfig",
       "file": "forge/luau/Forge/Save/LiveConfig.lua",
       "lines": 80,
@@ -9113,7 +9538,7 @@
     {
       "name": "LiveOps",
       "file": "forge/luau/Forge/LiveOps/init.lua",
-      "lines": 341,
+      "lines": 366,
       "summary": "LiveOps — changing a running game without shipping a new one. A game that can only be changed by publishing is a game whose every balance tweak costs a release and whose every mistake costs a rollback. Everything here exists so a number can be moved, a feature can be switched off, or an experiment can be started, while people are playing. Four things, because they are one mechanism wearing four hats: config   a value the server reads instead of a constant flags    a config value that is a boolean, with a kill switch bucket   a config value chosen per player, which is an experiment text     a config value chosen per locale, which is localisation --- Where the values come from ----------------------------------------- A real DataStore, read on an interval, with the last good values kept in memory. That ordering matters more than it looks: a DataStore outage must never take the game down, so a failed refresh leaves the previous values in place and says so. A config system that fails closed turns a Roblox incident into your incident. --- Bucketing -------------------------------------------------------------- Assignment is a hash of the player's id and the experiment name, not a random roll. A player therefore lands in the same arm on every server, on every session, forever — which is the difference between an experiment and noise. It also means no state has to be stored to remember the decision.",
       "examples": [
         "LiveOps.define(\"enemy.maxAlive\", 14)\nLiveOps.flag(\"newLootTable\", false)\nLiveOps.experiment(\"firstSessionLength\", { \"control\", \"longer\" })",
@@ -9332,6 +9757,73 @@
       "describes": false
     },
     {
+      "name": "Luck",
+      "file": "forge/luau/Forge/LiveOps/Luck.lua",
+      "lines": 184,
+      "summary": "Luck — shifting the odds toward the rare end, without breaking the economy. `Progression.CrateRoll` rolls a weighted table and guarantees a rare after enough failures. Luck is the other half of every gacha economy: the temporary or purchased multiplier that makes rare outcomes more likely while it lasts. Two decisions from a shipped simulator, both of which exist because the obvious version broke something. Luck does not stack. It arbitrates. ----------------------------------- A player with a luck gamepass, a luck potion and a lucky player standing in their server does **not** get 2 x 3 x 2. They get the best single source. Multiplying is the obvious implementation and it is how gacha economies die: sources are added over a game's life, each one reasonable on its own, and their product eventually makes the rarest tier common. Taking the maximum means a new source can never do more than the strongest existing one, so the ceiling is a number somebody chose rather than a number that emerged. Luck earned by progress is measured by *coverage*, not by volume --------------------------------------------------------------- If a game pays luck for collecting things, pay it for the **fraction of the collection discovered**, never for the raw number of rolls. The shipped game's note on this is blunt: not raw count, index -- so that parking on one source and grinding it forever stops paying luck. A count-based bonus rewards the exact behaviour a collection game does not want, which is a player farming the single cheapest source until the numbers get large. A coverage-based one pays for breadth, which is the behaviour the collection exists to encourage. What luck does to the table --------------------------- It multiplies the weight of everything at or above a rarity threshold, then the roll renormalises as it always would. Common outcomes are not made rarer directly; they shrink because the rare end grew. This keeps a luck multiplier readable -- \"twice as likely to see a legendary\" is true -- and it cannot ever remove an outcome from the table.",
+      "examples": [
+        "local multiplier = Luck.best({\n{ active = hasGamepass, multiplier = 2, source = \"gamepass\" },\n{ active = potionActive, multiplier = 3, source = \"potion\" },\n})",
+        "local drops = Luck.apply(crate.drops, multiplier, 3)"
+      ],
+      "functions": [
+        {
+          "name": "Luck.best",
+          "signature": "Luck.best(sources: { Source })",
+          "kind": "function",
+          "returns": "(number, string?)",
+          "summary": "The strongest active source, and which one it was. Returns 1 and nil when nothing applies, so the result is always safe to multiply by. Sources at or below 1 are ignored rather than allowed to reduce luck -- an \"unlucky\" mechanic is a different thing and should not arrive by way of a misconfigured bonus.",
+          "examples": [],
+          "line": 72
+        },
+        {
+          "name": "Luck.fromCompletion",
+          "signature": "Luck.fromCompletion(discovered: number, obtainable: number, maxBonus: number?)",
+          "kind": "function",
+          "returns": "number",
+          "summary": "Luck earned from how much of a collection has been found. `discovered / obtainable` scaled to `maxBonus`, returned as a multiplier. A player who has found none of it gets 1; one who has found all of it gets `1 + maxBonus`. `obtainable` is the count a player can actually still get -- not everything that has ever existed. Counting retired or event-limited entries in the denominator means the bonus can never be completed, and a bonus that cannot be completed stops motivating the moment players work that out.",
+          "examples": [],
+          "line": 99
+        },
+        {
+          "name": "Luck.apply",
+          "signature": "Luck.apply(drops: { any }, multiplier: number, minRarity: number?)",
+          "kind": "function",
+          "returns": "{ any }",
+          "summary": "Reweight a drop table by a luck multiplier. `minRarity` is the lowest rarity luck touches; anything below it keeps its weight. Returns a new table -- the caller's drops are configuration and must not be mutated by a roll, or two players with different luck would fight over the same numbers. Weights, not probabilities: the roll normalises, so this never has to produce something summing to one and never has to decide what to take away from the common outcomes.",
+          "examples": [],
+          "line": 119
+        },
+        {
+          "name": "Luck.odds",
+          "signature": "Luck.odds(drops: { any })",
+          "kind": "function",
+          "returns": "{ [string]: number }",
+          "summary": "The chance of each outcome, as a fraction, for a UI that shows odds. Worth having in the library rather than in each game's UI: a displayed odds table computed separately from the roll is a displayed odds table that will eventually disagree with it, and players notice that faster than they notice anything else.",
+          "examples": [],
+          "line": 144
+        },
+        {
+          "name": "Luck.effect",
+          "signature": "Luck.effect(base: { any }, lucky: { any }, id: string)",
+          "kind": "function",
+          "returns": "number",
+          "summary": "How much luck actually changed a given outcome's odds. For the \"your luck makes this 2.4x more likely\" line. Computed from the two tables rather than from the multiplier, because the multiplier is not the answer: renormalisation means a 2x weight on one of several rare outcomes is less than 2x on the final chance.",
+          "examples": [],
+          "line": 167
+        },
+        {
+          "name": "Luck.describe",
+          "signature": "Luck.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 176
+        }
+      ],
+      "describes": true
+    },
+    {
       "name": "Mark",
       "file": "forge/luau/Forge/Mark/init.lua",
       "lines": 285,
@@ -9436,7 +9928,7 @@
     {
       "name": "Match",
       "file": "forge/luau/Forge/Match/init.lua",
-      "lines": 22,
+      "lines": 47,
       "summary": "Match — competitive match primitives for Forge games. Everything a round-based game needs before gameplay starts and after it ends, as pure modules: the phase clock (RoundMachine), the waiting list (Queue), deterministic card rotation (CardCycle), authoritative placement regions (DeployZone), the end-of-match cascade (WinResolver) and declarative arena geometry (ArenaLayout). None of these touch Players or Workspace; the server wires effects.",
       "examples": [],
       "functions": [],
@@ -9445,7 +9937,7 @@
     {
       "name": "Material",
       "file": "forge/luau/Forge/Material/init.lua",
-      "lines": 306,
+      "lines": 457,
       "summary": "Material — physically based surfaces. Everything this engine has rendered so far has been `Part.Material` and a colour: SmoothPlastic, Wood, Slate. Those are Roblox's *legacy* materials, and they carry no normal map, no roughness and no metalness. A rock made of them is a coloured box with a noise texture, and no amount of lighting work fixes it, because there is nothing in the surface for light to catch. Two mechanisms replace that, and they are for different things: `SurfaceAppearance` overrides one MeshPart's textures. It is how a specific model gets its own colour, normal, metalness and roughness maps. `MaterialVariant` replaces a whole legacy material everywhere at once. Register a variant named for `Enum.Material.Slate` and every Slate surface in the game — including terrain — picks it up. That is the lever worth pulling first, because it upgrades the entire world in one call without touching a single part. --- On ids --------------------------------------------------------------- Every texture id here goes through `Assets`, which refuses anything that has not been loaded successfully once. That is deliberate: a wrong texture id does not error, it renders as a flat grey surface, which is exactly the sort of silent failure that survives every static check and is discovered by a person squinting at a screenshot.",
       "examples": [
         "Material.define(\"mossy_rock\", {\nbase = Enum.Material.Slate,\ncolor = \"rbxassetid://...\",\nnormal = \"rbxassetid://...\",\nroughness = \"rbxassetid://...\",\nstudsPerTile = 8,\n})\nMaterial.applyTerrain(Enum.Material.Slate, \"mossy_rock\")"
@@ -9506,13 +9998,64 @@
           "line": 176
         },
         {
+          "name": "Material.tint",
+          "signature": "Material.tint(base: Enum.Material, colour: Color3)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "Recolour a built-in terrain material. No textures, no variants, no uploads. `applyTerrain` above is the powerful path and it is also the expensive one: a variant needs texture maps, and texture maps need somebody to author and upload them. This is the cheap path, and for the single most common complaint about a Roblox world -- that the ground is a dead olive green -- it is the whole fix. Worth knowing before reaching for it: * **It is global and it persists.** One call restains every surface of * **It tints, it does not repaint.** The material keeps its own texture * **Only some materials accept it.** Roblox exposes `SetMaterialColor` * **Water is not one of them.** It looks like a terrain material and it",
+          "examples": [
+            "Material.tint(Enum.Material.Grass, Color3.fromRGB(126, 200, 96))",
+            "that material in the place, and the value is saved with the place. A\ngame that tints at runtime and a designer who tints in Studio will\nfight over the same property.",
+            "and its luminance; the colour multiplies through. So a saturated tint\non a dark material reads muddy rather than bright, and the way to a\nvivid ground is a light tint, not a strong one.",
+            "for the terrain set -- Grass, Slate, Ground, Rock, Sand and their\nsiblings -- and ignores the rest. The pcall is not defensive\ndecoration; passing an unsupported material really does throw.",
+            "is not tinted like one: it has its own properties on `Terrain`. Use\n`Material.water` for it. This is measured, not assumed -- passing\n`Enum.Material.Water` here throws."
+          ],
+          "line": 214
+        },
+        {
+          "name": "Material.tintOf",
+          "signature": "Material.tintOf(base: Enum.Material)",
+          "kind": "function",
+          "returns": "Color3?",
+          "summary": ": What a material is currently tinted to, or nil where it takes no tint.",
+          "examples": [],
+          "line": 225
+        },
+        {
+          "name": "Material.tintAll",
+          "signature": "Material.tintAll(palette: { [Enum.Material]: Color3 })",
+          "kind": "function",
+          "returns": "number",
+          "summary": "Apply a whole palette at once, and say how many took. Keyed by `Enum.Material` so a palette is a plain table a designer can read and reorder. Unsupported materials are skipped rather than aborting the rest, because a palette written against one Roblox version should not stop working entirely on another that dropped a material from the terrain set.",
+          "examples": [],
+          "line": 240
+        },
+        {
+          "name": "Material.water",
+          "signature": "Material.water(colour: Color3, options: { [string]: any }?)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "Water, which is its own thing. `SetMaterialColor` rejects `Enum.Material.Water`; water colour, reflectance, transparency and wave motion are properties of `Terrain` itself. Kept beside the palettes because anybody tinting a world will want it and would otherwise discover the hard way that the obvious call throws.",
+          "examples": [],
+          "line": 301
+        },
+        {
+          "name": "Material.palette",
+          "signature": "Material.palette(name: string)",
+          "kind": "function",
+          "returns": "number",
+          "summary": ": Apply one of the named palettes. Returns how many materials took it.",
+          "examples": [],
+          "line": 322
+        },
+        {
           "name": "Material.surface",
           "signature": "Material.surface(part: BasePart, spec: any)",
           "kind": "function",
           "returns": "Instance?",
           "summary": "Give one MeshPart its own textures. `SurfaceAppearance` is a child of the part, not a property, and a part may only have one — so an existing appearance is replaced rather than duplicated, which Roblox would otherwise refuse at runtime.",
           "examples": [],
-          "line": 187
+          "line": 338
         },
         {
           "name": "Material.paint",
@@ -9521,7 +10064,7 @@
           "returns": "number",
           "summary": "Apply a defined material to a part and everything under it. Sets the base material as well as the variant name, because a part whose `MaterialVariant` names something its `Material` does not match renders as the plain base — a silent mismatch that looks like the texture failed to load.",
           "examples": [],
-          "line": 221
+          "line": 372
         },
         {
           "name": "Material.renderFidelity",
@@ -9530,7 +10073,7 @@
           "returns": "number",
           "summary": "Render distance per model. Roblox has no author-facing LOD, but `MeshPart.RenderFidelity` is the part of it that matters most: `Precise` on every rock in a forest is how a scene with a good frame budget spends all of it on geometry nobody can see. `Automatic` lets Roblox drop fidelity with distance. It is almost always the right answer for scatter, and almost always the wrong one for anything the player stands next to.",
           "examples": [],
-          "line": 259
+          "line": 410
         },
         {
           "name": "Material.shadowBudget",
@@ -9539,7 +10082,7 @@
           "returns": "number",
           "summary": "Stop small props from casting shadows. A shadow costs roughly what the geometry costs. On a pebble it buys nothing, and a field of scattered pebbles each casting one is a measurable share of a frame for detail no player will ever notice missing.",
           "examples": [],
-          "line": 282
+          "line": 433
         },
         {
           "name": "Material.describe",
@@ -9548,7 +10091,39 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 296
+          "line": 447
+        }
+      ],
+      "describes": true
+    },
+    {
+      "name": "Meander",
+      "file": "forge/luau/Forge/Companion/Meander.lua",
+      "lines": 169,
+      "summary": "Meander — what a follower does while nothing is happening. Why this exists at all ---------------------- A squad that holds perfect formation while its leader stands still reads as furniture. The shipped system this comes from puts it plainly: followers should drift near their slot \"so they don't just stand there -- frozen statues unless they're in combat\". It is the cheapest possible aliveness. No animation, no AI, no pathfinding: pick a point near the slot, walk to it, wait, pick another. What makes it work is entirely in the timing: * **It waits for the leader, not for itself.** Strolling begins only after * **Each one desyncs.** The pause between strolls is randomised per * **It surrenders instantly.** The moment the leader moves or the follower Purely cosmetic, and best run on the client: nothing here is authoritative, and replicating a wander is paying for jitter.",
+      "examples": [
+        "the *leader* has been still for a couple of seconds. A follower that\nwanders the moment it reaches its slot is a follower that never arrives.",
+        "follower, so a group of six does not step off together. Synchronised\nidling is more obviously mechanical than no idling at all.",
+        "is given something to do, the target snaps back to the slot. Anything\nthat has to finish its stroll first is a follower that lags a step\nbehind for ever."
+      ],
+      "functions": [
+        {
+          "name": "Meander.new",
+          "signature": "Meander.new(seed: number?, config: Config?)",
+          "kind": "function",
+          "returns": "State",
+          "summary": "One follower's wandering state. The initial wait is randomised rather than zero, so a squad that spawns together does not take its first step together.",
+          "examples": [],
+          "line": 82
+        },
+        {
+          "name": "Meander.describe",
+          "signature": "Meander.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 164
         }
       ],
       "describes": true
@@ -10096,7 +10671,7 @@
     {
       "name": "Movement",
       "file": "forge/luau/Forge/Movement/init.lua",
-      "lines": 16,
+      "lines": 41,
       "summary": "Movement — player feel and shooting validation. Movement quality is configuration, not mystery: split accel/brake integration (AccelMove), a shared spread cone so aim matches server truth (Ballistics), and authoritative hitscan checks (HitscanValidator). Pure math over plain vectors throughout.",
       "examples": [],
       "functions": [],
@@ -10322,7 +10897,7 @@
     {
       "name": "Net",
       "file": "forge/luau/Forge/Net/init.lua",
-      "lines": 366,
+      "lines": 391,
       "summary": "Net — a typed, validated, rate-limited bus between client and server. Roblox gives you RemoteEvent, which is a hole in your server. Every exploit that matters in a Roblox game goes through one: the client sends `{ price = 0 }` and the server believes it. The defence is not vigilance, it is making the unsafe path harder to write than the safe one. So: an event that is not declared does not exist, every client->server packet is shape-checked before your handler sees it, and every one is rate limited whether you remembered to think about it or not. Server: Client: Nothing here decides what your events mean. It only decides that they are declared, shaped and throttled.",
       "examples": [
         "Net.define({\nAttack    = { dir = \"c2s\", rate = 6, shape = { dir = \"Vector3\" } },\nBuyItem   = { dir = \"c2s\", rate = 4, shape = { shop = \"string\", item = \"string\" } },\nStateSync = { dir = \"s2c\" },\nGetShop   = { dir = \"c2s\", kind = \"function\", shape = { shop = \"string\" } },\n})",
@@ -10755,7 +11330,7 @@
     {
       "name": "PanelStateMachine",
       "file": "forge/luau/Forge/UI/PanelStateMachine.lua",
-      "lines": 112,
+      "lines": 129,
       "summary": "PanelStateMachine — modal panel lifecycle that always resolves. Every panel eventually reaches a decided state: opening times out into open, a data load that never answers times out into an error state shown to the user, closing finishes. The classic bug — a spinner that spins forever because one callback never fired — cannot happen here.",
       "examples": [],
       "functions": [
@@ -10766,7 +11341,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 25
+          "line": 42
         },
         {
           "name": "PanelStateMachine.status",
@@ -10775,7 +11350,7 @@
           "returns": "Status",
           "summary": "",
           "examples": [],
-          "line": 35
+          "line": 52
         },
         {
           "name": "PanelStateMachine.request",
@@ -10784,7 +11359,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 48
+          "line": 65
         },
         {
           "name": "PanelStateMachine.dataArrived",
@@ -10793,7 +11368,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 61
+          "line": 78
         },
         {
           "name": "PanelStateMachine.dataFailed",
@@ -10802,7 +11377,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 69
+          "line": 86
         },
         {
           "name": "PanelStateMachine.animationDone",
@@ -10811,7 +11386,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 77
+          "line": 94
         },
         {
           "name": "PanelStateMachine.tick",
@@ -10820,7 +11395,7 @@
           "returns": "{ resolved: string? }",
           "summary": "Timeouts guarantee resolution even when a callback is lost.",
           "examples": [],
-          "line": 86
+          "line": 103
         }
       ],
       "describes": false
@@ -11054,6 +11629,112 @@
       "describes": false
     },
     {
+      "name": "Place",
+      "file": "forge/luau/Forge/Catalog/Place.lua",
+      "lines": 288,
+      "summary": "Place — put a catalogue model in the world so it looks like it belongs. Every game built on bought or salvaged models has to solve the same four problems before anything looks right, and each one produces a distinctive kind of broken world when it is skipped: * **The pivot is not the centre.** An imported mesh's pivot is wherever * **Packs share no unit.** A sofa arrives 271 units tall and a castle 4. * **Two thirds arrive grey.** Not a failed upload -- the pack modelled * **Fetching costs a round trip.** `LoadAsset` yields. Placing a thousand So: What stays with the game is the *arrangement* -- where a road runs, which side of it the houses face. That is the part worth authoring. None of what is below is.",
+      "examples": [
+        "the pack's exporter left it -- under a tree's roots, inside a rock.\nPlacing at `ground + height/2` therefore floats or sinks every model by\nthat offset. A whole world hovering, from an assumption that reads as\nobviously true.",
+        "`Scale` holds the answer; this applies it.",
+        "them with plain materials and the importer keeps geometry, not that.\n`Tint` holds the answer; this applies it.",
+        "props by calling it a thousand times spends minutes re-fetching models\nalready in hand.",
+        "local Place = Forge.Catalog.Place\nPlace.put({ topic = \"tree\", seed = 7, at = point, yaw = 1.2,\nparent = folder })"
+      ],
+      "functions": [
+        {
+          "name": "Place.bounds",
+          "signature": "Place.bounds(model: Instance)",
+          "kind": "function",
+          "returns": "(Vector3, Vector3)",
+          "summary": "The true world box of an instance, computed from its parts. Not `GetExtentsSize`, and that call has cost this project two rebuilds. It returns the box *in the pivot's frame*, so for anything rotated, or with a pivot the exporter left off-centre, it describes a box the model does not occupy. Measuring with it and then hunting the resulting fault is a day. `half` is the standard oriented-box projection: each local axis contributes its own length times how much of that axis points along each world axis.",
+          "examples": [],
+          "line": 58
+        },
+        {
+          "name": "Place.move",
+          "signature": "Place.move(model: Instance, delta: Vector3)",
+          "kind": "function",
+          "returns": null,
+          "summary": "",
+          "examples": [],
+          "line": 90
+        },
+        {
+          "name": "Place.turn",
+          "signature": "Place.turn(model: Instance, yaw: number)",
+          "kind": "function",
+          "returns": null,
+          "summary": "",
+          "examples": [],
+          "line": 100
+        },
+        {
+          "name": "Place.template",
+          "signature": "Place.template(assetId: number)",
+          "kind": "function",
+          "returns": "Instance?",
+          "summary": "One fetch per asset id, cloned thereafter. Kept in `ReplicatedStorage` rather than in a table alone, so the template stays parented somewhere the DataModel owns and is not collected while clones of it are still being made.",
+          "examples": [],
+          "line": 121
+        },
+        {
+          "name": "Place.fetched",
+          "signature": "Place.fetched()",
+          "kind": "function",
+          "returns": "number",
+          "summary": "",
+          "examples": [],
+          "line": 147
+        },
+        {
+          "name": "Place.unavailable",
+          "signature": "Place.unavailable()",
+          "kind": "function",
+          "returns": "number",
+          "summary": "",
+          "examples": [],
+          "line": 155
+        },
+        {
+          "name": "Place.forget",
+          "signature": "Place.forget()",
+          "kind": "function",
+          "returns": null,
+          "summary": ": For a game that regenerates its world repeatedly in one session and wants : the second run to cost what the first did.",
+          "examples": [],
+          "line": 165
+        },
+        {
+          "name": "Place.build",
+          "signature": "Place.build(spec: Spec)",
+          "kind": "function",
+          "returns": "Instance?",
+          "summary": "Place one model, already chosen. Collision defaults to **off**, which surprises people until they see the alternative. A pack models a house as a shell; a shell given collision is a solid box you cannot walk into, because Roblox's default fidelity boxes it. Only things a player is meant to stand *on* should ask for `solid`, and those usually want authored geometry anyway.",
+          "examples": [],
+          "line": 197
+        },
+        {
+          "name": "Place.put",
+          "signature": "Place.put(catalogue: any, spec: Spec & { seed: number })",
+          "kind": "function",
+          "returns": "Instance?",
+          "summary": "Choose from a catalogue and place it. `catalogue` is anything with `pick(topic, seed, texturedOnly)` -- which is `Forge.Catalog.ItchAssets`, and is a small enough surface that a game with its own asset table can satisfy it. Textured is preferred and not required: for most topics in most catalogues there is no coloured member at all, and refusing to place anything is a worse answer than placing something `Tint` will colour.",
+          "examples": [],
+          "line": 269
+        },
+        {
+          "name": "Place.describe",
+          "signature": "Place.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 280
+        }
+      ],
+      "describes": true
+    },
+    {
       "name": "Platform",
       "file": "forge/luau/Forge/Platform/init.lua",
       "lines": 290,
@@ -11128,6 +11809,129 @@
           "summary": "",
           "examples": [],
           "line": 273
+        }
+      ],
+      "describes": true
+    },
+    {
+      "name": "PlaytimeLadder",
+      "file": "forge/luau/Forge/Progression/PlaytimeLadder.lua",
+      "lines": 328,
+      "summary": "PlaytimeLadder — rewards for time spent, without paying people to be absent. `DailyRewardCalendar` rewards coming back on consecutive days.    This rewards staying once you are here: a ladder of milestones at five minutes, fifteen, thirty, an hour, each with something at the top of it. Written rather than salvaged ---------------------------- Unlike most of this engine, this one has no shipped antecedent: none of the production games read for it had a session-time ladder, so nothing here is somebody else's hard-won tuning and it should not be presented as such. What it does carry across is the shape of the reward systems that *were* there -- claim rather than grant, persist the claim not the timer, keep the policy pure and testable -- plus one problem those systems did not have to solve. The AFK problem is the whole design ----------------------------------- A ladder that counts wall-clock time pays players for leaving the game open on a second monitor. Every serious implementation of this eventually grows an idle check, and bolting one on afterwards is how you end up with a timer that behaves differently in three places. So `tick` takes an `active` flag and **the caller decides what active means** -- moving, clicking, being in combat, not being in the lobby. This module will not guess, because the answer differs per game and a wrong guess silently either pays AFK farmers or punishes someone reading a quest log. Two things make it usable rather than merely correct: * **Grace.** Idleness has to persist before the clock stops. Without it, * **A cap on the drift.** Once idle beyond the grace, time stops Claim, do not grant ------------------- Reaching a rung makes it *claimable*; it does not hand anything over. A reward granted at the moment of arrival lands while the player is mid-fight, mid-menu or mid-cutscene, and a grant that nobody sees may as well not have happened. The claim is also the thing worth persisting -- see below. Persist the claim, not the clock -------------------------------- Save which rungs are claimed and, for lifetime ladders, the accumulated total. Never save \"seconds until the next rung\": that is derived, and a derived value in a save file is a value that will one day disagree with what it was derived from.",
+      "examples": [
+        "local ladder = PlaytimeLadder.define(\"session\", {\nscope = \"session\",\nrungs = {\n{ at = 300, reward = { coins = 100 } },\n{ at = 900, reward = { coins = 300 } },\n{ at = 1800, reward = { gems = 5 } },\n},\n})",
+        "local state = PlaytimeLadder.begin(ladder, saved)\nPlaytimeLadder.tick(ladder, state, dt, active)   -- each frame or second\nfor _, rung in PlaytimeLadder.claimable(ladder, state) do ... end",
+        "a player who stands still to read a sign loses credit for the pause, and\nthe ladder feels like it is cheating them.",
+        "accumulating entirely rather than accumulating slowly. Half credit for\nbeing away is still a reason to be away."
+      ],
+      "functions": [
+        {
+          "name": "PlaytimeLadder.define",
+          "signature": "PlaytimeLadder.define(id: string, config: Config?)",
+          "kind": "function",
+          "returns": "any",
+          "summary": "Register a ladder. Rungs are sorted by time, so a caller may list them in any order and a generated ladder needs no discipline about it.",
+          "examples": [],
+          "line": 119
+        },
+        {
+          "name": "PlaytimeLadder.get",
+          "signature": "PlaytimeLadder.get(id: string)",
+          "kind": "function",
+          "returns": "any?",
+          "summary": "",
+          "examples": [],
+          "line": 144
+        },
+        {
+          "name": "PlaytimeLadder.begin",
+          "signature": "PlaytimeLadder.begin(ladder: any, saved: any?)",
+          "kind": "function",
+          "returns": "State",
+          "summary": "A fresh state, or one restored from a save. A session ladder ignores any saved elapsed time -- that is what makes it a session ladder -- but still honours saved claims, so a game can switch a ladder from lifetime to session without players re-earning what they had.",
+          "examples": [],
+          "line": 155
+        },
+        {
+          "name": "PlaytimeLadder.save",
+          "signature": "PlaytimeLadder.save(ladder: any, state: State)",
+          "kind": "function",
+          "returns": "any",
+          "summary": ": What to persist. Deliberately not the whole state: `idleFor` is meaningless : across a session boundary and saving it would only invite it being trusted.",
+          "examples": [],
+          "line": 173
+        },
+        {
+          "name": "PlaytimeLadder.tick",
+          "signature": "PlaytimeLadder.tick(ladder: any, state: State, dt: number, active: boolean?)",
+          "kind": "function",
+          "returns": "number",
+          "summary": "Advance the clock. `active` is the game's own judgement, and the reason this module refuses to form one. Passing `true` unconditionally gives a wall-clock ladder, which is a legitimate choice for a game where merely being present is the point. Returns the seconds actually credited, which is `dt` or zero. Callers that want to show \"paused\" in a HUD read it rather than re-deriving the idle rule.",
+          "examples": [],
+          "line": 191
+        },
+        {
+          "name": "PlaytimeLadder.isPaused",
+          "signature": "PlaytimeLadder.isPaused(ladder: any, state: State)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": ": True while the clock is stopped, for a HUD that wants to say so. A ladder : that pauses silently reads as broken rather than as working correctly.",
+          "examples": [],
+          "line": 209
+        },
+        {
+          "name": "PlaytimeLadder.claimable",
+          "signature": "PlaytimeLadder.claimable(ladder: any, state: State)",
+          "kind": "function",
+          "returns": "{ Rung }",
+          "summary": "Rungs reached but not yet taken, in order. Returned rather than granted, and returning the whole list rather than one matters: a player who was away for the last three milestones should see all three waiting, not collect them one join at a time.",
+          "examples": [],
+          "line": 220
+        },
+        {
+          "name": "PlaytimeLadder.claim",
+          "signature": "PlaytimeLadder.claim(ladder: any, state: State, id: string)",
+          "kind": "function",
+          "returns": "any?",
+          "summary": "Take one rung. Returns its reward, or nil if it was not available. Nil covers both \"not reached yet\" and \"already taken\", and the caller does not need to tell them apart: in either case nothing is owed. Checking the claim inside here rather than trusting the caller is what makes a double click harmless.",
+          "examples": [],
+          "line": 238
+        },
+        {
+          "name": "PlaytimeLadder.claimAll",
+          "signature": "PlaytimeLadder.claimAll(ladder: any, state: State)",
+          "kind": "function",
+          "returns": "{ any }",
+          "summary": ": Everything outstanding at once, for a \"collect all\" button.",
+          "examples": [],
+          "line": 263
+        },
+        {
+          "name": "PlaytimeLadder.next",
+          "signature": "PlaytimeLadder.next(ladder: any, state: State)",
+          "kind": "function",
+          "returns": "(Rung?, number?)",
+          "summary": "The next rung and the seconds until it, for a countdown. Returns nil when every rung is claimed and the ladder does not loop, which is a real state a HUD should render as \"done\" rather than as a stuck timer.",
+          "examples": [],
+          "line": 283
+        },
+        {
+          "name": "PlaytimeLadder.progress",
+          "signature": "PlaytimeLadder.progress(ladder: any, state: State)",
+          "kind": "function",
+          "returns": "number",
+          "summary": ": Progress toward the next rung, 0..1, for a bar. One when nothing is left.",
+          "examples": [],
+          "line": 293
+        },
+        {
+          "name": "PlaytimeLadder.describe",
+          "signature": "PlaytimeLadder.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 314
         }
       ],
       "describes": true
@@ -11323,7 +12127,7 @@
     {
       "name": "Progression",
       "file": "forge/luau/Forge/Progression/init.lua",
-      "lines": 207,
+      "lines": 232,
       "summary": "Progression — levels, experience, points and unlocks, for any subject. \"Subject\" and not \"player\" on purpose: the same machinery levels a weapon, a settlement, a pet or a skill tree. A game that hard-codes progression to players has to write it again the first time a sword gains levels.",
       "examples": [
         "Progression.define(\"hero\", {\nmaxLevel = 40,\ncurve = function(level) return math.floor(72 * level ^ 1.55 + 28 * level) end,\nperLevel = { points = 3, health = 14 },\nunlocks = { [5] = { \"ability.dash\" }, [10] = { \"zone.highlands\" } },\n})",
@@ -11506,6 +12310,56 @@
         }
       ],
       "describes": false
+    },
+    {
+      "name": "Prop",
+      "file": "forge/luau/Forge/Catalog/Prop.lua",
+      "lines": 361,
+      "summary": "Prop — rebuild a Creator Store model from baked geometry. `StoreProps` holds specs read out of real store models; this turns one into instances. Nothing is fetched: the geometry is data in the place, so this works in a live game where `InsertService` and `game:GetObjects` do not. What a rebuilt prop is and is not --------------------------------- Meshed parts come back as a `Part` carrying a `SpecialMesh`, because `MeshPart.MeshId` cannot be written -- not at runtime and not from a plugin. Two consequences worth knowing before using one for something load-bearing: * **No PBR.** `SurfaceAppearance` is a child of a MeshPart and has no * **Box collision.** A SpecialMesh is decoration on a Part, and the Part's Everything is built anchored and non-colliding by default. A store model's own anchoring is whatever its author happened to leave, and a third of the catalogued ones carry unanchored parts -- each one a physics body the server simulates for as long as it exists. Scenery needs none of that, and a caller who wants a prop to fall says so.",
+      "examples": [
+        "local Prop = Forge.Catalog.Prop\nlocal rock = Prop.build(\"rock\", CFrame.new(0, 5, 0))\nrock.Parent = workspace",
+        "SpecialMesh equivalent, so a prop that shipped with colour, normal and\nroughness maps comes back with its flat colour and material.",
+        "box is what a player collides with. Fine for scenery, wrong for anything\nsomebody has to stand on precisely."
+      ],
+      "functions": [
+        {
+          "name": "Prop.build",
+          "signature": "Prop.build(which: string, at: CFrame?, settings0: Options?)",
+          "kind": "function",
+          "returns": "Model?",
+          "summary": "Build one prop by its spec id or topic. A topic returns the first spec filed under it, which the bake orders best first. Nil when nothing matches -- a missing prop is a real answer and should not be an error that takes a world build down with it.",
+          "examples": [],
+          "line": 149
+        },
+        {
+          "name": "Prop.variant",
+          "signature": "Prop.variant(topic: string, seed: number, at: CFrame?, options: Options?)",
+          "kind": "function",
+          "returns": "Model?",
+          "summary": "Build one of a topic's props, chosen by a seed rather than at random. Scenery wants variety and reproducibility at once: two runs of the same world generator should place the same rocks, or a scene cannot be authored against. The seed is the caller's, so the same world layout gives the same result every time.",
+          "examples": [],
+          "line": 292
+        },
+        {
+          "name": "Prop.place",
+          "signature": "Prop.place(topic: string, seed: number, on: Vector3, options: Options?)",
+          "kind": "function",
+          "returns": "Model?",
+          "summary": "Place a prop standing on a point, rather than centred on it. `PivotTo` puts a model's centre where you ask, which for scenery is almost never what is wanted: a rock placed on the ground sinks halfway into it and a tree floats with its trunk cut off. This lifts by half the prop's own height so its base meets the point. `yaw` is taken rather than left to the caller because a scattered prop that is not rotated reads as a repeated stamp -- the single most obvious tell that a field of rocks came out of a loop.",
+          "examples": [],
+          "line": 313
+        },
+        {
+          "name": "Prop.describe",
+          "signature": "Prop.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 352
+        }
+      ],
+      "describes": true
     },
     {
       "name": "QualityTierSelector",
@@ -12426,7 +13280,7 @@
     {
       "name": "Rig",
       "file": "forge/luau/Forge/Rig/init.lua",
-      "lines": 852,
+      "lines": 877,
       "summary": "Rig — characters authored in code. A creature's silhouette becomes a table of numbers. That matters for two reasons: an agent can create a new enemy without a modelling tool, and the difference between a rat and a golem becomes something you can tune rather than something you have to re-model. R6 by default: six joints, and `shape` changes the posture rather than the bone count -- a quadruped is an R6 rig with a pitched torso, which reads correctly and costs nothing. `rigType = \"R15\"` builds the fifteen-part skeleton instead, with elbows, knees, wrists and ankles. That exists because shoulders alone can only aim an arm, never fold one, and an archer's draw hand belongs at the cheek.",
       "examples": [
         "local model = Rig.build({\nname = \"Grass Wolf\",\nscale = 0.85,\nshape = \"quadruped\",\nbody = Color3.fromRGB(112, 106, 96),\naccent = Color3.fromRGB(64, 60, 54),\neyes = Color3.fromRGB(240, 200, 80),\nweapon = nil,\n})"
@@ -12530,12 +13384,138 @@
     {
       "name": "Rng",
       "file": "forge/luau/Forge/Core/Rng.lua",
-      "lines": 70,
-      "summary": "Rng — deterministic random helpers shared by Forge families. Gameplay that can be replayed (tests, scenarios, evidence) must never reach for the global math.random. Every module here takes a seed and produces the same stream on every machine, so a recorded match or a lottery roll can be re-run bit-for-bit.",
+      "lines": 250,
+      "summary": "Rng — seeded randomness in named streams. This is where determinism belongs, and the only place Forge insists on it. One shared Random is a trap: the moment loot rolls consume numbers from the same sequence as terrain, regenerating the same world with a different drop becomes impossible, and a bug reproduced yesterday will not reproduce today. Streams fix that — `Rng.stream(\"world\")` and `Rng.stream(\"loot\")` are independent, both derived from one master seed, both reproducible. The validation half can capture `Rng.describe()` with a run and replay it.",
       "examples": [
-        "local rng = Rng.xorshift(20260811)\nlocal pick = Rng.weightedPick(rng, { 10, 5, 1 })"
+        "Rng.seed(20260819)\nlocal world = Rng.stream(\"world\")\nlocal h = world:number(0, 1)"
       ],
       "functions": [
+        {
+          "name": "Stream:number",
+          "signature": "Stream:number(min: number?, max: number?)",
+          "kind": "method",
+          "returns": "number",
+          "summary": "",
+          "examples": [],
+          "line": 39
+        },
+        {
+          "name": "Stream:int",
+          "signature": "Stream:int(min: number, max: number)",
+          "kind": "method",
+          "returns": "number",
+          "summary": "",
+          "examples": [],
+          "line": 46
+        },
+        {
+          "name": "Stream:bool",
+          "signature": "Stream:bool(chance: number?)",
+          "kind": "method",
+          "returns": "boolean",
+          "summary": "",
+          "examples": [],
+          "line": 50
+        },
+        {
+          "name": "Stream:unit",
+          "signature": "Stream:unit()",
+          "kind": "method",
+          "returns": "Vector3",
+          "summary": "",
+          "examples": [],
+          "line": 54
+        },
+        {
+          "name": "Stream:inDisc",
+          "signature": "Stream:inDisc(radius: number)",
+          "kind": "method",
+          "returns": "Vector2",
+          "summary": "Point in a disc, uniform by area (naive polar sampling clusters at the centre).",
+          "examples": [],
+          "line": 94
+        },
+        {
+          "name": "Stream:reset",
+          "signature": "Stream:reset()",
+          "kind": "method",
+          "returns": null,
+          "summary": "",
+          "examples": [],
+          "line": 100
+        },
+        {
+          "name": "Rng.seed",
+          "signature": "Rng.seed(seed: number)",
+          "kind": "function",
+          "returns": null,
+          "summary": "",
+          "examples": [],
+          "line": 104
+        },
+        {
+          "name": "Rng.masterSeed",
+          "signature": "Rng.masterSeed()",
+          "kind": "function",
+          "returns": "number",
+          "summary": "",
+          "examples": [],
+          "line": 109
+        },
+        {
+          "name": "Rng.stream",
+          "signature": "Rng.stream(name: string)",
+          "kind": "function",
+          "returns": "any",
+          "summary": "",
+          "examples": [],
+          "line": 113
+        },
+        {
+          "name": "Rng.at",
+          "signature": "Rng.at(name: string, x: number, y: number)",
+          "kind": "function",
+          "returns": "any",
+          "summary": "Throwaway stream for a specific coordinate: same tile always rolls the same contents, without keeping any per-tile state.",
+          "examples": [],
+          "line": 126
+        },
+        {
+          "name": "Rng.fbm",
+          "signature": "Rng.fbm(x: number, y: number, options: any?)",
+          "kind": "function",
+          "returns": "number",
+          "summary": "Fractal noise. The backbone of every heightfield, moisture map and scatter mask, and deterministic for a given seed.",
+          "examples": [],
+          "line": 133
+        },
+        {
+          "name": "Rng.fbm01",
+          "signature": "Rng.fbm01(x: number, y: number, options: any?)",
+          "kind": "function",
+          "returns": "number",
+          "summary": "fbm remapped to 0..1, which is what most callers actually want.",
+          "examples": [],
+          "line": 152
+        },
+        {
+          "name": "Rng.ridge",
+          "signature": "Rng.ridge(x: number, y: number, options: any?)",
+          "kind": "function",
+          "returns": "number",
+          "summary": "Ridged noise: sharp crests instead of rolling hills. Mountains, canyons.",
+          "examples": [],
+          "line": 157
+        },
+        {
+          "name": "Rng.describe",
+          "signature": "Rng.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "What a run should record so it can be replayed.",
+          "examples": [],
+          "line": 162
+        },
         {
           "name": "Rng.xorshift",
           "signature": "Rng.xorshift(seed: number?)",
@@ -12543,7 +13523,7 @@
           "returns": "Generator",
           "summary": "",
           "examples": [],
-          "line": 18
+          "line": 198
         },
         {
           "name": "Rng.weightedPick",
@@ -12552,7 +13532,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 34
+          "line": 214
         },
         {
           "name": "Rng.range",
@@ -12561,7 +13541,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 52
+          "line": 232
         },
         {
           "name": "Rng.int",
@@ -12570,10 +13550,10 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 56
+          "line": 236
         }
       ],
-      "describes": false
+      "describes": true
     },
     {
       "name": "RoundMachine",
@@ -12636,7 +13616,7 @@
     {
       "name": "Save",
       "file": "forge/luau/Forge/Save/init.lua",
-      "lines": 542,
+      "lines": 567,
       "summary": "Save — player profiles that survive, migrate and do not corrupt. Three failures this exists to prevent, all of which are invisible in Studio and expensive in production: 1. No session lock. Two servers hold the same profile, the second one saves last, and a player loses an evening of progress. 2. No migration. You add a field, every returning player has `nil` where a number should be, and a dozen systems break in ways that look unrelated. 3. No retry, no BindToClose. The server shuts down mid-write and the save is simply gone.",
       "examples": [
         "Save.configure({\nstore = \"Profiles_v1\",\ntemplate = { level = 1, gold = 0, inventory = {} },\nmigrations = {\n[2] = function(data) data.attributes = data.attributes or {} end,\n},\nversion = 2,\n})",
@@ -12737,9 +13717,48 @@
       "describes": true
     },
     {
+      "name": "Scale",
+      "file": "forge/luau/Forge/Catalog/Scale.lua",
+      "lines": 379,
+      "summary": "Scale — how big a thing of this kind should be, in studs. The problem ----------- Asset packs share no unit. One models a sofa 271 units tall, another a fuel tank at 318, a third a whole castle at 4. Nothing about a mesh says what it is supposed to measure, and every marketplace normalises nothing, so a world assembled from several packs is a world where a chair is taller than a church. The fix is to declare a target height and scale each model to reach it. The question is where that number comes from. Why it is not measured ---------------------- It cannot be. Authored height is in the pack's own arbitrary unit, so measuring 295 models tells you the median tree is 4.2 *somethings*. There is no arithmetic from that to \"a tree is about 34 studs\" -- that is knowledge about trees, not about the file. Why it is not a table of topics ------------------------------- The first version was: 67 topics, two numbers each, typed by hand. It worked and it does not survive twelve thousand models, because every new topic is a new row nobody writes and the fallback is one number for everything. So the knowledge lives in about a dozen **categories**, and topics are classified into them by name. `tree` and `dead oak tree` and `palm tree` are all foliage without anyone adding a row; an unrecognised topic lands on a neutral prop size rather than on nothing. The other half -------------- Height alone is not enough, and the failure is spectacular: a bush modelled 1 unit tall and 20 wide, scaled until it stands 5 studs, becomes 100 studs across. One of those filled a third of a frame and read as a hill. So a category also declares how wide a thing of its kind may be, as a multiple of its height, and whichever limit binds first wins. A squat model then stays squat rather than reaching its target height -- which is correct. The target says what a tree should measure, not that every model is tree-shaped.",
+      "examples": [
+        "local Scale = Forge.Catalog.Scale\nlocal factor = Scale.factor(\"tree\", authoredSize)"
+      ],
+      "functions": [
+        {
+          "name": "Scale.classify",
+          "signature": "Scale.classify(topic: string)",
+          "kind": "function",
+          "returns": "string",
+          "summary": "Which category a topic falls into. Two passes, and the order is the fix for a real bug. The first version matched rule words as plain substrings anywhere in the topic. `street lamp` came back as **foliage, thirty-four studs tall**, because `street` contains `tree`: s-TREE-t. Every lamp post in the village was built as an oak. The same trap is waiting in `crate`/`rate`, `shovel`/`hovel`, `barn`/`bar` -- substring matching over natural language finds words inside other words, and it does it silently. So pass one compares whole words. A topic is words separated by spaces, and `lamp` matching the word `lamp` is what was meant all along. Pass two falls back to substrings, because compound topics arrive welded: `watchtower`, `pinetree`, `lamppost`. It only runs when no whole word matched, so it can no longer outvote the obvious answer. Cached: this runs once per prop and a thousand-prop world would otherwise walk the list a thousand times for the same dozen answers.",
+          "examples": [],
+          "line": 302
+        },
+        {
+          "name": "Scale.of",
+          "signature": "Scale.of(topic: string, override: { [string]: Kind }?)",
+          "kind": "function",
+          "returns": "Kind",
+          "summary": ": The target size for a topic. `override` lets a game disagree about one : thing without restating the other sixty-six.",
+          "examples": [],
+          "line": 343
+        },
+        {
+          "name": "Scale.describe",
+          "signature": "Scale.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 374
+        }
+      ],
+      "describes": true
+    },
+    {
       "name": "Scene",
       "file": "forge/luau/Forge/Scene/init.lua",
-      "lines": 543,
+      "lines": 581,
       "summary": "Scene — a place expressed as data, not as code. Why this matters more than it looks ----------------------------------- A world built by a `for` loop in a server script exists only while that script runs. Nothing can list it, diff it, hand-edit it, or hand it to a tool. The moment the same world is a table of placements, all four become possible — including an editor, which is only ever a UI over this data. Scenes also make unloading real. `scene:unload()` removes exactly what the scene created and nothing else, which is what lets a game move between areas without leaking the previous one into the next.",
       "examples": [
         "local dungeon = Scene.create(\"Dungeon\")\ndungeon:add(\"Prop.Torch\", CFrame.new(10, 3, 0))\ndungeon:add(\"Enemy.Orc\", CFrame.new(20, 3, 4), { tags = { \"guard\" } })\ndungeon:spawnPoint(\"entrance\", CFrame.new(0, 4, 0))\ndungeon:load()",
@@ -12895,9 +13914,9 @@
           "signature": "SceneClass:materialise(placement: any)",
           "kind": "method",
           "returns": null,
-          "summary": "================================ loading =================================== Public because Streaming drives placements one at a time rather than loading a whole scene at once.",
+          "summary": "",
           "examples": [],
-          "line": 248
+          "line": 267
         },
         {
           "name": "SceneClass:dematerialise",
@@ -12906,7 +13925,7 @@
           "returns": null,
           "summary": "Remove one placement's instance and entity, leaving the placement itself in the scene so it can come back. This is what unloading a chunk means.",
           "examples": [],
-          "line": 290
+          "line": 328
         },
         {
           "name": "SceneClass:load",
@@ -12915,7 +13934,7 @@
           "returns": "any",
           "summary": "",
           "examples": [],
-          "line": 309
+          "line": 347
         },
         {
           "name": "SceneClass:unload",
@@ -12924,7 +13943,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 348
+          "line": 386
         },
         {
           "name": "SceneClass:isLoaded",
@@ -12933,7 +13952,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 385
+          "line": 423
         },
         {
           "name": "SceneClass:container",
@@ -12942,7 +13961,7 @@
           "returns": "Instance?",
           "summary": "",
           "examples": [],
-          "line": 389
+          "line": 427
         },
         {
           "name": "Scene.activate",
@@ -12951,7 +13970,7 @@
           "returns": "any",
           "summary": "Only one scene at a time: the common case for areas, dungeons and lobbies.",
           "examples": [],
-          "line": 394
+          "line": 432
         },
         {
           "name": "Scene.activeName",
@@ -12960,7 +13979,7 @@
           "returns": "string?",
           "summary": "",
           "examples": [],
-          "line": 408
+          "line": 446
         },
         {
           "name": "SceneClass:serialize",
@@ -12969,7 +13988,7 @@
           "returns": "{ [string]: any }",
           "summary": "A plain table: safe for JSONEncode, a DataStore, a file, or a tool that never runs inside Roblox.",
           "examples": [],
-          "line": 425
+          "line": 463
         },
         {
           "name": "SceneClass:toJson",
@@ -12978,7 +13997,7 @@
           "returns": "string",
           "summary": "",
           "examples": [],
-          "line": 456
+          "line": 494
         },
         {
           "name": "Scene.fromTable",
@@ -12987,7 +14006,7 @@
           "returns": "any",
           "summary": "",
           "examples": [],
-          "line": 460
+          "line": 498
         },
         {
           "name": "Scene.fromJson",
@@ -12996,7 +14015,7 @@
           "returns": "any",
           "summary": "",
           "examples": [],
-          "line": 474
+          "line": 512
         },
         {
           "name": "Scene.capture",
@@ -13005,7 +14024,7 @@
           "returns": "any",
           "summary": "Capture what is already in the world as a scene. This is the bridge from hand-built to data-driven: block something out in Studio, capture it, and from then on it is a table an agent can edit. Instances carry a `ForgeAsset` attribute naming what they are; anything without one cannot be captured, because the engine has no id for it.",
           "examples": [],
-          "line": 486
+          "line": 524
         },
         {
           "name": "SceneClass:validate",
@@ -13014,7 +14033,7 @@
           "returns": "{ [string]: any }",
           "summary": "Check every asset a scene references before trying to load it.",
           "examples": [],
-          "line": 516
+          "line": 554
         },
         {
           "name": "Scene.describe",
@@ -13023,7 +14042,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 524
+          "line": 562
         }
       ],
       "describes": true
@@ -13652,7 +14671,7 @@
     {
       "name": "Social",
       "file": "forge/luau/Forge/Social/init.lua",
-      "lines": 312,
+      "lines": 337,
       "summary": "Social — the player's relationship with everyone outside this server. Three Roblox services that Forge had never touched, grouped because they answer one question between them: what may this particular player see, do and say, and who can they bring. `PolicyService` decides what a player is *allowed* to be shown. Paid items, random rewards and links to other experiences are all gated by region and age, and the gate is not optional — it is compliance. A game that shows a loot box to a player whose policy forbids it is a game with a real problem, and nothing in Roblox stops you doing it by accident. `SocialService` is invites. Roughly half of a Roblox game's growth is one player pulling in a friend, and the prompt to do that is three lines nobody writes. `TextChatService` is chat, and more usefully, the filter. **Any** text a player authored that another player will see must be filtered — names, signs, pet names, guild tags. Not filtering is the single most common way a Roblox game gets moderated off the platform. --- Fail closed -------------------------------------------------------- Every question here fails closed. If the policy service cannot be reached, `may` returns false; if the filter errors, `filter` returns a redacted string rather than the original. Failing open on either would mean the one time the service is down is the one time a game shows a minor a paid item or broadcasts unfiltered text.",
       "examples": [
         "if Social.may(player, \"paidItems\") then ... end\nSocial.inviteFriend(player)\nlocal safe = Social.filter(text, player)"
@@ -13940,6 +14959,57 @@
       "describes": false
     },
     {
+      "name": "Stance",
+      "file": "forge/luau/Forge/Weapon/Stance.lua",
+      "lines": 217,
+      "summary": "Stance — what the shooter is doing, and what that costs in accuracy. `Weapon` already models bloom: a cone that grows per shot and recovers while the trigger is released. What it did not model is the other half of every shooter's accuracy, which is *posture*. Aiming down sights narrows the cone; walking, sprinting and being airborne widen it. This is the layer that makes movement a decision. Without it a player who sprints backwards while firing is exactly as accurate as one who plants and aims, and the entire risk/reward of a firefight disappears. Multipliers compound -------------------- A player sprinting *and* airborne is worse off than either alone. That is deliberate and it is what stops bunny-hopping from being free accuracy -- the single most common way a shooter's movement model eats its aiming model. The presets ----------- Four weapon classes, tuned in a shipped shooter. Offered as a starting point for `Weapon.define`, and more usefully as a worked example of the relationships, which travel further than the values: * a **pistol** blooms fastest per shot and recovers fastest, so it rewards * a **shotgun** barely blooms *relative to its own cone* -- around a * **fast weapons bloom harder**, so holding the trigger costs accuracy and",
+      "examples": [
+        "local stance = Stance.read(character, { ads = aiming })\nlocal cone = Weapon.currentSpread(character) * Stance.multiplier(def, stance)",
+        "tapping and punishes spraying;",
+        "tenth of its resting spread per shot, against two thirds for a pistol.\nIts cone is already its pellet spread, and bloom on top of that is a\npenalty no player can read;",
+        "a burst becomes a real choice rather than a worse version of holding it."
+      ],
+      "functions": [
+        {
+          "name": "Stance.preset",
+          "signature": "Stance.preset(class: string, overrides: { [string]: any }?)",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "A weapon definition built from a preset, with overrides merged over it. Shallow per-table, so `{ spread = { min = 2 } }` replaces only `min` and keeps the preset's other three. A deep merge here would be surprising and a replace would make the presets useless for tuning one value.",
+          "examples": [],
+          "line": 97
+        },
+        {
+          "name": "Stance.multiplier",
+          "signature": "Stance.multiplier(def: any, state: State?)",
+          "kind": "function",
+          "returns": "number",
+          "summary": "The accuracy multiplier for a posture. `def` may carry a `stance` table to override any of the four; anything it omits falls back to the defaults above, so a weapon defined without thinking about stance still behaves sensibly.",
+          "examples": [],
+          "line": 135
+        },
+        {
+          "name": "Stance.read",
+          "signature": "Stance.read(character: Model?, extra: State?)",
+          "kind": "function",
+          "returns": "State",
+          "summary": "Read a posture off a character, so callers do not each invent their own. `moving` and `sprinting` are derived from actual velocity rather than from input, because a player held against a wall is pressing forward and not moving, and should be shooting like someone standing still. `extra` supplies what a character cannot know -- chiefly `ads`, which is a game's own aiming state. `sprintAbove` defaults to just over a default walk speed. A game with its own movement model should pass its own threshold.",
+          "examples": [],
+          "line": 175
+        },
+        {
+          "name": "Stance.describe",
+          "signature": "Stance.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 207
+        }
+      ],
+      "describes": true
+    },
+    {
       "name": "State",
       "file": "forge/luau/Forge/State/init.lua",
       "lines": 25,
@@ -14144,6 +15214,91 @@
         }
       ],
       "describes": true
+    },
+    {
+      "name": "StoreAssets",
+      "file": "forge/luau/Forge/Catalog/StoreAssets.lua",
+      "lines": 451,
+      "summary": "StoreAssets — Creator Store assets that were fetched, opened and read. Generated by `rqe.assets.sweep`; do not edit by hand, it is rewritten on every sweep. Every id here was searched for, filtered on its metadata, then actually pulled into Studio and inspected -- the part and triangle counts below are measured rather than claimed, and nothing carrying a script or an unreadable payload reached this file. `verdict` is \"ok\" or \"caveats\". Caveats means usable with something to attend to, and in practice that is nearly always unanchored parts: they are physics bodies the server simulates for as long as they exist, which is fine for one and expensive for a hundred. `unanchored` says how many. Swept 2026-08-26. 365 assets across 81 topics.",
+      "examples": [
+        "local store = Forge.Catalog.StoreAssets\nfor _, piece in store.byTopic(\"conveyor\") do\nprint(piece.id, piece.parts)\nend"
+      ],
+      "functions": [
+        {
+          "name": "StoreAssets.byTopic",
+          "signature": "StoreAssets.byTopic(topic: string)",
+          "kind": "function",
+          "returns": "{ Piece }",
+          "summary": ": Everything filed under one topic, best first. Empty table rather than nil, : so a caller can iterate the result of any topic without checking.",
+          "examples": [],
+          "line": 418
+        },
+        {
+          "name": "StoreAssets.byKind",
+          "signature": "StoreAssets.byKind(kind: string)",
+          "kind": "function",
+          "returns": "{ Piece }",
+          "summary": "",
+          "examples": [],
+          "line": 422
+        },
+        {
+          "name": "StoreAssets.pick",
+          "signature": "StoreAssets.pick(topic: string, clean: boolean?)",
+          "kind": "function",
+          "returns": "Piece?",
+          "summary": "The best match for a topic, optionally refusing anything with caveats. `clean` is worth passing wherever the piece will be placed in bulk: a prop with unanchored parts is a fine centrepiece and a bad choice for scatter.",
+          "examples": [],
+          "line": 432
+        },
+        {
+          "name": "StoreAssets.topics",
+          "signature": "StoreAssets.topics()",
+          "kind": "function",
+          "returns": "{ string }",
+          "summary": "",
+          "examples": [],
+          "line": 441
+        }
+      ],
+      "describes": false
+    },
+    {
+      "name": "StoreProps",
+      "file": "forge/luau/Forge/Catalog/StoreProps.lua",
+      "lines": 474,
+      "summary": "StoreProps — geometry read out of real Creator Store models. Generated by `rqe.assets.bake`; rewritten on every bake, so do not edit it. `Forge.Catalog.Prop` turns one of these into instances. Each part carries its offset from the model's pivot as twelve numbers in `CFrame.new` order, its size, colour and material, and -- where the original was a MeshPart -- the mesh id and the scale that reproduces its size. That scale is `Size / MeshSize`, because a FileMesh renders at its own natural size and ignores the Part's. 32 props across 16 topics. Baked 2026-08-27.",
+      "examples": [],
+      "functions": [
+        {
+          "name": "StoreProps.get",
+          "signature": "StoreProps.get(which: string)",
+          "kind": "function",
+          "returns": "any?",
+          "summary": ": By id first, then by topic. A caller naming a topic wants \"any rock\" and a : caller naming an id wants that one, and both spellings are a string.",
+          "examples": [],
+          "line": 451
+        },
+        {
+          "name": "StoreProps.byTopic",
+          "signature": "StoreProps.byTopic(topic: string)",
+          "kind": "function",
+          "returns": "{ any }",
+          "summary": "",
+          "examples": [],
+          "line": 460
+        },
+        {
+          "name": "StoreProps.topics",
+          "signature": "StoreProps.topics()",
+          "kind": "function",
+          "returns": "{ string }",
+          "summary": "",
+          "examples": [],
+          "line": 464
+        }
+      ],
+      "describes": false
     },
     {
       "name": "StrafeJump",
@@ -14376,6 +15531,70 @@
         }
       ],
       "describes": false
+    },
+    {
+      "name": "Sway",
+      "file": "forge/luau/Forge/Weapon/Sway.lua",
+      "lines": 203,
+      "summary": "Sway — the small motions that make a held weapon feel held. A weapon welded rigidly to a camera reads as a decal. The difference between that and a gun somebody is carrying is four cheap oscillations, and this is all four. Ported from a faithful Quake `view.c` implementation ---------------------------------------------------- Not invented here, and deliberately so: this maths is thirty years old, shipped in the games that defined how a first-person weapon should feel, and every constant in it was tuned by people watching players. What follows are the parts that matter and the reasons they are shaped that way. **Units are converted, relationships are not.** The original is in Quake units -- roughly ten to a stud -- with a player running at 320 and a bob clamped to 7. Copying those numbers into Roblox would swing a weapon seven studs. The scales below are re-expressed for studs and a 16 stud/s walk; the *shape* of every curve is untouched. * **Bob is proportional to speed**, so walking pumps gently and sprinting * **The stroke is asymmetric.** `upFraction` splits the cycle unevenly, * **There is a constant term.** `bob * 0.3 + bob * 0.7 * sin(...)` never * **The clamp is lopsided** -- it can drop further than it rises, because * **Airborne freezes the cycle.** The clock stops and the last value is * **Idle sway runs three waves at different rates** -- pitch, yaw and roll Everything here is scalar and stateless apart from the bob clock, so it runs in a test with no camera, and drives a viewmodel, a third-person weld or a held tool equally well.",
+      "examples": [
+        "pumps hard, with no separate states to configure.",
+        "so the rise and the fall take different lengths of time. A pure sine\nreads as a machine; a footstep does not.",
+        "returns to zero while moving, so the weapon rides slightly high rather\nthan passing through its rest position twice a step.",
+        "a weapon that flies up past the crosshair obscures the thing you are\naiming at, and one that dips does not.",
+        "held. This is the detail a first attempt always misses: a weapon that\nkeeps pumping while its owner is in mid-air is walking on nothing.",
+        "at 1, 2 and 0.5 -- so the composite never visibly repeats. One shared\nfrequency is a wobble; three unequal ones read as breathing."
+      ],
+      "functions": [
+        {
+          "name": "Sway.newBob",
+          "signature": "Sway.newBob()",
+          "kind": "function",
+          "returns": "BobState",
+          "summary": "",
+          "examples": [],
+          "line": 99
+        },
+        {
+          "name": "Sway.roll",
+          "signature": "Sway.roll(lateral: number, tuning: Tuning?)",
+          "kind": "function",
+          "returns": "number",
+          "summary": "Degrees of roll for a given sideways speed. Strafing leans. Linear up to `rollSpeed`, flat after, signed by direction. It is a small angle -- two degrees -- and it does more for the feel of movement than any other single number in this file. `lateral` is the component of velocity along the camera's right vector; the caller has the camera and this does not.",
+          "examples": [],
+          "line": 148
+        },
+        {
+          "name": "Sway.idle",
+          "signature": "Sway.idle(clock: number, scale: number?)",
+          "kind": "function",
+          "returns": "(number, number, number)",
+          "summary": "Breathing: pitch, yaw and roll additions in degrees. `scale` is the whole effect's depth -- zero disables it, and the original shipped with it off by default for exactly the reason a modern game should turn it on quietly: at any strength a player consciously notices, it is motion sickness rather than life. Small values only.",
+          "examples": [],
+          "line": 166
+        },
+        {
+          "name": "Sway.decay",
+          "signature": "Sway.decay(value: number, dt: number, halfLife: number?)",
+          "kind": "function",
+          "returns": "number",
+          "summary": "Recoil that decays: add on fire, call each frame, use what comes back. Exponential rather than linear, so the kick is sharp and the settle is soft. `halfLife` is how long it takes to fall to half -- around a tenth of a second for a rifle, longer for something heavy. Returns the remaining kick, so a caller keeps one number per axis:",
+          "examples": [
+            "state.pitch = Sway.decay(state.pitch + shotKick, dt, 0.1)"
+          ],
+          "line": 187
+        },
+        {
+          "name": "Sway.describe",
+          "signature": "Sway.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 198
+        }
+      ],
+      "describes": true
     },
     {
       "name": "SystemMailbox",
@@ -14711,7 +15930,7 @@
     {
       "name": "Testing",
       "file": "forge/luau/Forge/Testing/init.lua",
-      "lines": 437,
+      "lines": 524,
       "summary": "Testing — assertions about a game that is actually running. Every other check in this project reads source. The compiler reads syntax, the doctor reads structure, the unit tests read text. None of them can tell you whether an attack lands, whether an enemy dies, or whether a save survives a rejoin — and those are the only questions that matter. So this runs inside the live game. It drives real characters through real systems and asserts on real state. Nothing here is mocked: a test that hits a fake enemy with a fake sword proves that the fakes agree with each other. --- Why bots and not mocks --------------------------------------------- A bot here is a real `Rig` with a real `Humanoid`, spawned into the real world, moved by the real movement code and damaged by the real damage pipeline. When one of these tests fails it is because the game is broken, not because a stub drifted. That is the entire point: this suite is the thing that was missing when every genuine bug in this project had to be found by a person watching a screen. --- Determinism --------------------------------------------------------- Scenarios are given their own RNG stream and their own container, and the world is put back afterwards. Two runs of the same suite see the same numbers, so a failure is reproducible rather than a story about one afternoon.",
       "examples": [
         "Testing.scenario(\"a third hit finishes a husk\", function(t)\nlocal enemy = t:spawnEnemy(\"husk\", Vector3.new(0, 5, 0))\nlocal hero = t:spawnBot(Vector3.new(0, 5, 6))",
@@ -14727,7 +15946,7 @@
           "returns": null,
           "summary": "================================ registry ==================================",
           "examples": [],
-          "line": 85
+          "line": 97
         },
         {
           "name": "Testing.clear",
@@ -14736,7 +15955,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 95
+          "line": 108
         },
         {
           "name": "Testing.count",
@@ -14745,7 +15964,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 99
+          "line": 112
         },
         {
           "name": "Testing.names",
@@ -14754,7 +15973,7 @@
           "returns": "{ string }",
           "summary": "",
           "examples": [],
-          "line": 103
+          "line": 116
         },
         {
           "name": "Context:track",
@@ -14763,7 +15982,7 @@
           "returns": "Instance",
           "summary": "Own an instance for the length of the scenario, and hold it still. Anchored, because a rig from `Rig.build` is unanchored and has a Humanoid: spawned at test altitude it falls, lands in the middle of whatever someone is playing, and is deleted a second later. That is exactly what it looks like from the player's seat — bodies dropping out of the sky and vanishing — and it is the test suite doing it. A scenario that genuinely needs physics unanchors what it spawned; that is one line and an explicit decision, which is the right way round.",
           "examples": [],
-          "line": 147
+          "line": 160
         },
         {
           "name": "Context:spawnEnemy",
@@ -14772,7 +15991,7 @@
           "returns": "Model",
           "summary": "A real enemy, built by the same code the game uses. Deliberately not a stub with a Health attribute: the value of this suite is that it exercises `Rig.build`, the Humanoid, the damage pipeline and every modifier the game installed. A stub would pass while the real thing was broken, which is the failure mode being designed out.",
           "examples": [],
-          "line": 168
+          "line": 181
         },
         {
           "name": "Context:spawnBot",
@@ -14781,7 +16000,7 @@
           "returns": "Model",
           "summary": "",
           "examples": [],
-          "line": 184
+          "line": 197
         },
         {
           "name": "Context:face",
@@ -14790,7 +16009,7 @@
           "returns": null,
           "summary": "Point one model at another. Combat is directional almost everywhere, so a test that forgets this fails for the wrong reason.",
           "examples": [],
-          "line": 193
+          "line": 206
         },
         {
           "name": "Context:wait",
@@ -14799,7 +16018,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 203
+          "line": 216
         },
         {
           "name": "Context:waitUntil",
@@ -14808,7 +16027,7 @@
           "returns": "boolean",
           "summary": "Wait for something to become true, or give up. The alternative — a fixed sleep long enough for the slowest machine — makes a suite that is both slow and flaky. This is fast when the game is fast and still correct when it is not.",
           "examples": [],
-          "line": 217
+          "line": 230
         },
         {
           "name": "Context:expect",
@@ -14817,7 +16036,7 @@
           "returns": null,
           "summary": "================================ assertions ================================",
           "examples": [],
-          "line": 229
+          "line": 242
         },
         {
           "name": "Context:expectEqual",
@@ -14826,7 +16045,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 236
+          "line": 249
         },
         {
           "name": "Context:expectNear",
@@ -14835,7 +16054,27 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 245
+          "line": 258
+        },
+        {
+          "name": "Context:expectSome",
+          "signature": "Context:expectSome(items: { any }, minimum: number?, label: string?)",
+          "kind": "method",
+          "returns": "{ any }",
+          "summary": "Prove there is something to assert about, then return it. The failure this exists to stop: a scenario reads \"every lamp is lit correctly\", iterates a list, finds nothing to iterate, and passes. It asserted nothing and reported success -- and it reports success loudest exactly when the world failed to build, which is when a green suite is most dangerous. `expectSome` makes the population itself an assertion. Put it before the loop and an empty world fails the test instead of flattering it.",
+          "examples": [
+            "local lamps = ctx:expectSome(Lighting.all(), 1, \"lamps\")\nfor _, lamp in lamps do ctx:expect(lamp.lit, \"lamp is lit\") end"
+          ],
+          "line": 282
+        },
+        {
+          "name": "Context:baseline",
+          "signature": "Context:baseline(read: () -> any)",
+          "kind": "method",
+          "returns": "() -> any",
+          "summary": "Sample a value now, so a later assertion can compare against it. The other half of the racing problem. A suite that runs beside a live game measures a moving target: one scenario here failed a correct game because a 12Hz tick had already banked the resource between the action and the measurement. Capturing before acting turns \"is it 5\" into \"did it go up by 1\", which is true regardless of what the tick did in between.",
+          "examples": [],
+          "line": 303
         },
         {
           "name": "Context:expectAlive",
@@ -14844,7 +16083,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 254
+          "line": 310
         },
         {
           "name": "Context:expectDead",
@@ -14853,7 +16092,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 258
+          "line": 314
         },
         {
           "name": "Context:cleanup",
@@ -14862,7 +16101,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 262
+          "line": 318
         },
         {
           "name": "Testing.run",
@@ -14871,7 +16110,7 @@
           "returns": "{ [string]: any }",
           "summary": "Run every registered scenario and report. Each case runs inside a coroutine with a deadline, because the most common way a live test fails is not an assertion but a hang: something waits for an event that a broken system never fires. A hang that takes the whole suite down teaches nothing; a hang reported as a timeout on one named scenario points straight at the break.",
           "examples": [],
-          "line": 292
+          "line": 348
         },
         {
           "name": "Testing.publish",
@@ -14880,7 +16119,7 @@
           "returns": null,
           "summary": "Publish the last report where a tool outside the game can read it. A StringValue under ReplicatedStorage, the same channel `Debug.expose` uses and for the same reason: it replicates, so it is readable from a play session that no edit-mode command can reach. The alternative — returning the report to a caller — only works if the caller is inside the same Lua VM, which a CLI never is.",
           "examples": [],
-          "line": 375
+          "line": 462
         },
         {
           "name": "Testing.runAndPublish",
@@ -14889,7 +16128,7 @@
           "returns": "{ [string]: any }",
           "summary": "Load a game's scenarios, run them, and publish the result. One call, so a game's bootstrap can opt in with a single line and a CLI has one thing to trigger.",
           "examples": [],
-          "line": 400
+          "line": 487
         },
         {
           "name": "Testing.describe",
@@ -14898,7 +16137,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 428
+          "line": 515
         }
       ],
       "describes": true
@@ -14959,9 +16198,48 @@
       "describes": false
     },
     {
+      "name": "Tint",
+      "file": "forge/luau/Forge/Catalog/Tint.lua",
+      "lines": 312,
+      "summary": "Tint — colour for imported meshes that arrived without any. Why this exists --------------- Two thirds of the CC0 models published to this account carry no colour at all. Not because the upload failed: the packs modelled them with plain untextured materials, and Roblox's importer keeps geometry and drops that. What comes back is a MeshPart the colour of unpainted plastic. A world built from them is white. Not stylised-white -- the *absence* of a decision, which reads as a bug in a way that a wrong colour never does. And the grey ones are not a random third: `house`, `tree`, `castle`, `rock`, `bush` have no coloured member at all, so exactly the models that fill a frame are the ones missing. So: colour them here, from what they are. How it decides -------------- Three passes, most specific first. 1. **The part's own name.** A pack that modelled a house as six meshes usually named them (`house5_door1`, `house5_windows`), and a door painted like a door is worth more than a house painted one flat colour. 2. **The topic.** `tree` is bark and leaves; `barrel` is wood; `castle` is stone. One colour for the whole model, which is the honest answer when the model is a single welded mesh. 3. **Stone.** Anything unrecognised. Neutral, slightly warm, and never white -- an unknown prop should look like a thing, not like a hole. Material matters as much as colour. Brown on `SmoothPlastic` reads as brown plastic; the same brown on `Wood` reads as wood. Every entry names both. What it will not touch ---------------------- A part with a `TextureID` or a `SurfaceAppearance` already carries an artist's decision, and overwriting that with a guess is strictly worse. Those are left alone, which is why this can be run over a mixed set without sorting it first.",
+      "examples": [
+        "local Tint = Forge.Catalog.Tint\nTint.apply(model, \"house\", stream)   -- returns parts coloured"
+      ],
+      "functions": [
+        {
+          "name": "Tint.apply",
+          "signature": "Tint.apply(model: Instance, topic: string, stream: any?)",
+          "kind": "function",
+          "returns": "number",
+          "summary": "Colour every uncoloured part of a model. Returns how many it painted. `stream` is optional; without one every copy of a model comes out identical, which is visible the moment a topic has one model and the world places it thirteen times.",
+          "examples": [],
+          "line": 228
+        },
+        {
+          "name": "Tint.topics",
+          "signature": "Tint.topics()",
+          "kind": "function",
+          "returns": "{ string }",
+          "summary": "",
+          "examples": [],
+          "line": 298
+        },
+        {
+          "name": "Tint.describe",
+          "signature": "Tint.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 307
+        }
+      ],
+      "describes": true
+    },
+    {
       "name": "TradeSession",
       "file": "forge/luau/Forge/Social/TradeSession.lua",
-      "lines": 172,
+      "lines": 189,
       "summary": "TradeSession — two-party trade as an explicit state machine. Trades go wrong when \"who agreed to what\" is fuzzy. This session tracks offers per side, a lock step (both sides freeze their offer), then confirmation; double confirmation produces the exact transfer list. Any cancellation is terminal. A failed-save flag (injected) blocks locking new value.",
       "examples": [],
       "functions": [
@@ -14972,7 +16250,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 56
+          "line": 73
         },
         {
           "name": "TradeSession.setDataSaveFailed",
@@ -14981,7 +16259,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 74
+          "line": 91
         },
         {
           "name": "TradeSession.offer",
@@ -14990,7 +16268,7 @@
           "returns": "(boolean, string?)",
           "summary": "",
           "examples": [],
-          "line": 78
+          "line": 95
         },
         {
           "name": "TradeSession.lock",
@@ -14999,7 +16277,7 @@
           "returns": "(boolean, string?)",
           "summary": "",
           "examples": [],
-          "line": 105
+          "line": 122
         },
         {
           "name": "TradeSession.confirm",
@@ -15008,7 +16286,7 @@
           "returns": "(boolean, string?)",
           "summary": "",
           "examples": [],
-          "line": 126
+          "line": 143
         },
         {
           "name": "TradeSession.cancel",
@@ -15017,7 +16295,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 144
+          "line": 161
         },
         {
           "name": "TradeSession.result",
@@ -15026,7 +16304,7 @@
           "returns": "{ from: string, to: string, give: Offer, take: Offer }?",
           "summary": "The exact transfer list once both sides confirmed; nil otherwise.",
           "examples": [],
-          "line": 154
+          "line": 171
         },
         {
           "name": "TradeSession.status",
@@ -15035,7 +16313,7 @@
           "returns": "(Status, string?)",
           "summary": "",
           "examples": [],
-          "line": 167
+          "line": 184
         }
       ],
       "describes": false
@@ -15194,7 +16472,7 @@
     {
       "name": "Travel",
       "file": "forge/luau/Forge/Travel/init.lua",
-      "lines": 318,
+      "lines": 343,
       "summary": "Travel — moving players between places, and arriving with something. A Roblox experience is many places: a lobby, a match, a hub. Forge has only ever known one, so a game built on it could only ever be one room. This is the layer that makes a game an experience. Three things `TeleportService` does badly on its own, and this fixes each: **It fails.** Teleports fail for reasons nobody controls — a full server, a place still updating, a flood check. Roblox raises `TeleportInitFailed` and the player is left standing there with no explanation. Every teleport here retries with backoff and reports what happened. **It loses the party.** Teleporting four friends individually sends them to four different servers. `TeleportPartyAsync` and reserved servers exist precisely to avoid that and are easy to forget. **It forgets why.** Teleport data is the only thing that survives the trip, and it is unsigned — a modified client can rewrite it. So anything that matters travels through `MemoryStore` keyed by a token, and the teleport carries only the token. --- On trusting what arrives ------------------------------------------- `TeleportService:GetLocalPlayerTeleportData` is client-supplied. Reading a match's difficulty, a reward, or a permission out of it is the same as letting the player choose them. The token pattern below costs one MemoryStore read and removes the entire class of exploit.",
       "examples": [
         "Travel.define(\"match\", { placeId = 0, reserved = true, party = true })\nTravel.send(players, \"match\", { mode = \"ranked\", seed = 41 })",
@@ -15407,7 +16685,7 @@
     {
       "name": "Tycoon",
       "file": "forge/luau/Forge/Tycoon/init.lua",
-      "lines": 19,
+      "lines": 44,
       "summary": "Tycoon — build-and-earn game primitives. Pure planning and bookkeeping for tycoon gameplay: grid placement math shared by client ghost and server validation, dropper throughput caps, live-item ledgers, layout persistence and plot allocation. The server owns the planner; clients render ghosts from the same plan.",
       "examples": [],
       "functions": [],
@@ -15416,7 +16694,7 @@
     {
       "name": "UI",
       "file": "forge/luau/Forge/UI/init.lua",
-      "lines": 381,
+      "lines": 406,
       "summary": "UI — tokens and widgets, so an interface looks designed instead of assembled. Agent-built Roblox UI has a signature: default fonts, primary-colour backgrounds, no consistent spacing, every panel a slightly different grey. The cause is not bad taste, it is that every widget gets invented at the point of use with whatever numbers were in mind at that second. Tokens fix that. Read colours and spacing from `UI.theme`, never literals, and a whole interface stays coherent even when twelve different systems built pieces of it.",
       "examples": [
         "local gui = UI.mount(\"HUD\")\nlocal panel = UI.panel(gui, { size = UDim2.fromOffset(320, 96), pos = ... })\nlocal hp = UI.bar(panel, { color = UI.theme.color.danger })\nhp:set(0.62)\nUI.toast(\"Level 7 reached\", { color = UI.theme.color.gold })"
@@ -15658,6 +16936,82 @@
         }
       ],
       "describes": false
+    },
+    {
+      "name": "Validate",
+      "file": "forge/luau/Forge/Weapon/Validate.lua",
+      "lines": 192,
+      "summary": "Validate — deciding whether to believe a client that says it fired. `Weapon.fire` takes an origin and a direction and uses them. On a server handling a client's request, both are claims. This is the layer that checks them, and it exists because the game that this is generalised from shipped without part of it and found the hole in an audit. Why the obvious check is not enough ----------------------------------- The client must send its own muzzle position -- only it knows where its arms are, and only it knows what its camera was doing at the instant of the trigger. The obvious guard is a distance bound: the muzzle may be at most so far from the character. Twelve studs, say, to cover latency and reach. **Twelve studs of tolerance is twelve studs of freedom to put a muzzle on the far side of a wall** and shoot through it. The shipped version records this as a finding: the bound alone lets an exploiter project their barrel into cover and fire from the other side. So an origin must be both *near* and *reachable* -- there has to be a clear line from the head to the point being claimed. Two checks, and the second is the one that gets forgotten. Not every rejection is an accusation ------------------------------------ The distinction a first attempt misses. Several different things stop a shot, and treating them alike either buries real cheating in false positives or ignores it: * **reloading** and **empty** are ordinary. The client fired because it * **firing faster than the weapon can** is not ordinary. Nothing * **an impossible origin** is not ordinary either. Hence a verdict plus a `hostile` flag rather than a boolean, and hence the rate check carries **slack**: two honest shots sent a full interval apart can arrive closer together, and a server that flags network jitter as cheating is a server that bans its own players.",
+      "examples": [
+        "had not heard about the reload yet, or because the player is mashing a\ndry trigger. Refuse it, say nothing, flag nobody.",
+        "legitimate outruns the weapon's own rate."
+      ],
+      "functions": [
+        {
+          "name": "Validate.origin",
+          "signature": "Validate.origin(character: Model, origin: Vector3, tolerance: number?)",
+          "kind": "function",
+          "returns": "Verdict",
+          "summary": "Is the claimed muzzle plausible? Both halves: within tolerance of the character, and reachable from its head without passing through geometry. Skipping the raycast is the wall-shooting hole described above, which is why this does it rather than leaving it to the caller to remember. Returns a verdict; `reason` is \"far\" or \"blocked\" so a caller can tell a laggy player from an exploiting one.",
+          "examples": [],
+          "line": 80
+        },
+        {
+          "name": "Validate.classify",
+          "signature": "Validate.classify(reason: string?)",
+          "kind": "function",
+          "returns": "Verdict",
+          "summary": "Turn one of `Weapon.fire`'s refusal reasons into a verdict. `Weapon` already reports \"cooldown\", \"empty\", \"reloading\" and \"no-weapon\". This says which of those deserve suspicion: only \"cooldown\", and only because a client that respects its own cooldown never produces it.",
+          "examples": [],
+          "line": 131
+        },
+        {
+          "name": "Validate.tracker",
+          "signature": "Validate.tracker(halfLife: number?)",
+          "kind": "function",
+          "returns": "Tracker",
+          "summary": "",
+          "examples": [],
+          "line": 156
+        },
+        {
+          "name": "Validate.flag",
+          "signature": "Validate.flag(tracker: Tracker, who: any, now: number, weight: number?)",
+          "kind": "function",
+          "returns": "number",
+          "summary": "",
+          "examples": [],
+          "line": 160
+        },
+        {
+          "name": "Validate.score",
+          "signature": "Validate.score(tracker: Tracker, who: any, now: number)",
+          "kind": "function",
+          "returns": "number",
+          "summary": "",
+          "examples": [],
+          "line": 171
+        },
+        {
+          "name": "Validate.forget",
+          "signature": "Validate.forget(tracker: Tracker, who: any)",
+          "kind": "function",
+          "returns": null,
+          "summary": "",
+          "examples": [],
+          "line": 179
+        },
+        {
+          "name": "Validate.describe",
+          "signature": "Validate.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 183
+        }
+      ],
+      "describes": true
     },
     {
       "name": "Validators",
@@ -15922,7 +17276,7 @@
     {
       "name": "Visual",
       "file": "forge/luau/Forge/Visual/init.lua",
-      "lines": 579,
+      "lines": 604,
       "summary": "Visual — art direction as data. Why a generated Roblox game looks generated ------------------------------------------- It is almost never the geometry. It is four things, and all four are defaults nobody changed: 1. Default Lighting. Flat white ambient, no atmosphere, fog off. Every 2. Primary colours. `BrickColor.Random()` or hand-picked RGB per system, 3. No post. No bloom, no colour grading, no depth cue. 4. SmoothPlastic on everything, which reads as plastic because it is. A \"look\" here bundles all four into one named, tunable thing: And a palette makes procedural colour cohere instead of scatter: Quality tiers ------------- Half of Roblox is on a phone that cannot take three post-processing effects and shadow maps. `Visual.autoQuality()` reads the device and drops what costs most, in the order that costs the least to lose visually.",
       "examples": [
         "world lit identically, so every world reads identically.",
@@ -16404,7 +17758,7 @@
     {
       "name": "Weapon",
       "file": "forge/luau/Forge/Weapon/init.lua",
-      "lines": 555,
+      "lines": 594,
       "summary": "Weapon — the layer between \"the player pressed fire\" and \"something took damage\". Combat already knows how to fly a projectile and how to apply damage. What was missing is everything in between: how often a weapon may fire, where the shot actually goes when the barrel is not perfectly still, how many rounds are left, and what happens while reloading. Those rules are the same for every shooter ever made, which is exactly why they belong here and not in the game. What this module does NOT decide: what a weapon is called, what it costs, who may hold it, what it looks like, or whether your game even has guns. It gives you numbers and a verdict; the game decides what they mean. --- Determinism, and why it matters ------------------------------------- Spread is generated from a seed, not from `math.random`. `Weapon.fire` returns the seed it used, so a client that predicts a shot and the server that resolves it produce the *same* pellet pattern from the same number. Without that, every shotgun blast disagrees between the two machines and you get corrections on every trigger pull. --- No update loop ------------------------------------------------------ Spread recovery, recoil decay and reload completion are all computed from timestamps when someone asks, never on a heartbeat. A hundred idle weapons cost nothing, because an idle weapon genuinely has nothing to do.",
       "examples": [
         "Weapon.define(\"longbow\", {\nmode = \"projectile\",\ndamage = 46, rpm = 55, range = 700,\ncharge = { time = 0.85, minRatio = 0.3 },\nmagazine = 1, reserve = math.huge, reloadTime = 0.55,\nprojectile = { speed = 190, gravity = 42 },\n})",
@@ -16419,7 +17773,7 @@
           "returns": null,
           "summary": "Register a weapon. Definitions are data and are meant to be reloaded: call `define` again with the same id and every weapon already in someone's hands picks up the new numbers, which is what makes tuning a weapon a five-second loop instead of a restart.",
           "examples": [],
-          "line": 90
+          "line": 104
         },
         {
           "name": "Weapon.definition",
@@ -16428,7 +17782,7 @@
           "returns": "any?",
           "summary": "",
           "examples": [],
-          "line": 126
+          "line": 140
         },
         {
           "name": "Weapon.ids",
@@ -16437,7 +17791,7 @@
           "returns": "{ string }",
           "summary": "",
           "examples": [],
-          "line": 130
+          "line": 144
         },
         {
           "name": "Weapon.equip",
@@ -16446,7 +17800,7 @@
           "returns": "any",
           "summary": "Give a character a weapon. Equipping the same id twice is a no-op rather than a reset, so a game that calls this defensively every frame does not silently refill the magazine.",
           "examples": [],
-          "line": 189
+          "line": 203
         },
         {
           "name": "Weapon.unequip",
@@ -16455,7 +17809,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 221
+          "line": 235
         },
         {
           "name": "Weapon.state",
@@ -16464,7 +17818,7 @@
           "returns": "any?",
           "summary": "",
           "examples": [],
-          "line": 225
+          "line": 239
         },
         {
           "name": "Weapon.equippedId",
@@ -16473,7 +17827,7 @@
           "returns": "string?",
           "summary": "",
           "examples": [],
-          "line": 230
+          "line": 244
         },
         {
           "name": "Weapon.reload",
@@ -16482,7 +17836,7 @@
           "returns": "boolean",
           "summary": "=================================== reload =================================",
           "examples": [],
-          "line": 236
+          "line": 250
         },
         {
           "name": "Weapon.isReloading",
@@ -16491,7 +17845,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 249
+          "line": 263
         },
         {
           "name": "Weapon.reloadProgress",
@@ -16500,7 +17854,7 @@
           "returns": "number",
           "summary": "How far through the reload we are, 0 to 1. Exists so a progress ring on the HUD does not have to duplicate the timing maths and drift out of sync with the weapon it is describing.",
           "examples": [],
-          "line": 260
+          "line": 274
         },
         {
           "name": "Weapon.beginCharge",
@@ -16509,7 +17863,7 @@
           "returns": null,
           "summary": "Draw weapons — bows, railguns, anything where holding the button matters. A charge is just a timestamp. The ratio is read at the moment of release and multiplies damage and projectile speed, so a half-drawn bow is genuinely weaker rather than merely slower to animate.",
           "examples": [],
-          "line": 278
+          "line": 292
         },
         {
           "name": "Weapon.cancelCharge",
@@ -16518,7 +17872,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 285
+          "line": 299
         },
         {
           "name": "Weapon.chargeRatio",
@@ -16527,7 +17881,7 @@
           "returns": "number",
           "summary": "How far the weapon is drawn, 0 to 1. Reports the truth, including zero. An earlier version floored this at `minRatio`, which quietly made the \"undercharged\" refusal in `fire` unreachable: a client that never started a draw got a 30% shot instead of nothing. The floor belongs at the gate, not in the measurement.",
           "examples": [],
-          "line": 300
+          "line": 314
         },
         {
           "name": "Weapon.spreadDirection",
@@ -16536,25 +17890,25 @@
           "returns": "Vector3",
           "summary": "Deterministic cone. The same seed and index always produce the same direction, which is what lets the client draw a tracer that lands where the server says it landed. `math.random` here would be a desync per pellet.",
           "examples": [],
-          "line": 324
+          "line": 338
         },
         {
           "name": "Weapon.currentSpread",
-          "signature": "Weapon.currentSpread(owner: Model)",
+          "signature": "Weapon.currentSpread(owner: Model, stance: any?)",
           "kind": "function",
           "returns": "number",
-          "summary": "",
+          "summary": "The cone right now, in degrees. Pass a stance to include posture. Omitting it returns the bloom alone, which is what a HUD wants when the game has no aiming model -- and what every existing caller got before stance existed.",
           "examples": [],
-          "line": 343
+          "line": 364
         },
         {
           "name": "Weapon.fire",
           "signature": "Weapon.fire(owner: Model, origin: Vector3, direction: Vector3, options: any?)",
           "kind": "function",
           "returns": "any",
-          "summary": "Pull the trigger. Always returns a table. `ok = false` with a `reason` is the normal way a weapon says no — refusing by returning nil would make every caller write the same nil check and lose the reason, which is the part the HUD wants. Options: ignore   instances the shot passes through (the shooter, usually) seed     supply one to reproduce a shot exactly; omit and one is made onHit    called per pellet that connects: (model?, position, normal, damage) onSpawn  projectile mode only, called with each projectile made filter   projectile mode only, forwarded to Combat",
+          "summary": "Pull the trigger. Always returns a table. `ok = false` with a `reason` is the normal way a weapon says no — refusing by returning nil would make every caller write the same nil check and lose the reason, which is the part the HUD wants. Options: ignore   instances the shot passes through (the shooter, usually) seed     supply one to reproduce a shot exactly; omit and one is made stance   {ads, moving, sprinting, airborne}; widens or narrows this shot onHit    called per pellet that connects: (model?, position, normal, damage) onSpawn  projectile mode only, called with each projectile made filter   projectile mode only, forwarded to Combat",
           "examples": [],
-          "line": 390
+          "line": 419
         },
         {
           "name": "Weapon.recoil",
@@ -16563,7 +17917,7 @@
           "returns": "(number, number)",
           "summary": "The recoil the camera should be showing right now, in degrees. Read it every frame and add it to the aim angles; it decays on its own, so there is nothing to reset and nothing to leak if the player stops firing.",
           "examples": [],
-          "line": 514
+          "line": 550
         },
         {
           "name": "Weapon.ammo",
@@ -16572,7 +17926,7 @@
           "returns": "(number, number)",
           "summary": "",
           "examples": [],
-          "line": 522
+          "line": 558
         },
         {
           "name": "Weapon.describe",
@@ -16581,7 +17935,7 @@
           "returns": "{ [string]: any }",
           "summary": "What a validator reads to prove a shooting game actually has weapons.",
           "examples": [],
-          "line": 531
+          "line": 567
         }
       ],
       "describes": true
@@ -16730,7 +18084,7 @@
     {
       "name": "World",
       "file": "forge/luau/Forge/World/init.lua",
-      "lines": 525,
+      "lines": 605,
       "summary": "World — terrain as a composable function, not a fixed generator. A heightfield here is a stack of layers you declare. Forge does not know what an island is; it knows how to add noise, ridges, basins and flats together and how to turn the result into voxels without freezing the server. The material function is where biomes live, and it is yours. Forge never ships a biome table, because a biome table is a game.",
       "examples": [
         "local hf = World.heightfield({\nsize = 1024,\nseed = 20260819,\nbase = { { frequency = 0.0018, octaves = 4, weight = 0.60 },\n{ frequency = 0.0074, octaves = 5, weight = 0.32 },\n{ frequency = 0.0280, octaves = 3, weight = 0.08 } },\nrange = { 4, 96 },\nfalloff = { power = 2.7 },\nfeatures = {\n{ kind = \"ridge\", center = Vector2.new(-320, 305), radius = 300, amount = 118, sharpness = 1.7 },\n{ kind = \"basin\", center = Vector2.new(255, -290), radius = 190, amount = 26 },\n{ kind = \"flat\",  center = Vector2.new(0, 0),      radius = 90,  height = 36, blend = 1.9 },\n},\n})",
@@ -16805,9 +18159,9 @@
           "signature": "World.paint(field: any, config: PaintConfig?)",
           "kind": "function",
           "returns": null,
-          "summary": "Writes the heightfield into Roblox terrain. Two details that matter and are easy to get wrong: 1. Occupancy is a linear ramp across the surface voxel, not 0/1. Binary occupancy produces visible stair-stepping on every slope in the game. 2. Each chunk computes its own vertical extent. A flat meadow chunk writes ten voxels of height instead of fifty, which is the difference between a world that generates in eight seconds and one that generates in forty.",
+          "summary": "",
           "examples": [],
-          "line": 207
+          "line": 211
         },
         {
           "name": "World.scatter",
@@ -16818,7 +18172,7 @@
           "examples": [
             "World.scatter(hf, {\nstep = 13,\nbudget = 1500,\ndensity = function(x, z, height, slope)\nif height < 22 or slope < 0.8 then return 0 end\nreturn 0.08\nend,\nplace = function(position, stream) makeTree(position) end,\n})"
           ],
-          "line": 349
+          "line": 404
         },
         {
           "name": "World.surface",
@@ -16827,7 +18181,7 @@
           "returns": "Vector3?",
           "summary": "============================== surface queries ============================= The heightfield is the plan; this is the ground that actually exists. Use it for anything that must stand on the world after it was written, because voxel rounding means the two differ by up to half a voxel.",
           "examples": [],
-          "line": 398
+          "line": 453
         },
         {
           "name": "World.findGround",
@@ -16836,7 +18190,7 @@
           "returns": "Vector3?",
           "summary": "Finds standable ground near a point: what a spawner should call instead of trusting a heightfield value on a cliff face.",
           "examples": [],
-          "line": 415
+          "line": 470
         },
         {
           "name": "World.level",
@@ -16845,7 +18199,7 @@
           "returns": null,
           "summary": "Flattens real terrain in a radius. For dropping a structure onto a world that has already been written.",
           "examples": [],
-          "line": 440
+          "line": 495
         },
         {
           "name": "World.describe",
@@ -16854,7 +18208,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 478
+          "line": 533
         }
       ],
       "describes": true

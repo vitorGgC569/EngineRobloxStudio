@@ -21,8 +21,9 @@
 
 	**No shared unit of scale.** A sofa arrives 271 studs tall and a fuel tank
 	318, because every CC0 pack was modelled for its own engine and itch.io
-	normalises nothing. `HEIGHTS` declares what each topic should measure and
-	everything is scaled to reach it. Without it, three sofas tower over the
+	normalises nothing. `Forge.Catalog.Scale` classifies a topic by name and
+	declares what a thing of that kind should measure; `SIZES` below is the four
+	places this island disagrees. Without any of it, three sofas tower over the
 	world and nothing else is visible.
 
 	**Thin topics repeat.** Nine topics have exactly one model published, so
@@ -32,12 +33,11 @@
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
-local InsertService = game:GetService("InsertService")
 local Workspace = game:GetService("Workspace")
 
 local Forge = require(ReplicatedStorage:WaitForChild("Forge"))
 local Itch = Forge.Catalog.ItchAssets
-local Tint = Forge.Catalog.Tint
+local Place = Forge.Catalog.Place
 local World = Forge.World
 local Visual = Forge.Visual
 local Material = Forge.Material
@@ -93,178 +93,54 @@ local SPAWN_CLEAR = 24
 local SEA_EXTENT = HALF * 2.2
 
 --[[
-	What each topic should measure, in studs.
+	Where this game disagrees with the engine about size.
 
-	Hand-written, and that is a stated limit: it covers the 67 topics published
-	and would not survive 12,000 models. Measuring authored height and
-	normalising per category automatically is the next step.
+	`Forge.Catalog.Scale` classifies a topic by name and hands back what a thing
+	of that kind should measure. It is right about almost everything here, and
+	these four are the exceptions this place needs:
+
+	  * A castle is the one landmark, sized to be read from the far end of the
+	    road -- which is the only reason to put a building on a hill.
+	  * These walls are curtain wall around the keep, not room partitions.
+	  * The bridge topic supplies piers standing in a lake, not spans.
+	  * Street lamps line a village road, so they are shorter than a lamp
+	    post on a highway.
+
+	Four rows, against sixty-seven before. That is the whole point of moving the
+	knowledge into categories: a game states what is unusual about *it*, not the
+	size of everything it might place.
 ]]
-local HEIGHTS: { [string]: number } = {
-	--: Trees and buildings carry the silhouette, so they are sized against the
-	--: hill and the horizon rather than against a player. At 24 studs a tree
-	--: read as a shrub from the road; at 34 it reads as a tree.
-	tree = 34, bush = 5, rock = 4, log = 3, flower = 1.6, ["grass patch"] = 1.4,
-	house = 26, fence = 5, door = 8, window = 5, ["street lamp"] = 12,
-	bench = 3, ["wooden sign"] = 4.5, barrel = 4, crate = 3, bridge = 12,
-	wall = 20, road = 1, platform = 2,
-	chair = 4, table = 3, bed = 3, sofa = 3, bookshelf = 7,
-	["desk lamp"] = 2, rug = 1, ["kitchen counter"] = 4, refrigerator = 7,
-	conveyor = 3, dropper = 6, furnace = 7, generator = 5,
-	["storage tank"] = 12, pipe = 3, ["mine cart"] = 4, ore = 3,
-	pickaxe = 3, ["factory machine"] = 8,
-	--: The one landmark. Sized to be read from the far end of the road, which
-	--: is the only reason to put a building on a hill.
-	castle = 105, altar = 4, anvil = 3, sword = 4, shield = 3,
-	potion = 1, ["magic staff"] = 5, ["treasure chest"] = 3, coffin = 3,
-	candle = 1.5, coin = 1, gem = 1.4, egg = 2, armor = 6,
-	torch = 4, campfire = 3, ladder = 8, ["shop stand"] = 7, portal = 10,
-	watchtower = 34, barricade = 4, sandbag = 2, ["ammo box"] = 2,
-	["military crate"] = 3, ["shooting target"] = 5, rifle = 4, pistol = 2,
+local SIZES: { [string]: any } = {
+	castle = { height = 105, spread = 2.4 },
+	wall = { height = 20, spread = 3.5 },
+	bridge = { height = 12, spread = 5 },
+	["street lamp"] = { height = 12, spread = 1.6 },
 }
-local DEFAULT_HEIGHT = 5
 
---[[
-	How wide a topic is allowed to be, as a multiple of its height.
-
-	Normalising height alone is not enough, and the failure is spectacular: a
-	bush modelled 1 unit tall and 20 wide, scaled until it is 5 studs tall,
-	becomes 100 studs across. One of those filled a third of the frame and read
-	as a hill.
-
-	So each topic also declares a proportion, and whichever limit binds first
-	wins. A squat model then stays squat instead of reaching its target height,
-	which is the right answer -- the target is what a tree should measure, not
-	a promise that every model is tree-shaped.
-]]
-local SPREAD: { [string]: number } = {
-	road = 24, rug = 8, platform = 6, bridge = 5, wall = 3.5,
-	fence = 4, house = 2.6, castle = 2.4, watchtower = 1.8,
-	log = 6, ["grass patch"] = 3, ["shooting target"] = 3,
-	bench = 4, sofa = 3.5, bed = 3, table = 3, ["kitchen counter"] = 4,
-	conveyor = 5, pipe = 6, sword = 4, ["magic staff"] = 5,
-	rifle = 5, pistol = 3, coin = 4, gem = 2.5, campfire = 3,
-}
-local DEFAULT_SPREAD = 2.2
-
---: Everything else is scenery you walk through. A mesh pack models a house
---: as a shell, and a shell given collision is a box you cannot enter -- so
---: only the things a player is meant to stand *on* get it.
+--: Everything else is scenery you walk through. A mesh pack models a house as
+--: a shell, and a shell given collision is a box you cannot enter -- so only
+--: the things a player is meant to stand *on* get it.
 local SOLID: { [string]: boolean } = { bridge = true, platform = true }
-
-local function count(table_: { [any]: any }): number
-	local n = 0
-	for _ in table_ do
-		n += 1
-	end
-	return n
-end
-
--- ============================== fetching ====================================
---: One fetch per asset, cloned thereafter. `LoadAsset` yields and costs a round
---: trip; placing 400 props by calling it 400 times spends minutes re-fetching
---: models already in hand.
-local loaded: { [number]: Instance } = {}
-local missing: { [number]: boolean } = {}
 
 --: One stream for the tint pass, so a world generated twice is coloured the
 --: same way. Shared across every placement rather than derived per prop,
 --: because the variation wanted here is between neighbours, not between runs.
 local tintStream = Rng.stream("yard.tint")
 
-local function template(assetId: number): Instance?
-	if loaded[assetId] then
-		return loaded[assetId]
-	end
-	if missing[assetId] then
-		return nil
-	end
-	local ok, container = pcall(function()
-		return InsertService:LoadAsset(assetId)
-	end)
-	if not ok or typeof(container) ~= "Instance" then
-		missing[assetId] = true
-		return nil
-	end
-	local first = container:GetChildren()[1]
-	if not first then
-		missing[assetId] = true
-		container:Destroy()
-		return nil
-	end
-	first.Parent = ReplicatedStorage
-	loaded[assetId] = first
-	container:Destroy()
-	return first
-end
-
--- ============================== measuring ===================================
---[[
-	The true world box of a model, computed from its parts.
-
-	Not `GetExtentsSize`, and this is the second time that call has cost a
-	rebuild. It returns the box *in the pivot's frame*, and an imported mesh's
-	pivot is wherever the pack's exporter left it -- often the modelling
-	origin, which for a tree is under the roots and for a rock is the middle of
-	the stone.
-
-	Placing by `at + height/2` therefore assumes the pivot sits at the centre
-	of the model. When it does not, the model floats above the ground by the
-	offset, or sinks into it: a whole world of props hovering, from one
-	assumption that reads as obviously true.
-
-	This measures the axis-aligned box every part actually occupies, so the
-	answer does not depend on where the pivot is or how the model is turned.
-	`half` is the standard oriented-box projection: each local axis contributes
-	its own length times how much of that axis points along world Y.
-]]
-local function bounds(model: Instance): (Vector3, Vector3)
-	local low = Vector3.new(math.huge, math.huge, math.huge)
-	local high = Vector3.new(-math.huge, -math.huge, -math.huge)
-
-	local parts: { Instance } = if model:IsA("BasePart")
-		then { model }
-		else model:GetDescendants()
-
-	for _, instance in parts do
-		if not instance:IsA("BasePart") then
-			continue
-		end
-		local part = instance :: BasePart
-		local frame, size = part.CFrame, part.Size
-		local right, up, look = frame.RightVector, frame.UpVector, frame.LookVector
-		local half = Vector3.new(
-			0.5 * (math.abs(right.X) * size.X + math.abs(up.X) * size.Y
-				+ math.abs(look.X) * size.Z),
-			0.5 * (math.abs(right.Y) * size.X + math.abs(up.Y) * size.Y
-				+ math.abs(look.Y) * size.Z),
-			0.5 * (math.abs(right.Z) * size.X + math.abs(up.Z) * size.Y
-				+ math.abs(look.Z) * size.Z))
-		low = low:Min(frame.Position - half)
-		high = high:Max(frame.Position + half)
-	end
-
-	if low.X == math.huge then
-		return Vector3.zero, Vector3.zero
-	end
-	return low, high
-end
-
-local function move(model: Instance, delta: Vector3)
-	if model:IsA("Model") then
-		local m = model :: Model
-		m:PivotTo(m:GetPivot() + delta)
-	else
-		local part = model :: BasePart
-		part.CFrame = part.CFrame + delta
-	end
-end
-
 -- ============================== placing =====================================
+--[[
+	This game's rules about *where*; the engine's about everything else.
+
+	Measuring the model, normalising its size, standing it on the ground,
+	colouring what arrived grey and caching the fetch are all in
+	`Forge.Catalog.Place` now. What is left here is the two refusals that are
+	about this island in particular -- and that is the right split. A layout is
+	worth authoring. None of what this used to contain was.
+]]
 local function put(topic: string, seed: number, at: Vector3, yaw: number,
                    parent: Instance, jitter: number?): Instance?
-	--: The spawn's circle, refused here rather than cleaned up later. Checked
-	--: before the asset is even chosen, because the cheapest rejection is the
-	--: one that happens before the work.
+	--: The spawn's circle, refused before the asset is even chosen, because the
+	--: cheapest rejection is the one that happens before the work.
 	if (Vector2.new(at.X, at.Z) - SPAWN_AT).Magnitude < SPAWN_CLEAR then
 		return nil
 	end
@@ -278,85 +154,17 @@ local function put(topic: string, seed: number, at: Vector3, yaw: number,
 		return nil
 	end
 
-	local assetId = Itch.pick(topic, seed, true) or Itch.pick(topic, seed, false)
-	if not assetId then
-		return nil
-	end
-	local source = template(assetId)
-	if not source then
-		return nil
-	end
-
-	local model = source:Clone()
-
-	--: Turned first, then measured, then scaled, then measured again. Rotation
-	--: changes the world box, so measuring before turning gives a number that
-	--: no longer describes the thing being placed.
-	if model:IsA("Model") then
-		local m = model :: Model
-		m:PivotTo(CFrame.new(m:GetPivot().Position) * CFrame.Angles(0, yaw, 0))
-	else
-		local part = model :: BasePart
-		part.CFrame = CFrame.new(part.Position) * CFrame.Angles(0, yaw, 0)
-	end
-
-	local low, high = bounds(model)
-	local raw = high - low
-	local wanted = (HEIGHTS[topic] or DEFAULT_HEIGHT) * (jitter or 1)
-
-	--: Whichever limit binds first. Height alone lets a wide flat model grow
-	--: sideways without bound; width alone lets a tall thin one stay tiny.
-	local byHeight = if raw.Y > 0.01 then wanted / raw.Y else 1
-	local widest = math.max(raw.X, raw.Z)
-	local allowed = wanted * (SPREAD[topic] or DEFAULT_SPREAD)
-	local byWidth = if widest > 0.01 then allowed / widest else byHeight
-	local factor = math.min(byHeight, byWidth)
-
-	if model:IsA("Model") then
-		(model :: Model):ScaleTo(factor)
-	else
-		local part = model :: BasePart
-		part.Size = part.Size * factor
-	end
-
-	low, high = bounds(model)
-	local size = high - low
-
-	--: Now the placement is exact: put the box's *bottom* on the ground and
-	--: its footprint's centre over the point, whatever the pivot thinks.
-	--: Sunk very slightly, so an uneven base does not stand on a visible seam.
-	local sink = math.min(size.Y * 0.04, 0.5)
-	local centre = (low + high) * 0.5
-	move(model, Vector3.new(
-		at.X - centre.X,
-		at.Y - low.Y - sink,
-		at.Z - centre.Z))
-
-	local solid = SOLID[topic] == true
-	for _, part in model:GetDescendants() do
-		if part:IsA("BasePart") then
-			part.Anchored = true
-			part.CanCollide = solid
-			part.CanTouch = false
-			--: Shadows only where the silhouette is big enough to read one.
-			part.CastShadow = size.Y > 6
-		end
-	end
-	if model:IsA("BasePart") then
-		local part = model :: BasePart
-		part.Anchored = true
-		part.CanCollide = solid
-	end
-
-	--: Two thirds of these models carry no colour: the packs modelled them
-	--: with plain materials and the importer keeps geometry, not that. Without
-	--: this pass the world is white -- and it is the structural topics (house,
-	--: tree, castle, rock) that have no coloured member at all, so the gap is
-	--: exactly where it shows most.
-	Tint.applyVaried(model, topic, tintStream)
-
-	model.Parent = parent
-	return model
+	return Place.put(Itch, {
+		topic = topic,
+		seed = seed,
+		at = at,
+		yaw = yaw,
+		parent = parent,
+		jitter = jitter,
+		solid = SOLID[topic] == true,
+		stream = tintStream,
+		sizes = SIZES,
+	})
 end
 
 -- ============================== the ground ==================================
@@ -836,14 +644,14 @@ function Yard.start()
 	local total = counts.village + counts.keep + counts.crossing + counts.forest
 	Debug.info(string.format(
 		"yard: %d props (village %d, keep %d, crossing %d, forest %d), %d assets",
-		total, counts.village, counts.keep, counts.crossing, counts.forest, count(loaded)))
+		total, counts.village, counts.keep, counts.crossing, counts.forest,
+		Place.fetched()))
 
 	Debug.probe("yard", function()
 		return {
 			placed = total,
 			byArea = counts,
-			assetsFetched = count(loaded),
-			assetsMissing = count(missing),
+			assets = Place.describe(),
 			catalogue = Itch.describe(),
 		}
 	end)

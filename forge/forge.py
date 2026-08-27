@@ -269,22 +269,52 @@ def cmd_bench(args: argparse.Namespace) -> int:
     return 0
 
 
+def _public_api(source: str) -> list[str]:
+    """The dotted functions a module exports."""
+    return sorted(
+        set(
+            line.split("function ")[1].split("(")[0].strip()
+            for line in source.splitlines()
+            if line.startswith("function ") and "." in line
+        )
+    )
+
+
 def cmd_engine(args: argparse.Namespace) -> int:
-    """What the engine offers, so an agent does not have to guess."""
+    """What the engine offers, so an agent does not have to guess.
+
+    Walks each family's siblings, not only its `init.lua`.
+
+    Reading only `init.lua` made every module that lives *beside* one invisible
+    -- `Catalog.Tint`, `Catalog.Place`, `Weapon.Stance`, `LiveOps.Leaderboard`,
+    `Companion.Formation`. All of them are reachable as `Forge.Family.Child`
+    through the lazy `__index` every family carries, so all of them are public;
+    a couple of dozen were simply missing from the index an agent is told to
+    consult. That is worse than having no index, because it answers
+    confidently and the answer is short.
+    """
     engine = REPO_ROOT / "forge" / "luau" / "Forge"
     modules = []
-    for child in sorted(engine.iterdir()):
-        if child.is_dir() and (child / "init.lua").exists():
-            source = (child / "init.lua").read_text(encoding="utf-8", errors="replace")
-            functions = sorted(
-                set(
-                    line.split("function ")[1].split("(")[0].strip()
-                    for line in source.splitlines()
-                    if line.startswith("function ") and "." in line
-                )
-            )
-            lines = len(source.splitlines())
-            modules.append({"module": child.name, "lines": lines, "api": functions})
+    for family in sorted(engine.iterdir()):
+        if not family.is_dir() or not (family / "init.lua").exists():
+            continue
+
+        source = (family / "init.lua").read_text(encoding="utf-8", errors="replace")
+        modules.append({
+            "module": family.name,
+            "lines": len(source.splitlines()),
+            "api": _public_api(source),
+        })
+
+        for child in sorted(family.glob("*.lua")):
+            if child.name == "init.lua":
+                continue
+            body = child.read_text(encoding="utf-8", errors="replace")
+            modules.append({
+                "module": f"{family.name}.{child.stem}",
+                "lines": len(body.splitlines()),
+                "api": _public_api(body),
+            })
 
     if args.json:
         print(json.dumps(modules, indent=2))

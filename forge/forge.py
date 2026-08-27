@@ -953,6 +953,48 @@ def cmd_analytics(args: argparse.Namespace) -> int:
     return 0
 
 
+def cmd_playtest(args: argparse.Namespace) -> int:
+    """Run the game and refuse the build when the interface is not there.
+
+    The exit code is the point. `doctor` reports and ships; this fails, because
+    every defect it looks for is one that a clean doctor has already waved
+    through in this repository.
+    """
+    import sys as _sys
+
+    _sys.path.insert(0, str(REPO_ROOT))
+    from forge.cli import playtest
+
+    report = playtest.run(args.project, wait=args.wait,
+                          panels=tuple(args.panels))
+
+    if args.json:
+        print(json.dumps({
+            "game": report.game,
+            "failed": report.failed,
+            "measured": report.measured,
+            "shots": report.shots,
+            "findings": [{"severity": f.severity, "what": f.what,
+                          "detail": f.detail} for f in report.findings],
+        }, indent=1))
+        return 1 if report.failed else 0
+
+    print(f"forge playtest: {report.game}")
+    for key, value in sorted(report.measured.items()):
+        print(f"  {key:<14} {value}")
+    print()
+    for finding in report.findings:
+        print(f"  {finding.severity:<8} {finding.what}")
+        if finding.detail:
+            print(f"           {finding.detail}")
+    for shot in report.shots:
+        print(f"  picture  {shot}")
+    if not report.findings:
+        print("  nothing to report - and go and look at the pictures anyway,")
+        print("  because this measures presence, not taste.")
+    return 1 if report.failed else 0
+
+
 def cmd_traps(args: argparse.Namespace) -> int:
     """The traps this engine knows about, as data rather than as folklore.
 
@@ -1315,6 +1357,17 @@ def main(argv: list[str] | None = None) -> int:
     p_kit.add_argument("--per-kind", type=int, default=200, dest="per_kind",
                        help="harvest: ceiling per shelf, so chairs cannot crowd out monsters")
     p_kit.set_defaults(func=cmd_kit)
+
+    p_play = sub.add_parser(
+        "playtest",
+        help="open the game, play it, photograph it, and fail if the screen is wrong")
+    p_play.add_argument("project")
+    p_play.add_argument("--panel", action="append", default=[], dest="panels",
+                        help="a panel to open and photograph; repeatable")
+    p_play.add_argument("--wait", type=float, default=9.0,
+                        help="seconds to let the world settle before looking")
+    p_play.add_argument("--json", action="store_true")
+    p_play.set_defaults(func=cmd_playtest)
 
     p_traps = sub.add_parser("traps", help="what breaks, and what to do instead")
     p_traps.add_argument("search", nargs="?", default=None)

@@ -90,4 +90,12 @@ assets/itch/
 #: people's zips. What the repository keeps is the manifest that says which
 #: pack each published asset came from, not the pack.
 assets/itch-ui/
+#: Generated inventories of what is inside those zips. 20 MB and growing with
+#: every sweep, rebuilt by one command, and describing files that are not
+#: versioned either. The *published* manifests stay -- those record asset ids
+#: that cannot be recovered by re-running anything.
+forge/kits/itch-ui-inventory.json
+forge/kits/itch-inventory.json
+forge/kits/itch-ui-selected.json
+forge/kits/itch-strategy2.json
 siegehold.rbxlx.lock

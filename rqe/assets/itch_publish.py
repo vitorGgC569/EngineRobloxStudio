@@ -104,20 +104,118 @@ def _topic_words() -> dict[str, tuple[str, ...]]:
     return out
 
 
+#[[
+#   Compounds whose meaning flips at the very edge a structural rule reads.
+#
+#   `watchtower` really is a tower and `minecart` really is a cart, so the
+#   prefix/suffix rule below is right about them. These are the ones it is
+#   wrong about, and nothing in the spelling distinguishes the two groups --
+#   so they are written down rather than derived.
+#
+#   Written as the *word* the splitter produces, not the filename: `brickSmoker`
+#   arrives here as `brick` and `smoker`, so the trap is `smoker`.
+#
+#   Each earns its line by having been observed in the published set.
+#]]
+COMPOUND_TRAPS = {
+    "sandcastle",   #: a beach prop, not a 105-stud landmark
+    "workbench",    #: a table
+    "clamp",        #: ends in `lamp`
+    "cauliflower",  #: ends in `flower`
+    "smoker",       #: a barbecue, not smoke (from `brickSmoker`)
+    "holder",       #: ends in `older`, starts nothing
+    "micropipet",   #: not a pipe
+}
+
+
+def _stem_words(stem: str) -> list[str]:
+    """A filename's words, in order, split on punctuation and on caseChanges.
+
+    Without the case split `sandCastle` is one unknown word; with it, `sand`
+    and `castle` both land and the *last* one can be recognised as the noun.
+    """
+    out = []
+    for index, char in enumerate(stem):
+        if char.isupper() and index > 0 and stem[index - 1].islower():
+            out.append(" ")
+        out.append(char.lower() if char.isalnum() else " ")
+    return [w for w in "".join(out).split() if w]
+
+
 def classify(stem: str, words: dict[str, tuple[str, ...]] | None = None) -> str | None:
-    """Which topic a mesh filename belongs to, or None."""
+    """Which topic a mesh filename belongs to, or None.
+
+    Whole words first, substrings only as a fallback. This matched substrings
+    anywhere in the name, which files a mesh under a word buried inside another
+    word -- silently, and the wrong answer looks exactly like a right one.
+    Measured against the 295 already published: 38 were classified that way and
+    about half changed meaning outright.
+
+        carpet        -> pet
+        sandcastle_A  -> castle       (and would then be built 105 studs tall)
+        mailbox       -> ammo box
+        hex_forest    -> ore
+        table_lamp    -> table        (longest term wins, and `table` is longer)
+
+    That last one is why the fallback is not enough on its own: both `table`
+    and `lamp` are whole words in `table_lamp`, and length picks the adjective.
+    English compounds put the noun last, so ties are broken by position -- the
+    later word wins, which reads `table lamp` as a lamp and `lamp table` as a
+    table, both correctly.
+
+    The same bug has now been fixed three times in this repository, in three
+    classifiers written months apart. It is worth suspecting on sight.
+    """
     table = words or _topic_words()
-    lowered = stem.lower().replace("-", "_")
-    best: tuple[int, str] | None = None
+    present = _stem_words(stem)
+    if not present:
+        return None
+    index_of = {word: position for position, word in enumerate(present)}
+
+    #: (position, length) so a later word beats an earlier one, and among words
+    #: at the same position the longer term wins.
+    best: tuple[int, int, str] | None = None
     for topic, terms in table.items():
         for term in terms:
-            if term in lowered:
-                #: Longest matching term wins, so `bookshelf` files under
-                #: `bookshelf` rather than under `book`.
-                score = len(term)
-                if best is None or score > best[0]:
-                    best = (score, topic)
-    return best[1] if best else None
+            position = index_of.get(term)
+            if position is None:
+                continue
+            score = (position, len(term), topic)
+            if best is None or score[:2] > best[:2]:
+                best = score
+    if best:
+        return best[2]
+
+    #[[
+    #   Compounds, and only at their edges.
+    #
+    #   Names arrive welded -- `minecart`, `watchtower`, `bookshelf`,
+    #   `trapdoor` -- and all four of those are genuinely the thing their tail
+    #   names. So the fallback matches a term that *starts or ends* a word,
+    #   never one buried in the middle: `micropipet` stops being a pipe and
+    #   `hex_forest` stops being ore.
+    #
+    #   That still leaves compounds whose meaning flips at the same edge --
+    #   a sandcastle is not a castle at castle scale, a workbench is a table --
+    #   and no structural rule separates those from `watchtower`. They are
+    #   listed below as knowledge, which is what they are.
+    #]]
+    joined_words = [w for w in present if w not in COMPOUND_TRAPS]
+    fallback: tuple[int, str] | None = None
+    for topic, terms in table.items():
+        for term in terms:
+            if len(term) <= 3:
+                #: Three letters is not evidence inside a longer word. `ore`,
+                #: `pet` and `box` are exactly the ones that caused this.
+                continue
+            for word in joined_words:
+                if word == term:
+                    continue
+                if word.startswith(term) or word.endswith(term):
+                    if fallback is None or len(term) > fallback[0]:
+                        fallback = (len(term), topic)
+                    break
+    return fallback[1] if fallback else None
 
 
 def _is_variant(stem: str) -> bool:
@@ -485,10 +583,20 @@ def _write(records: dict[str, Any], uploaded: int, skipped: int, failed: int,
 #: not the moment -- a throttle or a dropped connection is transient and worth
 #: another go; a mesh with no geometry in it is not.
 TERMINAL_ERRORS = (
-    "no mesh content",
-    "failed to parse",
-    "unreadable",
-    "too large",
+    "no mesh content", "failed to parse", "unreadable", "too large",
+    #[[
+    #   Roblox accepts the upload, starts an operation and never resolves it.
+    #
+    #   All 22 of these are `.gltf`, which the uploadable list has excluded
+    #   since the format was measured -- glTF references its buffers as
+    #   separate files, so a single-file upload hands Roblox a document
+    #   pointing at things that are not there. They are residue from before
+    #   that exclusion and none of them can succeed.
+    #
+    #   Without this line a follow loop retries all 22 every round, forever.
+    #   That has already happened once in this repository, for four files.
+    #]]
+    "did not resolve",
 )
 
 

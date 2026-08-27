@@ -56,6 +56,9 @@ UI.theme = {
 
 local T = UI.theme
 
+--: Where the toast column starts. Clear of a top bar by default.
+UI.toastTop = 150
+
 -- ================================= mount ====================================
 function UI.mount(name: string, options: any?): ScreenGui
 	local opts = options or {}
@@ -162,14 +165,19 @@ function UI.skin(widget: GuiObject, role: string, state: string?): (boolean, boo
 	image.Size = UDim2.fromScale(1, 1)
 	image.BackgroundTransparency = 1
 	--[[
-		One below the widget, not zero.
+		The ZIndex here orders this image among *its siblings*, and that is all
+		it can do.
 
-		`mount` sets `ZIndexBehavior.Sibling`, under which ZIndex is compared
-		**globally** rather than within a parent. A flat zero therefore does not
-		mean "behind my own contents", it means "behind everything in the
-		interface" -- including a modal scrim at 20. Every skinned button inside
-		an open panel had its face drawn under the dim, which read as a button
-		whose art had failed to load rather than as a layering mistake.
+		`mount` sets `ZIndexBehavior.Sibling`, and the name says what it means:
+		ZIndex sorts siblings, while a child is drawn above its parent
+		**always**, whatever the numbers say. So a skin parented to the widget
+		it decorates covers that widget's own text, and no ZIndex can move it
+		behind. Measured the long way round: the label was present, white,
+		opaque, visible, with `TextBounds` of 51x12 -- laid out and drawn, and
+		painted over by its own background.
+
+		This form is therefore only for widgets that have no content of their
+		own to cover. Anything with text uses the holder in `UI.button`.
 	]]
 	--: Followed, not copied once. A caller that raises the widget's ZIndex
 	--: after building it -- which is how anything gets above a scrim -- would
@@ -210,6 +218,20 @@ end
 
 	Both are `GuiObject`, so callers cannot tell and nothing downstream changes.
 ]]
+--: Swap a skinned button's face without rebuilding it. The face is the
+--: button's *sibling*, so it is reached through the holder.
+function UI.reskin(button: GuiObject, role: string, state: string): boolean
+	local holder = button.Parent
+	if not holder or not holder:IsA("GuiObject") then
+		return false
+	end
+	local face = holder:FindFirstChild("Skin")
+	if not face or not face:IsA("ImageLabel") then
+		return false
+	end
+	return (UI.dress(face, role, state))
+end
+
 function UI.panel(parent: Instance, options: any?): GuiObject
 	local o = options or {}
 
@@ -397,9 +419,59 @@ function UI.button(parent: Instance, text: string, options: any?): TextButton
 	local role = if type(o.skin) == "string" then o.skin
 		elseif o.skin == true then "button"
 		else nil
+
+	--[[
+		A skinned button is two siblings in a holder, not a button with a
+		picture inside it.
+
+		Under `Sibling` behaviour a child always draws above its parent, so a
+		skin parented to the button hides the button's own label -- which it
+		did, completely, while every property said the text was fine. Siblings
+		*are* ordered by ZIndex, so putting the face and the button side by
+		side inside a transparent holder puts the label back on top.
+
+		The holder takes the size, position and layout slot the caller asked
+		for; the button fills it. Callers keep the TextButton, so `.Text` and
+		`.Active` still work on what they were handed.
+	]]
 	local skinned, solid, dark = false, false, false
 	if role then
-		skinned, solid, dark = UI.skin(b, role, "normal")
+		local face = Instance.new("ImageLabel")
+		local took: boolean
+		took, solid, dark = UI.dress(face, role, "normal")
+		if took then
+			skinned = true
+			local holder = Instance.new("Frame")
+			holder.Name = (o.name or "Button") .. "Holder"
+			holder.Size = b.Size
+			holder.Position = b.Position
+			holder.AnchorPoint = b.AnchorPoint
+			holder.BackgroundTransparency = 1
+			holder.BorderSizePixel = 0
+			holder.LayoutOrder = b.LayoutOrder
+			holder.Parent = parent
+
+			face.Name = "Skin"
+			face.Size = UDim2.fromScale(1, 1)
+			face.BackgroundTransparency = 1
+			face.ZIndex = 1
+			face.Parent = holder
+
+			b.Size = UDim2.fromScale(1, 1)
+			b.Position = UDim2.fromOffset(0, 0)
+			b.AnchorPoint = Vector2.zero
+			b.ZIndex = 2
+			b.Parent = holder
+
+			--: The caller raises the button's ZIndex to clear a scrim; the
+			--: holder is the thing that actually needs to be above it.
+			b:GetPropertyChangedSignal("ZIndex"):Connect(function()
+				holder.ZIndex = b.ZIndex
+			end)
+			holder.ZIndex = b.ZIndex
+		else
+			face:Destroy()
+		end
 	end
 	if solid then
 		b.BackgroundTransparency = 1
@@ -437,7 +509,7 @@ function UI.button(parent: Instance, text: string, options: any?): TextButton
 	]]
 	b.MouseEnter:Connect(function()
 		if skinned then
-			UI.skin(b, role :: string, "hover")
+			UI.reskin(b, role :: string, "hover")
 			return
 		end
 		TweenService:Create(b, TweenInfo.new(0.12), { BackgroundColor3 = hover }):Play()
@@ -447,7 +519,7 @@ function UI.button(parent: Instance, text: string, options: any?): TextButton
 	end)
 	b.MouseLeave:Connect(function()
 		if skinned then
-			UI.skin(b, role :: string, "normal")
+			UI.reskin(b, role :: string, "normal")
 			return
 		end
 		TweenService:Create(b, TweenInfo.new(0.16), { BackgroundColor3 = base }):Play()
@@ -459,13 +531,13 @@ function UI.button(parent: Instance, text: string, options: any?): TextButton
 	-- responds and one that feels broken
 	b.MouseButton1Down:Connect(function()
 		if skinned then
-			UI.skin(b, role :: string, "pressed")
+			UI.reskin(b, role :: string, "pressed")
 		end
 		TweenService:Create(b, TweenInfo.new(0.06), { Size = (o.size or UDim2.fromOffset(140, 34)) - UDim2.fromOffset(4, 4) }):Play()
 	end)
 	b.MouseButton1Up:Connect(function()
 		if skinned then
-			UI.skin(b, role :: string, "normal")
+			UI.reskin(b, role :: string, "normal")
 		end
 		TweenService:Create(b, TweenInfo.new(0.12, Enum.EasingStyle.Back, Enum.EasingDirection.Out), { Size = o.size or UDim2.fromOffset(140, 34) }):Play()
 	end)
@@ -502,7 +574,17 @@ function UI.toast(text: string, options: any?)
 		local holder = Instance.new("Frame")
 		holder.Name = "Toasts"
 		holder.Size = UDim2.fromOffset(360, 400)
-		holder.Position = UDim2.new(0.5, -180, 0, 90)
+		--[[
+			Below where a HUD puts its top bar, not on top of it.
+
+			Ninety pixels is where a status shelf lives, and three stacked
+			toasts covered the wave, the integrity meter and the balance
+			completely -- the three things a player is most likely to be
+			checking at the moment something worth announcing happens.
+
+			`toastTop` overrides it for a game whose HUD sits somewhere else.
+		]]
+		holder.Position = UDim2.new(0.5, -180, 0, UI.toastTop)
 		holder.BackgroundTransparency = 1
 		holder.Parent = gui
 		UI.list(holder, { gap = T.space.sm, hAlign = Enum.HorizontalAlignment.Center })

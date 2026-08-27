@@ -592,12 +592,21 @@ builders.daily = function(parent: Instance): number
 	--: about why were wrong. Reading the values the widget actually ended up
 	--: with beats a fourth guess.
 	local skin = claim:FindFirstChild("Skin")
-	Forge.Debug.info(string.format(
-		"claim: text=%q colour=%s size=%d z=%d skin=%s skinZ=%s image=%s",
-		claim.Text, tostring(claim.TextColor3), claim.TextSize, claim.ZIndex,
-		tostring(skin ~= nil),
-		if skin then tostring(skin.ZIndex) else "-",
-		if skin and skin:IsA("ImageLabel") then skin.Image else "-"))
+	--: `print`, not `Debug.info`. `Debug.info` appends to an internal ring
+	--: buffer and only `Debug.error` reaches Studio's output, so the probe was
+	--: writing somewhere `log.tail` cannot see -- which is why three attempts
+	--: to read it came back empty.
+	task.defer(function()
+		print(string.format(
+			"claim: text=%q colour=%s size=%d z=%d bounds=%s vis=%s "
+			.. "textT=%.2f skinZ=%s skinT=%.2f scale=%s",
+			claim.Text, tostring(claim.TextColor3), claim.TextSize, claim.ZIndex,
+			tostring(claim.TextBounds), tostring(claim.Visible),
+			claim.TextTransparency,
+			if skin then tostring(skin.ZIndex) else "-",
+			if skin and skin:IsA("ImageLabel") then skin.ImageTransparency else -1,
+			if skin and skin:IsA("ImageLabel") then tostring(skin.ScaleType) else "-"))
+	end)
 
 	return 190
 end
@@ -808,5 +817,44 @@ function Interface.describe(): { [string]: any }
 end
 
 Forge.Debug.probe("interface", Interface.describe)
+
+--[[
+	A way in from outside, for the look-and-critique pass.
+
+	Driving this UI by synthetic mouse clicks does not work -- Studio refuses
+	`SendMouseButtonEvent` without the RobloxScript capability -- and driving it
+	by real OS clicks at screen coordinates works until anything moves, which
+	cost three failed attempts to open one panel today.
+
+	A BindableFunction the client owns is the honest alternative: it opens the
+	same panel through the same `showSheet` a button press would, so what gets
+	photographed is what a player would see.
+]]
+do
+	local opener = Instance.new("BindableFunction")
+	opener.Name = "SiegeholdUI"
+	--: One argument, because that is what the bridge's `invoke_bindable`
+	--: passes. `open:daily`, `close`, `describe`.
+	opener.OnInvoke = function(command: any): any
+		local text = tostring(command or "")
+		local verb, rest = text:match("^(%a+):?(.*)$")
+		if verb == "open" and rest ~= "" then
+			--: The same titles the rail uses. Passing the key made the panel
+			--: read "daily" in a screenshot, which is a defect in the probe
+			--: rather than in the UI and would have been reported as the UI's.
+			local titles = { daily = "Daily Reward", shop = "Towers",
+				progress = "Progression" }
+			showSheet(rest, titles[rest] or rest)
+			return open
+		elseif verb == "close" then
+			closeSheet()
+			return true
+		elseif verb == "describe" then
+			return Interface.describe()
+		end
+		return nil
+	end
+	opener.Parent = ReplicatedStorage
+end
 
 return Interface

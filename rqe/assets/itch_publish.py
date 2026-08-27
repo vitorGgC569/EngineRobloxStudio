@@ -444,10 +444,13 @@ def publish(chosen: list[dict[str, Any]], creator_user_id: str = "5812220258",
             records = {}
 
     uploaded = skipped = failed = 0
+    stopped = False
     started = time.time()
     since_write = 0
 
     for index, mesh in enumerate(chosen, start=1):
+        if stopped:
+            break
         marker = f"{Path(mesh['archive']).name}::{mesh['member']}"
         if marker in records and records[marker].get("assetId"):
             skipped += 1
@@ -489,10 +492,18 @@ def publish(chosen: list[dict[str, Any]], creator_user_id: str = "5812220258",
                     progress(f"  throttled; waiting {wait:.0f}s")
                     time.sleep(wait)
                     continue
+                body = error.read()[:200].decode("utf-8", "replace")
                 records[marker] = {
-                    "error": f"HTTP {error.code}: "
-                             f"{error.read()[:120].decode('utf-8', 'replace')}",
+                    "error": f"HTTP {error.code}: {body[:120]}",
                     **_source(mesh)}
+                #: An account-level stop, not a failure of this file. Walking
+                #: the rest of the batch collects the same answer several
+                #: hundred times and deepens whatever triggered it: 487 of
+                #: these came from one run that kept going.
+                if MODERATED in body.lower():
+                    progress("  ! the account is moderated for uploads; "
+                             "stopping the batch")
+                    stopped = True
                 break
             except (urllib.error.URLError, OSError) as error:
                 records[marker] = {"error": str(error)[:160], **_source(mesh)}
@@ -582,6 +593,11 @@ def _write(records: dict[str, Any], uploaded: int, skipped: int, failed: int,
 #: Refusals that will not change on a retry. Roblox is describing the file,
 #: not the moment -- a throttle or a dropped connection is transient and worth
 #: another go; a mesh with no geometry in it is not.
+#: Not a per-file failure at all: the account has been stopped. Retrying is
+#: what produced 487 of these in one run, and the publisher should give up the
+#: whole batch rather than walk the rest of it collecting the same answer.
+MODERATED = "user is moderated"
+
 TERMINAL_ERRORS = (
     "no mesh content", "failed to parse", "unreadable", "too large",
     #[[

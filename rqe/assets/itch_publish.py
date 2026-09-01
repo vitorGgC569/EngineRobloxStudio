@@ -831,6 +831,27 @@ function ItchAssets.pick(topic: string, seed: number, texturedOnly: boolean?): n
 	if not list or #list == 0 then
 		return nil
 	end
+	--[[
+		A flat model is never picked, and unlike `texturedOnly` that is not a
+		parameter.
+
+		Some assets import as a single quad -- a billboard plane where a prop
+		was expected -- and scattered through a world they stand in the grass as
+		grey rectangles. There is no caller for whom that is the right answer.
+		If every model for a topic is flat then the topic has nothing usable,
+		and nil is the honest reply.
+	]]
+	local solid = {}
+	for _, entry in list do
+		if not entry.flat then
+			table.insert(solid, entry)
+		end
+	end
+	if #solid == 0 then
+		return nil
+	end
+	list = solid
+
 	if texturedOnly then
 		local coloured = {}
 		for _, entry in list do
@@ -868,7 +889,8 @@ function ItchAssets.named(topic: string, needle: string,
 	end
 	local wanted = string.lower(needle)
 	for _, entry in list do
-		if (not texturedOnly or entry.textured)
+		if not entry.flat
+				and (not texturedOnly or entry.textured)
 				and string.find(string.lower(entry.name), wanted, 1, true) then
 			return entry.id
 		end
@@ -937,7 +959,11 @@ def audit_textures(bridge: Any, ids: list[str] | None = None,
         if PUBLISHED.exists():
             records = json.loads(PUBLISHED.read_text(encoding="utf-8")).get("assets") or {}
         ids = [str(v["assetId"]) for v in records.values() if v.get("assetId")]
-    todo = [i for i in ids if i not in book]
+    #: Anything measured before the shape fields existed is measured again.
+    #: A partial audit that silently keeps old rows is an audit that never
+    #: gains a column.
+    todo = [i for i in ids
+            if i not in book or "thinness" not in (book.get(i) or {})]
     if not todo:
         progress("every published asset is already measured")
         return book
@@ -968,9 +994,47 @@ for _, id in { %s } do
                 surfaces += 1
             end
         end
+        --[[
+            The shape, not just the contents.
+
+            Some published models import as a single flat quad -- a billboard
+            plane where a prop was expected. Scattered through a world they
+            read as grey rectangles standing in the grass, and nothing about
+            the file, the topic or the texture count says so. The bounding box
+            does, in one number.
+        ]]
+        local lo, hi
+        for _, d in model:GetDescendants() do
+            if d:IsA("BasePart") then
+                local half = d.Size / 2
+                local c = d.CFrame
+                for _, corner in {
+                    Vector3.new(half.X, half.Y, half.Z),
+                    Vector3.new(-half.X, half.Y, half.Z),
+                    Vector3.new(half.X, -half.Y, half.Z),
+                    Vector3.new(half.X, half.Y, -half.Z),
+                    Vector3.new(-half.X, -half.Y, half.Z),
+                    Vector3.new(-half.X, half.Y, -half.Z),
+                    Vector3.new(half.X, -half.Y, -half.Z),
+                    Vector3.new(-half.X, -half.Y, -half.Z),
+                } do
+                    local w = c:PointToWorldSpace(corner)
+                    lo = if lo then Vector3.new(math.min(lo.X, w.X), math.min(lo.Y, w.Y), math.min(lo.Z, w.Z)) else w
+                    hi = if hi then Vector3.new(math.max(hi.X, w.X), math.max(hi.Y, w.Y), math.max(hi.Z, w.Z)) else w
+                end
+            end
+        end
+        local extent = if lo and hi then hi - lo else Vector3.zero
+        local dims = { extent.X, extent.Y, extent.Z }
+        table.sort(dims)
+
         local first = model:GetChildren()[1]
         out[id] = { textures = textures, meshes = meshes, surfaces = surfaces,
-                    tinted = tinted, name = first and first.Name or name }
+                    tinted = tinted, name = first and first.Name or name,
+                    sizeX = extent.X, sizeY = extent.Y, sizeZ = extent.Z,
+                    --: The thinnest edge against the longest. Under about a
+                    --: fortieth and the thing has no depth at all.
+                    thinness = if dims[3] > 0 then dims[1] / dims[3] else 0 }
         model:Destroy()
     end
 end
@@ -1043,10 +1107,23 @@ def export_lua(published: Path | None = None,
             guessed += 1
         textured += 1 if has_colour else 0
 
+        #[[
+        #   Flat, and therefore not a prop.
+        #
+        #   Some published models import as a single quad -- a billboard plane
+        #   where a tree or a rock was expected. Scattered through a world they
+        #   stand in the grass as grey rectangles, and nothing in the filename,
+        #   the topic or the texture count says so. The bounding box does: the
+        #   thinnest edge against the longest, under a fortieth.
+        #]]
+        thinness = float(found.get("thinness") or 0) if found else 0.0
+        flat = bool(found) and 0 < thinness < 0.025
+
         rows.append(
             f"\t{{ id = {entry['assetId']}, name = {_lua_str(entry.get('displayName'))}, "
             f"topic = {_lua_str(entry.get('topic'))}, "
             f"textured = {'true' if has_colour else 'false'}, "
+            f"flat = {'true' if flat else 'false'}, "
             f"meshes = {meshes}, "
             f"pack = {_lua_str(entry.get('pack'))}, "
             f"author = {_lua_str(entry.get('author'))} }},")

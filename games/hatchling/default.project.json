@@ -2,21 +2,24 @@
   "name": "hatchling",
   "tree": {
     "$className": "DataModel",
-
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
-      "Forge": { "$path": "../../forge/luau/Forge" },
-      "Shared": { "$path": "src/shared" }
+      "Forge": {
+        "$path": "../../forge/luau/Forge"
+      },
+      "Shared": {
+        "$path": "src/shared"
+      }
     },
-
     "ServerScriptService": {
       "$className": "ServerScriptService",
       "$properties": {
         "LoadStringEnabled": true
       },
-      "Server": { "$path": "src/server" }
+      "Server": {
+        "$path": "src/server"
+      }
     },
-
     "StarterPlayer": {
       "$className": "StarterPlayer",
       "$properties": {
@@ -28,10 +31,11 @@
       },
       "StarterPlayerScripts": {
         "$className": "StarterPlayerScripts",
-        "Client": { "$path": "src/client" }
+        "Client": {
+          "$path": "src/client"
+        }
       }
     },
-
     "Workspace": {
       "$className": "Workspace",
       "$properties": {
@@ -42,36 +46,199 @@
         "Gravity": 178
       }
     },
-
     "Lighting": {
       "$className": "Lighting",
       "$properties": {
         "Technology": "Future",
-        "Ambient": [0.16, 0.16, 0.19],
-        "OutdoorAmbient": [0.45, 0.45, 0.46],
-        "Brightness": 2.4,
-        "ClockTime": 9,
-        "GeographicLatitude": 22,
-        "FogColor": [0.74, 0.78, 0.82],
-        "FogStart": 220,
-        "FogEnd": 1200,
+        "Ambient": [
+          0.52,
+          0.52,
+          0.56
+        ],
+        "OutdoorAmbient": [
+          0.72,
+          0.73,
+          0.78
+        ],
+        "Brightness": 3.0,
+        "ClockTime": 13.4,
+        "GeographicLatitude": 12,
+        "ExposureCompensation": 0.18,
+        "FogColor": [
+          0.78,
+          0.86,
+          0.94
+        ],
+        "FogStart": 400,
+        "FogEnd": 2200,
         "GlobalShadows": true,
-        "EnvironmentDiffuseScale": 0.4,
-        "EnvironmentSpecularScale": 0.3
+        "EnvironmentDiffuseScale": 0.75,
+        "EnvironmentSpecularScale": 0.35,
+        "ColorShift_Top": [
+          0.06,
+          0.05,
+          0.0
+        ]
+      },
+      "Bloom": {
+        "$className": "BloomEffect",
+        "$properties": {
+          "Intensity": 0.42,
+          "Size": 20,
+          "Threshold": 1.05
+        }
+      },
+      "Grade": {
+        "$className": "ColorCorrectionEffect",
+        "$properties": {
+          "Brightness": 0.015,
+          "Contrast": 0.055,
+          "Saturation": 0.16,
+          "TintColor": [
+            1.0,
+            0.99,
+            0.96
+          ]
+        }
+      },
+      "Sky": {
+        "$className": "Sky",
+        "$properties": {
+          "StarCount": 0,
+          "SunAngularSize": 17
+        }
       }
     },
-
     "StarterGui": {
       "$className": "StarterGui",
       "$properties": {
         "ResetPlayerGuiOnSpawn": false
       }
     },
-
     "Players": {
       "$className": "Players",
       "$properties": {
         "RespawnTime": 3
+      }
+    },
+    "MaterialService": {
+      "$className": "MaterialService",
+      "MeadowGrass": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Grass",
+          "StudsPerTile": 5,
+          "ColorMap": "rbxassetid://98584017569493",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "WoodFloor": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Ground",
+          "StudsPerTile": 6,
+          "ColorMap": "rbxassetid://101619815413671",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "FrostGround": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Snow",
+          "StudsPerTile": 7,
+          "ColorMap": "rbxassetid://123255875340478",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "EmberGround": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Ground",
+          "StudsPerTile": 6,
+          "ColorMap": "rbxassetid://102397297645525",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "SkyStone": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Slate",
+          "StudsPerTile": 8,
+          "ColorMap": "rbxassetid://139079590378305",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "VoidStone": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Rock",
+          "StudsPerTile": 5,
+          "ColorMap": "rbxassetid://139079590378305",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "SandGround": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Sand",
+          "StudsPerTile": 6,
+          "ColorMap": "rbxassetid://86130022274357",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "IceGround": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Ice",
+          "StudsPerTile": 7,
+          "ColorMap": "rbxassetid://122836387096882",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "PlankFloor": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "WoodPlanks",
+          "StudsPerTile": 3,
+          "ColorMap": "rbxassetid://99874005373896",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "BrickWall": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Brick",
+          "StudsPerTile": 4,
+          "ColorMap": "rbxassetid://114580984900203",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "PlasterWall": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Plaster",
+          "StudsPerTile": 5,
+          "ColorMap": "rbxassetid://127529642092753",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "BareWood": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Wood",
+          "StudsPerTile": 3,
+          "ColorMap": "rbxassetid://136522653239094",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "RustPlate": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Metal",
+          "StudsPerTile": 4,
+          "ColorMap": "rbxassetid://86881408240446",
+          "MaterialPattern": "Regular"
+        }
       }
     }
   }

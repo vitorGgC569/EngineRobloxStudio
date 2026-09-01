@@ -42,21 +42,15 @@ for _, name in Config.containers do
 	end
 end
 
--- 3. The network contract. Nothing crosses the wire that is not declared here.
-Net.define({
-	-- server -> client
-	StateSync = { dir = "s2c" },
-	Notify = { dir = "s2c" },
-
-	-- client -> server
-	-- Every c2s entry needs a rate and a shape. That is not a style rule;
-	-- it is the difference between a game and an exploit surface.
-	Ping = { dir = "c2s", rate = 2, shape = {} },
-})
-
-Net.on("Ping", function(player)
-	Net.fire(player, "Notify", { text = "pong" })
-end)
+-- 3. The world, before anybody can stand in it.
+--
+--    Built here rather than lazily on join, because a player arrives faster
+--    than a world builds and the failure mode is a character in freefall
+--    against an empty sky. That has happened twice in this repository already.
+local World = require(script.systems.World)
+local built = World.build()
+Debug.info(string.format("world: %d trees, %d rocks, %d ruins",
+	built.trees or 0, built.rocks or 0, built.ruins or 0))
 
 -- 4. Persistence. The template is the shape of a new player's save.
 Save.configure({

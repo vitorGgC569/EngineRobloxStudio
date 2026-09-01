@@ -2,21 +2,24 @@
   "name": "holdout",
   "tree": {
     "$className": "DataModel",
-
     "ReplicatedStorage": {
       "$className": "ReplicatedStorage",
-      "Forge": { "$path": "../../forge/luau/Forge" },
-      "Shared": { "$path": "src/shared" }
+      "Forge": {
+        "$path": "../../forge/luau/Forge"
+      },
+      "Shared": {
+        "$path": "src/shared"
+      }
     },
-
     "ServerScriptService": {
       "$className": "ServerScriptService",
       "$properties": {
         "LoadStringEnabled": true
       },
-      "Server": { "$path": "src/server" }
+      "Server": {
+        "$path": "src/server"
+      }
     },
-
     "StarterPlayer": {
       "$className": "StarterPlayer",
       "$properties": {
@@ -28,50 +31,163 @@
       },
       "StarterPlayerScripts": {
         "$className": "StarterPlayerScripts",
-        "Client": { "$path": "src/client" }
+        "Client": {
+          "$path": "src/client"
+        }
       }
     },
-
     "Workspace": {
       "$className": "Workspace",
       "$properties": {
         "StreamingEnabled": true,
-        "StreamingMinRadius": 128,
-        "StreamingTargetRadius": 640,
-        "FallenPartsDestroyHeight": -120,
-        "Gravity": 178
+        "StreamingMinRadius": 256,
+        "StreamingTargetRadius": 900,
+        "FallenPartsDestroyHeight": -180,
+        "Gravity": 196.2
       }
     },
-
     "Lighting": {
       "$className": "Lighting",
       "$properties": {
         "Technology": "Future",
-        "Ambient": [0.16, 0.16, 0.19],
-        "OutdoorAmbient": [0.45, 0.45, 0.46],
-        "Brightness": 2.4,
-        "ClockTime": 9,
-        "GeographicLatitude": 22,
-        "FogColor": [0.74, 0.78, 0.82],
-        "FogStart": 220,
-        "FogEnd": 1200,
+        "Ambient": [
+          0.24,
+          0.25,
+          0.27
+        ],
+        "OutdoorAmbient": [
+          0.46,
+          0.48,
+          0.51
+        ],
+        "Brightness": 2.2,
+        "ClockTime": 15.4,
+        "GeographicLatitude": 54,
+        "ExposureCompensation": 0.08,
+        "FogColor": [
+          0.44,
+          0.46,
+          0.45
+        ],
+        "FogStart": 90,
+        "FogEnd": 720,
         "GlobalShadows": true,
-        "EnvironmentDiffuseScale": 0.4,
-        "EnvironmentSpecularScale": 0.3
+        "ShadowSoftness": 0.45,
+        "EnvironmentDiffuseScale": 0.5,
+        "EnvironmentSpecularScale": 0.22,
+        "ColorShift_Bottom": [
+          0.02,
+          0.03,
+          0.03
+        ]
+      },
+      "Air": {
+        "$className": "Atmosphere",
+        "$properties": {
+          "Density": 0.42,
+          "Offset": 0.1,
+          "Color": [
+            0.52,
+            0.55,
+            0.53
+          ],
+          "Decay": [
+            0.4,
+            0.42,
+            0.44
+          ],
+          "Glare": 0.25,
+          "Haze": 2.1
+        }
+      },
+      "Grade": {
+        "$className": "ColorCorrectionEffect",
+        "$properties": {
+          "Brightness": -0.015,
+          "Contrast": 0.09,
+          "Saturation": -0.2,
+          "TintColor": [
+            0.94,
+            0.97,
+            0.95
+          ]
+        }
+      },
+      "Bloom": {
+        "$className": "BloomEffect",
+        "$properties": {
+          "Intensity": 0.22,
+          "Size": 28,
+          "Threshold": 1.5
+        }
+      },
+      "Sky": {
+        "$className": "Sky",
+        "$properties": {
+          "StarCount": 0,
+          "SunAngularSize": 5,
+          "MoonAngularSize": 0
+        }
       }
     },
-
     "StarterGui": {
       "$className": "StarterGui",
       "$properties": {
         "ResetPlayerGuiOnSpawn": false
       }
     },
-
     "Players": {
       "$className": "Players",
       "$properties": {
         "RespawnTime": 3
+      }
+    },
+    "MaterialService": {
+      "$className": "MaterialService",
+      "ConcreteFloor": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Concrete",
+          "StudsPerTile": 5,
+          "ColorMap": "rbxassetid://102397297645525",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "RuinWall": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Brick",
+          "StudsPerTile": 4,
+          "ColorMap": "rbxassetid://114580984900203",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "CliffRock": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Rock",
+          "StudsPerTile": 10,
+          "ColorMap": "rbxassetid://139079590378305",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "PlankFloor": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "WoodPlanks",
+          "StudsPerTile": 3,
+          "ColorMap": "rbxassetid://99874005373896",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "RustPlate": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Metal",
+          "StudsPerTile": 3,
+          "ColorMap": "rbxassetid://86881408240446",
+          "MaterialPattern": "Regular"
+        }
       }
     }
   }

@@ -27,7 +27,7 @@
 	sliver of its neighbour, and looks deliberate.
 
 	348 whole icons across 77 tokens, and 59 sheets
-	holding 9133 cells. Published 2026-08-27.
+	holding 9133 cells. Published 2026-09-01.
 ]]
 
 local ItchIcons = {}
@@ -464,10 +464,34 @@ ItchIcons.entries = ({
 	Sheets are still reachable by `cell`, which is the only way they were ever
 	meant to be drawn.
 ]]
+--[[
+	Icons win the token, and the squarest icon wins among icons.
+
+	Both kinds carry a token -- a crosshair sheet classifies as `action.close`
+	as readily as a loose cross does -- and the first entry used to win, which
+	made the answer depend on asset id ordering. When a sheet won, `get`
+	returned it with a zero rect and a caller asking for a close glyph got a
+	256-pixel grid of ninety crosshairs stretched across its button.
+
+	Among icons, aspect decides. A glyph is drawn on a square canvas: a cross,
+	a gear, a coin. An entry at 160x150 is a small illustration with a caption
+	or a margin, and it reads as the wrong picture at button size -- the close
+	button showed what looked like a broken-image icon for a whole session
+	because the least square candidate happened to sort first.
+]]
+local function squareness(entry: Entry): number
+	local long = math.max(entry.width, entry.height)
+	local short = math.min(entry.width, entry.height)
+	return if long > 0 then short / long else 0
+end
+
 local byToken: { [string]: Entry } = {}
 for _, entry in ItchIcons.entries do
-	if entry.token and entry.kind == "icon" and not byToken[entry.token] then
-		byToken[entry.token] = entry
+	if entry.token and entry.kind == "icon" then
+		local held = byToken[entry.token]
+		if not held or squareness(entry) > squareness(held) then
+			byToken[entry.token] = entry
+		end
 	end
 end
 for _, entry in ItchIcons.entries do
@@ -610,8 +634,51 @@ for _, entry in ItchIcons.entries do
 	end
 end
 
-function ItchIcons.frame(role: string, state: string?): Entry?
-	return byFrame[role .. "." .. (state or "normal")] or byFrame[role .. ".normal"]
+--[[
+	The best frame for a role, optionally sized against the box it must fill.
+
+	Size is not "bigger is better", which is what this did after "smaller is
+	cheaper" turned out to be wrong. A nine-slice draws its corners at their
+	own size, so a 414x309 slot frame in a 48x88 cell has corners larger than
+	the cell and renders as nothing at all -- the day cells lost their cards
+	that way, and the fix for the button (prefer the largest) is what broke
+	them.
+
+	Given a target, the frames are ranked by how close their border is to the
+	box: a border more than a third of the smaller edge cannot draw a middle,
+	and one under a pixel or two disappears. Without a target the old rule
+	stands, because a caller that does not know its size cannot be helped.
+]]
+function ItchIcons.frame(role: string, state: string?, target: Vector2?): Entry?
+	local key = role .. "." .. (state or "normal")
+	local pool = byRole[key] or byRole[role .. ".normal"]
+	if not pool or #pool == 0 then
+		return nil
+	end
+	if not target then
+		return pool[1]
+	end
+
+	local shortest = math.min(target.X, target.Y)
+	local best, bestScore = nil, -math.huge
+	for _, entry in pool do
+		local border = math.max(
+			entry.sliceLeft or 0, entry.sliceTop or 0,
+			entry.width - (entry.sliceRight or entry.width),
+			entry.height - (entry.sliceBottom or entry.height))
+		--: A border wants to be a small fraction of the box. 0.18 is the
+		--: proportion a drawn frame reads as a frame rather than as a blob.
+		local wanted = math.max(shortest * 0.18, 2)
+		local score = -math.abs(border - wanted)
+		if border * 2 >= shortest then
+			--: Cannot fit two corners across the box; it will draw as a smear.
+			score -= 1000
+		end
+		if score > bestScore then
+			best, bestScore = entry, score
+		end
+	end
+	return best or pool[1]
 end
 
 --[[
@@ -630,8 +697,9 @@ end
 --: Returns whether it skinned, whether the art fills its own middle, and
 --: whether that middle is dark -- which is what a caller needs to choose text
 --: that can be read against it.
-function ItchIcons.skin(label: any, role: string, state: string?): (boolean, boolean, boolean)
-	local entry = ItchIcons.frame(role, state)
+function ItchIcons.skin(label: any, role: string, state: string?,
+                       target: Vector2?): (boolean, boolean, boolean)
+	local entry = ItchIcons.frame(role, state, target)
 	if not entry then
 		return false, false, false
 	end

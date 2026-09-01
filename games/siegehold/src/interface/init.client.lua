@@ -588,25 +588,6 @@ builders.daily = function(parent: Instance): number
 	claim.ZIndex = 23
 	claim.Active = available
 
-	--: Temporary: the label is present and invisible and three hypotheses
-	--: about why were wrong. Reading the values the widget actually ended up
-	--: with beats a fourth guess.
-	local skin = claim:FindFirstChild("Skin")
-	--: `print`, not `Debug.info`. `Debug.info` appends to an internal ring
-	--: buffer and only `Debug.error` reaches Studio's output, so the probe was
-	--: writing somewhere `log.tail` cannot see -- which is why three attempts
-	--: to read it came back empty.
-	task.defer(function()
-		print(string.format(
-			"claim: text=%q colour=%s size=%d z=%d bounds=%s vis=%s "
-			.. "textT=%.2f skinZ=%s skinT=%.2f scale=%s",
-			claim.Text, tostring(claim.TextColor3), claim.TextSize, claim.ZIndex,
-			tostring(claim.TextBounds), tostring(claim.Visible),
-			claim.TextTransparency,
-			if skin then tostring(skin.ZIndex) else "-",
-			if skin and skin:IsA("ImageLabel") then skin.ImageTransparency else -1,
-			if skin and skin:IsA("ImageLabel") then tostring(skin.ScaleType) else "-"))
-	end)
 
 	return 190
 end

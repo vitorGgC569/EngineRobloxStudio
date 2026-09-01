@@ -142,12 +142,17 @@ end
 --: Set an ImageLabel's own image and slice rect from the catalogue, for when
 --: the widget *is* the picture. A panel takes this form; a labelled button
 --: cannot, because a TextButton has Text and an ImageButton does not.
-function UI.dress(image: any, role: string, state: string?): (boolean, boolean, boolean)
+--: `target` is the box the frame has to fill. A nine-slice draws its corners
+--: at their own size, so a 414px frame in a 48px cell has corners bigger than
+--: the cell and renders as nothing -- which is exactly what happened to a row
+--: of day cells after "prefer the largest" fixed a button.
+function UI.dress(image: any, role: string, state: string?,
+                  target: Vector2?): (boolean, boolean, boolean)
 	local book = skinBook()
 	if not book or not book.skin then
 		return false, false, false
 	end
-	local took, opaque, dark = book.skin(image, role, state)
+	local took, opaque, dark = book.skin(image, role, state, target)
 	return took == true, opaque == true, dark == true
 end
 
@@ -239,7 +244,16 @@ function UI.panel(parent: Instance, options: any?): GuiObject
 	local dressed, solid = false, false
 	if o.skin then
 		local candidate = Instance.new("ImageLabel")
-		dressed, solid = UI.dress(candidate, o.skin, o.skinState)
+		--: The declared offset size, which is what a skinned panel is given in
+		--: practice. A scale-sized panel falls back to the unranked choice.
+		local wanted = o.size
+		local target = if wanted
+			then Vector2.new(wanted.X.Offset, wanted.Y.Offset)
+			else nil
+		if target and (target.X < 1 or target.Y < 1) then
+			target = nil
+		end
+		dressed, solid = UI.dress(candidate, o.skin, o.skinState, target)
 		if dressed then
 			f = candidate
 		else
@@ -438,7 +452,12 @@ function UI.button(parent: Instance, text: string, options: any?): TextButton
 	if role then
 		local face = Instance.new("ImageLabel")
 		local took: boolean
-		took, solid, dark = UI.dress(face, role, "normal")
+		local box = o.size
+		local target = if box then Vector2.new(box.X.Offset, box.Y.Offset) else nil
+		if target and (target.X < 1 or target.Y < 1) then
+			target = nil
+		end
+		took, solid, dark = UI.dress(face, role, "normal", target)
 		if took then
 			skinned = true
 			local holder = Instance.new("Frame")

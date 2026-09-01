@@ -810,7 +810,20 @@ def cmd_api(args: argparse.Namespace) -> int:
 
 # ================================ publishing ================================
 def cmd_publish(args: argparse.Namespace) -> int:
-    """Upload the built place as a new version of a Roblox experience."""
+    """Upload the built place as a new version of a Roblox experience.
+
+    Gated on a passing `forge playtest` for *this* build.
+
+    The gate is here rather than on `build` because publishing is the outward
+    step, and because a build that is never published costs nobody anything. It
+    is here at all because a tool nobody is obliged to run is not a standard:
+    `playtest` was written to catch the class of defect that keeps reaching
+    users, and it caught it, and then sat unreferenced by anything.
+
+    `--force` exists and prints what it is skipping. A gate with no override
+    gets removed the first time it is inconvenient.
+    """
+    from forge.cli import playtest as pt
     from forge.cli import publish as pub
 
     try:
@@ -819,6 +832,19 @@ def cmd_publish(args: argparse.Namespace) -> int:
             print(f"key: {'authenticates' if result['ok'] else 'rejected'} "
                   f"(HTTP {result['status']}) -- {result['meaning']}")
             return 0 if result["ok"] else 1
+
+        place = REPO_ROOT / "games" / args.game / f"{args.game}.rbxlx"
+        if place.exists():
+            passed, why = pt.read_receipt(args.game, place)
+            if not passed and not args.force:
+                print(f"publish: refused -- {why}")
+                print()
+                print(f"    python forge/forge.py playtest {args.game}")
+                print()
+                print("  or --force, which publishes a build nobody has looked at.")
+                return 1
+            if not passed:
+                print(f"publish: forced past the gate -- {why}")
 
         result = pub.publish(args.game, release=args.release,
                              universe_id=args.universe, place_id=args.place)
@@ -1294,6 +1320,8 @@ def main(argv: list[str] | None = None) -> int:
     p_pub.add_argument("--release", action="store_true",
                        help="push live to running servers instead of saving privately")
     p_pub.add_argument("--check", action="store_true", help="only test the credential")
+    p_pub.add_argument("--force", action="store_true",
+                       help="publish without a passing playtest for this build")
     p_pub.set_defaults(func=cmd_publish)
 
     p_ex = sub.add_parser("example", help="run the engine's runnable examples")

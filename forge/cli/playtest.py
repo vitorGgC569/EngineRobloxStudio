@@ -53,6 +53,7 @@ from typing import Any
 
 REPO = Path(__file__).resolve().parents[2]
 SHOTS = REPO / "artifacts" / "playtest"
+RECEIPTS = REPO / "artifacts" / "playtest"
 
 #: Roblox's own minimum for a touch target, in points. Anything smaller is a
 #: control a thumb misses, and a `UIScale` shrinks these without telling you.
@@ -84,6 +85,60 @@ class Report:
 
     def add(self, severity: str, what: str, detail: str = "") -> None:
         self.findings.append(Finding(severity, what, detail))
+
+
+def stamp(place: Path) -> str:
+    """What identifies *this* build, so a receipt cannot outlive it.
+
+    Size and modification time, not a hash: a place file is megabytes and this
+    runs on every publish. The pair changes whenever rojo writes, which is the
+    only event that matters.
+    """
+    info = place.stat()
+    return f"{info.st_size}:{int(info.st_mtime)}"
+
+
+def receipt_path(game: str) -> Path:
+    return RECEIPTS / f"{game}.json"
+
+
+def write_receipt(game: str, place: Path, report: "Report") -> Path:
+    RECEIPTS.mkdir(parents=True, exist_ok=True)
+    path = receipt_path(game)
+    path.write_text(json.dumps({
+        "game": game,
+        "build": stamp(place),
+        "passed": not report.failed,
+        "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
+        "measured": report.measured,
+        "findings": [{"severity": f.severity, "what": f.what}
+                     for f in report.findings],
+    }, indent=1), encoding="utf-8")
+    return path
+
+
+def read_receipt(game: str, place: Path) -> tuple[bool, str]:
+    """Whether this exact build has a passing playtest, and why not.
+
+    The build stamp is the point. A receipt from before the last rebuild says
+    nothing about what is on disk now, and treating it as if it did is how a
+    gate becomes a formality.
+    """
+    path = receipt_path(game)
+    if not path.exists():
+        return False, "no playtest has been run for this game"
+    try:
+        record = json.loads(path.read_text(encoding="utf-8"))
+    except (OSError, json.JSONDecodeError):
+        return False, "the playtest receipt is unreadable"
+    if record.get("build") != stamp(place):
+        return False, ("the last playtest was for a different build; "
+                       "rebuild happened after it")
+    if not record.get("passed"):
+        failures = [f["what"] for f in record.get("findings") or []
+                    if f.get("severity") == "error"]
+        return False, "the last playtest failed: " + ("; ".join(failures) or "?")
+    return True, "passed"
 
 
 def _luma(pixel: tuple[int, ...]) -> float:
@@ -228,7 +283,8 @@ def run(game: str, wait: float = 9.0, panels: tuple[str, ...] = (),
     place = REPO / "games" / game / f"{game}.rbxlx"
     if not place.exists():
         report.add("error", "no built place", str(place))
-        return report
+        write_receipt(game, place, report)
+    return report
 
     bridge = _bridge()
     lifecycle.restart_for_bridge(place, REPO / ".tmp" / "studio-recovery",

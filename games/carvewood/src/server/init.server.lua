@@ -36,6 +36,7 @@ Forge.require("0.2.0")
 
 local Wire = require(ReplicatedStorage.Shared.Wire)
 local Trees = require(ReplicatedStorage.Shared.Trees)
+local Config = require(ReplicatedStorage.Shared.Config)
 
 local systems = ServerScriptService.Server.systems
 local Yard = require(systems.Yard)
@@ -547,6 +548,29 @@ Players.PlayerRemoving:Connect(function(player)
 	benches[player], lastSwing[player] = nil, nil
 	autoAccept[player], nextArrival[player] = nil, nil
 end)
+
+--[[
+	The game, played by nobody.
+
+	`forge gametest` reads the report this publishes, and that command is the
+	only thing in this project that can answer "does the game still work"
+	without a person watching a screen.
+
+	The scaffold has always emitted this block. This game lost it because the
+	bootstrap was rewritten from scratch and the line was not carried across --
+	so eight builds shipped with a `tests` folder nothing ran, and every one of
+	those builds was validated by a person reading screenshots instead.
+
+	Studio only: the scenarios build and destroy real state, which does not
+	belong in a session somebody is playing.
+]]
+if Config.selfTest then
+	task.defer(function()
+		local report = Forge.Testing.runAndPublish(script:FindFirstChild("tests"))
+		Debug.info(string.format("self test: %d passed, %d failed, %d hung",
+			report.passed or 0, report.failed or 0, report.timedOut or 0))
+	end)
+end
 
 Debug.probe("carvewood", function()
 	local live, cash, chopped, displayed = 0, 0, 0, 0

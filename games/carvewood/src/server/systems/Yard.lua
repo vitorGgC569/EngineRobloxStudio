@@ -706,7 +706,20 @@ function Yard.buyUpgrade(state: State, nodeId: string): (boolean, any)
 		return false, "build the counter out first"
 	end
 	local cost = Yard.shopTree:cost(state.shop.upgrades, nodeId)
-	Yard.shopTree:buy(state.shop.upgrades, nodeId)
+	--[[
+		`buy` is pure. It answers with a delta and changes nothing.
+
+		Calling it and discarding the answer -- which is what this did --
+		charged the player and left the level where it was. They paid 150 for a
+		shelf that never appeared, and the panel showed the cash leaving, so
+		the only visible symptom was a number going down. A live scenario found
+		it in a millisecond; eight rounds of screenshots had not.
+	]]
+	local delta = Yard.shopTree:buy(state.shop.upgrades, nodeId)
+	if not delta then
+		return false, "that upgrade is not available"
+	end
+	state.shop.upgrades[delta.id] = delta.level
 	state.cash -= cost
 	return true, { node = nodeId, level = state.shop.upgrades[nodeId],
 		spent = cost }

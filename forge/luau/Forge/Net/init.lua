@@ -163,8 +163,36 @@ function Net.define(defs: { [string]: Definition })
 	end
 end
 
+--: Names that have a handler attached. See `Net.handles`.
+local listening: { [string]: boolean } = {}
+
 function Net.defined(name: string): boolean
 	return definitions[name] ~= nil
+end
+
+--[[
+	Whether anything is actually listening.
+
+	`defined` says the remote instance exists; this says somebody called
+	`Net.on` for it. The gap between those two is the hardest failure in a
+	Roblox codebase to see: firing into a defined remote with no handler raises
+	nothing anywhere, and the client simply hangs until it times out -- which
+	looks exactly like a broken button.
+
+	A game can now assert it in a live scenario instead of discovering it by
+	pressing every control.
+]]
+function Net.handles(name: string): boolean
+	return listening[name] == true
+end
+
+function Net.listening(): { string }
+	local out = {}
+	for name in listening do
+		table.insert(out, name)
+	end
+	table.sort(out)
+	return out
 end
 
 function Net.manifest(): { [string]: any }
@@ -281,6 +309,7 @@ function Net.on(name: string, handler: (...any) -> ...any): RBXScriptConnection?
 		error(string.format("[Net] '%s' was never defined", tostring(name)), 2)
 	end
 	local remote = remoteFor(name)
+	listening[name] = true
 
 	if IS_SERVER then
 		if def.dir ~= "c2s" then

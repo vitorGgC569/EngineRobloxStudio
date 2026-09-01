@@ -685,8 +685,11 @@ function Grove.raise(slot: number): any
 		anchor + Vector3.new(0, GROUND_Y - 1.6, 0),
 		Color3.fromRGB(146, 110, 70), Enum.Material.WoodPlanks, folder)
 
-	local sign = slab("Sign", Vector3.new(14, 6, 1),
-		anchor + Vector3.new(0, 3, -44),
+	--: Behind the spawn pad, not through it. The pad sits at -42 and the sign
+	--: was at -44 on all six yards -- two studs apart, so a player arrived
+	--: standing inside their own nameplate.
+	local sign = slab("Sign", Vector3.new(18, 7, 1),
+		anchor + Vector3.new(0, 3.5, -56),
 		Color3.fromRGB(126, 94, 62), Enum.Material.Wood, folder)
 	local label = Instance.new("SurfaceGui")
 	label.Face = Enum.NormalId.Front

@@ -305,8 +305,29 @@ def run(game: str, wait: float = 9.0, panels: tuple[str, ...] = (),
         report.add("error", "the game would not start")
         return report
 
-    time.sleep(wait)
-    session = _server_session(bridge)
+    #[[
+    #   Wait for the interface, not for the clock.
+    #
+    #   This slept a flat nine seconds on every run, which is both too long on
+    #   a warm machine and not long enough on a cold one -- the failure mode of
+    #   the second being a photograph of a game that had not finished building
+    #   its HUD, reported as "the game drew almost no interface".
+    #
+    #   Polling for what the wait was actually for costs a second or two on a
+    #   normal run and still gives a slow machine its nine.
+    #]]
+    session = None
+    deadline = time.time() + max(wait, 3.0)
+    while time.time() < deadline:
+        session = _server_session(bridge)
+        if session:
+            bridge.pinned_session = session
+            try:
+                if len(_gui_nodes(bridge)) >= 3:
+                    break
+            except Exception:  # noqa: BLE001 - not up yet is not an error
+                pass
+        time.sleep(0.4)
     if not session:
         report.add("error", "no running session answered after starting one")
         return report

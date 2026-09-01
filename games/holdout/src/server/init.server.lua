@@ -20,7 +20,11 @@ local Forge = require(ReplicatedStorage:WaitForChild("Forge"))
 -- The engine contract this project was scaffolded against. Keep it: an engine
 -- that moves under a game fails far from the line that caused it.
 Forge.require("0.2.0")
-local Config = require(ReplicatedStorage:WaitForChild("Shared"):WaitForChild("Config"))
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Config = require(Shared:WaitForChild("Config"))
+local Map = require(Shared:WaitForChild("Map"))
+local Posture = require(Shared:WaitForChild("Posture"))
+local Wire = require(Shared:WaitForChild("Wire"))
 
 local Rng = Forge.Core.Rng
 local Net = Forge.Net
@@ -31,6 +35,26 @@ local startedAt = os.clock()
 
 -- 1. Determinism where it belongs: one seed, named streams downstream.
 Rng.seed(Config.seed)
+
+--: Remotes before any handler. A handler registered first attaches to nothing
+--: and the client's call hangs until it times out, which looks exactly like a
+--: broken button.
+Wire.install()
+
+--[[
+	Named places, with geography.
+
+	`World.Areas` gained `center`/`radius` for this: a location readout and a
+	minimap both need to answer "which area is this point in", and before that
+	the module could only answer "may this player enter". The bounds live in
+	`Map` so the client draws the same circles the server tests against.
+]]
+for _, area in Map.areas do
+	Forge.World.Areas.define(area.id, {
+		label = area.label, center = area.center, radius = area.radius,
+		priority = area.priority, safe = true,
+	})
+end
 
 -- 2. Runtime containers. Anything the game creates lives in one of these, so a
 --    validator can count them and a cleanup can find them.
@@ -49,8 +73,163 @@ end
 --    against an empty sky. That has happened twice in this repository already.
 local World = require(script.systems.World)
 local built = World.build()
-Debug.info(string.format("world: %d trees, %d rocks, %d ruins",
-	built.trees or 0, built.rocks or 0, built.ruins or 0))
+local Caches = require(script.systems.Caches)
+local stocked = Caches.build(Workspace:WaitForChild("World"))
+Debug.info(string.format("world: %d trees, %d rocks, %d ruins, %d caches",
+	built.trees or 0, built.rocks or 0, built.ruins or 0, stocked))
+
+-- =============================== the player =================================
+--[[
+	Posture, owned by the server.
+
+	It looks like overkill for a crouch key right up until you remember that
+	posture changes a hitbox height and an accuracy multiplier: a client that
+	could declare itself prone would be shrinking its own target for free, and
+	skipping the second and a half it costs to get up.
+]]
+local posture: { [Player]: string } = {}
+local changing: { [Player]: number } = {}
+local sprinting: { [Player]: boolean } = {}
+local aiming: { [Player]: boolean } = {}
+
+local function applyPosture(player: Player, id: string)
+	local character = player.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if not humanoid then
+		return
+	end
+	local state = Posture.get(id)
+	humanoid.WalkSpeed = Posture.speed(id, sprinting[player])
+	--: Hip height moves the whole character down, which lowers the camera and
+	--: the silhouette together. Scaling the model would do neither.
+	humanoid.HipHeight = 2 - state.drop
+	player:SetAttribute("posture", id)
+	player:SetAttribute("profile", state.profile)
+	Net.fire(player, "postured", { posture = id, speed = humanoid.WalkSpeed,
+		drop = state.drop, profile = state.profile })
+end
+
+Net.on("posture", function(player: Player, payload: any)
+	local from = posture[player] or "stand"
+	local to = tostring((payload or {}).to)
+	local ok, why = Posture.mayChange(from, to)
+	if not ok then
+		return { ok = false, reason = why }
+	end
+	local now = os.clock()
+	if now < (changing[player] or 0) then
+		return { ok = false, reason = "still moving" }
+	end
+	local seconds = Posture.duration(from, to)
+	changing[player] = now + seconds
+	posture[player] = to
+	--: Speed drops immediately and the rest lands when the change finishes, so
+	--: standing up is slow in the way a player can feel rather than in a
+	--: number they never see.
+	applyPosture(player, to)
+	return { ok = true, detail = { posture = to, seconds = seconds } }
+end)
+
+Net.on("sprint", function(player: Player, payload: any)
+	sprinting[player] = (payload or {}).on == true
+	applyPosture(player, posture[player] or "stand")
+	return { ok = true }
+end)
+
+Net.on("aim", function(player: Player, payload: any)
+	aiming[player] = (payload or {}).on == true
+	player:SetAttribute("aiming", aiming[player])
+	return { ok = true }
+end)
+
+Net.on("loot", function(player: Player, payload: any)
+	local name = tostring((payload or {}).container)
+	local world = Workspace:FindFirstChild("World")
+	local box = world and world:FindFirstChild(name, true)
+	if not (box and box:IsA("BasePart") and box.Name == "Cache") then
+		return { ok = false, reason = "no such container" }
+	end
+	local ok, detail = Caches.open(player.Character, box)
+	if not ok then
+		Net.fire(player, "notice", { kind = "refused", text = tostring(detail) })
+		return { ok = false, reason = tostring(detail) }
+	end
+	Net.fire(player, "looted", detail)
+	return { ok = true, detail = detail }
+end)
+
+Net.on("pickup", function(player: Player, payload: any)
+	local ok, detail = Caches.take(player.Character, tostring((payload or {}).drop))
+	if ok then
+		Net.fire(player, "notice", { kind = "good", text = "Picked up " .. tostring(detail.id) })
+	end
+	return { ok = ok, detail = detail }
+end)
+
+Net.on("atlas", function()
+	--: The map does not move, so this is asked once and never polled.
+	return { areas = Map.layout(), extent = Map.EXTENT, cell = Map.CELL,
+		columns = Map.COLUMNS }
+end)
+
+--: The caches are server-owned prompts, so no client claim is involved in
+--: opening one at all.
+game:GetService("ProximityPromptService").PromptTriggered:Connect(
+	function(prompt, player)
+		local part = prompt.Parent
+		if not (part and part:IsA("BasePart")) then
+			return
+		end
+		if prompt.Name == "Open" and part:GetAttribute("cache") then
+			local ok, detail = Caches.open(player.Character, part)
+			if ok then
+				Net.fire(player, "looted", detail)
+			else
+				Net.fire(player, "notice",
+					{ kind = "refused", text = tostring(detail) })
+			end
+		elseif prompt.Name == "Take" and part:GetAttribute("drop") then
+			local ok, detail = Caches.take(player.Character,
+				tostring(part:GetAttribute("drop")))
+			if ok then
+				Net.fire(player, "notice",
+					{ kind = "good", text = "Picked up " .. tostring(detail.id) })
+			end
+		end
+	end)
+
+--[[
+	Where everybody is, four times a second.
+
+	Not per frame: a grid reference that updates sixty times a second is one
+	nobody can read, and the minimap interpolates its own dot from the
+	character it can already see. This is for the words.
+]]
+task.spawn(function()
+	while true do
+		task.wait(0.25)
+		for _, player in Players:GetPlayers() do
+			local character = player.Character
+			local root = character and character:FindFirstChild("HumanoidRootPart")
+			if root and root:IsA("BasePart") then
+				local areaId = Forge.World.Areas.at(root.Position)
+				Net.fire(player, "located", Map.locate(root.Position, areaId))
+			end
+		end
+	end
+end)
+
+Players.PlayerAdded:Connect(function(player)
+	player.CharacterAdded:Connect(function()
+		posture[player] = "stand"
+		sprinting[player], aiming[player] = false, false
+		task.defer(applyPosture, player, "stand")
+	end)
+end)
+Players.PlayerRemoving:Connect(function(player)
+	posture[player], changing[player] = nil, nil
+	sprinting[player], aiming[player] = nil, nil
+end)
 
 -- 4. Persistence. The template is the shape of a new player's save.
 Save.configure({

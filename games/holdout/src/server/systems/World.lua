@@ -103,9 +103,19 @@ local function carve()
 			terrain:FillBlock(
 				CFrame.new(x, top - 1.5, z),
 				Vector3.new(step + 2, 5, step + 2),
+				--[[
+					`Grass`, and it has to be exactly that.
+
+					Roblox grows animated blades on the `Grass` material and on
+					no other. `LeafyGrass` is a flat surface with a leafy
+					pattern printed on it -- it looks like grass in a
+					screenshot and nothing on it ever moves. The whole
+					decoration-and-wind chain was correct and pointed at a
+					material that cannot carry it.
+				]]
 				if distance > World.RADIUS * 0.86 then Enum.Material.Slate
 				elseif rough < -3 then Enum.Material.Mud
-				else Enum.Material.LeafyGrass)
+				else Enum.Material.Grass)
 		end
 	end
 end
@@ -326,6 +336,17 @@ local function ruin(at: Vector3, yaw: number, parent: Instance)
 	model.Name = "Ruin"
 	model.Parent = parent
 	local base = CFrame.new(at) * CFrame.Angles(0, yaw, 0)
+
+	--[[
+		Clear the ground the building stands on.
+
+		Terrain does not know a floor was laid over it, so grass keeps growing
+		through the concrete -- knee-high, indoors, in a ruin. Cutting the
+		voxels away is one call and it is the difference between a building and
+		a slab dropped in a field.
+	]]
+	Workspace.Terrain:FillBlock(base * CFrame.new(0, 6, 0),
+		Vector3.new(40, 26, 34), Enum.Material.Air)
 
 	slab("Floor", Vector3.new(34, 1, 28), base * CFrame.new(0, 0.5, 0),
 		Color3.fromRGB(128, 124, 118), "ConcreteFloor", Enum.Material.Concrete, model)

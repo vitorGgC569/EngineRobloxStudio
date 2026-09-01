@@ -44,6 +44,12 @@
         "StreamingTargetRadius": 900,
         "FallenPartsDestroyHeight": -180,
         "Gravity": 196.2
+      },
+      "Terrain": {
+        "$className": "Terrain",
+        "$properties": {
+          "Decoration": true
+        }
       }
     },
     "Lighting": {
@@ -61,7 +67,7 @@
           0.51
         ],
         "Brightness": 2.2,
-        "ClockTime": 15.4,
+        "ClockTime": 16.1,
         "GeographicLatitude": 54,
         "ExposureCompensation": 0.08,
         "FogColor": [
@@ -127,6 +133,13 @@
           "StarCount": 0,
           "SunAngularSize": 5,
           "MoonAngularSize": 0
+        }
+      },
+      "Rays": {
+        "$className": "SunRaysEffect",
+        "$properties": {
+          "Intensity": 0.2,
+          "Spread": 0.85
         }
       }
     },

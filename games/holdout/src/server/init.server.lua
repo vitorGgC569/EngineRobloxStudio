@@ -66,9 +66,12 @@ Save.start()
 -- `observe` connects AND replays for players whose profile already loaded.
 -- A plain `onLoaded:Connect` here silently misses the Studio local player,
 -- because they join before the bootstrap finishes.
+--: The scaffold fired a `StateSync` remote here that this game's own network
+--: contract does not declare, so the first profile load threw. Left alone
+--: until there is a save shape worth sending; a remote defined for the sake
+--: of the line that uses it is how a contract stops meaning anything.
 Save.observe(function(player, profile)
 	Debug.count("profiles.loaded")
-	Net.fire(player, "StateSync", profile)
 end)
 
 -- 5. Your systems. Each one is a module with a `start()`.

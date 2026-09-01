@@ -197,6 +197,24 @@ def isSurface(stats: dict[str, float] | None) -> bool:
             and stats["luma"] > 40)
 
 
+def isFoliage(stats: dict[str, float] | None) -> bool:
+    """Whether a measured image is a cut-out card rather than a surface.
+
+    This existed as the negation of `isSurface` and the images that failed it
+    were thrown away, which was the wrong conclusion drawn from a correct
+    measurement. `grass_1` and its siblings are grass blades on a transparent
+    or black field -- they are useless as ground and they are exactly what a
+    foliage card is: a quad standing in the terrain with the sky showing
+    through it.
+
+    So the measurement routes rather than rejects. A filled image is a
+    surface; a holed one is a card; both are wanted, for different jobs.
+    """
+    if stats is None:
+        return False
+    return (stats["transparent"] >= 0.20 or stats["black"] >= 0.25)         and stats["luma"] > 12
+
+
 def select(found: list[dict[str, Any]], per_role: int = 3) -> list[dict[str, Any]]:
     """A few per role, smallest first.
 
@@ -222,7 +240,14 @@ def select(found: list[dict[str, Any]], per_role: int = 3) -> list[dict[str, Any
                 stats = survey(bundle.read(item["member"]))
         except (zipfile.BadZipFile, KeyError, OSError):
             stats = None
-        if not isSurface(stats):
+        if isSurface(stats):
+            item["kind"] = "surface"
+        elif isFoliage(stats):
+            #: A card, not a floor. Filed under `foliage.` so a world dresser
+            #: asks for it deliberately and a ground never picks one up.
+            item["kind"] = "foliage"
+            item["role"] = "foliage." + item["role"].split(".")[-1]
+        else:
             continue
         if stats:
             item["measured"] = stats
@@ -279,6 +304,56 @@ def _await_operation(operation: str, key: str, tries: int = 14,
     return {}
 
 
+def cutout(data: bytes) -> bytes | None:
+    """Turn a black-backed sprite into one with an alpha channel.
+
+    The foliage cards in these packs are grass blades painted on solid black,
+    not on transparency -- which is how a sprite sheet from 2003 is drawn and
+    how half of itch's CC0 vegetation still ships. Uploaded as-is and applied
+    as a Roblox `Texture` they render exactly what they contain: dark
+    rectangles standing in the grass.
+
+    Roblox has no colour-key. The alpha has to exist in the file, so it is put
+    there here, once, before upload. Luminance drives the alpha rather than an
+    exact-black test, because these are compressed and the "black" around a
+    blade is a gradient of near-black.
+
+    Returns None when Pillow is unavailable or the image already has usable
+    transparency, so nothing is converted twice.
+    """
+    try:
+        import io
+        from PIL import Image
+    except ImportError:
+        return None
+    try:
+        image = Image.open(io.BytesIO(data)).convert("RGBA")
+    except Exception:  # noqa: BLE001
+        return None
+
+    pixels = list(image.getdata())
+    if sum(1 for p in pixels if p[3] < 40) / max(1, len(pixels)) > 0.15:
+        return None  # already cut out
+
+    out = []
+    for r, g, b, _ in pixels:
+        luma = 0.2126 * r + 0.7152 * g + 0.0722 * b
+        #: Fully transparent under 18, fully opaque over 58, and a ramp
+        #: between -- which is what keeps a blade's edge from looking cut with
+        #: scissors.
+        if luma <= 18:
+            alpha = 0
+        elif luma >= 58:
+            alpha = 255
+        else:
+            alpha = int((luma - 18) / 40 * 255)
+        out.append((r, g, b, alpha))
+    image.putdata(out)
+    buffer = io.BytesIO()
+    image.save(buffer, format="PNG")
+    return buffer.getvalue()
+
+
 MODERATED = "user is moderated"
 
 
@@ -329,7 +404,15 @@ def publish(chosen: list[dict[str, Any]], creator_user_id: str = "5812220258",
             book["assets"][marker] = {"error": f"unreadable: {error}"[:150]}
             continue
 
+        #: A card gets its alpha cut before it goes up. A surface never does:
+        #: the same operation on a floor texture punches holes in the dark
+        #: parts of it.
         suffix = Path(item["member"]).suffix.lower()
+        if item.get("kind") == "foliage":
+            converted = cutout(content)
+            if converted:
+                content = converted
+                suffix = ".png"
         payload = {
             "assetType": "Image",
             "displayName": item["stem"][:48].replace("_", " ").title() or "Texture",
@@ -379,6 +462,7 @@ def publish(chosen: list[dict[str, Any]], creator_user_id: str = "5812220258",
             uploaded += 1
             book["assets"][marker] = {
                 "assetId": asset_id, "role": item["role"], "stem": item["stem"],
+                "kind": item.get("kind") or "surface",
                 "displayName": asset.get("displayName"),
                 "moderation": (asset.get("moderationResult") or {}).get("moderationState"),
                 "pack": item["pack"], "author": item["author"],
@@ -415,8 +499,9 @@ def export_lua(published: Path | None = None) -> tuple[Path, int]:
 
     rows = []
     for entry in live:
-        rows.append("\t{ id = %s, role = %s, name = %s, pack = %s, author = %s },"
+        rows.append("	{ id = %s, role = %s, kind = %s, name = %s, pack = %s, author = %s },"
                     % (_lua(int(entry["assetId"])), _lua(entry.get("role") or ""),
+                       _lua(entry.get("kind") or "surface"),
                        _lua(entry.get("stem") or ""), _lua(entry.get("pack") or ""),
                        _lua(entry.get("author") or "")))
 
@@ -451,7 +536,8 @@ def export_lua(published: Path | None = None) -> tuple[Path, int]:
 local Textures = {}
 
 export type Entry = {
-	id: number, role: string, name: string, pack: string, author: string,
+	id: number, role: string, kind: string, name: string, pack: string,
+	author: string,
 }
 
 Textures.entries = ({

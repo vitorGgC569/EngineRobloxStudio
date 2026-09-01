@@ -46,6 +46,24 @@ export type Area = {
 	from: { string },
 	spawn: CFrame?,
 	safe: boolean,
+	--[[
+		Where the area *is*, which this module could not previously say.
+
+		It was a registry of permissions and respawns and knew nothing about
+		geography, so the one question every map screen, minimap and location
+		readout asks -- "which area am I standing in" -- had no answer here and
+		got rebuilt per game, badly, as a pile of magic rectangles.
+
+		`center` and `radius` describe a circle; `bounds` describes a box. An
+		area may have neither, in which case it is a place you are *sent* to
+		rather than a place you can *be in*, and `Areas.at` will not return it.
+	]]
+	center: Vector3?,
+	radius: number?,
+	bounds: { min: Vector3, max: Vector3 }?,
+	--: Ordering when two areas overlap. The tighter place wins by default, so
+	--: a room inside a district reports as the room.
+	priority: number?,
 }
 
 local areas: { [string]: Area } = {}
@@ -97,6 +115,13 @@ function Areas.define(id: string, area: any?)
 			game with none has nowhere to put a player whose area vanished.
 		]]
 		safe = spec.safe == true,
+		--: Geography, if this area has any. An area with neither is a place a
+		--: player is sent to rather than one they can be found standing in,
+		--: and `Areas.at` will not report it.
+		center = spec.center,
+		radius = spec.radius,
+		bounds = spec.bounds,
+		priority = spec.priority,
 	}
 end
 
@@ -164,6 +189,61 @@ function Areas.place(player: Player, id: string)
 	local previous = located[player]
 	located[player] = id
 	Areas.entered:Fire(player, id, previous)
+end
+
+--[[
+	Which defined area contains a point.
+
+	Smallest match wins, so a checkpoint inside a district reports as the
+	checkpoint. `priority` overrides that when a game means something different
+	by "inside".
+
+	Returns nil outside every area, and that is a real answer rather than a
+	failure: most maps have ground that belongs to nowhere in particular, and a
+	location readout that invents a name for it is lying.
+]]
+function Areas.at(position: Vector3): string?
+	local best: string? = nil
+	local bestScore = math.huge
+	for id, area in areas do
+		local score: number? = nil
+		if area.bounds then
+			local lo, hi = area.bounds.min, area.bounds.max
+			if position.X >= lo.X and position.X <= hi.X
+					and position.Z >= lo.Z and position.Z <= hi.Z
+					and (lo.Y == hi.Y or (position.Y >= lo.Y and position.Y <= hi.Y)) then
+				local size = hi - lo
+				score = size.X * size.Z
+			end
+		elseif area.center and area.radius then
+			local dx = position.X - area.center.X
+			local dz = position.Z - area.center.Z
+			if dx * dx + dz * dz <= area.radius * area.radius then
+				score = area.radius * area.radius
+			end
+		end
+		if score then
+			--: A lower priority number is more specific, and beats area.
+			local ranked = score - (area.priority or 0) * 1e9
+			if ranked < bestScore then
+				best, bestScore = id, ranked
+			end
+		end
+	end
+	return best
+end
+
+--: Every area that has geography, for a map screen to draw. Ordered as they
+--: were defined, because that is the order a designer thought about them in.
+function Areas.mapped(): { Area }
+	local out = {}
+	for _, id in order do
+		local area = areas[id]
+		if area and (area.center or area.bounds) then
+			table.insert(out, area)
+		end
+	end
+	return out
 end
 
 function Areas.locate(player: Player): string?

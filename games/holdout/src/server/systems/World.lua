@@ -32,11 +32,16 @@ local Forge = require(ReplicatedStorage:WaitForChild("Forge"))
 
 local Place = Forge.Catalog.Place
 local Itch = Forge.Catalog.ItchAssets
+local Textures = Forge.Catalog.Textures
 local Rng = Forge.Core.Rng
 
 local World = {}
 
 World.RADIUS = 460
+--: Wind, in studs per second. Drives terrain grass, the foliage cards and
+--: anything else that should agree with them.
+World.WIND = Vector3.new(9, 0, 5)
+World.TUFTS = 900
 World.FLOOR = 0
 World.TREES = 620
 World.ROCKS = 90
@@ -55,6 +60,23 @@ local root: Folder? = nil
 local function carve()
 	local terrain = Workspace.Terrain
 	terrain:Clear()
+
+	--[[
+		Grass on the ground, and wind through it.
+
+		`Terrain.Decoration` grows real blades on any grass-family voxel and
+		Roblox animates them against `Workspace.GlobalWind` for free -- which
+		is a moving forest floor for two properties and no per-frame cost. It
+		is off by default and every game in this project has left it off.
+
+		The wind is a real vector, not a toggle: the same one moves the
+		foliage cards below, so the ground and the cards lean the same way.
+		A forest where they disagree reads as broken in a way nobody can name.
+	]]
+	--: `Decoration` itself is set in the place file -- it is plugin-gated and a
+	--: server that assigns it throws, which a pcall turns into a silent bald
+	--: floor. Only the wind is writable from here.
+	Workspace.GlobalWind = World.WIND
 
 	local step = 32
 	local reach = World.RADIUS + step * 2
@@ -204,6 +226,76 @@ local function forest(parent: Instance): (number, number)
 	return trees, rocks
 end
 
+-- ================================= foliage ==================================
+--[[
+	Grass tufts, as crossed cards.
+
+	Two quads at right angles with an alpha-cut grass image on both faces --
+	the oldest trick in real-time vegetation and still the right one, because a
+	tuft costs two triangles and reads as a hundred blades.
+
+	The images are the ones the texture pipeline first threw away for having
+	holes in them. They were being measured correctly and judged wrongly:
+	useless as a floor, and exactly what a card is.
+
+	Anchored and unscripted. The sway comes from Roblox animating
+	`Decoration` grass against `GlobalWind`; the cards themselves are still,
+	and at tuft scale nobody reads the difference against a moving floor.
+]]
+local function tuft(at: Vector3, textureId: number, parent: Instance)
+	local size = stream:number(3.4, 6.2)
+	local model = Instance.new("Model")
+	model.Name = "Tuft"
+
+	for index = 0, 1 do
+		local card = Instance.new("Part")
+		card.Name = "Card"
+		card.Size = Vector3.new(size, size * 0.8, 0.08)
+		card.Anchored = true
+		card.CanCollide = false
+		card.CanQuery = false
+		card.CanTouch = false
+		card.Transparency = 1
+		card.CastShadow = false
+		card.CFrame = CFrame.new(at + Vector3.new(0, size * 0.4, 0))
+			* CFrame.Angles(0, stream:number(0, math.pi) + index * math.pi / 2, 0)
+		--: A texture per face, because a single-sided card vanishes when
+		--: walked past and that is the most obvious vegetation bug there is.
+		for _, face in { Enum.NormalId.Front, Enum.NormalId.Back } do
+			local texture = Instance.new("Texture")
+			texture.Face = face
+			texture.Texture = "rbxassetid://" .. textureId
+			texture.StudsPerTileU = size
+			texture.StudsPerTileV = size * 0.8
+			texture.Parent = card
+		end
+		card.Parent = model
+	end
+	model.Parent = parent
+	return model
+end
+
+local function undergrowth(parent: Instance): number
+	local cards = Textures.byRole("foliage.grass")
+	if #cards == 0 then
+		return 0
+	end
+	local folder = Instance.new("Folder")
+	folder.Name = "Undergrowth"
+	folder.Parent = parent
+
+	local placed = 0
+	for index = 1, World.TUFTS do
+		local angle = stream:number(0, math.pi * 2)
+		local radius = math.sqrt(stream:number(0, 1)) * (World.RADIUS - 30)
+		local x, z = math.sin(angle) * radius, math.cos(angle) * radius
+		tuft(Vector3.new(x, groundAt(x, z) - 0.6, z),
+			cards[stream:int(1, #cards)].id, folder)
+		placed += 1
+	end
+	return placed
+end
+
 -- ================================== cover ===================================
 local function slab(name: string, size: Vector3, cf: CFrame, colour: Color3,
                     variant: string, base: Enum.Material, parent: Instance): Part
@@ -278,6 +370,7 @@ function World.build(): any
 
 	carve()
 	local trees, rocks = forest(folder)
+	local tufts = undergrowth(folder)
 	for _, spot in RUINS do
 		ruin(Vector3.new(spot.x, groundAt(spot.x, spot.z), spot.z), spot.yaw, folder)
 	end
@@ -311,7 +404,8 @@ function World.build(): any
 	pad.Transparency = 0.4
 	pad.Parent = folder
 
-	World.planted = { trees = trees, rocks = rocks, ruins = #RUINS }
+	World.planted = { trees = trees, rocks = rocks, ruins = #RUINS,
+		tufts = tufts }
 	return World.planted
 end
 

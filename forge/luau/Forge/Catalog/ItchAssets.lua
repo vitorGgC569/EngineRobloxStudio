@@ -33,13 +33,13 @@
 	-- the provenance is for the question "what is this and where did it come
 	from", which is asked long after the answer stops being obvious.
 
-	470 models across 63 topics, 229 of them carrying
+	538 models across 63 topics, 237 of them carrying
 	colour of their own. Published 2026-09-01.
 ]]
 
 local ItchAssets = {}
 
-ItchAssets.count = 470
+ItchAssets.count = 538
 
 export type Entry = {
 	id: number, name: string, topic: string,
@@ -47,31 +47,50 @@ export type Entry = {
 }
 
 ItchAssets.models = ({
+	{ id = 100183455219038, name = "Scaffold Small Low Railing Long.Gltf", topic = "", textured = false, meshes = 1, pack = "(Legacy) KayKit - Dungeon Pack", author = "Kay Lousberg" },
+	{ id = 103414162962886, name = "Pine01", topic = "", textured = false, meshes = 2, pack = "Low Poly Nature Pack", author = "Augusto Micheli Debard" },
+	{ id = 103598272406169, name = "Scaffold Small Low Railing.Gltf", topic = "", textured = false, meshes = 1, pack = "(Legacy) KayKit - Dungeon Pack", author = "Kay Lousberg" },
 	{ id = 104285640237364, name = "Eggwhite", topic = "", textured = true, meshes = 1, pack = "Food & Kitchen Props", author = "styloo" },
 	{ id = 107764022231063, name = "Hex Forest Watera Empty.Gltf", topic = "", textured = false, meshes = 1, pack = "(Legacy) KayKit - Medieval Builder Pack", author = "Kay Lousberg" },
 	{ id = 110649278293582, name = "Principalofficewallsfloor", topic = "", textured = true, meshes = 1, pack = "School Classrooms Asset Pack", author = "styloo" },
 	{ id = 114202750807815, name = "Gems", topic = "", textured = false, meshes = 1, pack = "Dungeon Asset Pack", author = "styloo" },
 	{ id = 114400167687375, name = "Holder", topic = "", textured = false, meshes = 1, pack = "School Classrooms Asset Pack", author = "styloo" },
+	{ id = 114645567765432, name = "Poppy2", topic = "", textured = false, meshes = 1, pack = "Lowpoly  plant pack Godot", author = "Niwl Games" },
 	{ id = 117439952752745, name = "Hex Forest Waterb Empty.Gltf", topic = "", textured = false, meshes = 1, pack = "(Legacy) KayKit - Medieval Builder Pack", author = "Kay Lousberg" },
+	{ id = 120961494345989, name = "Stump 01", topic = "", textured = false, meshes = 1, pack = "Titan's Packs: Floral Green", author = "Titan's Tracks" },
 	{ id = 123248205309096, name = "Workbench Drawers", topic = "", textured = false, meshes = 1, pack = "Fantasy Props MegaKit", author = "Quaternius" },
 	{ id = 124030229197343, name = "Bricksmoker", topic = "", textured = false, meshes = 1, pack = "Low Poly Food Pack", author = "Felipe Greboge" },
 	{ id = 124640687484549, name = "Square Forest.Gltf", topic = "", textured = false, meshes = 1, pack = "(Legacy) KayKit - Medieval Builder Pack", author = "Kay Lousberg" },
+	{ id = 126162046527632, name = "M3D Fern 1", topic = "", textured = false, meshes = 1, pack = "Lowpoly  plant pack Godot", author = "Niwl Games" },
 	{ id = 126354115274215, name = "Dish Petridish", topic = "", textured = true, meshes = 2, pack = "Lab Assets", author = "jamesdev" },
 	{ id = 127838829637367, name = "Clamp Ring Clamp", topic = "", textured = true, meshes = 2, pack = "Lab Assets", author = "jamesdev" },
 	{ id = 132338291375058, name = "Mailbox", topic = "", textured = true, meshes = 3, pack = "COZY FARM", author = "styloo" },
 	{ id = 135269801877927, name = "Hex Forest.Gltf", topic = "", textured = false, meshes = 1, pack = "(Legacy) KayKit - Medieval Builder Pack", author = "Kay Lousberg" },
 	{ id = 136080024714190, name = "Carpet", topic = "", textured = false, meshes = 1, pack = "Furniture Asset Pack 3D - Free", author = "Aline" },
+	{ id = 136533057225352, name = "Stump 04", topic = "", textured = false, meshes = 1, pack = "Titan's Packs: Floral Green", author = "Titan's Tracks" },
 	{ id = 137106712751355, name = "Cauliflower", topic = "", textured = false, meshes = 1, pack = "Low Poly Food Pack", author = "Felipe Greboge" },
 	{ id = 137182996556036, name = "Eggplant", topic = "", textured = true, meshes = 1, pack = "COZY FARM", author = "styloo" },
 	{ id = 138297128608822, name = "Scaffold Small Low Long.Gltf", topic = "", textured = false, meshes = 1, pack = "(Legacy) KayKit - Dungeon Pack", author = "Kay Lousberg" },
+	{ id = 139441283816490, name = "Axe Common.Gltf", topic = "", textured = false, meshes = 2, pack = "(Legacy) KayKit - Dungeon Pack", author = "Kay Lousberg" },
 	{ id = 139968300215666, name = "Floor Tile Carpet Blue", topic = "", textured = true, meshes = 1, pack = "Molten Maps - SciFi Assets Pack", author = "Moltenbolt" },
 	{ id = 71591293676571, name = "Gems 002", topic = "", textured = false, meshes = 1, pack = "Dungeon Asset Pack", author = "styloo" },
+	{ id = 71733053733950, name = "Axe", topic = "", textured = false, meshes = 2, pack = "Creatus - Pirate Pack", author = "Creatus" },
+	{ id = 72118456050693, name = "M3D Fern 2", topic = "", textured = false, meshes = 1, pack = "Lowpoly  plant pack Godot", author = "Niwl Games" },
+	{ id = 72628364352541, name = "Axe Uncommon.Gltf", topic = "", textured = false, meshes = 3, pack = "(Legacy) KayKit - Dungeon Pack", author = "Kay Lousberg" },
+	{ id = 76564400729841, name = "M3D Pine", topic = "", textured = false, meshes = 2, pack = "Lowpoly  plant pack Godot", author = "Niwl Games" },
 	{ id = 76810637925154, name = "Scaffold Small Low.Gltf", topic = "", textured = false, meshes = 1, pack = "(Legacy) KayKit - Dungeon Pack", author = "Kay Lousberg" },
+	{ id = 77324422261321, name = "M3D Poppy 1", topic = "", textured = false, meshes = 1, pack = "Lowpoly  plant pack Godot", author = "Niwl Games" },
 	{ id = 78075353491258, name = "Sandcastle A", topic = "", textured = false, meshes = 1, pack = "Tiny Treats - Fun Playground set", author = "Tiny Treats" },
+	{ id = 80172406242930, name = "Axe", topic = "", textured = false, meshes = 1, pack = "PSX Small Tools Pack", author = "Amos" },
+	{ id = 86073157953131, name = "Axe 01 001", topic = "", textured = true, meshes = 1, pack = "RPG Weapons - 3D Asset Pack", author = "Binbun" },
+	{ id = 86735262173375, name = "Hatchet", topic = "", textured = false, meshes = 4, pack = "Fantasy Pawn Shape Character Pack v2", author = "TheRulerMeasure" },
+	{ id = 87199535668602, name = "Stump 02", topic = "", textured = false, meshes = 1, pack = "Titan's Packs: Floral Green", author = "Titan's Tracks" },
 	{ id = 90301466423392, name = "Scaffold Stairs.Gltf", topic = "", textured = false, meshes = 1, pack = "(Legacy) KayKit - Dungeon Pack", author = "Kay Lousberg" },
 	{ id = 90787727981074, name = "Basket Eggplants", topic = "", textured = true, meshes = 1, pack = "PSX style going medieval", author = "valsekamerplant" },
 	{ id = 94250177067053, name = "Gems 001", topic = "", textured = false, meshes = 1, pack = "Dungeon Asset Pack", author = "styloo" },
+	{ id = 94262648292381, name = "Stump 05", topic = "", textured = false, meshes = 1, pack = "Titan's Packs: Floral Green", author = "Titan's Tracks" },
 	{ id = 95789682363124, name = "Bottle Micropipet", topic = "", textured = true, meshes = 1, pack = "Lab Assets", author = "jamesdev" },
+	{ id = 97246536651908, name = "Scaffold Small Medium Railing.Gltf", topic = "", textured = false, meshes = 1, pack = "(Legacy) KayKit - Dungeon Pack", author = "Kay Lousberg" },
 	{ id = 99204982004343, name = "Ppe Fire Extinguisher Clamp", topic = "", textured = true, meshes = 2, pack = "Lab Assets", author = "jamesdev" },
 	{ id = 75783559395113, name = "Altar", topic = "altar", textured = true, meshes = 1, pack = "Ancient Ruins Assset Pack", author = "Makovice" },
 	{ id = 100775947798200, name = "Pizza Box Close", topic = "ammo box", textured = false, meshes = 1, pack = "PSX Kitchen Props Pack", author = "Nicowlas" },
@@ -125,6 +144,7 @@ ItchAssets.models = ({
 	{ id = 113376641270691, name = "Barreldark.Gltf", topic = "barrel", textured = false, meshes = 3, pack = "(Legacy) KayKit - Dungeon Pack", author = "Kay Lousberg" },
 	{ id = 115315369001733, name = "Barrel Open Small", topic = "barrel", textured = true, meshes = 2, pack = "PSX style going medieval", author = "valsekamerplant" },
 	{ id = 121284098633437, name = "Barrel Lid Small Alt2", topic = "barrel", textured = true, meshes = 2, pack = "PSX style going medieval", author = "valsekamerplant" },
+	{ id = 122675866898779, name = "Barrel", topic = "barrel", textured = false, meshes = 1, pack = "Low Poly Food Pack", author = "Felipe Greboge" },
 	{ id = 123221050743324, name = "Barrel Lid Small", topic = "barrel", textured = true, meshes = 1, pack = "PSX style going medieval", author = "valsekamerplant" },
 	{ id = 139775482270150, name = "Barrel Eggplant", topic = "barrel", textured = true, meshes = 3, pack = "PSX style going medieval", author = "valsekamerplant" },
 	{ id = 139878751950371, name = "Barrel Lid Small", topic = "barrel", textured = false, meshes = 1, pack = "PSX style going medieval", author = "valsekamerplant" },
@@ -164,6 +184,7 @@ ItchAssets.models = ({
 	{ id = 113036358635427, name = "Bench 001", topic = "bench", textured = true, meshes = 1, pack = "Village Asset Pack", author = "styloo" },
 	{ id = 119333307910179, name = "Bench01", topic = "bench", textured = false, meshes = 1, pack = "Retro Modular Hedge Maze", author = "Elegant Crow" },
 	{ id = 125463610729330, name = "Bench", topic = "bench", textured = false, meshes = 1, pack = "KayKit : City Builder Bits", author = "Kay Lousberg" },
+	{ id = 131253342749966, name = "Bench02", topic = "bench", textured = false, meshes = 1, pack = "Low Poly Food Pack", author = "Felipe Greboge" },
 	{ id = 133455360892971, name = "Busstop Bench Long", topic = "bench", textured = true, meshes = 1, pack = "PSX style urban stacked pack", author = "valsekamerplant" },
 	{ id = 137776975166505, name = "Benchlittle", topic = "bench", textured = true, meshes = 1, pack = "COZY FARM", author = "styloo" },
 	{ id = 138294279813627, name = "Bench.Gltf", topic = "bench", textured = false, meshes = 1, pack = "(Legacy) KayKit - Dungeon Pack", author = "Kay Lousberg" },
@@ -176,6 +197,7 @@ ItchAssets.models = ({
 	{ id = 84078900227564, name = "Bench02", topic = "bench", textured = false, meshes = 1, pack = "Low Poly Food Pack", author = "Felipe Greboge" },
 	{ id = 92581769446966, name = "Bench Decorated", topic = "bench", textured = false, meshes = 1, pack = "KayKit : Halloween Bits", author = "Kay Lousberg" },
 	{ id = 93166016778266, name = "Benchchair", topic = "bench", textured = true, meshes = 1, pack = "Village Asset Pack", author = "styloo" },
+	{ id = 95298842807472, name = "Bench", topic = "bench", textured = false, meshes = 1, pack = "Low Poly Food Pack", author = "Felipe Greboge" },
 	{ id = 99703837564747, name = "Busstop Clean Bench", topic = "bench", textured = true, meshes = 1, pack = "PSX style urban stacked pack", author = "valsekamerplant" },
 	{ id = 88422067040072, name = "Speaker Bookshelf", topic = "bookshelf", textured = false, meshes = 5, pack = "Office low poly pack", author = "MrEliptik" },
 	{ id = 100489335449588, name = "Bridge Support Alt", topic = "bridge", textured = true, meshes = 1, pack = "PSX style urban stacked pack", author = "valsekamerplant" },
@@ -232,11 +254,14 @@ ItchAssets.models = ({
 	{ id = 127246598623362, name = "Bushesportalgreen", topic = "bush", textured = true, meshes = 1, pack = "COZY FARM", author = "styloo" },
 	{ id = 128881301443037, name = "Grass Bush", topic = "bush", textured = false, meshes = 1, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
 	{ id = 128930893353523, name = "Bushescubeyellow", topic = "bush", textured = true, meshes = 1, pack = "COZY FARM", author = "styloo" },
+	{ id = 131868780364712, name = "Bush Connector High Half End Dead", topic = "bush", textured = true, meshes = 1, pack = "PSX style modular hedges", author = "valsekamerplant" },
 	{ id = 133419189090987, name = "Bushescubegreen", topic = "bush", textured = true, meshes = 1, pack = "COZY FARM", author = "styloo" },
 	{ id = 133891079583222, name = "Bush01", topic = "bush", textured = false, meshes = 1, pack = "Retro PSX Style Tree Pack", author = "Elegant Crow" },
 	{ id = 134535299901766, name = "Bush03", topic = "bush", textured = false, meshes = 1, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
 	{ id = 135472615927196, name = "Bush Overgrown Dead", topic = "bush", textured = true, meshes = 1, pack = "PSX style modular hedges", author = "valsekamerplant" },
+	{ id = 136166219681544, name = "Bush Tall Half Dead", topic = "bush", textured = true, meshes = 1, pack = "PSX style modular hedges", author = "valsekamerplant" },
 	{ id = 137330499884014, name = "Bush Tall Dead", topic = "bush", textured = true, meshes = 1, pack = "PSX style modular hedges", author = "valsekamerplant" },
+	{ id = 139530376749435, name = "Bush Connector Straight Dead", topic = "bush", textured = true, meshes = 1, pack = "PSX style modular hedges", author = "valsekamerplant" },
 	{ id = 140232723713653, name = "Bush Tall Full Overgrown Dead", topic = "bush", textured = true, meshes = 1, pack = "PSX style modular hedges", author = "valsekamerplant" },
 	{ id = 71029714490970, name = "Bush04 Winter", topic = "bush", textured = false, meshes = 1, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
 	{ id = 73005930044936, name = "Bush 2", topic = "bush", textured = false, meshes = 1, pack = "Lowpoly  plant pack Godot", author = "Niwl Games" },
@@ -252,6 +277,7 @@ ItchAssets.models = ({
 	{ id = 83317695065243, name = "Bush05", topic = "bush", textured = false, meshes = 1, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
 	{ id = 84656512226597, name = "M3D Bush 2", topic = "bush", textured = false, meshes = 1, pack = "Lowpoly  plant pack Godot", author = "Niwl Games" },
 	{ id = 85004250529635, name = "Bush02 Winter", topic = "bush", textured = false, meshes = 1, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
+	{ id = 91336141240369, name = "Bush Long Half Dead", topic = "bush", textured = true, meshes = 1, pack = "PSX style modular hedges", author = "valsekamerplant" },
 	{ id = 92292099929885, name = "Bush02", topic = "bush", textured = false, meshes = 1, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
 	{ id = 93863750113124, name = "Bush Tall Overgrown Dead", topic = "bush", textured = true, meshes = 1, pack = "PSX style modular hedges", author = "valsekamerplant" },
 	{ id = 94135740234246, name = "Bush Tall Half Overgrown Dead", topic = "bush", textured = true, meshes = 1, pack = "PSX style modular hedges", author = "valsekamerplant" },
@@ -326,9 +352,12 @@ ItchAssets.models = ({
 	{ id = 136901282947195, name = "Crate Potatoes Angled", topic = "crate", textured = true, meshes = 1, pack = "PSX style going medieval", author = "valsekamerplant" },
 	{ id = 140126525986405, name = "Crate Apples", topic = "crate", textured = true, meshes = 1, pack = "PSX style going medieval", author = "valsekamerplant" },
 	{ id = 73443920544889, name = "Crate Potatoes", topic = "crate", textured = true, meshes = 1, pack = "PSX style going medieval", author = "valsekamerplant" },
+	{ id = 75927611265965, name = "Crate02", topic = "crate", textured = false, meshes = 1, pack = "Low Poly Food Pack", author = "Felipe Greboge" },
 	{ id = 79451956478736, name = "Crate Apples Angled", topic = "crate", textured = true, meshes = 1, pack = "PSX style going medieval", author = "valsekamerplant" },
 	{ id = 80490898316836, name = "Crate Angled", topic = "crate", textured = true, meshes = 1, pack = "PSX style going medieval", author = "valsekamerplant" },
+	{ id = 81369544817432, name = "Crate", topic = "crate", textured = false, meshes = 1, pack = "Low Poly Food Pack", author = "Felipe Greboge" },
 	{ id = 85287185700202, name = "Crate", topic = "crate", textured = true, meshes = 1, pack = "PSX style going medieval", author = "valsekamerplant" },
+	{ id = 87119495427450, name = "Crate03", topic = "crate", textured = false, meshes = 1, pack = "Low Poly Food Pack", author = "Felipe Greboge" },
 	{ id = 87119787380834, name = "Cratedark.Gltf", topic = "crate", textured = false, meshes = 2, pack = "(Legacy) KayKit - Dungeon Pack", author = "Kay Lousberg" },
 	{ id = 89811448112377, name = "Crate Eggplants", topic = "crate", textured = true, meshes = 1, pack = "PSX style going medieval", author = "valsekamerplant" },
 	{ id = 93952533305018, name = "Crate03", topic = "crate", textured = false, meshes = 1, pack = "Low Poly Food Pack", author = "Felipe Greboge" },
@@ -387,9 +416,13 @@ ItchAssets.models = ({
 	{ id = 109487860198391, name = "Fencebase", topic = "fence", textured = false, meshes = 1, pack = "CHICKEN ESCAPE ASSET PACK", author = "styloo" },
 	{ id = 126766098635623, name = "Fencemiddleclean", topic = "fence", textured = true, meshes = 1, pack = "COZY FARM", author = "styloo" },
 	{ id = 129506350231881, name = "Fenceend", topic = "fence", textured = false, meshes = 1, pack = "Village Asset Pack", author = "styloo" },
+	{ id = 81578796884889, name = "Fence.Gltf", topic = "fence", textured = false, meshes = 1, pack = "(Legacy) KayKit - Spooktober Seasonal Pack", author = "Kay Lousberg" },
 	{ id = 93508358363733, name = "Fence", topic = "fence", textured = false, meshes = 1, pack = "Village Asset Pack", author = "styloo" },
+	{ id = 98060225354281, name = "Fence", topic = "fence", textured = true, meshes = 1, pack = "COZY FARM", author = "styloo" },
+	{ id = 121302093476783, name = "Flower2", topic = "flower", textured = false, meshes = 1, pack = "Village Asset Pack", author = "styloo" },
 	{ id = 125918596914339, name = "Flower", topic = "flower", textured = true, meshes = 1, pack = "COZY FARM", author = "styloo" },
 	{ id = 130740051629055, name = "Flowerno", topic = "flower", textured = true, meshes = 1, pack = "COZY FARM", author = "styloo" },
+	{ id = 71602228581518, name = "Flower1", topic = "flower", textured = false, meshes = 1, pack = "Village Asset Pack", author = "styloo" },
 	{ id = 79174061182525, name = "Flowerstack", topic = "flower", textured = true, meshes = 1, pack = "COZY FARM", author = "styloo" },
 	{ id = 92654725195359, name = "M3D Sunflower", topic = "flower", textured = false, meshes = 1, pack = "Lowpoly  plant pack Godot", author = "Niwl Games" },
 	{ id = 94354275787686, name = "Wateringcanwflower", topic = "flower", textured = true, meshes = 1, pack = "COZY FARM", author = "styloo" },
@@ -400,8 +433,12 @@ ItchAssets.models = ({
 	{ id = 136246049894050, name = "Generator Pile Small", topic = "generator", textured = true, meshes = 3, pack = "Molten Maps - SciFi Assets Pack", author = "Moltenbolt" },
 	{ id = 96458252096717, name = "Generator Pile Chonky", topic = "generator", textured = true, meshes = 3, pack = "Molten Maps - SciFi Assets Pack", author = "Moltenbolt" },
 	{ id = 104341143876354, name = "Grass01", topic = "grass patch", textured = false, meshes = 1, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
+	{ id = 117452007647148, name = "Grass05", topic = "grass patch", textured = false, meshes = 1, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
 	{ id = 124190860539093, name = "Grass09", topic = "grass patch", textured = false, meshes = 1, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
 	{ id = 124368983781138, name = "Grass07", topic = "grass patch", textured = false, meshes = 1, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
+	{ id = 131571138231780, name = "Grass04", topic = "grass patch", textured = false, meshes = 1, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
+	{ id = 72835281401175, name = "Grass02", topic = "grass patch", textured = false, meshes = 1, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
+	{ id = 89850238790265, name = "Grass06", topic = "grass patch", textured = false, meshes = 1, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
 	{ id = 92898605820994, name = "Grass08", topic = "grass patch", textured = false, meshes = 1, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
 	{ id = 127242035238396, name = "Horrorkit Multitexture 2.0", topic = "horror house", textured = true, meshes = 16, pack = "Horror Player Item Pack", author = "3Dexter3D" },
 	{ id = 113178288015270, name = "House5", topic = "house", textured = false, meshes = 6, pack = "Retro House Pack", author = "Elegant Crow" },
@@ -414,10 +451,14 @@ ItchAssets.models = ({
 	{ id = 88222430573736, name = "Counter Counter 4 Shelves", topic = "kitchen counter", textured = true, meshes = 1, pack = "Lab Assets", author = "jamesdev" },
 	{ id = 116942861927480, name = "Barrierladder.Gltf", topic = "ladder", textured = false, meshes = 1, pack = "(Legacy) KayKit - Mini Game Variety Pack", author = "Kay Lousberg" },
 	{ id = 113630936739510, name = "Log 05", topic = "log", textured = false, meshes = 1, pack = "Titan's Packs: Floral Green", author = "Titan's Tracks" },
+	{ id = 115301704962951, name = "Log 01", topic = "log", textured = false, meshes = 1, pack = "Titan's Packs: Floral Green", author = "Titan's Tracks" },
 	{ id = 116513717656597, name = "Log 02", topic = "log", textured = false, meshes = 1, pack = "Titan's Packs: Floral Green", author = "Titan's Tracks" },
+	{ id = 118062762338138, name = "Log 02", topic = "log", textured = false, meshes = 1, pack = "Titan's Packs: Floral Green", author = "Titan's Tracks" },
 	{ id = 118650873617568, name = "Log 04", topic = "log", textured = false, meshes = 1, pack = "Titan's Packs: Floral Green", author = "Titan's Tracks" },
+	{ id = 125733014870851, name = "Log 05", topic = "log", textured = false, meshes = 1, pack = "Titan's Packs: Floral Green", author = "Titan's Tracks" },
 	{ id = 137036255839227, name = "Log 01", topic = "log", textured = false, meshes = 1, pack = "Titan's Packs: Floral Green", author = "Titan's Tracks" },
 	{ id = 75060483896750, name = "Anvil Log", topic = "log", textured = false, meshes = 1, pack = "Fantasy Props MegaKit", author = "Quaternius" },
+	{ id = 94161571350839, name = "Log 04", topic = "log", textured = false, meshes = 1, pack = "Titan's Packs: Floral Green", author = "Titan's Tracks" },
 	{ id = 100120195565884, name = "Skeleton Staff Broken.Gltf", topic = "magic staff", textured = false, meshes = 3, pack = "(Legacy) KayKit - Character Pack : Skeletons", author = "Kay Lousberg" },
 	{ id = 118940338214950, name = "Staff Rare.Gltf", topic = "magic staff", textured = false, meshes = 3, pack = "(Legacy) KayKit - Dungeon Pack", author = "Kay Lousberg" },
 	{ id = 138773103102692, name = "Staff Uncommon.Gltf", topic = "magic staff", textured = false, meshes = 2, pack = "(Legacy) KayKit - Dungeon Pack", author = "Kay Lousberg" },
@@ -459,10 +500,15 @@ ItchAssets.models = ({
 	{ id = 110818682547297, name = "Road Square Barrier", topic = "road", textured = false, meshes = 1, pack = "City Roads GLB Pack - 72 Free CC0 3D Models", author = "Eclair Assets" },
 	{ id = 120890523313837, name = "Road Slant Barrier", topic = "road", textured = false, meshes = 1, pack = "City Roads GLB Pack - 72 Free CC0 3D Models", author = "Eclair Assets" },
 	{ id = 78515807192451, name = "Road End Barrier", topic = "road", textured = false, meshes = 1, pack = "City Roads GLB Pack - 72 Free CC0 3D Models", author = "Eclair Assets" },
+	{ id = 78599893626321, name = "Square Rock Roadb.Gltf", topic = "road", textured = false, meshes = 2, pack = "(Legacy) KayKit - Medieval Builder Pack", author = "Kay Lousberg" },
 	{ id = 109857123091273, name = "Hex Rock Waterb Empty.Gltf", topic = "rock", textured = false, meshes = 1, pack = "(Legacy) KayKit - Medieval Builder Pack", author = "Kay Lousberg" },
 	{ id = 115160694637776, name = "Hex Rock Watera Empty.Gltf", topic = "rock", textured = false, meshes = 1, pack = "(Legacy) KayKit - Medieval Builder Pack", author = "Kay Lousberg" },
+	{ id = 138613226898792, name = "Square Rock Detail.Gltf", topic = "rock", textured = false, meshes = 2, pack = "(Legacy) KayKit - Medieval Builder Pack", author = "Kay Lousberg" },
 	{ id = 140556093243817, name = "Square Rock.Gltf", topic = "rock", textured = false, meshes = 1, pack = "(Legacy) KayKit - Medieval Builder Pack", author = "Kay Lousberg" },
 	{ id = 71686552394059, name = "Hex Rock.Gltf", topic = "rock", textured = false, meshes = 1, pack = "(Legacy) KayKit - Medieval Builder Pack", author = "Kay Lousberg" },
+	{ id = 82099760401030, name = "Square Rock Waterstraight Empty.Gltf", topic = "rock", textured = false, meshes = 2, pack = "(Legacy) KayKit - Medieval Builder Pack", author = "Kay Lousberg" },
+	{ id = 96035256888103, name = "Hex Rock Waterb.Gltf", topic = "rock", textured = false, meshes = 2, pack = "(Legacy) KayKit - Medieval Builder Pack", author = "Kay Lousberg" },
+	{ id = 98766415149341, name = "Rock2", topic = "rock", textured = false, meshes = 1, pack = "Creatus - Pirate Pack", author = "Creatus" },
 	{ id = 129396334547874, name = "Rug", topic = "rug", textured = false, meshes = 1, pack = "Furniture Asset Pack 3D - Free", author = "Aline" },
 	{ id = 103458929748517, name = "Goblin Rusty Shiv", topic = "rusty door", textured = true, meshes = 1, pack = "LOWPO: Goblin Assets – Low Poly Fantasy 3D Assets for Games", author = "Standout 7" },
 	{ id = 111991161341371, name = "Shield Round", topic = "shield", textured = false, meshes = 2, pack = "Fantasy Pawn Shape Character Pack v2", author = "TheRulerMeasure" },
@@ -501,9 +547,31 @@ ItchAssets.models = ({
 	{ id = 136520274096129, name = "Chest Rare.Gltf", topic = "treasure chest", textured = false, meshes = 2, pack = "(Legacy) KayKit - Dungeon Pack", author = "Kay Lousberg" },
 	{ id = 139448899605588, name = "Chesttop Common Empty.Gltf", topic = "treasure chest", textured = false, meshes = 2, pack = "(Legacy) KayKit - Dungeon Pack", author = "Kay Lousberg" },
 	{ id = 85968769200009, name = "Chest", topic = "treasure chest", textured = false, meshes = 2, pack = "Mini Dungeon", author = "Kenney (Assets)" },
+	{ id = 103118223758330, name = "Tree04", topic = "tree", textured = false, meshes = 2, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
+	{ id = 106847246892770, name = "Tree", topic = "tree", textured = true, meshes = 1, pack = "Village Asset Pack", author = "styloo" },
+	{ id = 107515147586079, name = "Birch Tree 3", topic = "tree", textured = false, meshes = 2, pack = "Lowpoly  plant pack Godot", author = "Niwl Games" },
+	{ id = 108426925391729, name = "Tree Desert.Gltf", topic = "tree", textured = false, meshes = 1, pack = "(Legacy) KayKit - Mini Game Variety Pack", author = "Kay Lousberg" },
 	{ id = 109573179148967, name = "Detail Treea.Gltf", topic = "tree", textured = false, meshes = 2, pack = "(Legacy) KayKit - Medieval Builder Pack", author = "Kay Lousberg" },
+	{ id = 111598666746773, name = "Birch Tree 1", topic = "tree", textured = false, meshes = 2, pack = "Lowpoly  plant pack Godot", author = "Niwl Games" },
+	{ id = 115572046102720, name = "Tree01", topic = "tree", textured = false, meshes = 2, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
+	{ id = 117140963845056, name = "Tree05", topic = "tree", textured = false, meshes = 2, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
 	{ id = 118529965001715, name = "Treeb Graveyard.Gltf", topic = "tree", textured = false, meshes = 1, pack = "(Legacy) KayKit - Spooktober Seasonal Pack", author = "Kay Lousberg" },
+	{ id = 122797048415351, name = "Tree07", topic = "tree", textured = false, meshes = 2, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
+	{ id = 125564927414164, name = "Birch Tree 2", topic = "tree", textured = false, meshes = 2, pack = "Lowpoly  plant pack Godot", author = "Niwl Games" },
+	{ id = 127089263202884, name = "Birch Tree 6", topic = "tree", textured = false, meshes = 2, pack = "Lowpoly  plant pack Godot", author = "Niwl Games" },
+	{ id = 129537762392405, name = "Tree02", topic = "tree", textured = false, meshes = 2, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
+	{ id = 129828771252604, name = "Tree 05", topic = "tree", textured = false, meshes = 1, pack = "Titan's Packs: Floral Green", author = "Titan's Tracks" },
 	{ id = 134038325186781, name = "Treed Graveyard.Gltf", topic = "tree", textured = false, meshes = 1, pack = "(Legacy) KayKit - Spooktober Seasonal Pack", author = "Kay Lousberg" },
+	{ id = 140568400837708, name = "Birch Tree 4", topic = "tree", textured = false, meshes = 2, pack = "Lowpoly  plant pack Godot", author = "Niwl Games" },
+	{ id = 71973165859498, name = "Tree 02", topic = "tree", textured = false, meshes = 1, pack = "Titan's Packs: Floral Green", author = "Titan's Tracks" },
+	{ id = 73380086826768, name = "Tree 01", topic = "tree", textured = false, meshes = 1, pack = "Titan's Packs: Floral Green", author = "Titan's Tracks" },
+	{ id = 79075379454406, name = "Tree06", topic = "tree", textured = false, meshes = 2, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
+	{ id = 80619356273817, name = "Tree03", topic = "tree", textured = false, meshes = 2, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
+	{ id = 81551430507321, name = "Tree 001", topic = "tree", textured = true, meshes = 1, pack = "Village Asset Pack", author = "styloo" },
+	{ id = 86965297734403, name = "Tree08", topic = "tree", textured = false, meshes = 2, pack = "Retro PSX Nature Pack", author = "Elegant Crow" },
+	{ id = 90278178286973, name = "Tree Forest.Gltf", topic = "tree", textured = false, meshes = 2, pack = "(Legacy) KayKit - Mini Game Variety Pack", author = "Kay Lousberg" },
+	{ id = 93820678065016, name = "Birch Tree 5", topic = "tree", textured = false, meshes = 2, pack = "Lowpoly  plant pack Godot", author = "Niwl Games" },
+	{ id = 99998633805764, name = "Tree 04", topic = "tree", textured = false, meshes = 1, pack = "Titan's Packs: Floral Green", author = "Titan's Tracks" },
 	{ id = 133167308091197, name = "Torchwall.Gltf", topic = "wall", textured = false, meshes = 4, pack = "(Legacy) KayKit - Dungeon Pack", author = "Kay Lousberg" },
 	{ id = 72267355822455, name = "Wall Clock", topic = "wall", textured = true, meshes = 1, pack = "PSX style office pack", author = "valsekamerplant" },
 	{ id = 80410723819374, name = "Wall Half", topic = "wall", textured = false, meshes = 1, pack = "Mini Dungeon", author = "Kenney (Assets)" },
@@ -578,6 +646,36 @@ function ItchAssets.pick(topic: string, seed: number, texturedOnly: boolean?): n
 		list = coloured
 	end
 	return list[(math.floor(math.abs(seed)) % #list) + 1].id
+end
+
+--[[
+	A *named* model from a topic, for when any-of-them will not do.
+
+	`pick` is the right call for scenery: a seed, a topic, and whichever tree
+	comes back is a tree. It is the wrong call the moment a specific model has
+	to mean something -- six tree species whose whole progression is "this one
+	is rarer than that one" cannot be six seeds into the same list, because
+	the player has no way to tell which they got.
+
+	Matches on a word in the model's name, so a game asks for "birch" and gets
+	the birch. Returns nil rather than a substitute: a caller that wanted a
+	specific thing is better served by knowing it is absent than by silently
+	receiving something else.
+]]
+function ItchAssets.named(topic: string, needle: string,
+                         texturedOnly: boolean?): number?
+	local list = byTopic[topic]
+	if not list or needle == "" then
+		return nil
+	end
+	local wanted = string.lower(needle)
+	for _, entry in list do
+		if (not texturedOnly or entry.textured)
+				and string.find(string.lower(entry.name), wanted, 1, true) then
+			return entry.id
+		end
+	end
+	return nil
 end
 
 function ItchAssets.describe(): { [string]: any }

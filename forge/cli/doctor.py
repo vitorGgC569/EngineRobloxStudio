@@ -647,23 +647,44 @@ def check_unknown_globals(root: Path, findings: list[Finding]) -> None:
         )
         return
 
-    sources = _sources(root)
+    #[[
+    #   The engine is analysed alongside the game, every run.
+    #
+    #   This check was written for exactly one failure -- a name that resolves
+    #   to nil at runtime -- and then pointed only at `games/<name>`, so the
+    #   232 modules every game depends on were never once passed through it.
+    #   `ItchIcons.frame` read a `byRole` table that no line ever built; it
+    #   killed the client on the first panel of a brand-new game, and the
+    #   analyzer named it in one second the moment it was finally shown the
+    #   file. A check aimed away from most of the code is not a check.
+    #
+    #   Engine findings surface in every game's report on purpose: a nil global
+    #   in `forge/luau` breaks all of them, and attributing it to whichever
+    #   game happened to run first is how it goes unfixed.
+    #]]
+    sources = _sources(root) + _sources(repo / "forge" / "luau")
     if not sources:
         return
 
+    #: Analysed in batches. Windows caps a command line, and one over-long
+    #: invocation fails as a missing-file error, which reads as "no analyzer"
+    #: and quietly disables the whole check.
+    output: list[str] = []
     try:
-        result = subprocess.run(
-            [str(analyzer)] + [str(p) for p in sources],
-            capture_output=True,
-            text=True,
-            timeout=180,
-            cwd=repo,
-        )
+        for start in range(0, len(sources), 40):
+            result = subprocess.run(
+                [str(analyzer)] + [str(p) for p in sources[start:start + 40]],
+                capture_output=True,
+                text=True,
+                timeout=180,
+                cwd=repo,
+            )
+            output.append(result.stdout + result.stderr)
     except Exception as exc:  # noqa: BLE001
         findings.append(Finding("note", str(root), 0, f"luau-analyze failed: {exc}"))
         return
 
-    for line in (result.stdout + result.stderr).splitlines():
+    for line in "".join(output).splitlines():
         match = _UNKNOWN_GLOBAL.match(line.strip())
         if not match:
             continue

@@ -1139,6 +1139,18 @@ end
 local byFrame: { [string]: Entry } = {}
 
 --[[
+	And every candidate behind the winner.
+
+	`ItchIcons.frame` ranks art against the box it has to fill, and that cannot
+	be done from a single pre-chosen entry: the frame that is best in general
+	is routinely wrong for a 48-pixel cell. Keeping only the winner is what
+	this did, and `frame` read a `byRole` that no line ever wrote -- a nil
+	global, indexed on the first panel any game drew, which killed the whole
+	client script before it created one element.
+]]
+local byRole: { [string]: { Entry } } = {}
+
+--[[
 	Solid centre first, then the largest.
 
 	Size is not a cost question here, which is what the publisher assumed when
@@ -1164,6 +1176,14 @@ local byFrame: { [string]: Entry } = {}
 ]]
 local PREFER_DARK = true
 
+--: The roles that are surfaces rather than pictures. A game sets
+--: `ItchIcons.surfaceTint` to its panel colour and these stop arguing with it.
+local CONTAINER_ROLES: { [string]: boolean } = {
+	panel = true, bar = true, slot = true, tab = true, tooltip = true,
+	window = true, card = true,
+}
+ItchIcons.surfaceTint = nil :: Color3?
+
 local function better(candidate: Entry, held: Entry?): boolean
 	if not held then
 		return true
@@ -1178,10 +1198,23 @@ local function better(candidate: Entry, held: Entry?): boolean
 end
 
 for _, entry in ItchIcons.entries do
-	if entry.kind == "frame" and entry.token
-			and better(entry, byFrame[entry.token]) then
-		byFrame[entry.token] = entry
+	if entry.kind == "frame" and entry.token then
+		local pool = byRole[entry.token]
+		if not pool then
+			pool = {}
+			byRole[entry.token] = pool
+		end
+		table.insert(pool, entry)
+		if better(entry, byFrame[entry.token]) then
+			byFrame[entry.token] = entry
+		end
 	end
+end
+
+--: Best-first, so a caller that cannot say how big its box is still gets the
+--: pick `better` would have made, and one that can starts from a sorted pool.
+for _, pool in byRole do
+	table.sort(pool, better)
 end
 
 --[[
@@ -1224,6 +1257,26 @@ function ItchIcons.frame(role: string, state: string?, target: Vector2?): Entry?
 			--: Cannot fit two corners across the box; it will draw as a smear.
 			score -= 1000
 		end
+		--[[
+			Fit is the tie-breaker, not the whole question.
+
+			This ranked by border alone the moment a caller offered a target
+			size, which threw away the two properties `better` had already
+			established matter more: whether the art has a middle at all, and
+			whether it belongs to the same theme as the text that will sit on
+			it. A seed panel came out pale green with grey labels on it --
+			perfectly sized, unreadable -- because a light overlay frame
+			happened to have the best-proportioned border in the pool.
+
+			So opacity and theme are weighted above fit, and fit decides
+			between the candidates that pass both.
+		]]
+		if entry.opaque ~= true then
+			score -= 400
+		end
+		if (entry.dark == true) ~= PREFER_DARK then
+			score -= 200
+		end
 		if score > bestScore then
 			best, bestScore = entry, score
 		end
@@ -1258,8 +1311,24 @@ function ItchIcons.skin(label: any, role: string, state: string?,
 	label.SliceCenter = Rect.new(
 		entry.sliceLeft or 0, entry.sliceTop or 0,
 		entry.sliceRight or entry.width, entry.sliceBottom or entry.height)
-	--: The art carries its own colour; tinting it white leaves it as drawn.
-	label.ImageColor3 = Color3.new(1, 1, 1)
+	--[[
+		A surface takes the theme's colour; an icon keeps its own.
+
+		Tinting white leaves the art exactly as drawn, which is right for a
+		glyph -- the drawing *is* the content. It is wrong for a panel or a
+		bar, where the drawing is a texture and the colour is the theme's to
+		decide: a seed panel came out pale green with the game's grey labels on
+		it, every label correctly using `UI.theme`, for a surface that had
+		quietly stopped being dark.
+
+		`ItchIcons.surfaceTint` is what a caller sets to say "this is a
+		container, not a picture". Nine-slice art is nearly always flat colour
+		plus a border, so multiplying it lands on the tint and keeps the
+		border, the bevel and the corner ornaments intact.
+	]]
+	local tint = ItchIcons.surfaceTint
+	label.ImageColor3 = if tint and CONTAINER_ROLES[role] then tint
+		else Color3.new(1, 1, 1)
 	label.BackgroundTransparency = 1
 	return true, entry.opaque == true, entry.dark == true
 end

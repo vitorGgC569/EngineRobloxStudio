@@ -51,6 +51,11 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
 
+#: The name a game publishes its panel-opener under, so the gate never has to
+#: guess. Any game that wants its interface photographed creates a
+#: BindableFunction with exactly this name in ReplicatedStorage.
+FORGE_HOOK = "ForgeUIHook"
+
 REPO = Path(__file__).resolve().parents[2]
 SHOTS = REPO / "artifacts" / "playtest"
 RECEIPTS = REPO / "artifacts" / "playtest"
@@ -190,8 +195,14 @@ def _gui_nodes(bridge: Any) -> list[dict[str, Any]]:
         f"client.gui_tree answered with keys {sorted(tree)} and no element list")
 
 
-def inspect_ui(bridge: Any, report: Report) -> None:
-    """What the client actually built, measured through the client."""
+def inspect_ui(bridge: Any, report: Report, where: str = "") -> None:
+    """What the client actually built, measured through the client.
+
+    `where` names the screen being measured. Without it every finding reads as
+    if it were on the HUD, and the panels -- which is where the small controls
+    actually are -- had no way to say so.
+    """
+    tag = f" in the {where} panel" if where else ""
     try:
         nodes = _gui_nodes(bridge)
     except Exception as error:  # noqa: BLE001
@@ -203,17 +214,17 @@ def inspect_ui(bridge: Any, report: Report) -> None:
             if "PlayerGui" in n.get("path", "")
             and not any(word in n.get("path", "")
                         for word in ("Freecam", "RQEClient", "ForgeToasts"))]
-    report.measured["elements"] = len(ours)
+    report.measured["elements" if not where else f"elements:{where}"] = len(ours)
 
     if len(ours) < 3:
-        report.add("error", "the game drew almost no interface",
+        report.add("error", f"the game drew almost no interface{tag}",
                    f"{len(ours)} elements under PlayerGui. A LocalScript that "
                    "dies on its first line leaves exactly this.")
         return
 
     offscreen = [n for n in ours if n.get("offScreen")]
     if offscreen:
-        report.add("error", f"{len(offscreen)} elements are off-screen",
+        report.add("error", f"{len(offscreen)} elements are off-screen{tag}",
                    ", ".join(n.get("path", "").split(".")[-1]
                              for n in offscreen[:6]))
 
@@ -224,11 +235,11 @@ def inspect_ui(bridge: Any, report: Report) -> None:
         size = node.get("absoluteSize") or [0, 0]
         if min(size) and min(size) < MIN_TOUCH:
             small.append((node.get("path", "").split(".")[-1], round(min(size))))
-    report.measured["buttons"] = sum(
+    report.measured["buttons" if not where else f"buttons:{where}"] = sum(
         1 for n in ours if n.get("className") in ("TextButton", "ImageButton"))
     if small:
         report.add("warning",
-                   f"{len(small)} touch targets are under {MIN_TOUCH}px",
+                   f"{len(small)} touch targets are under {MIN_TOUCH}px{tag}",
                    ", ".join(f"{name} {edge}px" for name, edge in small[:6]))
 
     #: A label with no text is a readout that never bound. This is the shape of
@@ -237,7 +248,7 @@ def inspect_ui(bridge: Any, report: Report) -> None:
              if n.get("className") in ("TextLabel", "TextButton")
              and n.get("text") == ""]
     if len(blank) > 2:
-        report.add("warning", f"{len(blank)} text elements are empty")
+        report.add("warning", f"{len(blank)} text elements are empty{tag}")
 
 
 def inspect_frame(path: Path, report: Report) -> None:
@@ -283,8 +294,7 @@ def run(game: str, wait: float = 9.0, panels: tuple[str, ...] = (),
     place = REPO / "games" / game / f"{game}.rbxlx"
     if not place.exists():
         report.add("error", "no built place", str(place))
-        write_receipt(game, place, report)
-    return report
+        return report
 
     bridge = _bridge()
     lifecycle.restart_for_bridge(place, REPO / ".tmp" / "studio-recovery",
@@ -318,15 +328,76 @@ def run(game: str, wait: float = 9.0, panels: tuple[str, ...] = (),
     #: Panels are opened through the game's own opener when it has one, because
     #: synthetic input is refused by Studio and screen-coordinate clicking
     #: breaks the moment anything moves.
+    #[[
+    #   A report that measured nothing has verified nothing.
+    #
+    #   An edit once dedented the early `return` out of its own `if`, so `run`
+    #   returned before touching Studio -- and the gate answered "nothing to
+    #   report", wrote a passing receipt, and would have waved a publish
+    #   through. A gate whose failure mode is silent approval is worse than no
+    #   gate, so the absence of measurements is itself a finding.
+    #]]
+    if not report.measured:
+        report.add("error", "the playtest measured nothing",
+                   "it never reached Studio; the run is not evidence of anything")
+
+    #[[
+    #   Find the hook by asking, not by guessing its capitalisation.
+    #
+    #   This built the path as `game.title() + "UI"`, which turns `carvewood`
+    #   into `CarvewoodUI` while the game had named it `CarveWoodUI`. One
+    #   capital, and the gate reported "could not open the seeds panel" for a
+    #   panel that opened perfectly -- a false negative on the single check
+    #   that exists to photograph the interface.
+    #
+    #   Python cannot know where a game puts the camel hump in its own name.
+    #   The DataModel can, so it is asked.
+    #]]
+    #[[
+    #   One name, the same in every game.
+    #
+    #   This built the path from `game.title() + "UI"`, which is a guess about
+    #   where a game puts the capital letters in its own name. It happened to
+    #   be right for `siegehold` and `overflow` and wrong for `carvewood`,
+    #   whose hook is `CarveWoodUI` -- so the gate reported "could not open the
+    #   seeds panel" for a panel that opened perfectly. A false negative on the
+    #   only check that photographs the interface is worse than no check: it
+    #   trains you to ignore the warning.
+    #
+    #   The hook is created by a LocalScript, so it exists only in the client's
+    #   DataModel and cannot be looked up from the server either. There is no
+    #   way to *find* it -- so it gets a fixed name instead, and the old guess
+    #   stays as a fallback for the games written before this one.
+    #]]
+    hooks = [f"ReplicatedStorage.{FORGE_HOOK}",
+             f"ReplicatedStorage.{game.title()}UI"]
+
     for panel in panels:
-        try:
-            bridge.call("client.invoke_bindable",
-                        {"path": f"ReplicatedStorage.{game.title()}UI",
-                         "argument": f"open:{panel}"}, timeout=45)
-            time.sleep(0.8)
-            report.shots.append(str(look.shoot(f"{game}-{panel}")))
-        except Exception as error:  # noqa: BLE001
+        last: Exception | None = None
+        for path in hooks:
+            try:
+                bridge.call("client.invoke_bindable",
+                            {"path": path,
+                             "argument": f"open:{panel}"}, timeout=45)
+                time.sleep(0.8)
+                report.shots.append(str(look.shoot(f"{game}-{panel}")))
+                #[[
+                #   Measured, not merely photographed.
+                #
+                #   This opened each panel, took a picture and moved on, so
+                #   every rule the gate enforces -- touch targets, off-screen
+                #   elements, empty labels -- applied only to the HUD. The
+                #   panels are where the small controls live: a 30px close
+                #   button and a row of 29px buy buttons sat in a shot this
+                #   gate had itself taken and called clean.
+                #]]
+                inspect_ui(bridge, report, where=panel)
+                last = None
+                break
+            except Exception as error:  # noqa: BLE001
+                last = error
+        if last is not None:
             report.add("warning", f"could not open the {panel} panel",
-                       str(error)[:160])
+                       f"tried {', '.join(hooks)} -- {str(last)[:110]}")
 
     return report

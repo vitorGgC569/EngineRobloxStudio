@@ -299,7 +299,21 @@ local cache: { [string]: string } = {}
 	Cached: this runs once per prop and a thousand-prop world would otherwise
 	walk the list a thousand times for the same dozen answers.
 ]]
-function Scale.classify(topic: string): string
+function Scale.classify(topic: string?): string
+	--[[
+		A missing topic is a caller who named an asset directly, not a bug
+		worth killing the world over.
+
+		This took `string.lower(nil)` and threw, which stopped a server
+		mid-way through planting a forest -- half a world, and a stack trace
+		pointing at the engine rather than at the spec that omitted a field.
+		An unknown size is a normal thing to not know; crashing is not a
+		reasonable answer to it.
+	]]
+	if topic == nil or topic == "" then
+		--: "prop", the same answer an unrecognised topic already gets.
+		return "prop"
+	end
 	local known = cache[topic]
 	if known then
 		return known

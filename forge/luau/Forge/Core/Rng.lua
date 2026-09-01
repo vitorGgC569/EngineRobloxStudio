@@ -110,7 +110,15 @@ function Rng.masterSeed(): number
 	return masterSeed
 end
 
-function Rng.stream(name: string): any
+--[[
+	Typed, so a wrong method name is a compile error rather than a crash.
+
+	This returned `any`, which switches every check off at the call site: a
+	world-dressing pass called `stream:integer(1, 6)` -- the method is `int` --
+	and `luau-analyze`, the doctor and the typechecker all passed it through to
+	be discovered by a server that stopped building the world halfway.
+]]
+function Rng.stream(name: string): Stream
 	local existing = streams[name]
 	if existing then
 		return existing
@@ -123,7 +131,7 @@ end
 
 -- Throwaway stream for a specific coordinate: same tile always rolls the same
 -- contents, without keeping any per-tile state.
-function Rng.at(name: string, x: number, y: number): any
+function Rng.at(name: string, x: number, y: number): Stream
 	local seed = deriveSeed(string.format("%s:%d:%d", name, math.floor(x), math.floor(y)), masterSeed)
 	return setmetatable({ _seed = seed, _r = Random.new(seed), name = name }, Stream)
 end
@@ -193,6 +201,8 @@ end
 	intent.
 ]]
 
+export type Stream = typeof(setmetatable(
+	{ _seed = 0, _r = Random.new(0), name = "" }, Stream))
 export type Generator = () -> number
 
 function Rng.xorshift(seed: number?): Generator

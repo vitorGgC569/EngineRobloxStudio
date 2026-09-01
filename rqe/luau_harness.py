@@ -235,6 +235,11 @@ end
 Require = function(name)
 	return __require(__token(name))
 end
+
+-- The shim's storage containers hand out tokens, and they are built before
+-- this line runs, so the constructor is handed over rather than left in a
+-- global -- `_G` is read-only here.
+__shim.useTokens(__token)
 """
 
 

@@ -810,7 +810,70 @@ local TweenService = {
 -- assumed.
 local AssetService = { __isInstance = true }
 
+--[[
+	Storage services, as containers that resolve to modules.
+
+	Absent until now, and their absence meant the harness could only run a
+	module that required *nothing shared* -- which in a Roblox codebase is
+	almost none of them. Every rules module that reads a config table starts
+	`require(ReplicatedStorage.Shared.Thing)` and was answered with "this
+	module is not portable", so the cheapest test in the repository was
+	unavailable to the code that most deserved it.
+
+	Indexing one yields whatever the prelude's token function yields, so
+	`ReplicatedStorage.Shared.Trees` resolves by leaf name exactly as
+	`script.Parent.Trees` already did.
+]]
+--: The prelude owns the token constructor and runs after this file, so it is
+--: handed in rather than reached for. `_G` is read-only in this runtime, which
+--: is the sort of thing only running it tells you.
+local tokenFactory: any = nil
+
+local function container(label)
+	--[[
+		Indexing a storage service hands out a module token, which is how
+		`require(ReplicatedStorage.Shared.Trees)` resolves under the harness's
+		flat namespace.
+
+		`WaitForChild` has to be exempt, because it is a *method* and the
+		blanket `__index` turned it into a token -- so every server module
+		written the ordinary way, `require(ReplicatedStorage:WaitForChild("Forge"))`,
+		died on "attempt to call a table value" and could not be simulated at
+		all. It resolves to the same token the dot form would give, which is
+		exactly right: waiting is a replication concern and nothing replicates
+		here.
+	]]
+	local methods = {
+		WaitForChild = function(_, key)
+			if tokenFactory == nil then
+				error("[harness] " .. label .. ":WaitForChild(" .. tostring(key)
+					.. ") ran before the prelude installed tokens", 2)
+			end
+			return tokenFactory(key)
+		end,
+		FindFirstChild = function(_, key)
+			return if tokenFactory then tokenFactory(key) else nil
+		end,
+	}
+	return setmetatable({ __isInstance = true, Name = label }, {
+		__index = function(_, key)
+			local method = methods[key]
+			if method then
+				return method
+			end
+			if tokenFactory == nil then
+				error("[harness] " .. label .. "." .. tostring(key)
+					.. " was indexed before the prelude installed tokens", 2)
+			end
+			return tokenFactory(key)
+		end,
+	})
+end
+
 local services = {
+	ReplicatedStorage = container("ReplicatedStorage"),
+	ServerScriptService = container("ServerScriptService"),
+	ServerStorage = container("ServerStorage"),
 	RunService = RunService,
 	AnalyticsService = AnalyticsService,
 	AssetService = AssetService,
@@ -925,6 +988,12 @@ shim.flushDelays = function()
 end
 shim.warn = function(...)
 	print("[warn]", ...)
+end
+
+--- Let the prelude install its token constructor, so the storage containers
+--- above can resolve `ReplicatedStorage.Shared.Thing` into a module.
+function shim.useTokens(factory)
+	tokenFactory = factory
 end
 
 --- Count instances of a class beneath a root, for structural assertions.

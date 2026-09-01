@@ -93,6 +93,38 @@ VARIANT_TAILS = (
 )
 
 
+#[[
+#   The other names a topic goes by in a filename.
+#
+#   A topic was only ever identified by the words in its own name, so `tree`
+#   matched a file called `tree` and nothing else. The inventory holds 26,191
+#   meshes, of which 222 are trees -- `pine01`, `birch-tree-2`, `spruce_1`,
+#   `oak_large` -- and three reached the catalogue. A game whose entire
+#   progression is unlocking rarer trees was built on three tree models
+#   because artists do not name files after taxonomies.
+#
+#   Only names that genuinely *are* the topic go here. `stump` and `trunk`
+#   are filed as logs rather than as trees on purpose: they are cut wood, and
+#   a stump placed at tree scale is a stump the size of a tree.
+#]]
+SYNONYMS: dict[str, tuple[str, ...]] = {
+    "tree": ("pine", "spruce", "birch", "oak", "maple", "willow", "fir",
+             "cedar", "conifer", "palm", "sapling", "poplar", "aspen"),
+    "log": ("stump", "trunk", "timber", "firewood", "logs", "lumber"),
+    "rock": ("stone", "boulder", "rubble"),
+    "bush": ("shrub", "hedge", "fern"),
+    "flower": ("tulip", "rose", "daisy", "sunflower", "poppy"),
+    "fence": ("railing", "picket", "palisade"),
+    "grass patch": ("grasspatch", "turf", "meadow"),
+    #: The swung tool. There are sixty axes in the inventory and no `axe`
+    #: topic; filing them here is what makes a woodcutting game able to hand
+    #: the player the thing it is named after.
+    "pickaxe": ("axe", "hatchet", "chopper"),
+    #: A closed container. Seeds arrive in these.
+    "crate": ("sack", "pouch", "burlap"),
+}
+
+
 def _topic_words() -> dict[str, tuple[str, ...]]:
     """Every topic, with the words that identify it in a filename."""
     out: dict[str, tuple[str, ...]] = {}
@@ -100,7 +132,8 @@ def _topic_words() -> dict[str, tuple[str, ...]]:
         for topic in topics:
             #: "storage tank" matches a file called `tank` or `storage`; the
             #: multi-word topics almost never appear whole in a filename.
-            out[topic] = tuple(w for w in topic.split() if len(w) > 2)
+            terms = tuple(w for w in topic.split() if len(w) > 2)
+            out[topic] = terms + SYNONYMS.get(topic, ())
     return out
 
 
@@ -813,6 +846,36 @@ function ItchAssets.pick(topic: string, seed: number, texturedOnly: boolean?): n
 	return list[(math.floor(math.abs(seed)) % #list) + 1].id
 end
 
+--[[
+	A *named* model from a topic, for when any-of-them will not do.
+
+	`pick` is the right call for scenery: a seed, a topic, and whichever tree
+	comes back is a tree. It is the wrong call the moment a specific model has
+	to mean something -- six tree species whose whole progression is "this one
+	is rarer than that one" cannot be six seeds into the same list, because
+	the player has no way to tell which they got.
+
+	Matches on a word in the model's name, so a game asks for "birch" and gets
+	the birch. Returns nil rather than a substitute: a caller that wanted a
+	specific thing is better served by knowing it is absent than by silently
+	receiving something else.
+]]
+function ItchAssets.named(topic: string, needle: string,
+                         texturedOnly: boolean?): number?
+	local list = byTopic[topic]
+	if not list or needle == "" then
+		return nil
+	end
+	local wanted = string.lower(needle)
+	for _, entry in list do
+		if (not texturedOnly or entry.textured)
+				and string.find(string.lower(entry.name), wanted, 1, true) then
+			return entry.id
+		end
+	end
+	return nil
+end
+
 function ItchAssets.describe(): { [string]: any }
 	local textured = 0
 	for _, entry in ItchAssets.models do
@@ -834,6 +897,86 @@ def _lua_str(value: Any) -> str:
 
 
 AUDIT = Path("artifacts/itch-texture-audit.json")
+
+
+def audit_textures(bridge: Any, ids: list[str] | None = None,
+                   audit: Path | None = None, batch: int = 25,
+                   progress: Any = print) -> dict[str, Any]:
+    """Load each published asset in Studio and count what is actually inside.
+
+    `textured` cannot be inferred from the upload. It was, once -- `.glb`
+    carries its images, therefore a GLB upload is textured -- and that guess
+    claimed 221 coloured models where Studio found 89. The file format only
+    says what was *sent*; what survived the import is a different question and
+    the only instrument that can answer it is Studio.
+
+    This existed as a paragraph of Luau pasted through the bridge by hand, run
+    once, which is why 56 newly published assets had no measurement at all and
+    would have been ranked below the grey ones they replaced. Now it is a
+    function, and it only visits ids it has not already measured.
+    """
+    path = Path(audit) if audit else AUDIT
+    book: dict[str, Any] = {}
+    if path.exists():
+        try:
+            book = json.loads(path.read_text(encoding="utf-8"))
+        except (OSError, json.JSONDecodeError):
+            book = {}
+
+    if ids is None:
+        records = {}
+        if PUBLISHED.exists():
+            records = json.loads(PUBLISHED.read_text(encoding="utf-8")).get("assets") or {}
+        ids = [str(v["assetId"]) for v in records.values() if v.get("assetId")]
+    todo = [i for i in ids if i not in book]
+    if not todo:
+        progress("every published asset is already measured")
+        return book
+
+    progress(f"measuring {len(todo)} assets in Studio")
+    for start in range(0, len(todo), batch):
+        chunk = todo[start:start + batch]
+        source = """
+local InsertService = game:GetService("InsertService")
+local out = {}
+for _, id in { %s } do
+    local ok, model = pcall(function()
+        return InsertService:LoadAsset(tonumber(id))
+    end)
+    if not ok or not model then
+        out[id] = { error = "load failed" }
+    else
+        local textures, meshes, surfaces, tinted = 0, 0, 0, 0
+        local name = model.Name
+        for _, d in model:GetDescendants() do
+            if d:IsA("MeshPart") then
+                meshes += 1
+                if d.TextureID ~= "" then textures += 1 end
+            elseif d:IsA("SpecialMesh") then
+                meshes += 1
+                if d.TextureId ~= "" then textures += 1 end
+            elseif d:IsA("Texture") or d:IsA("Decal") then
+                surfaces += 1
+            end
+        end
+        local first = model:GetChildren()[1]
+        out[id] = { textures = textures, meshes = meshes, surfaces = surfaces,
+                    tinted = tinted, name = first and first.Name or name }
+        model:Destroy()
+    end
+end
+return out
+""" % ", ".join(f'"{i}"' for i in chunk)
+        try:
+            answer = bridge.exec_luau(source, timeout=240).get("returned") or {}
+        except Exception as exc:  # noqa: BLE001
+            progress(f"  ! batch failed: {exc}")
+            continue
+        book.update(answer)
+        path.parent.mkdir(parents=True, exist_ok=True)
+        path.write_text(json.dumps(book, indent=1) + chr(10), encoding="utf-8")
+        progress(f"  {min(start + batch, len(todo))}/{len(todo)}")
+    return book
 
 
 def _measured(audit: Path | None = None) -> dict[str, Any]:

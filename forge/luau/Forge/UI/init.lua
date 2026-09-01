@@ -152,6 +152,16 @@ function UI.dress(image: any, role: string, state: string?,
 	if not book or not book.skin then
 		return false, false, false
 	end
+	--[[
+		Hand the catalogue the theme before asking it for a surface.
+
+		Set here rather than by each game, because the failure it prevents is
+		not a game's mistake: a panel skinned in whatever colour the art
+		happened to be, with correctly-themed labels drawn on top of it,
+		unreadable. The catalogue cannot know the theme and the game should not
+		have to remember to say it twice.
+	]]
+	book.surfaceTint = UI.theme.color.panel
 	local took, opaque, dark = book.skin(image, role, state, target)
 	return took == true, opaque == true, dark == true
 end

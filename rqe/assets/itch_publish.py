@@ -896,7 +896,16 @@ def _lua_str(value: Any) -> str:
     return '"' + str(value or "").replace("\\", "\\\\").replace('"', '\\"') + '"'
 
 
-AUDIT = Path("artifacts/itch-texture-audit.json")
+#[[
+#   The texture audit is a ledger, not an artifact.
+#
+#   It lived under `artifacts/`, which is gitignored, so a fresh clone
+#   had no measurements and `export_lua` fell back to inferring
+#   `textured` from the file extension -- the guess that claimed 221
+#   coloured models where Studio found 89. What Studio measured is an
+#   input to the catalogue and belongs beside the published ledger.
+#]]
+AUDIT = Path("forge/kits/itch-texture-audit.json")
 
 
 def audit_textures(bridge: Any, ids: list[str] | None = None,

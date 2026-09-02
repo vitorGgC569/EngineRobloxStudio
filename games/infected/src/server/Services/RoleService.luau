@@ -9,6 +9,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local GameConfig = require(Shared.GameConfig)
+local Apocalypse = require(Shared.Apocalypse)
 local PatientZero = require(Shared.PatientZero)
 
 export type Role = "SURVIVOR" | "PATIENT_ZERO" | "ZOMBIE" | "NONE"
@@ -292,6 +293,29 @@ function RoleService:convert(victim: Player, killer: Player?)
 	if role ~= "SURVIVOR" then
 		return -- already infected or not in round
 	end
+
+	--[[
+		A player who dies stays a player.
+
+		Being killed by the horde used to make you part of it, which was the
+		whole arc of the old game: you lost, you joined the other side, you
+		hunted your friends. In an apocalypse there is no other side to join --
+		you are dead, and in six seconds you are back with whatever you were
+		carrying gone.
+
+		This is the difference between a round you can be eliminated from and a
+		world you live in.
+	]]
+	if not Apocalypse.Rules.PatientZero then
+		local character = victim.Character
+		local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+		if humanoid and humanoid.Health > 0 then
+			humanoid.Health = 0
+		end
+		self._deps.onConversion(victim, killer)
+		return
+	end
+
 	self._roles[victim] = "ZOMBIE"
 
 	-- Survivor count reaches the round machine BEFORE any reward hooks: onConversion

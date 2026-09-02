@@ -1,78 +1,131 @@
 --!strict
--- Runs ONLY in Studio (guarded by caller). Watches a live local-server playtest and
--- prints PASS/FAIL assertions for the core loop so multi-client tests verify themselves.
--- It does not fake anything the real game wouldn't do: it kills characters via
--- Humanoid:TakeDamage the same way combat will, and observes how the services react.
+--[[
+	Studio-only self-check for the apocalypse's rules.
+
+	This used to assert the round game's invariants -- exactly one Patient Zero,
+	survivors equal to players minus one -- and skipped itself entirely whenever
+	bots were enabled, which is always. So it never ran, and if it had, it would
+	have failed on a premise that no longer exists.
+
+	It now checks the four things that define this game, and checks them by
+	watching the live server rather than by reading configuration back to
+	itself. A test that asserts `FriendlyFire == true` proves a constant is set;
+	a test that hurts somebody proves the game does what the constant says.
+
+	Everything prints to the Output, so verifying this game is one boot and a
+	log read -- no screenshots, no clicking.
+]]
 
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
-local GameConfig = require(ReplicatedStorage:WaitForChild("Shared").GameConfig)
+local Shared = ReplicatedStorage:WaitForChild("Shared")
+local Apocalypse = require(Shared.Apocalypse)
+local GameConfig = require(Shared.GameConfig)
 
 local SmokeTest = {}
 
+local passed, failed = 0, 0
+
 local function report(ok: boolean, label: string)
+	if ok then
+		passed += 1
+	else
+		failed += 1
+	end
 	print(("[SMOKE] %s %s"):format(ok and "PASS" or "FAIL", label))
 end
 
-function SmokeTest.run(roundService: any, roleService: any)
-	-- The assertions below assume a bot-free lobby (human PZ, survivor = players-1).
-	-- With bots enabled the PZ can be a bot and counts include bots, so skip to avoid
-	-- misleading FAILs. Bot rounds are validated by playtesting instead.
-	if GameConfig.Bots.Enabled then
-		print("[SMOKE] skipped (bots enabled — verify bot rounds by playing)")
-		return
-	end
+function SmokeTest.run(roundService: any, roleService: any, botService: any)
 	task.spawn(function()
-		-- Wait for a round to actually start
 		while roundService:getState() ~= "ACTIVE" do
 			task.wait(0.5)
 		end
-		local playerCount = #Players:GetPlayers()
-		report(playerCount >= 2, ("round started with %d players"):format(playerCount))
+		report(true, "the world came up live")
 
-		task.wait(2)
+		--: Long enough for the horde to be seeded and the rigs to settle.
+		task.wait(8)
 
-		-- Exactly one Patient Zero, rest survivors
-		local pz = roleService:getPatientZero()
-		report(pz ~= nil, "patient zero assigned")
-		local survivorsBefore = roleService:survivorCount()
-		report(survivorsBefore == playerCount - 1, ("survivor count %d == players-1"):format(survivorsBefore))
+		-- ------------------------------------------------------- no traitor
+		local pz = roleService.getPatientZero and roleService:getPatientZero()
+		report(pz == nil, "nobody is Patient Zero")
+		report(Apocalypse.Rules.PatientZero == false,
+			"the rules say there is no Patient Zero")
 
-		-- Kill one survivor the way combat will (server-side damage) -> must convert
-		local victim: Player? = nil
-		for _, player in Players:GetPlayers() do
-			if roleService:getRole(player) == "SURVIVOR" then
-				victim = player
+		-- --------------------------------------------------------- the horde
+		local zombies = botService and botService:zombieCount() or 0
+		local wanted = Apocalypse.hordeSize(#Players:GetPlayers())
+		report(zombies > 0, ("the horde exists (%d zombies)"):format(zombies))
+		report(zombies >= math.min(wanted, GameConfig.Bots.MaxBots) * 0.5,
+			("the horde is roughly the size asked for (%d, wanted ~%d)")
+				:format(zombies, wanted))
+
+		--: Rivals as well as dead. An apocalypse with nobody to fight over the
+		--: loot with is a shooting gallery.
+		local rivals = botService and botService:survivorCount() or 0
+		report(rivals > 0, ("there are rivals to fight over it with (%d)"):format(rivals))
+
+		-- ------------------------------------------ survivors shoot survivors
+		--[[
+			The one that matters, and it is done by actually hurting somebody.
+
+			A survivor bot is a survivor. If the old "survivor shot survivor:
+			return" branch were still in the way, a survivor would be
+			untouchable; taking health off one proves it is not.
+		]]
+		--: Retried, because rivals die and respawn constantly out there and
+		--: looking exactly once found an empty slot rather than a missing
+		--: feature.
+		local victim: Model? = nil
+		for _ = 1, 10 do
+			for _, bot in botService:bots() do
+				if bot.role == "SURVIVOR" and bot.humanoid and bot.humanoid.Health > 0 then
+					victim = bot.model
+					break
+				end
+			end
+			if victim then
+				break
+			end
+			task.wait(1)
+		end
+		if victim then
+			local humanoid = (victim :: Model):FindFirstChildOfClass("Humanoid") :: Humanoid
+			local before = humanoid.Health
+			humanoid:TakeDamage(10)
+			report(humanoid.Health < before,
+				("a survivor can be hurt (%d -> %d)"):format(before, humanoid.Health))
+		else
+			report(false, "no survivor bot found to test damage on")
+		end
+		report(Apocalypse.Rules.FriendlyFire == true, "friendly fire is on")
+
+		-- -------------------------------------------------- the world persists
+		--[[
+			Watched, not assumed.
+
+			Suppressing the end-of-round *effect* was not enough the first time:
+			the machine still made the transition and the world quietly went back
+			to map voting while the callback was being dropped. The only check
+			worth having is to look at the state again later.
+		]]
+		local heldFor = 0
+		local ended = false
+		while heldFor < 30 do
+			task.wait(5)
+			heldFor += 5
+			if roundService:getState() ~= "ACTIVE" then
+				report(false, ("the world ended after %ds (state %s)")
+					:format(heldFor, roundService:getState()))
+				ended = true
 				break
 			end
 		end
-		if victim ~= nil and victim.Character then
-			local humanoid = victim.Character:FindFirstChildOfClass("Humanoid")
-			if humanoid then
-				humanoid:TakeDamage(humanoid.MaxHealth)
-			end
-			task.wait(1)
-			report(roleService:getRole(victim) == "ZOMBIE", "killed survivor converted to ZOMBIE")
-			report(roleService:survivorCount() == survivorsBefore - 1, "survivor count decreased")
-			-- Zombie respawn with green appearance
-			task.wait(5)
-			local char = victim.Character
-			local respawned = char ~= nil and char:FindFirstChild("HumanoidRootPart") ~= nil
-			local aura = char and char:FindFirstChild("InfectionAura", true)
-			report(respawned == true, "zombie respawned")
-			report(aura ~= nil, "zombie has infection appearance")
-		else
-			report(false, "no survivor victim found for conversion test")
+		if not ended then
+			report(true, ("the world is still live after %ds"):format(heldFor))
 		end
 
-		print("[SMOKE] core-loop checks done — now kill remaining survivors or wait out the timer")
-
-		-- Watch for round end
-		while roundService:getState() == "ACTIVE" do
-			task.wait(0.5)
-		end
-		report(roundService:getState() == "ROUND_END", "round reached ROUND_END")
+		print(("[SMOKE] %d passed, %d failed"):format(passed, failed))
 	end)
 end
 

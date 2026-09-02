@@ -8,6 +8,7 @@ local RunService = game:GetService("RunService")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local GameConfig = require(Shared.GameConfig)
+local Apocalypse = require(Shared.Apocalypse)
 local RoundMachine = require(Shared.RoundMachine)
 
 local RoundService = {}
@@ -49,6 +50,22 @@ function RoundService:forceEnd(winner: string)
 end
 
 function RoundService:setSurvivorCount(n: number)
+	--[[
+		Zero survivors is not an ending here.
+
+		Suppressing the `EndRound` *effect* was not enough: the machine still
+		made the transition, so the world quietly returned to "INTERMISSION --
+		VOTE A MAP" while the callback was being dropped. The ending has to be
+		prevented, not ignored.
+
+		There are two ways in. The deadline is one, and it is twenty-four hours
+		away. This is the other: everybody being dead at the same instant, which
+		in a persistent world means everybody is respawning -- an ordinary six
+		seconds, not a result.
+	]]
+	if Apocalypse.PERSISTENT_WORLD then
+		n = math.max(1, n)
+	end
 	self:_execute(self._machine:setSurvivorCount(n, os.clock()))
 end
 
@@ -60,6 +77,12 @@ function RoundService:_broadcastState()
 		playerCount = self._machine.playerCount,
 		survivorCount = self._machine.survivorCount,
 		conversions = self._machine.conversions,
+		--: What the HUD actually wants now: how much horde is out there, and
+		--: how long this world has been running.
+		hordeCount = self._deps.getHordeCount and self._deps.getHordeCount() or 0,
+		elapsed = if self._machine.roundStartedAt
+			then os.clock() - self._machine.roundStartedAt
+			else 0,
 	})
 end
 
@@ -71,6 +94,19 @@ function RoundService:_execute(effects)
 				self._deps.onRoundStart(self._playersInRound)
 			end
 		elseif effect.type == "EndRound" then
+			--[[
+				A persistent world does not end.
+
+				The machine still computes an ending -- the deadline passes, or
+				the survivor count reaches zero because everybody happened to be
+				dead at the same moment -- and in an apocalypse neither of those
+				is a result. Dropping the effect rather than deleting the
+				machine keeps the timer, the counts and every hook that reads
+				them working, with one state instead of three.
+			]]
+			if Apocalypse.PERSISTENT_WORLD then
+				continue
+			end
 			if self._deps.onRoundEnd then
 				self._deps.onRoundEnd(effect.winner)
 			end

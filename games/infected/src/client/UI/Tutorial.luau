@@ -19,27 +19,36 @@ function Tutorial.start(remotes: any)
 	local sprintHint = touch and "the SPRINT button" or "hold Shift"
 	local knifeHint = touch and "the KNIFE button" or "press F"
 
+	--[[
+		The first thing anybody reads, and it described a different game.
+
+		It promised a hidden Patient Zero, a round to survive, and a win
+		condition, none of which exist any more. Copy that lies about the rules
+		is worse than no copy: a player spends their first ten minutes looking
+		for a traitor.
+	]]
 	local slides = {
 		{
-			title = "WELCOME TO INFECTED",
-			body = "30 players. One is secretly Patient Zero. Survive the round — or spread the infection.",
+			title = "THE OUTBREAK",
+			body = "The city is gone and the dead own it. There is no rescue and no round to survive — you are here until you leave, and so is everyone else.",
 		},
 		{
-			title = "IF YOU'RE A SURVIVOR",
-			body = ("You have a real gun. Shoot zombies (%s) and %s to escape them. But watch your back — anyone could be the hidden Patient Zero."):format(
+			title = "THE HORDE",
+			body = ("They are always out there and they never stop coming. Shoot with %s, break contact with %s. Killing one is easy; killing thirty is a supply problem."):format(
 				fireHint,
 				sprintHint
 			),
 		},
 		{
-			title = "IF YOU'RE PATIENT ZERO",
-			body = ("You look like a survivor — blend in. Throw your one-hit knife with %s to convert people without being caught."):format(
-				knifeHint
-			),
+			title = "THE OTHER SURVIVORS",
+			body = "Everyone else out there wants what you are carrying, and they can shoot you for it. Nobody is on your team unless you decide they are.",
 		},
 		{
-			title = "GET TURNED?",
-			body = "You respawn as a zombie and hunt the survivors with the horde. Last survivor standing wins it for the humans.",
+			title = "NOISE COSTS",
+			body = ("A firefight brings the horde. Winning a fight in the open often means losing the next one — %s and a knife (%s) exist for a reason."):format(
+				sprintHint,
+				knifeHint
+			),
 		},
 		{
 			title = "EARN & UNLOCK",

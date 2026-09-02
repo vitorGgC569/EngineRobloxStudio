@@ -8,6 +8,7 @@ local Players = game:GetService("Players")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local GameConfig = require(Shared.GameConfig)
 local Remotes = require(Shared.Remotes)
+local Apocalypse = require(Shared.Apocalypse)
 
 local RoundService = require(script.Services.RoundService)
 local RoleService = require(script.Services.RoleService)
@@ -164,9 +165,7 @@ roleService = RoleService.new({
 endgameService = EndgameService.new({
 	remotes = remotes,
 	roleService = roleService,
-	isRoundActive = function()
-		return roundService ~= nil and roundService:getState() == "ACTIVE"
-	end,
+	isRoundActive = Apocalypse.worldIsLive,
 })
 
 botService = BotService.new({
@@ -225,9 +224,7 @@ local combatService = CombatService.new({
 	remotes = remotes,
 	roleService = roleService,
 	botService = botService,
-	isRoundActive = function()
-		return roundService:getState() == "ACTIVE"
-	end,
+	isRoundActive = Apocalypse.worldIsLive,
 	onZombieKilled = function(killer: Player, _victim: Player)
 		economyService:onZombieKilled(killer)
 		retentionService:recordEvent(killer, "kill", 1)
@@ -251,6 +248,9 @@ roundService = RoundService.new({
 	getExtraCount = function()
 		return botService:plannedCount(#Players:GetPlayers())
 	end,
+	getHordeCount = function()
+		return botService and botService:zombieCount() or 0
+	end,
 	onRoundStart = function(playersInRound)
 		economyService:resetRound()
 		combatService:resetRound()
@@ -260,28 +260,28 @@ roundService = RoundService.new({
 		applyModifier(roundMod)
 		analyticsService:onRoundStart(#playersInRound, roundMod.id)
 
-		-- Decide whether the Patient Zero is a human or a bot. With one human and
-		-- several bots, the human is usually a survivor being hunted (more fun solo),
-		-- and occasionally the hidden infected.
+		--[[
+			Everybody is a survivor, and nobody is hiding.
+
+			This used to roll for whether the Patient Zero was a human or a bot,
+			weighted so a solo player was usually the hunted one. There is no
+			Patient Zero in an apocalypse: the threat is the horde, and the
+			other survivors are rivals rather than suspects.
+		]]
 		local humanCount = #playersInRound
 		local botCount = botService:plannedCount(humanCount)
-		local totalParticipants = math.max(1, humanCount + botCount)
-		local pzIsHuman = humanCount > 0 and rng:NextInteger(1, totalParticipants) <= humanCount
 
-		roleService:assignRoles(playersInRound, { allSurvivors = not pzIsHuman })
+		roleService:assignRoles(playersInRound, { allSurvivors = true })
 		-- assignRoles can yield on LoadCharacter and used to push a humans-only survivor
 		-- count mid-setup (0 when the sole human is PZ) which ended the round as INFECTED
 		-- before bots existed. Abort cleanly if something else already ended us.
 		if roundService:getState() ~= "ACTIVE" then
 			return
 		end
-		botService:spawnForRound(botCount, { botIsPZ = not pzIsHuman })
-		if not pzIsHuman then
-			local pzName = botService:patientZeroName()
-			if pzName then
-				roleService:setOriginalPZName(pzName)
-			end
-		end
+		botService:spawnForRound(botCount, {
+			botIsPZ = false,
+			zombies = Apocalypse.hordeSize(humanCount),
+		})
 		-- First authoritative human+bot count of the round. Must run after bots spawn.
 		refreshCounts()
 	end,
@@ -360,7 +360,7 @@ mapService:loadLobby()
 -- scripted deaths so a local multi-client playtest verifies itself in the Output.
 if game:GetService("RunService"):IsStudio() then
 	local SmokeTest = require(script.StudioSmokeTest)
-	SmokeTest.run(roundService, roleService)
+	SmokeTest.run(roundService, roleService, botService)
 end
 
 print("[INFECTED] Server booted")

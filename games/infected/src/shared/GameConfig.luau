@@ -13,12 +13,17 @@ export type ZombieClass = {
 
 local GameConfig = {
 	Round = {
-		MinPlayersToStart = 4,
+		--: One. There is no lobby to fill in an open world -- a player who joins
+		--: an empty server should be playing, not waiting for three strangers.
+		MinPlayersToStart = 1,
 		FullRewardPlayerCount = 10, -- below this, rewards scale down linearly
-		IntermissionSeconds = 25,
-		BaseRoundSeconds = 5 * 60,
+		--: Only ever seen once, at server boot.
+		IntermissionSeconds = 5,
+		--: A day, which is longer than any Roblox server lives. The machine still
+		--: runs a clock because the HUD draws one; it just never reaches the end.
+		BaseRoundSeconds = 24 * 60 * 60,
 		SecondsPerConversion = 20,
-		MaxRoundSeconds = 8 * 60,
+		MaxRoundSeconds = 24 * 60 * 60,
 		RevealSeconds = 10,
 		ZombieRespawnSeconds = 3,
 		SpawnProtectionSeconds = 3,
@@ -158,7 +163,11 @@ local GameConfig = {
 	Bots = {
 		Enabled = true,
 		TargetPlayers = 8, -- fill humans + bots up to this headcount
-		MaxBots = 11, -- never spawn more than this
+		--: Raised for the horde. Eleven was a lobby filler; this is a crowd of
+		--: pathfinding rigs, so the ceiling is where frame time starts to cost
+		--: more than the pressure is worth rather than where the design wants
+		--: to stop.
+		MaxBots = 28,
 		ThinkInterval = 0.35, -- AI tick period (seconds)
 
 		-- Navigation (PathfindingService). Paths are recomputed when the target moves

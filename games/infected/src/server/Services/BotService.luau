@@ -24,6 +24,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local GameConfig = require(Shared.GameConfig)
+local Apocalypse = require(Shared.Apocalypse)
 local Ballistics = require(Shared.Ballistics)
 local BotBrain = require(Shared.BotBrain)
 local BotVision = require(Shared.BotVision)
@@ -65,6 +66,9 @@ type Difficulty = { name: string, weight: number, speedMult: number, reactionMul
 type Bot = {
 	id: number,
 	name: string,
+	--: What it was hired as, which is what it comes back as. Distinct from
+	--: `role`, which is what it is right now and can change.
+	spawnRole: string?,
 	model: Model,
 	humanoid: Humanoid,
 	root: BasePart,
@@ -194,14 +198,40 @@ function BotService:plannedCount(humanCount: number): number
 	if humanCount <= 0 then
 		return 0
 	end
-	local target = GameConfig.Bots.TargetPlayers
-	return math.clamp(target - humanCount, 0, GameConfig.Bots.MaxBots)
+	--: Horde plus rivals, not "fill the lobby to eight". An apocalypse is not
+	--: short of bodies; it is short of living ones.
+	local wanted = Apocalypse.hordeSize(humanCount) + Apocalypse.rivalSize(humanCount)
+	return math.clamp(wanted, 0, GameConfig.Bots.MaxBots)
 end
 
 function BotService:survivorCount(): number
 	local n = 0
 	for _, bot in self._bots do
 		if bot.role == "SURVIVOR" then
+			n += 1
+		end
+	end
+	return n
+end
+
+--: The horde, for a readout that means something in an apocalypse. There was
+--: no reason to count zombies when zombies were converted players and the
+--: interesting number was how many survivors were left.
+--: For callers that need to look at the population rather than count it --
+--: the self-check does, and reaching into `_bots` from outside would make the
+--: field's leading underscore a lie.
+function BotService:bots(): { any }
+	local out = {}
+	for _, bot in self._bots do
+		table.insert(out, bot)
+	end
+	return out
+end
+
+function BotService:zombieCount(): number
+	local n = 0
+	for _, bot in self._bots do
+		if bot.role == "ZOMBIE" then
 			n += 1
 		end
 	end
@@ -327,10 +357,21 @@ end
 
 -- Lifecycle ----------------------------------------------------------------------
 
-function BotService:spawnForRound(count: number, opts: { botIsPZ: boolean })
+--[[
+	`opts.zombies` is how many of these are already dead.
+
+	The old game had exactly one infected at the start -- the whole premise --
+	and everything else converted over the round. An apocalypse starts with the
+	horde already out there, so the count is a parameter instead of a secret.
+
+	Zombie bots respawn near the action on death (see `_onBotDied`), so seeding
+	the horde here is the only thing needed to keep one: it sustains itself.
+]]
+function BotService:spawnForRound(count: number, opts: { botIsPZ: boolean, zombies: number? })
 	self:clear()
 	self._active = true
 	local pzIndex = if opts.botIsPZ then rng:NextInteger(1, math.max(1, count)) else -1
+	local zombies = math.clamp(opts.zombies or 0, 0, count)
 	for i = 1, count do
 		local spawnCFrame = self._deps.getSurvivorSpawn() or CFrame.new(0, 5, 0)
 		local id = self._nextId
@@ -385,7 +426,24 @@ function BotService:spawnForRound(count: number, opts: { botIsPZ: boolean })
 			engageRange = GameConfig.Bots.ShootRange * bot.difficulty.sightMult,
 		})
 		self._bots[id] = bot
-		self:_applyRole(bot, if i == pzIndex then "PATIENT_ZERO" else "SURVIVOR")
+		--[[
+			What this one was hired as.
+
+			A rival killed by the horde used to be converted and stay converted,
+			so the rival population drained to nothing inside a minute and there
+			was nobody left to trade shots with -- which is the entire point of
+			the game now. Respawning into the role it was spawned with keeps the
+			horde-to-rival ratio the one that was asked for, however the last
+			few minutes went.
+		]]
+		--: The horde first, then the rivals. Ordered rather than rolled so a
+		--: given count always produces the same split -- a server that
+		--: sometimes spawns two zombies and sometimes eleven is not tunable.
+		local role = if i == pzIndex then "PATIENT_ZERO"
+			elseif i <= zombies then "ZOMBIE"
+			else "SURVIVOR"
+		bot.spawnRole = role
+		self:_applyRole(bot, role)
 		humanoid.Died:Connect(function()
 			self:_onBotDied(bot)
 		end)
@@ -442,10 +500,34 @@ function BotService:damageBot(character: Model, amount: number, attacker: Player
 end
 
 -- Human PZ knife/melee converted a survivor bot.
+--[[
+	The dead kill. They do not recruit.
+
+	This turned a survivor bot into a zombie, which was the whole engine of the
+	old game: the horde grew by converting the people in it. With no infection
+	mechanic left, conversion is just a bug wearing the old design's clothes --
+	the horde ate every rival inside a minute, they never *died* so they never
+	respawned, and an eight-second-old server had fifteen zombies and nobody to
+	trade shots with.
+
+	Killing instead routes through `_onBotDied`, which brings them back as what
+	they were hired as. The rival population is a constant now rather than a
+	countdown.
+]]
 function BotService:convertBot(character: Model, attacker: Player?): boolean
 	local bot = self:_botFromCharacter(character)
 	if bot == nil or bot.role ~= "SURVIVOR" then
 		return false
+	end
+	if not Apocalypse.Rules.PatientZero then
+		local humanoid = character:FindFirstChildOfClass("Humanoid")
+		if humanoid and humanoid.Health > 0 then
+			humanoid:TakeDamage(humanoid.Health)
+		end
+		if attacker then
+			self._deps.onBotConvertedByHuman(attacker)
+		end
+		return true
 	end
 	self:_applyRole(bot, "ZOMBIE")
 	if attacker then
@@ -569,8 +651,19 @@ function BotService:_spawnCorpse(bot: Bot)
 end
 
 function BotService:_onBotDied(bot: Bot)
-	-- Zombie bots respawn near the action; keeps the horde pressure up.
-	if not self._active or bot.role ~= "ZOMBIE" then
+	--[[
+		Everybody comes back, not just the dead.
+
+		Only zombies respawned, which was right when survivors were players and
+		a survivor dying meant they had been converted. Now a rival is a
+		permanent fixture of the world: if they stay dead, an hour-old server is
+		a player alone with the horde and nothing to shoot at that shoots back.
+	]]
+	if not self._active then
+		return
+	end
+	local comingBackAs = bot.spawnRole or bot.role
+	if comingBackAs ~= "ZOMBIE" and comingBackAs ~= "SURVIVOR" then
 		return
 	end
 	-- Fling a ragdoll corpse and hide the real rig until it respawns.
@@ -593,7 +686,11 @@ function BotService:_onBotDied(bot: Bot)
 				table.insert(roots, r)
 			end
 		end
-		local spawnCFrame = self._deps.getZombieSpawn(roots) or CFrame.new(0, 5, 0)
+		--: A rival comes back where survivors come in, not in the middle of the
+		--: horde that just ate them.
+		local spawnCFrame = if comingBackAs == "ZOMBIE"
+			then self._deps.getZombieSpawn(roots) or CFrame.new(0, 5, 0)
+			else self._deps.getSurvivorSpawn() or CFrame.new(0, 5, 0)
 
 		-- A dead Humanoid cannot be revived — Roblox treats the Dead state as terminal, so
 		-- restoring Health just left a frozen, mute body standing at the spawn point and the
@@ -623,9 +720,10 @@ function BotService:_onBotDied(bot: Bot)
 		bot.windupUntil = nil
 		bot.justDamaged = false
 		bot.lastPos = root.Position
-		bot.brain = BotBrain.newMemory("STALK", os.clock())
+		bot.brain = BotBrain.newMemory(
+			if comingBackAs == "ZOMBIE" then "STALK" else "PATROL", os.clock())
 
-		self:_applyRole(bot, "ZOMBIE")
+		self:_applyRole(bot, comingBackAs)
 		humanoid.Died:Connect(function()
 			self:_onBotDied(bot)
 		end)

@@ -136,15 +136,29 @@ function HUD.start(remotes: any)
 
 	-- Timer loop driven by server state pushes
 	local deadline: number? = nil
+	local elapsed: number? = nil
+	local syncedAt = os.clock()
 	local serverOffset = 0 -- serverNow - clientNow at last sync
 	task.spawn(function()
 		while true do
 			task.wait(0.2)
-			if deadline then
-				local remaining = math.max(0, deadline - (os.clock() + serverOffset))
-				local minutes = math.floor(remaining / 60)
-				local seconds = math.floor(remaining % 60)
-				timerLabel.Text = ("%d:%02d"):format(minutes, seconds)
+			--[[
+				Time survived, not time remaining.
+
+				A countdown is a promise that something happens when it reaches
+				zero, and in a world that never ends nothing does -- the clock
+				read "0:27" off a twenty-four hour deadline and meant nothing at
+				all. Counting up is the number a survival game actually has: how
+				long this run has lasted.
+			]]
+			if elapsed then
+				local live = elapsed + (os.clock() - syncedAt)
+				local hours = math.floor(live / 3600)
+				local minutes = math.floor(live % 3600 / 60)
+				local seconds = math.floor(live % 60)
+				timerLabel.Text = if hours > 0
+					then ("%d:%02d:%02d"):format(hours, minutes, seconds)
+					else ("%d:%02d"):format(minutes, seconds)
 			else
 				timerLabel.Text = "--:--"
 			end
@@ -155,18 +169,22 @@ function HUD.start(remotes: any)
 		local names = {
 			WAITING = "WAITING FOR PLAYERS",
 			INTERMISSION = "INTERMISSION — VOTE A MAP",
-			ACTIVE = "SURVIVE",
+			ACTIVE = "OUTBREAK",
 			ROUND_END = "ROUND OVER",
 		}
 		stateLabel.Text = names[state.state] or tostring(state.state)
 		deadline = state.deadline
+		elapsed = state.elapsed
+		syncedAt = os.clock()
 		if state.serverNow then
 			serverOffset = state.serverNow - os.clock()
 		end
-		local infected = (state.playerCount or 0) - (state.survivorCount or 0)
-		hordeLabel.Text = ("Survivors %d   Infected %d"):format(
+		--: Survivors and horde. "Infected" was the count of converted players,
+		--: and there are none -- the number that matters now is how much of the
+		--: dead is between you and the next building.
+		hordeLabel.Text = ("Survivors %d   Horde %d"):format(
 			state.survivorCount or 0,
-			math.max(0, infected)
+			state.hordeCount or 0
 		)
 	end)
 

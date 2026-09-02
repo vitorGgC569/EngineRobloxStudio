@@ -15,6 +15,7 @@ local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local Shared = ReplicatedStorage:WaitForChild("Shared")
 local GameConfig = require(Shared.GameConfig)
 local Ballistics = require(Shared.Ballistics)
+local Apocalypse = require(Shared.Apocalypse)
 
 local CombatService = {}
 CombatService.__index = CombatService
@@ -293,8 +294,33 @@ function CombatService:_hitscan(
 			damage = spec.Damage,
 		})
 	else
-		-- Survivor shot survivor: no damage, no feedback (prevents role-scanning by shooting)
-		return
+		--[[
+			Survivor shot survivor, and now it lands.
+
+			This used to return without damage or feedback on purpose: with a
+			hidden Patient Zero in the lobby, letting people shoot each other
+			would have turned "who is infected" into "shoot everybody and watch
+			who bleeds". There is no Patient Zero any more, so the only thing
+			that refusal protects is the ability to walk up to a rival and do
+			nothing to them.
+
+			Scaled down, because these weapons were tuned against zombies that
+			take several hits: a player killed in three tenths of a second by
+			something they never saw stops playing. The scale is what gives a
+			fight a middle.
+		]]
+		if not Apocalypse.Rules.FriendlyFire then
+			return
+		end
+		tagKiller(victim, shooter)
+		local damage = spec.Damage * Apocalypse.Rules.PlayerDamageScale
+		local vh = victimHumanoid :: Humanoid
+		vh:TakeDamage(damage)
+		self._deps.remotes.fireClient("HitConfirm", shooter, {
+			killed = vh.Health <= 0,
+			position = result.Position,
+			damage = damage,
+		})
 	end
 end
 

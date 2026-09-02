@@ -218,6 +218,9 @@ local postureLabel = UI.label(screen, "STANDING", {
 postureLabel.TextXAlignment = Enum.TextXAlignment.Left
 
 local currentPosture = "stand"
+--: Filled in once the animation section below has been read; the
+--: posture handler is declared above it and both need the other.
+local restageBody: (() -> ())? = nil
 
 Net.on("postured", function(payload: any)
 	if type(payload) ~= "table" then
@@ -226,6 +229,9 @@ Net.on("postured", function(payload: any)
 	currentPosture = tostring(payload.posture)
 	postureLabel.Text = string.upper(Posture.get(currentPosture).label)
 	postureLabel.TextColor3 = if currentPosture == "stand" then DIM else MARK
+	if restageBody then
+		restageBody()
+	end
 end)
 
 local function ask(to: string)
@@ -260,12 +266,19 @@ end, false, Enum.KeyCode.X)
 --: Sprint and aim are held. The client sends both without second-guessing
 --: what the server will allow: the two disagreeing about the rules is worse
 --: than one wasted remote.
+--: Assigned by the animation section below.
+local setAiming: ((boolean) -> ())? = nil
+
 local function hold(name: string, key: Enum.KeyCode, remote: string)
 	ContextActionService:BindAction(name, function(_, state)
-		if state == Enum.UserInputState.Begin then
-			pcall(function() Net.request(remote, { on = true }) end)
-		elseif state == Enum.UserInputState.End then
-			pcall(function() Net.request(remote, { on = false }) end)
+		local on = state == Enum.UserInputState.Begin
+		if on or state == Enum.UserInputState.End then
+			pcall(function() Net.request(remote, { on = on }) end)
+			--: Aiming swaps the upper-body clip. Held rather than toggled, so it
+			--: follows the key instead of a state the client has to track.
+			if remote == "aim" and setAiming then
+				setAiming(on)
+			end
 		end
 		return Enum.ContextActionResult.Pass
 	end, false, key)
@@ -321,119 +334,132 @@ end)
 	never shows you one.
 ]]
 --[[
-	The weapon you can actually see.
+	The weapon you can actually see, on the arm that is actually holding it.
 
-	A gun welded to the character's hand is where a gun belongs, and in first
-	person it is invisible: the hand hangs at hip height, three studs below the
-	camera, and Roblox hides everything parented to a character while the
-	camera is inside its head anyway. Raising the arm through the shoulder joint
-	does not survive the default animation script, and the project has no hold
-	animation to replace it with.
+	The first attempt at this was a second copy of the gun parented to the
+	camera at a fixed offset -- the standard first-person viewmodel. It worked
+	and it was wrong for this game: a weapon welded to the camera is a weapon
+	nailed to the middle of the screen, unaffected by the arm swinging under it,
+	which reads as a sticker rather than as something being carried.
 
-	So the same thing every first-person game does: a second copy of the weapon,
-	parented to the camera rather than to the body, sitting at a fixed offset
-	from the eye. It is not the gun that shoots -- the server's is, welded to
-	the hand, and that one is what other players see. This one exists purely so
-	that the person holding it can see it.
-
-	The real one is hidden locally while this is up, or the player sees two.
+	So there is one gun, welded to the hand where it belongs, and this makes it
+	visible. Roblox hides everything parented to a character while the camera is
+	inside its head, and `LocalTransparencyModifier` is the documented way to
+	say "not this". It has to be written every frame because the camera writes
+	it every frame too.
 ]]
---: Right of centre, below the eye, and close. A weapon a stud and a half away
---: reads as somebody else's; this is the distance it is actually held at.
-local HELD_AT = CFrame.new(0.6, -0.5, -0.9) * CFrame.Angles(0, math.rad(-3), 0)
-local view: Model? = nil
-local viewOf: string? = nil
-
-local function clearView()
-	if view then
-		view:Destroy()
-	end
-	view, viewOf = nil, nil
-end
-
-local function viewmodel(character: Model)
-	local real: Model? = nil
+local function showWeapon(character: Model)
 	for _, child in character:GetChildren() do
 		if child:IsA("Model") and string.match(child.Name, "^Gun_") then
-			real = child :: Model
-			break
+			for _, part in child:GetDescendants() do
+				if part:IsA("BasePart") then
+					part.LocalTransparencyModifier = 0
+				end
+			end
 		end
 	end
-	if not real then
-		clearView()
+end
+
+--[[
+	Animation, from the engine that already had it.
+
+	This file previously drove `AnimationConstraint.Transform` by hand, joint by
+	joint, in `PreSimulation`, with a table of hand-tuned Euler angles. It
+	worked -- the arms came up -- and it was a reimplementation of
+	`Forge.Anim`, which has a clip format, masks so the legs keep walking while
+	the arms aim, priorities, blending, and presets for `hold`, `aim`, `shoot`
+	and `reload` already written by somebody who had thought about it longer.
+
+	`Rig.stripDefaultAnimate` is the part that makes any of it stick: Roblox's
+	own Animate script fights every pose put on a character, and removing it is
+	the documented first step that none of the hand-rolled attempts did.
+]]
+local Anim = Forge.Anim
+local Rig = Forge.Rig
+
+Anim.registerAll(require(ReplicatedStorage.Forge.Anim.Presets))
+
+--: Crouch and prone are not in the presets, because they are this game's.
+--: Masked to the legs and torso so the arms keep holding the weapon.
+local STANCE = { "rightLeg", "leftLeg", "rightShin", "leftShin", "torso" }
+Anim.register("stance_crouch", {
+	duration = 0.28, loop = true, hold = true, mask = STANCE, priority = 2,
+	tracks = {
+		rightLeg = { Anim.k(0, -38, 6, 0), Anim.k(0.28, -37, 6, 0) },
+		leftLeg = { Anim.k(0, -38, -6, 0), Anim.k(0.28, -37, -6, 0) },
+		rightShin = { Anim.k(0, 64, 0, 0), Anim.k(0.28, 63, 0, 0) },
+		leftShin = { Anim.k(0, 64, 0, 0), Anim.k(0.28, 63, 0, 0) },
+		torso = { Anim.k(0, 20, 0, 0), Anim.k(0.28, 20, 0, 0) },
+	},
+})
+Anim.register("stance_prone", {
+	duration = 0.34, loop = true, hold = true, mask = STANCE, priority = 2,
+	tracks = {
+		rightLeg = { Anim.k(0, -74, 8, 0), Anim.k(0.34, -73, 8, 0) },
+		leftLeg = { Anim.k(0, -74, -8, 0), Anim.k(0.34, -73, -8, 0) },
+		rightShin = { Anim.k(0, 96, 0, 0), Anim.k(0.34, 95, 0, 0) },
+		leftShin = { Anim.k(0, 96, 0, 0), Anim.k(0.34, 95, 0, 0) },
+		torso = { Anim.k(0, 48, 0, 0), Anim.k(0.34, 48, 0, 0) },
+	},
+})
+
+local animator: any = nil
+
+local function attachAnimator(character: Model)
+	if not character:FindFirstChildOfClass("Humanoid") then
 		return
 	end
+	Rig.stripDefaultAnimate(character)
+	if animator then
+		animator:destroy()
+	end
+	animator = Anim.new(character)
+	Anim.bind(animator)
+end
 
-	--: Third person shows the real weapon in the real hand, which is correct
-	--: and needs nothing from this.
-	if not firstPerson then
-		clearView()
-		for _, part in real:GetDescendants() do
-			if part:IsA("BasePart") then
-				part.LocalTransparencyModifier = 0
-			end
-		end
+if player.Character then
+	task.defer(attachAnimator, player.Character)
+end
+player.CharacterAdded:Connect(function(character)
+	task.defer(attachAnimator, character)
+end)
+
+--: What the body is doing, recomputed whenever a reason to change it arrives.
+--: Stance and weapon are separate clips on separate masks, so crouching while
+--: aiming is both and not a third clip nobody wrote.
+local aiming = false
+
+local function restage()
+	if not animator then
 		return
 	end
-
-	for _, part in real:GetDescendants() do
-		if part:IsA("BasePart") then
-			part.LocalTransparencyModifier = 1
+	for _, name in { "stance_crouch", "stance_prone" } do
+		if animator:isPlaying(name) then
+			animator:stop(name, false)
 		end
 	end
-
-	--[[
-		Rebuild when the copy does not match what it is a copy of.
-
-		Keying only on the weapon's name looks right and is a trap: the model
-		replicates before its parts do, so the first frame a gun exists it is an
-		empty Model. Cloning then produces an empty viewmodel -- and caching on
-		the name means that empty copy is kept for the rest of the round.
-
-		Counting parts is the check that actually holds, because it fails in the
-		same way the thing it guards against does.
-	]]
-	local want = 0
-	for _, d in real:GetDescendants() do
-		if d:IsA("BasePart") then
-			want += 1
-		end
-	end
-	local have = 0
-	if view then
-		for _, d in view:GetDescendants() do
-			if d:IsA("BasePart") then
-				have += 1
-			end
-		end
+	if currentPosture == "crouch" then
+		animator:play("stance_crouch")
+	elseif currentPosture == "prone" then
+		animator:play("stance_prone")
 	end
 
-	if viewOf ~= real.Name or have ~= want or want == 0 then
-		clearView()
-		if want == 0 then
-			return
+	local armed = player:GetAttribute("gun") ~= nil
+	for _, name in { "hold", "aim" } do
+		if animator:isPlaying(name) then
+			animator:stop(name, false)
 		end
-		local copy = real:Clone()
-		for _, part in copy:GetDescendants() do
-			if part:IsA("BasePart") then
-				part.Anchored = true
-				part.CanCollide = false
-				part.CanQuery = false
-				part.CastShadow = false
-				part.LocalTransparencyModifier = 0
-			end
-		end
-		--: Parented to the world rather than to the camera. A camera-parented
-		--: part renders, but the camera is replaced on every respawn and the
-		--: reference is easy to lose without any error to show for it; an
-		--: anchored, uncollidable, unqueryable part in the workspace is inert
-		--: in exactly the same way and cannot be orphaned.
-		copy.Parent = Workspace
-		view, viewOf = copy, real.Name
 	end
-	if view then
-		view:PivotTo(eye().CFrame * HELD_AT)
+	if armed then
+		animator:play(if aiming then "aim" else "hold")
 	end
+end
+
+player:GetAttributeChangedSignal("gun"):Connect(restage)
+restageBody = restage
+setAiming = function(on: boolean)
+	aiming = on
+	restage()
 end
 
 RunService.RenderStepped:Connect(function()
@@ -446,7 +472,7 @@ RunService.RenderStepped:Connect(function()
 	humanoid.CameraOffset = Vector3.new(
 		if firstPerson then 0 else SHOULDER, -drop, 0)
 
-	viewmodel(character)
+	showWeapon(character)
 end)
 
 -- =================================== gun ====================================
@@ -660,6 +686,9 @@ Net.on("shot", function(payload: any)
 	if landed then
 		flashHitmarker()
 	end
+	if animator then
+		animator:play("shoot")
+	end
 end)
 
 local function pullTrigger()
@@ -683,6 +712,9 @@ UserInputService.InputBegan:Connect(function(input, typing)
 		pcall(function()
 			Net.request("reload")
 		end)
+		if animator then
+			animator:play("reload")
+		end
 	end
 end)
 UserInputService.InputEnded:Connect(function(input)

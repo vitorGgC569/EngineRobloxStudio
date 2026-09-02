@@ -25,11 +25,13 @@
 ]]
 
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
+local RunService = game:GetService("RunService")
 
 local Forge = require(ReplicatedStorage:WaitForChild("Forge"))
 local Arsenal = require(ReplicatedStorage.Shared.Arsenal)
 
 local Place = Forge.Catalog.Place
+local Rig = Forge.Rig
 local Itch = Forge.Catalog.ItchAssets
 
 local Guns = {}
@@ -42,18 +44,20 @@ local Guns = {}
 	MP5 borrows the plain rifle cut down -- a compromise worth writing down
 	rather than hiding.
 
-	`length` is the weapon along its longest axis, in studs, against a character
-	who is about five of them tall. These are the proportions a Roblox avatar
-	reads correctly rather than the millimetres a real M9 measures: scaled
-	honestly, a pistol is a third of a stud and disappears inside a fist.
+	`length` is the weapon along its longest axis, in studs. These are not real
+	proportions and are not trying to be: a correctly scaled M9 is a third of a
+	stud and vanishes inside a fist, and even at true Roblox proportion -- about
+	two studs against a five-stud character -- it reads as a detail rather than
+	as the thing the whole game is about. A shooter's weapon is the largest
+	object on the screen, so these are sized to be seen first.
 ]]
 local MODELS = {
-	m9 = { needle = "Pistol Compact", length = 1.9 },
-	mp5 = { needle = "Rifle", length = 2.9 },
-	m4 = { needle = "Rifle Assault", length = 4.0 },
-	m870 = { needle = "Rifle Battle", length = 4.2 },
-	sks = { needle = "Rifle Battle", length = 4.3 },
-	m24 = { needle = "Sniper Rifle", length = 4.9 },
+	m9 = { needle = "Pistol Compact", length = 3.6 },
+	mp5 = { needle = "Rifle", length = 5.4 },
+	m4 = { needle = "Rifle Assault", length = 7.2 },
+	m870 = { needle = "Rifle Battle", length = 7.4 },
+	sks = { needle = "Rifle Battle", length = 7.6 },
+	m24 = { needle = "Sniper Rifle", length = 8.6 },
 }
 
 --: Gunmetal, because every one of these arrives untextured and grey-brown.
@@ -89,6 +93,18 @@ local function dress(model: Instance)
 		part.CanCollide = false
 		part.CanQuery = false
 		part.CastShadow = false
+		--[[
+			Anchored until somebody says otherwise.
+
+			These arrive unanchored, get parented to a character at the origin,
+			and are welded to a hand seven studs away one frame later. On a rig
+			built from ball sockets that snap is a large impulse handed straight
+			to the physics solver, and the solver answers by throwing the
+			character over the valley -- which is what "the character still
+			flies" was. Anchored parts cannot violate a constraint they are not
+			participating in yet.
+		]]
+		part.Anchored = true
 		--: Welded to a hand, this becomes part of the character's physics
 		--: assembly. A rifle's worth of mass hanging off one arm is a character
 		--: that walks badly and sinks into ground it should stand on.
@@ -219,56 +235,9 @@ function Guns.build(id: string, parent: Instance): Model?
 	return wrapper
 end
 
--- ================================== the pose ================================
---[[
-	Raise the arm that is holding the thing.
-
-	A weapon welded to a hand is a weapon hanging at hip height beside the leg,
-	because that is where a Roblox character's arms are. In third person it
-	looks like the character forgot they were armed; in first person the camera
-	sits in the head and never sees it at all -- which is indistinguishable, to
-	the person playing, from the gun not existing.
-
-	`C0` on the shoulder joint rather than an animation. Roblox animations write
-	`Transform`, which composes on top of `C0` instead of replacing it, so the
-	arm stays raised through walking, running and idling without this project
-	needing an animation asset it does not have and cannot author.
-
-	It is not a substitute for a real hold animation -- the elbow does not bend
-	and the left hand does not come up to support a rifle. It is the difference
-	between seeing your weapon and not.
-]]
-local RAISED = CFrame.Angles(math.rad(-78), 0, math.rad(6))
-local posed: { [Model]: { joint: Motor6D, was: CFrame } } = {}
-
-local function raise(character: Model)
-	local arm = character:FindFirstChild("RightUpperArm")
-		or character:FindFirstChild("Right Arm")
-	local joint = arm and (arm:FindFirstChild("RightShoulder")
-		or arm:FindFirstChild("Right Shoulder"))
-	if not (joint and joint:IsA("Motor6D")) then
-		return
-	end
-	if posed[character] then
-		return
-	end
-	posed[character] = { joint = joint, was = joint.C0 }
-	joint.C0 = joint.C0 * RAISED
-end
-
-local function lower(character: Model)
-	local record = posed[character]
-	if not record then
-		return
-	end
-	if record.joint.Parent then
-		record.joint.C0 = record.was
-	end
-	posed[character] = nil
-end
-
 -- ================================= in hand ==================================
 local held: { [Model]: Model } = {}
+local grips: { [Model]: any } = {}
 
 --[[
 	Put it in the hand, and take the last one away.
@@ -279,52 +248,69 @@ local held: { [Model]: Model } = {}
 ]]
 function Guns.hold(character: Model, id: string): Model?
 	Guns.clear(character)
-	local hand = character:FindFirstChild("RightHand")
-		or character:FindFirstChild("Right Arm")
-	if not (hand and hand:IsA("BasePart")) then
-		return nil
-	end
 	local model = Guns.build(id, character)
 	if not model then
 		return nil
 	end
+
+	--[[
+		Joined into one rigid body first.
+
+		`Rig.grip` welds the primary part to the hand, which is the whole job for
+		the code-built weapons it was written for -- those are single parts. A
+		catalogue gun is eight meshes, so without this the grip carries one of
+		them and leaves the other seven standing in the field.
+	]]
 	local primary = model.PrimaryPart
 	if not primary then
 		model:Destroy()
 		return nil
 	end
-
-	--: Forward along the hand, rolled so the sights sit up. Hand-tuned once and
-	--: kept here rather than per gun: every model in the catalogue is built to
-	--: the same axis, and a per-gun offset table would be six numbers that all
-	--: turn out to be the same.
-	local offset = CFrame.new(0, -0.35, -0.9)
-	model:PivotTo(hand.CFrame * offset)
-
-	local weld = Instance.new("WeldConstraint")
-	weld.Part0 = hand
-	weld.Part1 = primary
-	weld.Parent = primary
-
-	--: Everything that is not the primary is welded to it, or the model comes
-	--: apart the moment the arm moves.
 	for _, descendant in model:GetDescendants() do
 		if descendant:IsA("BasePart") and descendant ~= primary then
 			local join = Instance.new("WeldConstraint")
 			join.Part0 = primary
 			join.Part1 = descendant
 			join.Parent = descendant
+		end
+	end
+	--: Released only once every weld exists, so the assembly enters the
+	--: simulation consistent instead of being built inside it.
+	for _, descendant in model:GetDescendants() do
+		if descendant:IsA("BasePart") then
 			descendant.Anchored = false
 		end
 	end
-	primary.Anchored = false
+
+	--[[
+		`Rig.grip` does the rest, and did before any of it was written here.
+
+		The hand-rolled version was a weld to `RightHand`, a fallback to
+		`Right Arm`, `Massless` on every part so the arm is not weighed down,
+		`CanCollide` off, and a hard-coded offset -- which is `Rig.grip`, line
+		for line, minus the R6 hand lookup it gets right and the `release(keep)`
+		that drops a weapon on the floor instead of destroying it.
+
+		Reaching for the engine first would have cost one grep.
+	]]
+	local handle = Rig.grip(character, model, { parent = character })
+	if not handle then
+		model:Destroy()
+		return nil
+	end
+	grips[character] = handle
 	held[character] = model
-	raise(character)
 	return model
 end
 
 function Guns.clear(character: Model)
-	lower(character)
+	local handle = grips[character]
+	if handle then
+		--: Destroyed rather than dropped: `Caches` owns what appears on a floor,
+		--: and a weapon left behind by a swap would be loot nobody placed.
+		handle:release(false)
+	end
+	grips[character] = nil
 	local model = held[character]
 	if model then
 		model:Destroy()

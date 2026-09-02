@@ -454,6 +454,21 @@ function World.build(): any
 	--: `Neutral = false` with no Teams accepts nobody at all, which is a spawn
 	--: pad that silently refuses every player.
 	pad.Neutral = true
+
+	--[[
+		No spawn shield.
+
+		A `SpawnLocation` grants a ForceField for ten seconds by default, and a
+		ForceField is a bright blue sphere drawn around the character. In third
+		person it washes out the weapon; in first person the camera sits inside
+		it, which is a screen full of blue haze and white sparkles with the
+		world barely visible through it.
+
+		That is what "I can't see the gun" and "the view is a blue fog" both
+		were -- neither had anything to do with the weapon or the world. A
+		shooter with no respawn invulnerability does not want it anyway.
+	]]
+	pad.Duration = 0
 	pad.Color = Color3.fromRGB(96, 92, 88)
 	pad.Material = Enum.Material.Concrete
 	pad.MaterialVariant = "ConcreteFloor"

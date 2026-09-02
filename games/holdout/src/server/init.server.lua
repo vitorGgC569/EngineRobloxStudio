@@ -103,6 +103,7 @@ for _, player in Players:GetPlayers() do
 end
 local Caches = require(script.systems.Caches)
 local Fight = require(script.systems.Fight)
+local Rig = Forge.Rig
 Fight.start()
 local stocked = Caches.build(Workspace:WaitForChild("World"))
 Debug.info(string.format("world: %d trees, %d rocks, %d ruins, %d caches",
@@ -327,6 +328,13 @@ end)
 ]]
 local function setUp(player: Player)
 	local function onCharacter()
+		--: Roblox's own Animate script overwrites any pose put on a character,
+		--: so it goes before anything tries to. The client does the same for its
+		--: own view; doing it here is what makes other players see the stance
+		--: rather than a stock idle.
+		if player.Character then
+			Rig.stripDefaultAnimate(player.Character)
+		end
 		posture[player] = "stand"
 		sprinting[player], aiming[player] = false, false
 		applyPosture(player, "stand")

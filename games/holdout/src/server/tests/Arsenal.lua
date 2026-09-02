@@ -212,7 +212,10 @@ return function(Testing)
 				built += 1
 				local _, size = model:GetBoundingBox()
 				local longest = math.max(size.X, size.Y, size.Z)
-				t:expect(longest > 1 and longest < 6,
+				--: Wide, because these are deliberately not real proportions -- the
+			--: band exists to catch a model that arrived unscaled or inside out,
+			--: not to hold a tuning decision still.
+			t:expect(longest > 2 and longest < 12,
 					gun.id .. " is a plausible size (" .. string.format("%.1f", longest) .. ")")
 				t:expect(model.PrimaryPart ~= nil, gun.id .. " has something to weld through")
 				model:Destroy()
@@ -254,9 +257,13 @@ return function(Testing)
 						.. string.format("%.1f", distance) .. " studs)")
 
 				--: Welded, or it stays behind the first time the arm moves.
+				--: `Weld` or `WeldConstraint`: the engine's gripper uses the
+				--: first for the hand and this file uses the second to join the
+				--: meshes, and the assertion is that the thing cannot fall off
+				--: rather than which class did it.
 				local welds = 0
 				for _, d in model:GetDescendants() do
-					if d:IsA("WeldConstraint") then
+					if d:IsA("WeldConstraint") or d:IsA("Weld") then
 						welds += 1
 					end
 				end

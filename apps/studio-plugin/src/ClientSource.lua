@@ -145,6 +145,95 @@ function COMMANDS.prompt_trigger(params)
 	}
 end
 
+--[[
+	The client's own DataModel, which nothing could see before.
+
+	`gui_tree` answered one question -- what interface exists -- and every other
+	question about the client had no answer at all. Debugging a first-person
+	weapon meant writing state into a TextLabel and reading it back through the
+	GUI tree, because that was the only channel out of a running client.
+
+	A viewmodel parented to the camera, a part hidden by
+	`LocalTransparencyModifier`, an effect that only exists on one machine: all
+	of it lives here and none of it replicates, so the server cannot be asked.
+
+	Same shape as the server's `dm.tree` and `dm.properties`, deliberately, so a
+	caller can point the same code at either side.
+]]
+function COMMANDS.tree(params)
+	local root = resolve(params.path or "Workspace")
+	local maxDepth = tonumber(params.depth) or 2
+	local limit = tonumber(params.limit) or 400
+	local seen = 0
+
+	local function walk(instance, depth)
+		seen += 1
+		local node = {
+			path = instance:GetFullName(),
+			name = instance.Name,
+			className = instance.ClassName,
+		}
+		local children = instance:GetChildren()
+		node.childCount = #children
+		if depth >= maxDepth or seen >= limit then
+			return node
+		end
+		local kids = {}
+		for _, child in ipairs(children) do
+			if seen >= limit then
+				node.childrenOmitted = #children - #kids
+				break
+			end
+			table.insert(kids, walk(child, depth + 1))
+		end
+		if #kids > 0 then
+			node.children = kids
+		end
+		return node
+	end
+
+	return { root = params.path or "Workspace", tree = walk(root, 0),
+		truncated = seen >= limit }
+end
+
+function COMMANDS.properties(params)
+	local instance = resolve(params.path)
+	local wanted = params.properties
+	if type(wanted) ~= "table" then
+		error({ code = "E_BAD_PARAMS",
+			message = "properties must be a list of names" })
+	end
+	local out = {}
+	for _, name in ipairs(wanted) do
+		--: A property that does not exist on this class is not an error worth
+		--: failing the whole call for; the caller asked a reasonable question
+		--: about a mixed list of instances.
+		local ok, value = pcall(function()
+			return (instance :: any)[name]
+		end)
+		if ok then
+			local kind = typeof(value)
+			if kind == "Vector3" then
+				out[name] = { value.X, value.Y, value.Z }
+			elseif kind == "CFrame" then
+				out[name] = { value.Position.X, value.Position.Y, value.Position.Z }
+			elseif kind == "Color3" then
+				out[name] = { value.R, value.G, value.B }
+			elseif kind == "EnumItem" then
+				out[name] = tostring(value)
+			elseif kind == "Instance" then
+				out[name] = value:GetFullName()
+			elseif kind == "number" or kind == "string" or kind == "boolean" then
+				out[name] = value
+			else
+				out[name] = tostring(value)
+			end
+		end
+	end
+	return { path = instance:GetFullName(), className = instance.ClassName,
+		properties = out }
+end
+
 function COMMANDS.gui_tree(params)
 	local playerGui = player:FindFirstChildOfClass("PlayerGui")
 	if playerGui == nil then

@@ -153,6 +153,8 @@ local REGISTRY: { [string]: Handler } = {
 	-- the client half of the engine, reached through the server
 	["client.info"] = ClientCommands.info,
 	["client.prompt_trigger"] = ClientCommands.promptTrigger,
+	["client.tree"] = ClientCommands.tree,
+	["client.properties"] = ClientCommands.properties,
 	["client.gui_tree"] = ClientCommands.guiTree,
 	["client.gui_click"] = ClientCommands.guiClick,
 	["client.player_state"] = ClientCommands.playerState,

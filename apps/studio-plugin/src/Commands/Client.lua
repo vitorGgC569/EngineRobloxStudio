@@ -172,6 +172,21 @@ function ClientCommands.promptTrigger(params: { [string]: any }): any
 	return ClientCommands.invoke("prompt_trigger", resolveForClient(params, "path"))
 end
 
+--[[
+	The client's DataModel, forwarded.
+
+	Same parameters and same answer shape as the server's `dm.tree` and
+	`dm.properties`, so the only difference at the call site is which side of
+	the wire is being asked.
+]]
+function ClientCommands.tree(params: { [string]: any }): any
+	return ClientCommands.invoke("tree", params)
+end
+
+function ClientCommands.properties(params: { [string]: any }): any
+	return ClientCommands.invoke("properties", params)
+end
+
 function ClientCommands.guiTree(params: { [string]: any }): any
 	return ClientCommands.invoke("gui_tree", params)
 end

@@ -40,6 +40,13 @@ python forge/forge.py gametest <game>   # opens, boots, runs scenarios, prints
 python forge/forge.py playtest <game>   # plays it and photographs the screen
 ```
 
+Both DataModels are readable. `dm.tree` / `dm.properties` answer from the
+server; `client.tree` / `client.properties` answer from the running client,
+which is the only place a viewmodel, a `LocalTransparencyModifier`, or anything
+else built client-side exists. Ask the right side: a first-person weapon was
+debugged for hours by writing state into a TextLabel and reading it back
+through the GUI tree, because the client half had no other way out.
+
 `gametest` is the cheap loop: no screenshots, finishes in about a second, and
 it is what should be reached for first. Scenarios live in
 `<game>/src/server/tests/` and register through `Forge.Testing`. The assertion

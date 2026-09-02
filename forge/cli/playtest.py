@@ -340,9 +340,20 @@ def run(game: str, wait: float = 9.0, panels: tuple[str, ...] = (),
     #   never declares anything, so waiting forever for the signal would turn a
     #   broken game into a hang instead of a report.
     #]]
-    deadline = time.time() + max(wait, 3.0) * 3
+    #[[
+    #   The readiness wait gets its own budget, not the whole one.
+    #
+    #   This shared a deadline with the settle loop below, so a game that never
+    #   declares readiness -- every game written before `Debug.ready` existed --
+    #   spent the entire budget waiting for a signal that was never coming, and
+    #   the settle loop then ran zero times. The report was "no running session
+    #   answered after starting one" for a game that had booted fine and was
+    #   sitting there answering.
+    #]]
+    budget = max(wait, 3.0) * 3
     declared = False
-    while time.time() < deadline:
+    ready_deadline = time.time() + budget * 0.6
+    while time.time() < ready_deadline:
         try:
             value = bridge.call("dm.properties", {
                 "path": "ReplicatedStorage.ForgeReady",
@@ -356,6 +367,9 @@ def run(game: str, wait: float = 9.0, panels: tuple[str, ...] = (),
         time.sleep(0.75)
 
     settled, last = 0, (-1, -1)
+    #: Whatever the readiness wait did not use, plus a floor, so the settle
+    #: loop always gets a real chance to run.
+    deadline = time.time() + (budget if not declared else budget * 0.5)
     while time.time() < deadline:
         session = _server_session(bridge)
         if session:

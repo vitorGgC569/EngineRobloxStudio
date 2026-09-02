@@ -77,8 +77,30 @@ end
 --    Built here rather than lazily on join, because a player arrives faster
 --    than a world builds and the failure mode is a character in freefall
 --    against an empty sky. That has happened twice in this repository already.
+--[[
+	Nobody stands in a world that is still being built.
+
+	Moving the spawn pad to the front of `World.build` gave a player somewhere
+	to stand from the first frame, and introduced a worse problem: terrain is
+	carved *underneath* a character who is already standing there, and Roblox
+	ejects anything a new voxel intersects. The player was launched over the
+	valley.
+
+	Holding character loading until the world exists is the fix with no other
+	side. It costs the eleven seconds the terrain was always going to take, and
+	during them a player waits instead of being thrown.
+]]
+Players.CharacterAutoLoads = false
+
 local World = require(script.systems.World)
 local built = World.build()
+
+Players.CharacterAutoLoads = true
+for _, player in Players:GetPlayers() do
+	if not player.Character then
+		player:LoadCharacter()
+	end
+end
 local Caches = require(script.systems.Caches)
 local Fight = require(script.systems.Fight)
 Fight.start()
@@ -123,7 +145,23 @@ local function applyPosture(player: Player, id: string)
 		somebody else. Saying that plainly beats shipping a player buried in a
 		field.
 	]]
-	humanoid.HipHeight = 2
+	--[[
+		And the character is left alone entirely.
+
+		This wrote `HipHeight = 2` to undo an earlier version that lowered it.
+		Writing it at all is the mistake: this avatar's rig is built from
+		`AnimationConstraint` and `BallSocketConstraint`, not `Motor6D`, so the
+		root height is one term in a physics solve rather than a number that
+		describes the character. Forcing a value the solver did not arrive at
+		makes it correct the difference, and pressing crouch launched the player
+		over the valley.
+
+		Posture stays real in every way that decides a fight -- view height,
+		speed, spread, hit profile. What it still does not do is *look* like
+		crouching, and on this rig that needs the joints driven directly or an
+		animation to drive them. Neither exists here yet, and pretending
+		otherwise by shoving the root around is what caused the flight.
+	]]
 	player:SetAttribute("posture", id)
 	player:SetAttribute("profile", state.profile)
 	Net.fire(player, "postured", { posture = id, speed = humanoid.WalkSpeed,
@@ -392,6 +430,10 @@ Debug.probe("session", function()
 		seed = Rng.masterSeed(),
 	}
 end)
+
+--: The last line of the bootstrap, and the only honest answer to "is it up".
+--: Everything that photographs or measures this game waits for it.
+Debug.ready(Config.name)
 
 Debug.info(string.format("%s up in %.2fs", Config.name, os.clock() - startedAt))
 print(string.format("[%s] server ready in %.2fs (seed %d)", Config.name, os.clock() - startedAt, Config.seed))

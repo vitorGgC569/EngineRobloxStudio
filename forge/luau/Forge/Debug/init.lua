@@ -248,6 +248,34 @@ end
 
 -- ============================== the seam ====================================
 --[[
+	Say the game has finished starting.
+
+	Every automated look at a running game -- screenshots, interface
+	measurement, the quality gate -- has to answer "is it up yet", and until
+	now each of them guessed. The guesses were all versions of watching the
+	HUD stop changing, and they were all wrong in the same way: a heads-up
+	display builds its labels in the first frame and fills them as answers
+	arrive, so anything watching it settles while the readout still says
+	"Locating" and the player is still unarmed.
+
+	A game whose server spends twelve seconds carving terrain was therefore
+	photographed at second two, every time, and every absence in that
+	photograph was read as a bug. Several were investigated. None existed.
+
+	One line at the end of a bootstrap ends that whole category. What cannot be
+	inferred from outside is trivially known from inside.
+]]
+function Debug.ready(label: string?)
+	local holder = ReplicatedStorage:FindFirstChild("ForgeReady")
+	if not holder then
+		holder = Instance.new("StringValue")
+		holder.Name = "ForgeReady"
+		holder.Parent = ReplicatedStorage
+	end
+	;(holder :: StringValue).Value = label or "ready"
+end
+
+--[[
 	Publishes the game's self-description where a validator can read it.
 
 	This is a StringValue, not a BindableFunction, and the reason matters:

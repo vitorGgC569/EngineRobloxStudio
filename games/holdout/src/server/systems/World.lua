@@ -412,6 +412,7 @@ function World.build(): any
 	folder.Parent = Workspace
 	root = folder
 
+
 	carve()
 	local trees, rocks = forest(folder)
 	local tufts = undergrowth(folder)
@@ -434,6 +435,17 @@ function World.build(): any
 		wall.CanCollide = true
 	end
 
+
+	--[[
+		Built last, and that is fine now.
+
+		This was moved to the front so a player joining mid-build had somewhere
+		to stand, which traded one bug for a worse one: terrain carved under a
+		character already standing there ejects them over the valley. The
+		bootstrap now holds character loading until the world is finished, so
+		there is nobody to catch out and the pad can sit where it belongs --
+		after the ground it is measured against actually exists.
+	]]
 	local pad = Instance.new("SpawnLocation")
 	pad.Name = "Spawn"
 	pad.Size = Vector3.new(18, 1, 18)

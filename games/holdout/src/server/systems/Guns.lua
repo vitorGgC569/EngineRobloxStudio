@@ -61,6 +61,23 @@ local MODELS = {
 local METAL = Color3.fromRGB(52, 54, 58)
 local FURNITURE = Color3.fromRGB(74, 62, 50)
 
+--[[
+	Make the thing copyable.
+
+	Models fetched through `InsertService` arrive with `Archivable = false` on
+	their contents, and `Clone()` silently skips anything non-archivable -- so
+	cloning one gives back a Model with no parts in it, no error, and nothing to
+	suggest what happened. The first-person weapon was invisible for exactly
+	this reason: the copy existed, was positioned correctly every frame, and was
+	empty.
+]]
+local function archivable(model: Instance)
+	model.Archivable = true
+	for _, instance in model:GetDescendants() do
+		instance.Archivable = true
+	end
+end
+
 local function dress(model: Instance)
 	local parts: { Instance } = if model:IsA("BasePart") then { model }
 		else model:GetDescendants()
@@ -72,6 +89,10 @@ local function dress(model: Instance)
 		part.CanCollide = false
 		part.CanQuery = false
 		part.CastShadow = false
+		--: Welded to a hand, this becomes part of the character's physics
+		--: assembly. A rifle's worth of mass hanging off one arm is a character
+		--: that walks badly and sinks into ground it should stand on.
+		part.Massless = true
 		if part:IsA("MeshPart") and (part :: MeshPart).TextureID ~= "" then
 			continue
 		end
@@ -81,6 +102,34 @@ local function dress(model: Instance)
 			or string.find(name, "wood", 1, true)
 		part.Color = if wood then FURNITURE else METAL
 		part.Material = if wood then Enum.Material.Wood else Enum.Material.Metal
+	end
+end
+
+--[[
+	Take the rig out of the weapon.
+
+	The catalogue's guns are articulated: eight mesh parts joined by Motor6Ds to
+	a root, driven by bones and an `AnimationController`, with a folder of
+	initial poses and named moving pieces -- slide, hammer, trigger, magazine.
+	Somebody built these to be animated, and one day that will be worth using.
+
+	Today it is actively harmful. A skinned mesh follows its bones, not its
+	part's CFrame, so a rigged model welded to a hand goes where the rig says
+	rather than where it was put -- and a rig with no animation playing says
+	"the pose I was exported in". Welding every part to a primary on top of that
+	leaves two systems arguing about the same geometry.
+
+	Stripped to plain meshes it is a prop, which is all a weapon needs to be
+	until this game has hold animations to drive the rig with.
+]]
+local function strip(model: Instance)
+	for _, instance in model:GetDescendants() do
+		if instance:IsA("Motor6D") or instance:IsA("Bone")
+				or instance:IsA("AnimationController")
+				or instance:IsA("Animator")
+				or (instance:IsA("Folder") and instance.Name == "InitialPoses") then
+			instance:Destroy()
+		end
 	end
 end
 
@@ -128,7 +177,25 @@ function Guns.build(id: string, parent: Instance): Model?
 		end
 	end
 
+	--[[
+		Lie the weapon along the axis everything else assumes.
+
+		These models are exported with their length on X, and every offset that
+		places one -- in a hand, in front of a camera, on a floor -- wants to
+		think in "forward". Turning the model once here means one convention
+		instead of a rotation guess at each of the three call sites.
+	]]
+	do
+		local l, h = Place.bounds(model)
+		local extent = h - l
+		if extent.X > extent.Z then
+			Place.turn(model, math.pi / 2)
+		end
+	end
+
 	model.Name = "Gun_" .. id
+	strip(model)
+	archivable(model)
 	dress(model)
 	model.Parent = parent
 
@@ -136,7 +203,11 @@ function Guns.build(id: string, parent: Instance): Model?
 	--: pivot and one primary part to weld through.
 	if model:IsA("Model") then
 		local built = model :: Model
-		built.PrimaryPart = built.PrimaryPart
+		--: `RootPart` is the rig's own root and the one part every other is
+		--: positioned against, so it is the honest thing to pivot and weld
+		--: through even after the rig itself is gone.
+		built.PrimaryPart = built:FindFirstChild("RootPart") :: BasePart?
+			or built.PrimaryPart
 			or built:FindFirstChildWhichIsA("BasePart")
 		return built
 	end
@@ -146,6 +217,54 @@ function Guns.build(id: string, parent: Instance): Model?
 	wrapper.PrimaryPart = model :: BasePart
 	wrapper.Parent = parent
 	return wrapper
+end
+
+-- ================================== the pose ================================
+--[[
+	Raise the arm that is holding the thing.
+
+	A weapon welded to a hand is a weapon hanging at hip height beside the leg,
+	because that is where a Roblox character's arms are. In third person it
+	looks like the character forgot they were armed; in first person the camera
+	sits in the head and never sees it at all -- which is indistinguishable, to
+	the person playing, from the gun not existing.
+
+	`C0` on the shoulder joint rather than an animation. Roblox animations write
+	`Transform`, which composes on top of `C0` instead of replacing it, so the
+	arm stays raised through walking, running and idling without this project
+	needing an animation asset it does not have and cannot author.
+
+	It is not a substitute for a real hold animation -- the elbow does not bend
+	and the left hand does not come up to support a rifle. It is the difference
+	between seeing your weapon and not.
+]]
+local RAISED = CFrame.Angles(math.rad(-78), 0, math.rad(6))
+local posed: { [Model]: { joint: Motor6D, was: CFrame } } = {}
+
+local function raise(character: Model)
+	local arm = character:FindFirstChild("RightUpperArm")
+		or character:FindFirstChild("Right Arm")
+	local joint = arm and (arm:FindFirstChild("RightShoulder")
+		or arm:FindFirstChild("Right Shoulder"))
+	if not (joint and joint:IsA("Motor6D")) then
+		return
+	end
+	if posed[character] then
+		return
+	end
+	posed[character] = { joint = joint, was = joint.C0 }
+	joint.C0 = joint.C0 * RAISED
+end
+
+local function lower(character: Model)
+	local record = posed[character]
+	if not record then
+		return
+	end
+	if record.joint.Parent then
+		record.joint.C0 = record.was
+	end
+	posed[character] = nil
 end
 
 -- ================================= in hand ==================================
@@ -179,7 +298,7 @@ function Guns.hold(character: Model, id: string): Model?
 	--: kept here rather than per gun: every model in the catalogue is built to
 	--: the same axis, and a per-gun offset table would be six numbers that all
 	--: turn out to be the same.
-	local offset = CFrame.new(0, -0.4, -1.1) * CFrame.Angles(0, math.rad(90), 0)
+	local offset = CFrame.new(0, -0.35, -0.9)
 	model:PivotTo(hand.CFrame * offset)
 
 	local weld = Instance.new("WeldConstraint")
@@ -200,10 +319,12 @@ function Guns.hold(character: Model, id: string): Model?
 	end
 	primary.Anchored = false
 	held[character] = model
+	raise(character)
 	return model
 end
 
 function Guns.clear(character: Model)
+	lower(character)
 	local model = held[character]
 	if model then
 		model:Destroy()

@@ -27,7 +27,19 @@ local ContextActionService = game:GetService("ContextActionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local Workspace = game:GetService("Workspace")
 local TweenService = game:GetService("TweenService")
+--[[
+	Ask for the camera, never remember it.
+
+	`Workspace.CurrentCamera` is replaced when a character spawns, so anything
+	holding the one that existed at boot is holding an orphan: parented to it,
+	a viewmodel is in the DataModel, positioned correctly, and rendered by
+	nobody.
+]]
+local function eye(): Camera
+	return Workspace.CurrentCamera :: Camera
+end
 
 local Forge = require(ReplicatedStorage:WaitForChild("Forge"))
 local Shared = ReplicatedStorage:WaitForChild("Shared")
@@ -308,6 +320,122 @@ end)
 	without it, first person is a game that tells you you are holding an M9 and
 	never shows you one.
 ]]
+--[[
+	The weapon you can actually see.
+
+	A gun welded to the character's hand is where a gun belongs, and in first
+	person it is invisible: the hand hangs at hip height, three studs below the
+	camera, and Roblox hides everything parented to a character while the
+	camera is inside its head anyway. Raising the arm through the shoulder joint
+	does not survive the default animation script, and the project has no hold
+	animation to replace it with.
+
+	So the same thing every first-person game does: a second copy of the weapon,
+	parented to the camera rather than to the body, sitting at a fixed offset
+	from the eye. It is not the gun that shoots -- the server's is, welded to
+	the hand, and that one is what other players see. This one exists purely so
+	that the person holding it can see it.
+
+	The real one is hidden locally while this is up, or the player sees two.
+]]
+--: Right of centre, below the eye, and close. A weapon a stud and a half away
+--: reads as somebody else's; this is the distance it is actually held at.
+local HELD_AT = CFrame.new(0.6, -0.5, -0.9) * CFrame.Angles(0, math.rad(-3), 0)
+local view: Model? = nil
+local viewOf: string? = nil
+
+local function clearView()
+	if view then
+		view:Destroy()
+	end
+	view, viewOf = nil, nil
+end
+
+local function viewmodel(character: Model)
+	local real: Model? = nil
+	for _, child in character:GetChildren() do
+		if child:IsA("Model") and string.match(child.Name, "^Gun_") then
+			real = child :: Model
+			break
+		end
+	end
+	if not real then
+		clearView()
+		return
+	end
+
+	--: Third person shows the real weapon in the real hand, which is correct
+	--: and needs nothing from this.
+	if not firstPerson then
+		clearView()
+		for _, part in real:GetDescendants() do
+			if part:IsA("BasePart") then
+				part.LocalTransparencyModifier = 0
+			end
+		end
+		return
+	end
+
+	for _, part in real:GetDescendants() do
+		if part:IsA("BasePart") then
+			part.LocalTransparencyModifier = 1
+		end
+	end
+
+	--[[
+		Rebuild when the copy does not match what it is a copy of.
+
+		Keying only on the weapon's name looks right and is a trap: the model
+		replicates before its parts do, so the first frame a gun exists it is an
+		empty Model. Cloning then produces an empty viewmodel -- and caching on
+		the name means that empty copy is kept for the rest of the round.
+
+		Counting parts is the check that actually holds, because it fails in the
+		same way the thing it guards against does.
+	]]
+	local want = 0
+	for _, d in real:GetDescendants() do
+		if d:IsA("BasePart") then
+			want += 1
+		end
+	end
+	local have = 0
+	if view then
+		for _, d in view:GetDescendants() do
+			if d:IsA("BasePart") then
+				have += 1
+			end
+		end
+	end
+
+	if viewOf ~= real.Name or have ~= want or want == 0 then
+		clearView()
+		if want == 0 then
+			return
+		end
+		local copy = real:Clone()
+		for _, part in copy:GetDescendants() do
+			if part:IsA("BasePart") then
+				part.Anchored = true
+				part.CanCollide = false
+				part.CanQuery = false
+				part.CastShadow = false
+				part.LocalTransparencyModifier = 0
+			end
+		end
+		--: Parented to the world rather than to the camera. A camera-parented
+		--: part renders, but the camera is replaced on every respawn and the
+		--: reference is easy to lose without any error to show for it; an
+		--: anchored, uncollidable, unqueryable part in the workspace is inert
+		--: in exactly the same way and cannot be orphaned.
+		copy.Parent = Workspace
+		view, viewOf = copy, real.Name
+	end
+	if view then
+		view:PivotTo(eye().CFrame * HELD_AT)
+	end
+end
+
 RunService.RenderStepped:Connect(function()
 	local character = player.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
@@ -318,15 +446,7 @@ RunService.RenderStepped:Connect(function()
 	humanoid.CameraOffset = Vector3.new(
 		if firstPerson then 0 else SHOULDER, -drop, 0)
 
-	for _, child in character:GetChildren() do
-		if child:IsA("Model") and string.match(child.Name, "^Gun_") then
-			for _, part in child:GetDescendants() do
-				if part:IsA("BasePart") then
-					part.LocalTransparencyModifier = 0
-				end
-			end
-		end
-	end
+	viewmodel(character)
 end)
 
 -- =================================== gun ====================================
@@ -339,8 +459,6 @@ end)
 	honest way to render a shooter.
 ]]
 local UserInputService = game:GetService("UserInputService")
-local Workspace = game:GetService("Workspace")
-local camera = Workspace.CurrentCamera
 
 local gunLabel = UI.label(screen, "", {
 	name = "Gun", size = T.text.sm, font = T.font.bold, color = INK,
@@ -545,7 +663,7 @@ Net.on("shot", function(payload: any)
 end)
 
 local function pullTrigger()
-	local look = camera.CFrame.LookVector
+	local look = eye().CFrame.LookVector
 	pcall(function()
 		Net.request("fire", { x = look.X, y = look.Y, z = look.Z })
 	end)

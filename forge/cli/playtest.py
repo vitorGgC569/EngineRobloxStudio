@@ -331,8 +331,31 @@ def run(game: str, wait: float = 9.0, panels: tuple[str, ...] = (),
     #   loading screen.
     #]]
     session = None
-    settled, last = 0, -1
+    #[[
+    #   Ask the game, and only guess when it does not answer.
+    #
+    #   `Debug.ready` is one line at the end of a bootstrap and it replaces
+    #   every heuristic below with a fact. The heuristics stay for games
+    #   written before it existed -- and because a game whose bootstrap throws
+    #   never declares anything, so waiting forever for the signal would turn a
+    #   broken game into a hang instead of a report.
+    #]]
     deadline = time.time() + max(wait, 3.0) * 3
+    declared = False
+    while time.time() < deadline:
+        try:
+            value = bridge.call("dm.properties", {
+                "path": "ReplicatedStorage.ForgeReady",
+                "properties": ["Value"],
+            })
+            if (value.get("properties") or {}).get("Value"):
+                declared = True
+                break
+        except Exception:  # noqa: BLE001 - not there yet, or never will be
+            pass
+        time.sleep(0.75)
+
+    settled, last = 0, (-1, -1)
     while time.time() < deadline:
         session = _server_session(bridge)
         if session:
@@ -345,21 +368,25 @@ def run(game: str, wait: float = 9.0, panels: tuple[str, ...] = (),
             #: HUD that has finished being built, not one that has finished
             #: being filled -- and a readout still reading "Locating" is
             #: exactly what a game whose server is mid-boot looks like.
-            filled = False
             try:
-                filled = any((n.get("text") or "").strip()
-                             for n in _gui_nodes(bridge)
+                filled = sum(1 for n in _gui_nodes(bridge)
                              if n.get("className") in ("TextLabel", "TextButton")
+                             and (n.get("text") or "").strip()
                              and "RQEClient" not in n.get("path", ""))
             except Exception:  # noqa: BLE001
-                filled = False
-            if count >= 3 and filled:
-                settled = settled + 1 if count == last else 0
-                last = count
+                filled = 0
+            #: Count what is *filled*, not what exists. A HUD builds its labels
+            #: in one frame and fills them as the answers arrive, so counting
+            #: elements settles while the readout still says "Locating" and the
+            #: weapon panel is blank -- which is exactly the half-booted
+            #: photograph this poll was added to prevent, one layer down.
+            if declared or (count >= 3 and filled >= 1):
+                settled = settled + 1 if (count, filled) == last else 0
+                last = (count, filled)
                 if settled >= 2:
                     break
             else:
-                last = count
+                last = (count, filled)
         time.sleep(0.5)
     if not session:
         report.add("error", "no running session answered after starting one")

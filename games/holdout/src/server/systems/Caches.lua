@@ -27,6 +27,7 @@ local Workspace = game:GetService("Workspace")
 
 local Forge = require(ReplicatedStorage:WaitForChild("Forge"))
 local Arsenal = require(ReplicatedStorage.Shared.Arsenal)
+local Guns = require(script.Parent.Guns)
 local Loot = require(ReplicatedStorage.Shared.Loot)
 
 local Rng = Forge.Core.Rng
@@ -127,17 +128,38 @@ local function spill(drop: any, at: Vector3, parent: Instance)
 	nextDrop += 1
 	local id = "d" .. nextDrop
 
+	local yaw = stream:number(0, 6.28)
 	local item = Instance.new("Part")
 	item.Name = "Drop"
 	item.Size = if drop.kind == "gun" then Vector3.new(3.4, 0.6, 1)
 		else Vector3.new(1.6, 1.2, 1.2)
-	item.CFrame = CFrame.new(at) * CFrame.Angles(0, stream:number(0, 6.28), 0)
+	item.CFrame = CFrame.new(at) * CFrame.Angles(0, yaw, 0)
 	item.Anchored = true
 	item.CanCollide = false
 	item.Color = KIND_COLOUR[drop.kind] or Color3.fromRGB(180, 180, 180)
 	item.Material = Enum.Material.Metal
 	item:SetAttribute("drop", id)
 	item.Parent = parent
+
+	--[[
+		A dropped gun is drawn as that gun.
+
+		The part stays -- it carries the `drop` attribute and the prompt, and
+		moving those onto a catalogue model would mean the interaction code
+		having to care what shape the loot is. It just turns invisible and the
+		real weapon sits where it was.
+
+		Recognising an M24 on the floor from across a room is the whole reason
+		to walk into a building, and a grey box cannot be recognised from
+		anywhere.
+	]]
+	if drop.kind == "gun" then
+		local model = Guns.lay(drop.id, at, yaw, parent)
+		if model then
+			item.Transparency = 1
+			model.Parent = item
+		end
+	end
 
 	local gun = if drop.kind == "gun" then Arsenal.get(drop.id) else nil
 	local name = if gun then gun.name

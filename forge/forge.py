@@ -767,29 +767,43 @@ def cmd_gametest(args: argparse.Namespace) -> int:
     from forge.cli import gametest
 
     #[[
-    #   The game argument is checked, not decoration.
+    #   The game argument is checked against the report, not against Studio.
     #
-    #   The suite reads a report the *running* game published, so it always
-    #   answers about whatever Studio has open. Naming a project that is not
-    #   the one open used to be impossible to express and is now caught: a
-    #   green suite attributed to the wrong game is worse than no suite.
+    #   This used to compare the project name to the place name the bridge
+    #   reports, which is "Game" for every place opened from a local file
+    #   whatever the project is called -- so the guard rejected every correct
+    #   run and could never have caught an incorrect one. The report now says
+    #   which game produced it, which is the only party that knows.
+    #
+    #   A green suite attributed to the wrong game is still worse than no
+    #   suite, so a mismatch is fatal; an unsigned report is only a warning,
+    #   because older games do not carry a name and refusing them would break
+    #   working projects to enforce bookkeeping.
     #]]
-    if args.game:
-        root = _resolve(args.game)
-        try:
-            place = gametest.live_place()
-        except Exception:  # noqa: BLE001 - the run below reports it properly
-            place = None
-        if place and root.name.lower() not in str(place).lower():
-            print(f"gametest: Studio has '{place}' open, not '{root.name}'.")
-            print("          Open that place, or drop the argument to test what is open.")
-            return 1
 
+    #: Naming a game means "test that game", which has to include starting it.
+    #: Without a name the command still reads whatever is already running,
+    #: which is the fast path when a session is open in front of you.
     try:
+        if args.game:
+            gametest.boot(_resolve(args.game).name)
         report = gametest.run(args.filter)
     except gametest.BridgeError as exc:
         print(f"gametest: {exc}")
         return 1
+
+    if args.game:
+        wanted = _resolve(args.game).name
+        signed = report.get("game")
+        if signed and signed != wanted:
+            print(f"gametest: the running game reports itself as '{signed}', "
+                  f"not '{wanted}'. Open that place, or drop the argument.")
+            return 1
+        if not signed:
+            print(f"gametest: the running game does not say which project it is, "
+                  f"so this report cannot be confirmed to be '{wanted}'. Pass the "
+                  f"name to Testing.runAndPublish to fix that.")
+
     print(gametest.render(report))
     return 0 if report.get("ok") else 1
 

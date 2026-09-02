@@ -566,7 +566,7 @@ end)
 ]]
 if Config.selfTest then
 	task.defer(function()
-		local report = Forge.Testing.runAndPublish(script:FindFirstChild("tests"))
+		local report = Forge.Testing.runAndPublish(script:FindFirstChild("tests"), nil, "carvewood")
 		Debug.info(string.format("self test: %d passed, %d failed, %d hung",
 			report.passed or 0, report.failed or 0, report.timedOut or 0))
 	end)

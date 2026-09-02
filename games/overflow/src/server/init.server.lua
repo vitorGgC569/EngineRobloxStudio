@@ -141,7 +141,7 @@ if Config.selfTest then
 			waited += task.wait(0.5)
 		end
 
-		local report = Forge.Testing.runAndPublish(script:FindFirstChild("tests"))
+		local report = Forge.Testing.runAndPublish(script:FindFirstChild("tests"), nil, "overflow")
 		Debug.info(string.format(
 			"self test: %d passed, %d failed, %d hung",
 			report.passed or 0, report.failed or 0, report.timedOut or 0))

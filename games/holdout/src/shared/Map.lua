@@ -29,62 +29,67 @@ Map.CELL = 120
 Map.COLUMNS = { "A", "B", "C", "D", "E", "F", "G", "H" }
 
 --[[
-	The named places.
+	The named places, read from the world rather than written twice.
 
-	Each is somewhere a player would say out loud. That is the test for whether
-	an area earns a name: if nobody would ever say "meet me at the north
-	treeline", the north treeline is scenery and does not need one.
+	`World.LANDMARKS` and `World.DISTRICTS` are the only place a building's
+	position is decided. This turns them into areas, with the landmarks given a
+	tighter radius and a higher priority so standing inside the mill reports
+	the mill and not the clearing it sits in.
 
-	`center` and `radius` are the geography `Forge.World.Areas` gained for
-	exactly this. Smaller areas win when they overlap, so standing inside the
-	mill reports the mill and not the clearing it sits in.
+	This was a hand-written table of coordinates that duplicated the world's
+	own. They agreed on the day they were written and nothing kept them
+	agreeing, which is what "the map is not related to the world" means when a
+	player says it out loud.
+
+	`Map` is shared and `World` is server-only, so the layout travels as plain
+	data rather than as a require -- `Map.adopt` is called once at boot and the
+	client is handed the result through the `atlas` remote.
 ]]
-Map.areas = {
-	{
-		id = "hollow", label = "The Hollow",
-		center = Vector3.new(0, 0, 0), radius = 150,
-		note = "The open middle. Nowhere to hide and everywhere to be seen from.",
-	},
-	{
-		id = "mill", label = "Old Mill",
-		center = Vector3.new(0, 0, 0), radius = 46, priority = 1,
-		note = "Ruin in the hollow. Cover from three sides and one doorway.",
-	},
-	{
-		id = "northwood", label = "North Wood",
-		center = Vector3.new(-60, 0, -300), radius = 200,
-		note = "Dense. Nothing sees further than forty studs in here.",
-	},
-	{
-		id = "eastridge", label = "East Ridge",
-		center = Vector3.new(300, 0, -60), radius = 190,
-		note = "Rising ground. The only place a marksman is worth carrying.",
-	},
-	{
-		id = "quarry", label = "The Quarry",
-		center = Vector3.new(230, 0, -210), radius = 110, priority = 1,
-		note = "Ruin on the ridge, overlooking the hollow.",
-	},
-	{
-		id = "southflats", label = "South Flats",
-		center = Vector3.new(60, 0, 300), radius = 200,
-		note = "Low and wet. Long sightlines and no cover worth the name.",
-	},
-	{
-		id = "westcamp", label = "West Camp",
-		center = Vector3.new(-250, 0, 180), radius = 130, priority = 1,
-		note = "Ruin at the treeline. The usual place to fall back to.",
-	},
-	{
-		id = "chapel", label = "Broken Chapel",
-		center = Vector3.new(-180, 0, -230), radius = 110, priority = 1,
-		note = "Ruin in the north wood. Easy to hold, hard to leave.",
-	},
+Map.areas = {}
+
+local NOTES = {
+	hollow = "The open middle. Nowhere to hide and everywhere to be seen from.",
+	northwood = "Dense. Nothing sees further than forty studs in here.",
+	eastridge = "Rising ground. The only place a marksman is worth carrying.",
+	southflats = "Low and wet. Long sightlines and no cover worth the name.",
+	mill = "Ruin in the hollow. Cover from three sides and one doorway.",
+	westcamp = "Ruin at the treeline. The usual place to fall back to.",
+	quarry = "Ruin on the ridge, overlooking the hollow.",
+	chapel = "Ruin in the north wood. Easy to hold, hard to leave.",
 }
 
+--: Districts first so the landmarks sit on top of them in the list; priority
+--: is what actually decides, but the drawing order matters for the map screen.
+function Map.adopt(districts: { any }, landmarks: { any })
+	table.clear(Map.areas)
+	for _, area in districts do
+		table.insert(Map.areas, {
+			id = area.id, label = area.label,
+			center = Vector3.new(area.x, 0, area.z), radius = area.radius,
+			priority = 0, note = NOTES[area.id],
+		})
+	end
+	for _, area in landmarks do
+		table.insert(Map.areas, {
+			id = area.id, label = area.label,
+			center = Vector3.new(area.x, 0, area.z), radius = area.radius,
+			--: Tighter and more specific, so `Areas.at` prefers it.
+			priority = 1, note = NOTES[area.id],
+		})
+	end
+	Map.index()
+	return Map.areas
+end
+
 local byId: { [string]: any } = {}
-for _, area in Map.areas do
-	byId[area.id] = area
+
+--: Rebuilt whenever the layout is adopted, because the areas arrive after
+--: this file loads rather than being written into it.
+function Map.index()
+	table.clear(byId)
+	for _, area in Map.areas do
+		byId[area.id] = area
+	end
 end
 
 function Map.area(id: string): any?

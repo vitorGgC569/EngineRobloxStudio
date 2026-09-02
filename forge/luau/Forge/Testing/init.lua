@@ -483,8 +483,15 @@ end
 
 	One call, so a game's bootstrap can opt in with a single line and a CLI has
 	one thing to trigger.
+
+	`game` is the project's own name, and it is here because nothing else in a
+	running Studio session can supply it. `game.Name` is "Game" for every place
+	opened from a local file, whatever the project is called, so a CLI that
+	guards against attributing a suite to the wrong project cannot ask Studio --
+	it has to be told, by the only party that knows.
 ]]
-function Testing.runAndPublish(suite: Instance?, filter: string?): { [string]: any }
+function Testing.runAndPublish(suite: Instance?, filter: string?,
+                              game: string?): { [string]: any }
 	Testing.clear()
 	local loaded = 0
 	if suite then
@@ -495,7 +502,7 @@ function Testing.runAndPublish(suite: Instance?, filter: string?): { [string]: a
 				end)
 				if not ok then
 					local failure = {
-						ok = false,
+						ok = false, game = game,
 						error = string.format("scenario module '%s' failed to load: %s",
 							module.Name, tostring(err)),
 					}
@@ -508,6 +515,7 @@ function Testing.runAndPublish(suite: Instance?, filter: string?): { [string]: a
 	end
 	local report = Testing.run(filter)
 	report.modules = loaded
+	report.game = game
 	Testing.publish(report)
 	return report
 end

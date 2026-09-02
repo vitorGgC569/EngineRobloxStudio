@@ -191,4 +191,87 @@ return function(Testing)
 				gun.id .. " does not survive translation to the engine's shape")
 		end
 	end)
+
+	--[[
+		Every gun in the arsenal has something to look like.
+
+		`Guns` matches catalogue models by name, and a name is exactly the kind of
+		thing that silently stops matching when the catalogue is regenerated. The
+		failure mode is not an error: it is a player picking up an M24 and holding
+		nothing, which takes a screenshot and a squint to notice and one assertion
+		to catch.
+	]]
+	Testing.scenario("guns have models", function(t)
+		local ServerScriptService = game:GetService("ServerScriptService")
+		local Guns = require(ServerScriptService.Server.systems.Guns)
+		local built = 0
+		for _, gun in Arsenal.guns do
+			local model = Guns.build(gun.id, game:GetService("Workspace"))
+			t:expect(model ~= nil, gun.id .. " resolves to a catalogue model")
+			if model then
+				built += 1
+				local _, size = model:GetBoundingBox()
+				local longest = math.max(size.X, size.Y, size.Z)
+				t:expect(longest > 1 and longest < 6,
+					gun.id .. " is a plausible size (" .. string.format("%.1f", longest) .. ")")
+				t:expect(model.PrimaryPart ~= nil, gun.id .. " has something to weld through")
+				model:Destroy()
+			end
+		end
+		t:expectEqual(built, #Arsenal.guns, "every gun in the arsenal is armed with a model")
+	end)
+
+	--[[
+		A gun given to a character is a gun in that character's hand.
+
+		"I picked up an M9, no asset came, I can't use the gun" is one sentence
+		describing three separate things, and only one of them was the shooting.
+		The weapon was equipped, the ammunition counted down and the tracers
+		flew -- and the player's hands were empty the whole time, because
+		`Weapon.equip` tracks state and has never had anything to do with what
+		is on screen.
+
+		This spawns a real rig, hands it a real weapon and asserts the model is
+		there, welded, and near the hand. It is the check that would have caught
+		it before a person had to.
+	]]
+	Testing.scenario("a gun given is a gun held", function(t)
+		local ServerScriptService = game:GetService("ServerScriptService")
+		local Guns = require(ServerScriptService.Server.systems.Guns)
+
+		local bot = t:spawnBot(Vector3.new(0, 60, 0))
+		local hand = bot:FindFirstChild("RightHand") or bot:FindFirstChild("Right Arm")
+		t:expect(hand ~= nil, "the rig has a right hand to hold anything with")
+
+		for _, id in { "m9", "m24" } do
+			local model = Guns.hold(bot, id)
+			t:expect(model ~= nil, id .. " reached the hand")
+			if model and hand then
+				t:expect(model.Parent == bot, id .. " is part of the character")
+				local distance = (model:GetPivot().Position - hand.Position).Magnitude
+				t:expect(distance < 4,
+					id .. " sits at the hand, not across the map ("
+						.. string.format("%.1f", distance) .. " studs)")
+
+				--: Welded, or it stays behind the first time the arm moves.
+				local welds = 0
+				for _, d in model:GetDescendants() do
+					if d:IsA("WeldConstraint") then
+						welds += 1
+					end
+				end
+				t:expect(welds > 0, id .. " is welded rather than merely placed")
+			end
+		end
+
+		--: One gun at a time. Two weapons in one hand is what happens when a
+		--: pickup does not clear the last one.
+		local guns = 0
+		for _, child in bot:GetChildren() do
+			if child:IsA("Model") and string.match(child.Name, "^Gun_") then
+				guns += 1
+			end
+		end
+		t:expectEqual(guns, 1, "swapping weapons leaves exactly one in hand")
+	end)
 end

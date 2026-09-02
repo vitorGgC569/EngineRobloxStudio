@@ -192,8 +192,38 @@ function Arsenal.spec(gun: Gun): { [string]: any }
 		reserve = gun.reserve,
 		auto = gun.auto,
 		reloadTime = gun.reload,
-		spread = gun.spread,
 		clip = "shoot",
+
+		--[[
+			Bloom, recoil and falloff are tables in the engine, not numbers.
+
+			`spread = gun.spread` was passed as a bare number and
+			`Weapon.define` threw on `def.spread.min` -- which killed the whole
+			server bootstrap, so nobody was ever armed, nothing was ever
+			located, and the posture code never ran either. One wrong shape,
+			four features silently absent.
+		]]
+		spread = {
+			min = gun.adsSpread,
+			--: The cone a held trigger climbs to. Three times the hip-fired
+			--: figure: a burst should stop being a burst.
+			max = gun.spread * 3,
+			perShot = gun.spread * 0.22,
+			recover = 5,
+		},
+		recoil = {
+			pitch = gun.recoilUp, yaw = gun.recoilSide, recover = 9,
+		},
+		--[[
+			The engine's falloff is switched off deliberately.
+
+			`Weapon.fire` can apply distance falloff itself, and `Fight`
+			already applies `Arsenal.damageAt` -- which also knows about hit
+			zones, which the engine's does not. Leaving both on halves every
+			long-range shot twice, and the symptom is a rifle that feels weak
+			for no reason anybody can point at.
+		]]
+		falloff = false,
 	}
 end
 

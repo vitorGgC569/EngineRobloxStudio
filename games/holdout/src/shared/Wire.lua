@@ -47,6 +47,18 @@ Wire.definitions = {
 	--: Everything the map screen needs, once. The map does not move.
 	atlas = { dir = "c2s", kind = "function", rate = 2 },
 
+	--[[
+		"I pulled the trigger, looking this way."
+
+		The direction is the only thing the client is believed about, and only
+		within a cone of where its character is actually facing. What was hit,
+		how far away and for how much are all recomputed server-side: a client
+		that could name its target is a client that shoots through walls.
+	]]
+	fire = { dir = "c2s", kind = "function", rate = 22,
+		shape = { x = "number", y = "number", z = "number" } },
+	reload = { dir = "c2s", kind = "function", rate = 3 },
+
 	-- ---------------------------------------------------- server -> client
 	notice = { dir = "s2c", kind = "event" },
 
@@ -56,6 +68,13 @@ Wire.definitions = {
 
 	--: A container gave something up.
 	looted = { dir = "s2c", kind = "event" },
+
+	--: What a shot did, for the tracer, the impact and the hitmarker. The
+	--: client draws all three; it decides none of them.
+	shot = { dir = "s2c", kind = "event" },
+
+	--: A gun arrived.
+	armed = { dir = "s2c", kind = "event" },
 
 	--: Where the player is, for the compass and the grid readout. Sent on a
 	--: slow tick rather than per frame: a grid reference that updates sixty

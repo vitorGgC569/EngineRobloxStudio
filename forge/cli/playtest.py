@@ -316,18 +316,51 @@ def run(game: str, wait: float = 9.0, panels: tuple[str, ...] = (),
     #   Polling for what the wait was actually for costs a second or two on a
     #   normal run and still gives a slow machine its nine.
     #]]
+    #[[
+    #   Wait for the interface to *settle*, not merely to appear.
+    #
+    #   The first version broke out as soon as three elements existed, which is
+    #   a HUD that has started drawing. A game whose server spends eleven
+    #   seconds carving terrain answers that test at second two -- so the gate
+    #   photographed a half-built game, reported an empty readout and no
+    #   weapon, and every one of those absences was read as a bug that did not
+    #   exist.
+    #
+    #   Two consecutive identical counts is enough: it costs a second on a warm
+    #   run and it is the difference between measuring a game and measuring a
+    #   loading screen.
+    #]]
     session = None
-    deadline = time.time() + max(wait, 3.0)
+    settled, last = 0, -1
+    deadline = time.time() + max(wait, 3.0) * 3
     while time.time() < deadline:
         session = _server_session(bridge)
         if session:
             bridge.pinned_session = session
             try:
-                if len(_gui_nodes(bridge)) >= 3:
-                    break
+                count = len(_gui_nodes(bridge))
             except Exception:  # noqa: BLE001 - not up yet is not an error
-                pass
-        time.sleep(0.4)
+                count = -1
+            #: Stable *and* saying something. A count that stops changing is a
+            #: HUD that has finished being built, not one that has finished
+            #: being filled -- and a readout still reading "Locating" is
+            #: exactly what a game whose server is mid-boot looks like.
+            filled = False
+            try:
+                filled = any((n.get("text") or "").strip()
+                             for n in _gui_nodes(bridge)
+                             if n.get("className") in ("TextLabel", "TextButton")
+                             and "RQEClient" not in n.get("path", ""))
+            except Exception:  # noqa: BLE001
+                filled = False
+            if count >= 3 and filled:
+                settled = settled + 1 if count == last else 0
+                last = count
+                if settled >= 2:
+                    break
+            else:
+                last = count
+        time.sleep(0.5)
     if not session:
         report.add("error", "no running session answered after starting one")
         return report

@@ -27,6 +27,7 @@ local ContextActionService = game:GetService("ContextActionService")
 local Players = game:GetService("Players")
 local ReplicatedStorage = game:GetService("ReplicatedStorage")
 local RunService = game:GetService("RunService")
+local TweenService = game:GetService("TweenService")
 
 local Forge = require(ReplicatedStorage:WaitForChild("Forge"))
 local Shared = ReplicatedStorage:WaitForChild("Shared")
@@ -260,6 +261,331 @@ end
 hold("Sprint", Enum.KeyCode.LeftShift, "sprint")
 hold("Aim", Enum.KeyCode.LeftAlt, "aim")
 
+-- ================================== view ====================================
+--[[
+	First person, because that is what this game is.
+
+	A shooter played over the shoulder puts the crosshair on the character's own
+	chest: the camera looks past the body, the reticle sits at the centre of the
+	screen, and the two do not meet until about forty studs out. Every
+	third-person shooter solves this by pushing the camera onto one shoulder,
+	and the honest version of that for a game aiming at realism is to be inside
+	the head instead.
+
+	Third person stays on `V`, because seeing your own character is worth having
+	and a game that takes the choice away is one somebody puts down. When it is
+	on the camera moves to the right shoulder, so the reticle still points at
+	open ground rather than at a spine.
+]]
+local firstPerson = true
+local SHOULDER = 2.2
+
+local function applyView()
+	if firstPerson then
+		player.CameraMode = Enum.CameraMode.LockFirstPerson
+	else
+		player.CameraMode = Enum.CameraMode.Classic
+		player.CameraMinZoomDistance = 8
+		player.CameraMaxZoomDistance = 12
+	end
+end
+applyView()
+player.CharacterAdded:Connect(function()
+	task.defer(applyView)
+end)
+
+--[[
+	Where the eye sits, every frame.
+
+	Posture is the server's -- it decides speed, spread and hitbox -- but the
+	camera is nobody's business but this client's, so the crouch drop and the
+	shoulder are combined here rather than fought over through a replicated
+	property.
+
+	Roblox hides everything parented to the character while the camera is inside
+	the head, and that includes the weapon welded to its hand. Clearing the
+	transparency modifier each frame is what puts the gun back on screen:
+	without it, first person is a game that tells you you are holding an M9 and
+	never shows you one.
+]]
+RunService.RenderStepped:Connect(function()
+	local character = player.Character
+	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
+	if not (character and humanoid) then
+		return
+	end
+	local drop = Posture.get(currentPosture).drop or 0
+	humanoid.CameraOffset = Vector3.new(
+		if firstPerson then 0 else SHOULDER, -drop, 0)
+
+	for _, child in character:GetChildren() do
+		if child:IsA("Model") and string.match(child.Name, "^Gun_") then
+			for _, part in child:GetDescendants() do
+				if part:IsA("BasePart") then
+					part.LocalTransparencyModifier = 0
+				end
+			end
+		end
+	end
+end)
+
+-- =================================== gun ====================================
+--[[
+	The trigger, the crosshair and what a hit looks like.
+
+	The client sends where it is looking and nothing else. Every tracer, every
+	impact and every hitmarker below is drawn from what the *server* replied
+	with -- so a shot the server refused draws nothing, which is the only
+	honest way to render a shooter.
+]]
+local UserInputService = game:GetService("UserInputService")
+local Workspace = game:GetService("Workspace")
+local camera = Workspace.CurrentCamera
+
+local gunLabel = UI.label(screen, "", {
+	name = "Gun", size = T.text.sm, font = T.font.bold, color = INK,
+	frameSize = UDim2.new(0, 240, 0, 18),
+	anchor = Vector2.new(0, 1), pos = UDim2.new(0, T.space.lg, 1, -T.space.lg - 20),
+})
+gunLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+local ammoLabel = UI.label(screen, "", {
+	name = "Ammo", size = T.text.xl, font = T.font.bold, color = INK,
+	frameSize = UDim2.new(0, 240, 0, 30),
+	anchor = Vector2.new(0, 1), pos = UDim2.new(0, T.space.lg, 1, -T.space.lg - 40),
+})
+ammoLabel.TextXAlignment = Enum.TextXAlignment.Left
+
+--[[
+	A crosshair that opens with the spread.
+
+	Four ticks around a gap rather than a dot, because the gap *is* the
+	information: a player should be able to watch their accuracy get worse
+	while they run without reading a number anywhere.
+]]
+local reticle = Instance.new("Frame")
+reticle.Name = "Reticle"
+reticle.Size = UDim2.fromOffset(46, 46)
+reticle.AnchorPoint = Vector2.new(0.5, 0.5)
+reticle.Position = UDim2.fromScale(0.5, 0.5)
+reticle.BackgroundTransparency = 1
+reticle.ZIndex = 20
+reticle.Parent = screen
+
+local ticks: { Frame } = {}
+for index = 1, 4 do
+	local tick = Instance.new("Frame")
+	tick.BorderSizePixel = 0
+	tick.BackgroundColor3 = INK
+	tick.BackgroundTransparency = 0.15
+	tick.AnchorPoint = Vector2.new(0.5, 0.5)
+	tick.ZIndex = 21
+	tick.Size = if index <= 2 then UDim2.fromOffset(2, 7) else UDim2.fromOffset(7, 2)
+	tick.Parent = reticle
+	ticks[index] = tick
+end
+
+local hitmarker = Instance.new("Frame")
+hitmarker.Name = "Hitmarker"
+hitmarker.Size = UDim2.fromOffset(16, 16)
+hitmarker.AnchorPoint = Vector2.new(0.5, 0.5)
+hitmarker.Position = UDim2.fromScale(0.5, 0.5)
+hitmarker.BackgroundTransparency = 1
+hitmarker.ZIndex = 22
+hitmarker.Parent = screen
+for _, rotation in { 45, -45 } do
+	local bar = Instance.new("Frame")
+	bar.Size = UDim2.fromOffset(2, 16)
+	bar.AnchorPoint = Vector2.new(0.5, 0.5)
+	bar.Position = UDim2.fromScale(0.5, 0.5)
+	bar.Rotation = rotation
+	bar.BorderSizePixel = 0
+	bar.BackgroundColor3 = Color3.fromRGB(255, 236, 220)
+	bar.BackgroundTransparency = 1
+	bar.ZIndex = 22
+	bar.Parent = hitmarker
+end
+
+local gun: any = nil
+local spreadNow = 2.5
+local firing = false
+
+Net.on("armed", function(payload: any)
+	if type(payload) ~= "table" then
+		return
+	end
+	gun = payload
+	gunLabel.Text = string.upper(tostring(payload.name))
+end)
+
+local function refreshAmmo()
+	local held = player:GetAttribute("ammo")
+	local reserve = player:GetAttribute("reserve")
+	if held == nil then
+		ammoLabel.Text = ""
+		return
+	end
+	ammoLabel.Text = string.format("%d / %s", held,
+		if reserve and reserve < 1e6 then tostring(reserve) else "inf")
+	ammoLabel.TextColor3 = if held == 0 then T.color.danger else INK
+end
+player:GetAttributeChangedSignal("ammo"):Connect(refreshAmmo)
+player:GetAttributeChangedSignal("reserve"):Connect(refreshAmmo)
+player:GetAttributeChangedSignal("gun"):Connect(function()
+	local name = player:GetAttribute("gun")
+	gunLabel.Text = if name then string.upper(tostring(name)) else ""
+end)
+
+--: A line from the muzzle to where the round stopped, for a tenth of a second.
+--: Long enough to read the direction, short enough not to become a laser show.
+local function tracer(from: Vector3, to: Vector3)
+	local length = (to - from).Magnitude
+	if length < 1 then
+		return
+	end
+	local beam = Instance.new("Part")
+	beam.Anchored = true
+	beam.CanCollide = false
+	beam.CanQuery = false
+	beam.CastShadow = false
+	beam.Size = Vector3.new(0.14, 0.14, length)
+	beam.CFrame = CFrame.lookAt(from:Lerp(to, 0.5), to)
+	beam.Color = Color3.fromRGB(255, 232, 176)
+	beam.Material = Enum.Material.Neon
+	beam.Transparency = 0.2
+	beam.Parent = Workspace
+
+	--: A ninth of a second was long enough for the code and far too short for a
+	--: person -- "I don't see the shots" is what a tracer that blinks out inside
+	--: one frame looks like from the other side. It now fades over a fifth of a
+	--: second, which reads as a round leaving the barrel instead of a flicker.
+	TweenService:Create(beam,
+		TweenInfo.new(0.2, Enum.EasingStyle.Quad, Enum.EasingDirection.In),
+		{ Transparency = 1 }):Play()
+	task.delay(0.22, function()
+		beam:Destroy()
+	end)
+
+	--: The flash at the muzzle -- the thing that actually tells a player the
+	--: trigger did something, at the place they are looking.
+	local flash = Instance.new("Part")
+	flash.Anchored, flash.CanCollide, flash.CanQuery = true, false, false
+	flash.CastShadow = false
+	flash.Shape = Enum.PartType.Ball
+	flash.Size = Vector3.new(0.55, 0.55, 0.55)
+	flash.CFrame = CFrame.new(from)
+	flash.Color = Color3.fromRGB(255, 214, 138)
+	flash.Material = Enum.Material.Neon
+	flash.Parent = Workspace
+	task.delay(0.05, function()
+		flash:Destroy()
+	end)
+end
+
+local function impact(at: Vector3, onBody: boolean)
+	local mark = Instance.new("Part")
+	mark.Anchored = true
+	mark.CanCollide = false
+	mark.CanQuery = false
+	mark.CastShadow = false
+	mark.Size = Vector3.new(0.35, 0.35, 0.35)
+	mark.CFrame = CFrame.new(at)
+	mark.Color = if onBody then Color3.fromRGB(150, 40, 36)
+		else Color3.fromRGB(210, 200, 186)
+	mark.Material = Enum.Material.Neon
+	mark.Transparency = 0.25
+	mark.Parent = Workspace
+	task.delay(0.5, function()
+		mark:Destroy()
+	end)
+end
+
+local function flashHitmarker()
+	for _, bar in hitmarker:GetChildren() do
+		if bar:IsA("Frame") then
+			bar.BackgroundTransparency = 0
+		end
+	end
+	task.delay(0.12, function()
+		for _, bar in hitmarker:GetChildren() do
+			if bar:IsA("Frame") then
+				bar.BackgroundTransparency = 1
+			end
+		end
+	end)
+end
+
+Net.on("shot", function(payload: any)
+	if type(payload) ~= "table" then
+		return
+	end
+	spreadNow = tonumber(payload.spread) or spreadNow
+	--: The server says where the barrel was. Falling back to the head keeps a
+	--: tracer on screen for anybody whose gun model failed to build, rather than
+	--: silently drawing nothing.
+	local head = player.Character and player.Character:FindFirstChild("Head")
+	local from = if typeof(payload.from) == "Vector3" then payload.from
+		elseif head and head:IsA("BasePart") then head.Position
+		else nil
+	local landed = false
+	for _, hit in payload.hits or {} do
+		if typeof(hit.at) == "Vector3" then
+			if from then
+				tracer(from, hit.at)
+			end
+			impact(hit.at, hit.zone ~= "world")
+		end
+		if hit.zone and hit.zone ~= "world" then
+			landed = true
+		end
+	end
+	if landed then
+		flashHitmarker()
+	end
+end)
+
+local function pullTrigger()
+	local look = camera.CFrame.LookVector
+	pcall(function()
+		Net.request("fire", { x = look.X, y = look.Y, z = look.Z })
+	end)
+end
+
+UserInputService.InputBegan:Connect(function(input, typing)
+	if typing then
+		return
+	end
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		firing = true
+		pullTrigger()
+	elseif input.KeyCode == Enum.KeyCode.V then
+		firstPerson = not firstPerson
+		applyView()
+	elseif input.KeyCode == Enum.KeyCode.R then
+		pcall(function()
+			Net.request("reload")
+		end)
+	end
+end)
+UserInputService.InputEnded:Connect(function(input)
+	if input.UserInputType == Enum.UserInputType.MouseButton1 then
+		firing = false
+	end
+end)
+
+--: Automatic fire is the client repeating the request; the server's cooldown
+--: decides the rate. Asking faster than the gun can fire costs a refusal and
+--: nothing else, which is cheaper than the client keeping its own timer and
+--: the two disagreeing.
+task.spawn(function()
+	while true do
+		task.wait(0.05)
+		if firing and gun then
+			pullTrigger()
+		end
+	end
+end)
+
 -- ================================== atlas ===================================
 --[[
 	The full map, on M.
@@ -401,6 +727,14 @@ RunService.RenderStepped:Connect(function()
 		line.Position = if vertical then UDim2.fromOffset(at, 0)
 			else UDim2.fromOffset(0, at)
 	end
+
+	--: The reticle opens with the spread the server last reported, so what a
+	--: player sees is the figure the shot was actually taken with.
+	local gap = 5 + spreadNow * 5.5
+	ticks[1].Position = UDim2.new(0.5, 0, 0.5, -gap)
+	ticks[2].Position = UDim2.new(0.5, 0, 0.5, gap)
+	ticks[3].Position = UDim2.new(0.5, -gap, 0.5, 0)
+	ticks[4].Position = UDim2.new(0.5, gap, 0.5, 0)
 
 	if mapScreen.Visible then
 		local nx, nz = Map.normalised(position)

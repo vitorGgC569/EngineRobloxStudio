@@ -374,12 +374,35 @@ local function ruin(at: Vector3, yaw: number, parent: Instance)
 		Color3.fromRGB(96, 82, 64), "RuinWall", Enum.Material.Wood, model)
 end
 
-local RUINS = {
-	{ x = 0, z = 0, yaw = 0.2 },
-	{ x = -250, z = 180, yaw = 2.1 },
-	{ x = 230, z = -210, yaw = -1.1 },
-	{ x = -180, z = -230, yaw = 0.8 },
+--[[
+	Where the buildings are, and what they are called.
+
+	This is the only place either question is answered. `Map` reads it, the
+	minimap draws from `Map`, and the location readout tests against the same
+	circles -- so a ruin cannot move without the map moving with it.
+
+	It used to be two tables: this one and a hand-written list of areas in
+	`Map`. They agreed on the day they were written and nothing kept them
+	agreeing, which is what "the map is not related to the world" means when a
+	player says it.
+]]
+World.LANDMARKS = {
+	{ id = "mill", label = "Old Mill", x = 0, z = 0, yaw = 0.2, radius = 60 },
+	{ id = "westcamp", label = "West Camp", x = -250, z = 180, yaw = 2.1, radius = 60 },
+	{ id = "quarry", label = "The Quarry", x = 230, z = -210, yaw = -1.1, radius = 60 },
+	{ id = "chapel", label = "Broken Chapel", x = -180, z = -230, yaw = 0.8, radius = 60 },
 }
+
+--: The wider districts the landmarks sit in. Derived from the clearings, so a
+--: clearing that moves takes its name with it.
+World.DISTRICTS = {
+	{ id = "hollow", label = "The Hollow", x = 0, z = 0, radius = 150 },
+	{ id = "northwood", label = "North Wood", x = -60, z = -300, radius = 200 },
+	{ id = "eastridge", label = "East Ridge", x = 300, z = -60, radius = 190 },
+	{ id = "southflats", label = "South Flats", x = 60, z = 300, radius = 200 },
+}
+
+local RUINS = World.LANDMARKS
 
 -- ================================== build ===================================
 function World.build(): any

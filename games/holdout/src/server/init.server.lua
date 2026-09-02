@@ -49,11 +49,17 @@ Wire.install()
 	the module could only answer "may this player enter". The bounds live in
 	`Map` so the client draws the same circles the server tests against.
 ]]
-for _, area in Map.areas do
-	Forge.World.Areas.define(area.id, {
-		label = area.label, center = area.center, radius = area.radius,
-		priority = area.priority, safe = true,
-	})
+--: The layout comes from `World`, is adopted by `Map`, and only then becomes
+--: areas. One source, three readers, and no way for them to drift.
+do
+	local Layout = require(script.systems.World)
+	Map.adopt(Layout.DISTRICTS, Layout.LANDMARKS)
+	for _, area in Map.areas do
+		Forge.World.Areas.define(area.id, {
+			label = area.label, center = area.center, radius = area.radius,
+			priority = area.priority, safe = true,
+		})
+	end
 end
 
 -- 2. Runtime containers. Anything the game creates lives in one of these, so a
@@ -74,6 +80,8 @@ end
 local World = require(script.systems.World)
 local built = World.build()
 local Caches = require(script.systems.Caches)
+local Fight = require(script.systems.Fight)
+Fight.start()
 local stocked = Caches.build(Workspace:WaitForChild("World"))
 Debug.info(string.format("world: %d trees, %d rocks, %d ruins, %d caches",
 	built.trees or 0, built.rocks or 0, built.ruins or 0, stocked))
@@ -100,9 +108,22 @@ local function applyPosture(player: Player, id: string)
 	end
 	local state = Posture.get(id)
 	humanoid.WalkSpeed = Posture.speed(id, sprinting[player])
-	--: Hip height moves the whole character down, which lowers the camera and
-	--: the silhouette together. Scaling the model would do neither.
-	humanoid.HipHeight = 2 - state.drop
+	--[[
+		The camera drops. The character does not.
+
+		`HipHeight` is how far the root floats above the feet, so lowering it
+		pulls the torso down while the legs stay the length they were -- the
+		character sinks into the ground up to the waist, which is exactly what
+		the first build did.
+
+		Crouching *visually* needs an animation that bends the knees, and this
+		project has no crouch clip. So the posture is real in every way that
+		decides a fight -- view height, speed, spread, and the hit profile the
+		server tests against -- and not yet real in the way it looks to
+		somebody else. Saying that plainly beats shipping a player buried in a
+		field.
+	]]
+	humanoid.HipHeight = 2
 	player:SetAttribute("posture", id)
 	player:SetAttribute("profile", state.profile)
 	Net.fire(player, "postured", { posture = id, speed = humanoid.WalkSpeed,
@@ -158,11 +179,49 @@ Net.on("loot", function(player: Player, payload: any)
 	return { ok = true, detail = detail }
 end)
 
+--[[
+	Picking a gun up arms you with it.
+
+	The first build spilled a rifle on the floor, let a player take it, and did
+	nothing -- the drop vanished and the player was still empty-handed. A
+	pickup that does not change what you are holding is a pickup that did not
+	happen.
+]]
 Net.on("pickup", function(player: Player, payload: any)
 	local ok, detail = Caches.take(player.Character, tostring((payload or {}).drop))
-	if ok then
-		Net.fire(player, "notice", { kind = "good", text = "Picked up " .. tostring(detail.id) })
+	if not ok then
+		return { ok = false, reason = tostring(detail) }
 	end
+	if detail.kind == "gun" then
+		local armed, info = Fight.give(player, detail.id)
+		if armed then
+			Net.fire(player, "armed", info)
+			Net.fire(player, "notice", { kind = "good", text = info.name })
+			return { ok = true, detail = info }
+		end
+	end
+	Net.fire(player, "notice",
+		{ kind = "good", text = "Picked up " .. tostring(detail.id) })
+	return { ok = true, detail = detail }
+end)
+
+Net.on("fire", function(player: Player, payload: any)
+	local p = payload or {}
+	local direction = Vector3.new(tonumber(p.x) or 0, tonumber(p.y) or 0,
+		tonumber(p.z) or 0)
+	local ok, detail = Fight.shoot(player, direction, aiming[player],
+		posture[player] or "stand")
+	if not ok then
+		--: Silent. A shooter that toasts "too fast" on every held trigger is a
+		--: shooter nobody can read the screen of.
+		return { ok = false, reason = tostring(detail) }
+	end
+	Net.fire(player, "shot", detail)
+	return { ok = true, detail = detail }
+end)
+
+Net.on("reload", function(player: Player)
+	local ok, detail = Fight.reload(player)
 	return { ok = ok, detail = detail }
 end)
 
@@ -219,14 +278,42 @@ task.spawn(function()
 	end
 end)
 
-Players.PlayerAdded:Connect(function(player)
-	player.CharacterAdded:Connect(function()
+--[[
+	Set up everybody, including the ones already here.
+
+	The world takes eleven seconds to carve and a player joins in two, so by
+	the time this line runs the local player in Studio has already arrived and
+	`PlayerAdded` will never fire for them. Connecting and *also* replaying is
+	the only shape that works, and the failure without it is total and silent:
+	no gun, no posture, no location, no error.
+]]
+local function setUp(player: Player)
+	local function onCharacter()
 		posture[player] = "stand"
 		sprinting[player], aiming[player] = false, false
-		task.defer(applyPosture, player, "stand")
+		applyPosture(player, "stand")
+		--: Everybody starts with a sidearm. The loop is finding something
+		--: better; starting empty is a five-minute walk before the game begins.
+		local ok, info = Fight.give(player, "m9")
+		if ok then
+			Net.fire(player, "armed", info)
+		end
+	end
+	player.CharacterAdded:Connect(function()
+		task.defer(onCharacter)
 	end)
-end)
+	if player.Character then
+		task.defer(onCharacter)
+	end
+end
+
+for _, player in Players:GetPlayers() do
+	setUp(player)
+end
+Players.PlayerAdded:Connect(setUp)
+
 Players.PlayerRemoving:Connect(function(player)
+	Fight.drop(player)
 	posture[player], changing[player] = nil, nil
 	sprinting[player], aiming[player] = nil, nil
 end)
@@ -286,7 +373,7 @@ end
 ]]
 if Config.selfTest then
 	task.defer(function()
-		local report = Forge.Testing.runAndPublish(script:FindFirstChild("tests"))
+		local report = Forge.Testing.runAndPublish(script:FindFirstChild("tests"), nil, "holdout")
 		Debug.info(string.format(
 			"self test: %d passed, %d failed, %d hung",
 			report.passed or 0, report.failed or 0, report.timedOut or 0))

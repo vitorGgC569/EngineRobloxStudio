@@ -280,7 +280,7 @@ if Config.selfTest then
 	task.defer(function()
 		local Testing = Forge.Testing
 		local suite = script:FindFirstChild("tests")
-		local report = Testing.runAndPublish(suite)
+		local report = Testing.runAndPublish(suite, nil, "provingground")
 		Debug.info(string.format(
 			"self test: %d passed, %d failed, %d hung",
 			report.passed or 0, report.failed or 0, report.timedOut or 0))

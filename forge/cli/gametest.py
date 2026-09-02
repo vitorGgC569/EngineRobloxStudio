@@ -36,6 +36,7 @@ from __future__ import annotations
 
 import json
 import subprocess
+import time
 import sys
 from pathlib import Path
 from typing import Any
@@ -72,6 +73,35 @@ def live_place() -> str | None:
     return envelope.get("place")
 
 
+def boot(game: str, wait_seconds: int = 240) -> None:
+    """Open the built place and start it, so there is a report to read.
+
+    `run` reads a report the *running* game published, and nothing was starting
+    one. The suite therefore only worked when a play session happened to be
+    left over from something else -- which made the fastest feedback in the
+    engine, the one that needs no screenshots and finishes in a second, the one
+    that could not be invoked on its own.
+
+    This is deliberately the same lifecycle `playtest` uses. Two ways to start
+    a game is two things to keep working.
+    """
+    sys.path.insert(0, str(REPO))
+    from rqe.hub import lifecycle
+    from rqe.hub.client import StudioBridge
+
+    place = REPO / "games" / game / f"{game}.rbxlx"
+    if not place.exists():
+        raise BridgeError(f"no built place at {place}; run `forge build {game}`")
+
+    bridge = StudioBridge("http://127.0.0.1:8790")
+    lifecycle.restart_for_bridge(place, REPO / ".tmp" / "studio-recovery",
+                                 bridge=bridge, wait_seconds=wait_seconds)
+    bridge.unpin()
+    started = lifecycle.start_play_solo(bridge=bridge, wait_seconds=120)
+    if not started.get("started"):
+        raise BridgeError("the game would not start")
+
+
 def run(filter_text: str | None = None, timeout: int = 240) -> dict:
     """Read the report the running game published.
 
@@ -84,14 +114,40 @@ def run(filter_text: str | None = None, timeout: int = 240) -> dict:
     `filter_text` is applied here rather than in the game, so re-reading a
     finished run is free and does not require re-running it.
     """
-    result = _call("dm.properties", {
-        "path": "ReplicatedStorage.ForgeTests.Report",
-        "properties": ["Value"],
-    }, timeout) or {}
-    raw = (result.get("properties") or {}).get("Value")
-    if not raw:
-        return {"error": "the game published no test report; is `selfTest` on "
-                         "in its Config, and has the place finished starting?"}
+    #[[
+    #   Wait for the report, do not glance for it.
+    #
+    #   The server publishes during its own bootstrap, which in a game that
+    #   carves terrain is twelve seconds after the play session starts. A
+    #   single read lands in that window every time and comes back "no instance
+    #   at ReplicatedStorage.ForgeTests" -- which reads as "the suite is
+    #   broken" and is really "you asked too early".
+    #
+    #   Polling costs nothing on a game that is already up: the first read
+    #   answers and the loop exits.
+    #]]
+    deadline = time.monotonic() + timeout
+    raw = None
+    while True:
+        try:
+            result = _call("dm.properties", {
+                "path": "ReplicatedStorage.ForgeTests.Report",
+                "properties": ["Value"],
+            }, 30) or {}
+            raw = (result.get("properties") or {}).get("Value")
+        except BridgeError as exc:
+            #: The holder does not exist yet. Anything else is a real failure
+            #: and should not be swallowed by a retry loop.
+            if "E_NOT_FOUND" not in str(exc):
+                raise
+            raw = None
+        if raw:
+            break
+        if time.monotonic() >= deadline:
+            return {"error": "the game published no test report within "
+                             f"{timeout}s; is `selfTest` on in its Config, and "
+                             "did the place finish starting?"}
+        time.sleep(1.5)
     try:
         report = json.loads(raw)
     except json.JSONDecodeError as exc:

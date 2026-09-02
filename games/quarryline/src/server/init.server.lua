@@ -469,7 +469,7 @@ if Config.selfTest then
 		Boot.await("economy_open", 90)
 		-- The folder, not a name: `runAndPublish` requires each child and
 		-- calls it with the Testing surface, so it wants the container.
-		Testing.runAndPublish(script:FindFirstChild("tests"))
+		Testing.runAndPublish(script:FindFirstChild("tests"), nil, "quarryline")
 	end)
 end
 

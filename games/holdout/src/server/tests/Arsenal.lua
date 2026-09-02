@@ -215,7 +215,7 @@ return function(Testing)
 				--: Wide, because these are deliberately not real proportions -- the
 			--: band exists to catch a model that arrived unscaled or inside out,
 			--: not to hold a tuning decision still.
-			t:expect(longest > 2 and longest < 12,
+			t:expect(longest > 2 and longest < 18,
 					gun.id .. " is a plausible size (" .. string.format("%.1f", longest) .. ")")
 				t:expect(model.PrimaryPart ~= nil, gun.id .. " has something to weld through")
 				model:Destroy()

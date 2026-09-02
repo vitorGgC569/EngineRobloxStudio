@@ -321,6 +321,10 @@ function Anim.new(character: Model): any
 			}
 			self.applied[key] = { swing = 0, spread = 0, twist = 0 }
 			kinds[isMotor and "Motor6D" or "AnimationConstraint"] += 1
+			if not isMotor then
+				--: Read by `Anim.bind` to pick the step this rig is posed on.
+				self.constraintRig = true
+			end
 		end
 	end
 	self.jointKinds = kinds
@@ -749,6 +753,23 @@ function Anim.bind(animator: any, phase: string?): RBXScriptConnection
 	local signal
 	if phase == "heartbeat" or RunService:IsServer() then
 		signal = RunService.Heartbeat
+	elseif phase == "simulation" or animator.constraintRig then
+		--[[
+			Constraint rigs are posed before the solve, not before the draw.
+
+			Writing a `Motor6D`'s `C0` moves the limb immediately, so computing
+			the pose at `RenderStepped` puts it exactly where the frame about to
+			be drawn needs it. An `AnimationConstraint` does not move anything:
+			it states a goal that the physics solver reaches for. A goal written
+			after the solve has already run is a goal the frame ignores, and the
+			character stands in its bind pose with the clip reporting itself as
+			playing -- which is a confusing thing to debug, because every check
+			says the animation is fine.
+
+			`PreSimulation` is the step before the solve, which is the only
+			place a write to a constraint changes the pose it is written for.
+		]]
+		signal = RunService.PreSimulation
 	else
 		signal = RunService.RenderStepped
 	end

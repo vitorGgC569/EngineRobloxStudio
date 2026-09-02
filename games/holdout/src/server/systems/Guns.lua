@@ -52,12 +52,12 @@ local Guns = {}
 	object on the screen, so these are sized to be seen first.
 ]]
 local MODELS = {
-	m9 = { needle = "Pistol Compact", length = 3.6 },
-	mp5 = { needle = "Rifle", length = 5.4 },
-	m4 = { needle = "Rifle Assault", length = 7.2 },
-	m870 = { needle = "Rifle Battle", length = 7.4 },
-	sks = { needle = "Rifle Battle", length = 7.6 },
-	m24 = { needle = "Sniper Rifle", length = 8.6 },
+	m9 = { needle = "Pistol Compact", length = 8.0 },
+	mp5 = { needle = "Rifle", length = 9.0 },
+	m4 = { needle = "Rifle Assault", length = 11.0 },
+	m870 = { needle = "Rifle Battle", length = 11.0 },
+	sks = { needle = "Rifle Battle", length = 11.5 },
+	m24 = { needle = "Sniper Rifle", length = 13.0 },
 }
 
 --: Gunmetal, because every one of these arrives untextured and grey-brown.

@@ -449,7 +449,10 @@ function World.build(): any
 	local pad = Instance.new("SpawnLocation")
 	pad.Name = "Spawn"
 	pad.Size = Vector3.new(18, 1, 18)
-	pad.CFrame = CFrame.new(0, groundAt(0, 26) + 1.5, 26)
+	--: Well clear of the mill. At twenty-six studs the pad sits inside the
+	--: ruin's own footprint, so a player spawns facing a wall a stud away and
+	--: the first thing this game shows them is masonry.
+	pad.CFrame = CFrame.new(0, groundAt(0, 96) + 1.5, 96)
 	pad.Anchored = true
 	--: `Neutral = false` with no Teams accepts nobody at all, which is a spawn
 	--: pad that silently refuses every player.

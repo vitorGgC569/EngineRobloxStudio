@@ -334,29 +334,131 @@ end)
 	never shows you one.
 ]]
 --[[
-	The weapon you can actually see, on the arm that is actually holding it.
+	The weapon in first person, through the engine's viewmodel.
 
-	The first attempt at this was a second copy of the gun parented to the
-	camera at a fixed offset -- the standard first-person viewmodel. It worked
-	and it was wrong for this game: a weapon welded to the camera is a weapon
-	nailed to the middle of the screen, unaffected by the arm swinging under it,
-	which reads as a sticker rather than as something being carried.
+	Two earlier attempts put the real weapon on screen: welded to the hand and
+	made visible, and cloned onto the camera. Both fought the character rig,
+	and the rig won -- the hand hangs three studs below the eye, the pose that
+	would raise it is solved by physics on a step nothing here controls, and a
+	weapon at hip height is a weapon a camera in the head cannot see.
 
-	So there is one gun, welded to the hand where it belongs, and this makes it
-	visible. Roblox hides everything parented to a character while the camera is
-	inside its head, and `LocalTransparencyModifier` is the documented way to
-	say "not this". It has to be written every frame because the camera writes
-	it every frame too.
+	`Forge.Camera.Viewmodel` does not involve the rig at all. It is a
+	`ViewportFrame` with its own camera and its own field of view, which is how
+	every first-person game has drawn its weapon since Quake -- and it solves
+	the problem that comes next, too: a viewport has its own depth range, so
+	the barrel cannot poke through a wall you are standing against.
+
+	The gun on the character stays where it is. That one is what other players
+	see, and it is still welded to the hand.
 ]]
-local function showWeapon(character: Model)
+local Viewmodel = Forge.Camera.Viewmodel
+--: Mounted beside the HUD, in the same PlayerGui, at a lower display order
+--: so the weapon is drawn under the crosshair rather than over it.
+local view = Viewmodel.mount(screen.Parent :: Instance)
+
+--: Right of centre, below the eye, far enough forward to read as carried.
+--: The viewmodel's own narrower field of view means this is not the same
+--: number a world-space offset would want.
+local HELD_AT = CFrame.new(1.0, -1.0, -2.6) * CFrame.Angles(0, math.rad(-6), 0)
+
+--[[
+	Lighting the gun, because a viewport has none.
+
+	`ViewportFrame` contents take no world lighting at all, so an untinted
+	weapon renders as a black silhouette -- which is exactly what the first
+	build of this looked like. This game is overcast and cold, so the tint is
+	a bright neutral pulled slightly blue: enough to read the barrel from the
+	stock, without a gun that glows in a dark ruin.
+]]
+Viewmodel.setLight(view, Color3.fromRGB(214, 222, 232))
+
+local viewOf: string? = nil
+
+local function realGun(character: Model): Model?
 	for _, child in character:GetChildren() do
 		if child:IsA("Model") and string.match(child.Name, "^Gun_") then
-			for _, part in child:GetDescendants() do
+			return child :: Model
+		end
+	end
+	return nil
+end
+
+local function countParts(model: Instance): number
+	local n = 0
+	for _, d in model:GetDescendants() do
+		if d:IsA("BasePart") then
+			n += 1
+		end
+	end
+	return n
+end
+
+local function showWeapon(character: Model, dt: number)
+	local real = realGun(character)
+
+	--: Third person shows the real weapon in the real hand, which is right and
+	--: needs nothing from the viewport.
+	if not (real and firstPerson) then
+		if viewOf then
+			Viewmodel.clear(view)
+			viewOf = nil
+		end
+		view.frame.Visible = false
+		if real then
+			for _, part in real:GetDescendants() do
 				if part:IsA("BasePart") then
 					part.LocalTransparencyModifier = 0
 				end
 			end
 		end
+		return
+	end
+
+	--: Hidden locally, or the player sees the same gun twice.
+	for _, part in real:GetDescendants() do
+		if part:IsA("BasePart") then
+			part.LocalTransparencyModifier = 1
+		end
+	end
+
+	--[[
+		Rebuilt when the copy stops matching the original.
+
+		A model replicates before its parts do, so the first frame a weapon
+		exists it is an empty Model -- and keying the copy on the weapon's name
+		alone keeps that empty copy for the rest of the round.
+	]]
+	local want = countParts(real)
+	if want > 0 and (viewOf ~= real.Name or countParts(view.world) ~= want) then
+		local copy = Viewmodel.hold(view, real)
+		--[[
+			Lightened, because a viewport is unlit and gunmetal is nearly black.
+
+			`setLight` tints the frame, and a tint multiplies -- so a dark grey
+			weapon stays a dark grey weapon however bright the tint is, which is
+			a black silhouette in the corner of the screen. The world copy keeps
+			its real colour; only the one being drawn without a sun is raised.
+		]]
+		for _, part in copy:GetDescendants() do
+			if part:IsA("BasePart") then
+				local c = (part :: BasePart).Color
+				;(part :: BasePart).Color = Color3.new(
+					math.min(1, c.R * 2.6 + 0.28),
+					math.min(1, c.G * 2.6 + 0.29),
+					math.min(1, c.B * 2.6 + 0.31))
+				;(part :: BasePart).Material = Enum.Material.SmoothPlastic
+			end
+		end
+		viewOf = real.Name
+	end
+
+	view.frame.Visible = true
+	local humanoid = character:FindFirstChildOfClass("Humanoid")
+	Viewmodel.step(view, eye(), dt,
+		if humanoid then (humanoid :: Humanoid).MoveDirection.Magnitude
+			* (humanoid :: Humanoid).WalkSpeed else 0)
+	if view.held then
+		view.held:PivotTo(view.camera.CFrame * HELD_AT)
 	end
 end
 
@@ -404,9 +506,23 @@ Anim.register("stance_prone", {
 })
 
 local animator: any = nil
+local restage: () -> ()
 
 local function attachAnimator(character: Model)
-	if not character:FindFirstChildOfClass("Humanoid") then
+	--[[
+		Wait for the humanoid, do not check for it.
+
+		`CharacterAdded` fires on the client before the character's children have
+		replicated, so a `FindFirstChildOfClass` here answers nil and the
+		function returns -- silently, once, for the only character the player
+		will have. The result is a character with Roblox's animate script
+		removed and nothing put in its place: rigid, arms out, sliding along the
+		ground wherever it is pushed.
+	]]
+	if not character:WaitForChild("Humanoid", 10) then
+		return
+	end
+	if player.Character ~= character then
 		return
 	end
 	Rig.stripDefaultAnimate(character)
@@ -414,7 +530,20 @@ local function attachAnimator(character: Model)
 		animator:destroy()
 	end
 	animator = Anim.new(character)
+	--[[
+		The walk, which is not free.
+
+		Removing Roblox's Animate script takes the idle and the walk with it, and
+		`Anim` replaces them only once it has a locomotion profile -- without one
+		the character stands in its bind pose and slides wherever it is pushed.
+		Stripping the default without setting this is strictly worse than leaving
+		the default alone.
+	]]
+	animator:setProfile(Anim.profiles.grounded)
+	animator:setLocomotion(true)
 	Anim.bind(animator)
+	restage()
+
 end
 
 if player.Character then
@@ -429,7 +558,7 @@ end)
 --: aiming is both and not a third clip nobody wrote.
 local aiming = false
 
-local function restage()
+function restage()
 	if not animator then
 		return
 	end
@@ -451,7 +580,18 @@ local function restage()
 		end
 	end
 	if armed then
-		animator:play(if aiming then "aim" else "hold")
+		--[[
+			Up in first person, carried in third.
+
+			`hold` is a weapon carried at chest height pointing down, which is
+			what somebody walking around with a rifle actually looks like -- and
+			from inside their own head it is entirely below the frame. A
+			first-person shooter where you cannot see your weapon unless you
+			hold the aim key is a first-person shooter that looks empty-handed,
+			so the ready pose is the raised one whenever the camera is in the
+			head.
+		]]
+		animator:play(if aiming or firstPerson then "aim" else "hold")
 	end
 end
 
@@ -462,7 +602,7 @@ setAiming = function(on: boolean)
 	restage()
 end
 
-RunService.RenderStepped:Connect(function()
+RunService.RenderStepped:Connect(function(dt: number)
 	local character = player.Character
 	local humanoid = character and character:FindFirstChildOfClass("Humanoid")
 	if not (character and humanoid) then
@@ -472,7 +612,7 @@ RunService.RenderStepped:Connect(function()
 	humanoid.CameraOffset = Vector3.new(
 		if firstPerson then 0 else SHOULDER, -drop, 0)
 
-	showWeapon(character)
+	showWeapon(character, dt)
 end)
 
 -- =================================== gun ====================================
@@ -708,6 +848,9 @@ UserInputService.InputBegan:Connect(function(input, typing)
 	elseif input.KeyCode == Enum.KeyCode.V then
 		firstPerson = not firstPerson
 		applyView()
+		if restageBody then
+			restageBody()
+		end
 	elseif input.KeyCode == Enum.KeyCode.R then
 		pcall(function()
 			Net.request("reload")

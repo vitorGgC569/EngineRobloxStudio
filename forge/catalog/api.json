@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-08-27T16:05:23+00:00",
+  "generatedAt": "2026-09-02T13:39:46+00:00",
   "engine": "Forge",
-  "modules": 230,
-  "functions": 1595,
+  "modules": 232,
+  "functions": 1617,
   "examples": [
     "Access",
     "Anim",
@@ -105,7 +105,7 @@
     {
       "name": "Areas",
       "summary": "Areas — where a player is allowed to be, and where they wake up",
-      "functions": 11
+      "functions": 13
     },
     {
       "name": "ArenaLayout",
@@ -305,7 +305,7 @@
     {
       "name": "Debug",
       "summary": "Debug — how a running game explains itself",
-      "functions": 19
+      "functions": 20
     },
     {
       "name": "DeltaCounter",
@@ -538,6 +538,11 @@
       "functions": 4
     },
     {
+      "name": "ItchIcons",
+      "summary": "ItchIcons — CC0 UI art published to this account, keyed by what it is for",
+      "functions": 8
+    },
+    {
       "name": "Leaderboard",
       "summary": "Leaderboard — persistent cross-server rankings that reset cleanly",
       "functions": 10
@@ -645,7 +650,7 @@
     {
       "name": "Net",
       "summary": "Net — a typed, validated, rate-limited bus between client and server",
-      "functions": 13
+      "functions": 15
     },
     {
       "name": "Netcode",
@@ -1005,7 +1010,12 @@
     {
       "name": "Testing",
       "summary": "Testing — assertions about a game that is actually running",
-      "functions": 22
+      "functions": 21
+    },
+    {
+      "name": "Textures",
+      "summary": "Textures — CC0 surface art published to this account, keyed by what it is for",
+      "functions": 5
     },
     {
       "name": "ThroughputLedger",
@@ -1055,7 +1065,7 @@
     {
       "name": "UI",
       "summary": "UI — tokens and widgets, so an interface looks designed instead of assembled",
-      "functions": 8
+      "functions": 10
     },
     {
       "name": "Ui",
@@ -1130,7 +1140,7 @@
     {
       "name": "VisualIcons",
       "summary": "VisualIcons — token-keyed icon registry",
-      "functions": 3
+      "functions": 6
     },
     {
       "name": "VisualLayouts",
@@ -2126,7 +2136,7 @@
     {
       "name": "Anim",
       "file": "forge/luau/Forge/Anim/init.lua",
-      "lines": 820,
+      "lines": 841,
       "summary": "Anim — layered procedural animation with markers. Why not AnimationTrack and rbxassetid ------------------------------------- Authored animation needs the Animation Editor and an upload, which means a human in a GUI for every timing change. That is fine for a studio and fatal for an agent: the one thing that most needs iteration becomes the one thing that cannot be iterated. Here a clip is *data*. It works on R6 and R15, it needs no asset, and — the part that actually matters — it carries its own MARKERS. The frame a sword becomes dangerous lives in the same table as the pose that swings it. Move the pose, the hit window moves with it. That is what makes combat timing tunable without touching combat logic. This does not replace authored animation. When you have a real animator, keep the clip names and the marker names and swap the pose source; every system that listened for \"hit\" still works. Track convention (degrees) -------------------------- swing   forward/back — the primary axis of a limb spread  outward, away from the body twist   rotation about the limb's own axis, or torso yaw Usage -----",
       "examples": [
         "local anim = Anim.new(character)\nanim:setLocomotion(Anim.profiles.grounded)\nanim:onMarker(function(clip, marker) ... end)",
@@ -2178,7 +2188,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 338
+          "line": 342
         },
         {
           "name": "Animator:setLocomotion",
@@ -2187,7 +2197,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 342
+          "line": 346
         },
         {
           "name": "Animator:onMarker",
@@ -2196,7 +2206,7 @@
           "returns": null,
           "summary": "(clipName, markerName, playback)",
           "examples": [],
-          "line": 347
+          "line": 351
         },
         {
           "name": "Animator:play",
@@ -2205,7 +2215,7 @@
           "returns": "any",
           "summary": "",
           "examples": [],
-          "line": 357
+          "line": 361
         },
         {
           "name": "Animator:stop",
@@ -2214,7 +2224,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 411
+          "line": 415
         },
         {
           "name": "Animator:stopAll",
@@ -2223,7 +2233,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 423
+          "line": 427
         },
         {
           "name": "Animator:isPlaying",
@@ -2232,7 +2242,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 433
+          "line": 437
         },
         {
           "name": "Animator:setRootMotion",
@@ -2243,7 +2253,7 @@
           "examples": [
             "dodge = {\nduration = 0.45,\nrootMotion = { k(0, 0, 0, 0), k(0.3, 0, 0, -14), k(0.45, 0, 0, -16) },\ntracks = { ... },\n}"
           ],
-          "line": 462
+          "line": 466
         },
         {
           "name": "Animator:_rootMotion",
@@ -2252,7 +2262,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 466
+          "line": 470
         },
         {
           "name": "Animator:setAdditive",
@@ -2261,7 +2271,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 500
+          "line": 504
         },
         {
           "name": "Animator:clearAdditive",
@@ -2270,7 +2280,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 504
+          "line": 508
         },
         {
           "name": "Animator:_fireMarker",
@@ -2279,7 +2289,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 508
+          "line": 512
         },
         {
           "name": "Animator:_locomotion",
@@ -2288,7 +2298,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 517
+          "line": 521
         },
         {
           "name": "Animator:update",
@@ -2297,7 +2307,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 568
+          "line": 572
         },
         {
           "name": "Animator:reset",
@@ -2306,7 +2316,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 680
+          "line": 684
         },
         {
           "name": "Animator:destroy",
@@ -2315,7 +2325,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 693
+          "line": 697
         },
         {
           "name": "Animator:describe",
@@ -2324,7 +2334,7 @@
           "returns": "{ [string]: any }",
           "summary": "What the validation half reads to prove a character is animating at all.",
           "examples": [],
-          "line": 703
+          "line": 707
         },
         {
           "name": "Anim.bind",
@@ -2333,7 +2343,7 @@
           "returns": "RBXScriptConnection",
           "summary": "Drive an animator on the right loop for its context. RenderStepped on a client so the pose is computed for the frame being drawn; Heartbeat on the server, where there is no frame to be early for. This is only safe because `Rig.stripDefaultAnimate` has removed Roblox's own animator first. While that is still present it rewrites the same joints every frame and no render priority is late enough to beat it -- that was measured, not assumed.",
           "examples": [],
-          "line": 748
+          "line": 752
         },
         {
           "name": "Anim.setTrail",
@@ -2342,7 +2352,7 @@
           "returns": null,
           "summary": "Weapon trails are the most common thing markers drive, so it ships here.",
           "examples": [],
-          "line": 763
+          "line": 784
         },
         {
           "name": "Anim.describe",
@@ -2351,7 +2361,7 @@
           "returns": "{ [string]: any }",
           "summary": "Module-level description: which clips are registered and whether each one carries markers. A clip with no markers is a pose with no timing.",
           "examples": [],
-          "line": 781
+          "line": 802
         }
       ],
       "describes": true
@@ -2405,7 +2415,7 @@
     {
       "name": "Areas",
       "file": "forge/luau/Forge/World/Areas.lua",
-      "lines": 284,
+      "lines": 364,
       "summary": "Areas — where a player is allowed to be, and where they wake up. Every game with more than one place to stand needs the same four answers, and every one of them gets rebuilt badly per game: which areas exist, and how they connect whether this player may enter this one yet where they were when they left where they respawn if the answer to the third is \"somewhere they can no longer go\" That last one is the one that bites. A player unlocks a zone, plays there, the zone is removed in an update or their unlock is revoked, and they respawn inside geometry that is no longer theirs — or worse, inside nothing at all. An area system that cannot answer \"where should this player be *now*\" is a fall through the world waiting to happen. Server-authoritative, and it has to be -------------------------------------- Entry is a permission, so it is decided where permissions are decided. A client that asks to teleport is asking, not telling: `enter` re-checks every time rather than trusting that the UI only offered legal doors.",
       "examples": [
         "Areas.define(\"crystal_caves\", {\nrequires = { level = 12 },\nfrom = { \"hub\" },\nspawn = CFrame.new(0, 40, 200),\n})",
@@ -2419,7 +2429,7 @@
           "returns": null,
           "summary": "================================= defining =================================",
           "examples": [],
-          "line": 75
+          "line": 93
         },
         {
           "name": "Areas.defineMany",
@@ -2428,7 +2438,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 103
+          "line": 128
         },
         {
           "name": "Areas.mayEnter",
@@ -2437,7 +2447,7 @@
           "returns": "(boolean, string?)",
           "summary": "May this player enter, and if not, why not. The reason is half the value. \"You cannot go there\" is a dead end; \"needs level 12\" is a goal, and it is the same string the UI should be showing on the locked door.",
           "examples": [],
-          "line": 117
+          "line": 142
         },
         {
           "name": "Areas.enter",
@@ -2446,7 +2456,7 @@
           "returns": "(boolean, string?)",
           "summary": "Move a player, if they are allowed. Re-checks rather than trusting the caller. The caller is usually a remote, and a remote is a request from somebody who may have written their own client.",
           "examples": [],
-          "line": 147
+          "line": 172
         },
         {
           "name": "Areas.place",
@@ -2455,7 +2465,25 @@
           "returns": null,
           "summary": ": Put a player somewhere without asking. For admin moves and for recovery, : which are the two cases where the rules are the problem rather than the : guard.",
           "examples": [],
-          "line": 163
+          "line": 188
+        },
+        {
+          "name": "Areas.at",
+          "signature": "Areas.at(position: Vector3)",
+          "kind": "function",
+          "returns": "string?",
+          "summary": "Which defined area contains a point. Smallest match wins, so a checkpoint inside a district reports as the checkpoint. `priority` overrides that when a game means something different by \"inside\". Returns nil outside every area, and that is a real answer rather than a failure: most maps have ground that belongs to nowhere in particular, and a location readout that invents a name for it is lying.",
+          "examples": [],
+          "line": 205
+        },
+        {
+          "name": "Areas.mapped",
+          "signature": "Areas.mapped()",
+          "kind": "function",
+          "returns": "{ Area }",
+          "summary": ": Every area that has geography, for a map screen to draw. Ordered as they : were defined, because that is the order a designer thought about them in.",
+          "examples": [],
+          "line": 238
         },
         {
           "name": "Areas.locate",
@@ -2464,7 +2492,7 @@
           "returns": "string?",
           "summary": "",
           "examples": [],
-          "line": 169
+          "line": 249
         },
         {
           "name": "Areas.forget",
@@ -2473,7 +2501,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 173
+          "line": 253
         },
         {
           "name": "Areas.respawnFor",
@@ -2482,7 +2510,7 @@
           "returns": "(string?, CFrame?)",
           "summary": "Where this player should be right now. Their own area if they may still be in it, otherwise the first safe area they qualify for, otherwise the first safe area at all. The cascade exists because every step of it happens: unlocks get revoked, areas get removed, and a player whose saved area no longer admits them still has to appear somewhere with a floor. Returns nil only when the game defines no safe area, which is a configuration error rather than a runtime one — and one worth finding at startup rather than at a respawn.",
           "examples": [],
-          "line": 191
+          "line": 271
         },
         {
           "name": "Areas.availableTo",
@@ -2491,7 +2519,7 @@
           "returns": "{ any }",
           "summary": "================================= reading ================================== : Everywhere this player could go from where they are, with reasons for the : places they cannot. The shape a map screen wants.",
           "examples": [],
-          "line": 237
+          "line": 317
         },
         {
           "name": "Areas.describe",
@@ -2500,7 +2528,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 252
+          "line": 332
         },
         {
           "name": "Areas.reset",
@@ -2509,7 +2537,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 277
+          "line": 357
         }
       ],
       "describes": true
@@ -5515,7 +5543,7 @@
     {
       "name": "Debug",
       "file": "forge/luau/Forge/Debug/init.lua",
-      "lines": 398,
+      "lines": 426,
       "summary": "Debug — how a running game explains itself. This is the seam between the two halves. The Quality Engine's bridge can already measure geometry: raycasts, bounds, overlaps, part counts. What it cannot see is *meaning* — whether the economy is solvent, whether forty actors are stuck in one state, whether anyone has taken damage in the last minute. Those are facts only the game knows. Debug makes the game say them out loud, in JSON, through a replicated StringValue the plugin can read while the place is running. No loadstring, which does not exist in a play session anyway. Then from the validator, with a command that already exists: It also carries live tunables, so a number can be changed in a running session and the effect observed without a rebuild — the shortest iteration loop the platform allows.",
       "examples": [
         "Debug.expose()                       -- once, on the server\nDebug.probe(\"economy\", function()\nreturn { gold = totalGold(), shops = #shops }\nend)",
@@ -5678,6 +5706,15 @@
           "line": 240
         },
         {
+          "name": "Debug.ready",
+          "signature": "Debug.ready(label: string?)",
+          "kind": "function",
+          "returns": null,
+          "summary": "Say the game has finished starting. Every automated look at a running game -- screenshots, interface measurement, the quality gate -- has to answer \"is it up yet\", and until now each of them guessed. The guesses were all versions of watching the HUD stop changing, and they were all wrong in the same way: a heads-up display builds its labels in the first frame and fills them as answers arrive, so anything watching it settles while the readout still says \"Locating\" and the player is still unarmed. A game whose server spends twelve seconds carving terrain was therefore photographed at second two, every time, and every absence in that photograph was read as a bug. Several were investigated. None existed. One line at the end of a bootstrap ends that whole category. What cannot be inferred from outside is trivially known from inside.",
+          "examples": [],
+          "line": 268
+        },
+        {
           "name": "Debug.expose",
           "signature": "Debug.expose(parent: Instance?, options: any?)",
           "kind": "function",
@@ -5687,7 +5724,7 @@
             "dm.properties { path = \"ReplicatedStorage.ForgeDebug.Snapshot\",\nproperties = { \"Value\" } }",
             "{\"cmd\":\"probe\",\"name\":\"fight\"}\n{\"cmd\":\"set\",\"path\":\"fight.comboWindow\",\"value\":1.4}\n{\"cmd\":\"logs\",\"count\":40}\n{\"cmd\":\"reset\"}"
           ],
-          "line": 278
+          "line": 306
         },
         {
           "name": "Debug.describe",
@@ -5696,7 +5733,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 382
+          "line": 410
         }
       ],
       "describes": true
@@ -9350,8 +9387,8 @@
     {
       "name": "ItchAssets",
       "file": "forge/luau/Forge/Catalog/ItchAssets.lua",
-      "lines": 421,
-      "summary": "ItchAssets — CC0 models published to this account, grouped by topic. Generated by `rqe.assets.itch_publish`; rewritten on every export. These are published Roblox Models, not baked geometry, so they load through `InsertService:LoadAsset` at runtime rather than being rebuilt from parts. That works here for the reason it fails for store models generally: the signed-in account owns them, because it published them. `textured` is the field that matters when choosing, and it is measured rather than inferred: every asset here was loaded once in Studio and its descendants counted. The obvious inference -- a `.glb` embeds its images, an `.fbx` names them by relative path and so arrives grey -- is sound about file formats and was wrong about 144 of these 295 assets, because a GLB whose materials are plain untextured colours converts to a bare MeshPart and the colour does not survive the import. So do not restore the guess. If `textured` is false, nothing in the asset carries colour and the caller has to supply it. `meshes` is how many MeshParts came out. One means a single welded shape, which is what you get from a GLB that lost its materials; several means the pack modelled parts separately, and their names are often meaningful (`house5_door1`, `house5_windows`) in a way that a tint pass can use. Every entry keeps the pack and author it came from. CC0 asks for no credit -- the provenance is for the question \"what is this and where did it come from\", which is asked long after the answer stops being obvious. 295 models across 67 topics, 89 of them carrying colour of their own. Published 2026-08-27.",
+      "lines": 716,
+      "summary": "ItchAssets — CC0 models published to this account, grouped by topic. Generated by `rqe.assets.itch_publish`; rewritten on every export. These are published Roblox Models, not baked geometry, so they load through `InsertService:LoadAsset` at runtime rather than being rebuilt from parts. That works here for the reason it fails for store models generally: the signed-in account owns them, because it published them. `textured` is the field that matters when choosing, and it is measured rather than inferred: every asset here was loaded once in Studio and its descendants counted. The obvious inference -- a `.glb` embeds its images, an `.fbx` names them by relative path and so arrives grey -- is sound about file formats and was wrong about 144 of these 295 assets, because a GLB whose materials are plain untextured colours converts to a bare MeshPart and the colour does not survive the import. So do not restore the guess. If `textured` is false, nothing in the asset carries colour and the caller has to supply it. `meshes` is how many MeshParts came out. One means a single welded shape, which is what you get from a GLB that lost its materials; several means the pack modelled parts separately, and their names are often meaningful (`house5_door1`, `house5_windows`) in a way that a tint pass can use. Every entry keeps the pack and author it came from. CC0 asks for no credit -- the provenance is for the question \"what is this and where did it come from\", which is asked long after the answer stops being obvious. 538 models across 63 topics, 236 of them carrying colour of their own. Published 2026-09-01.",
       "examples": [
         "local Itch = Forge.Catalog.ItchAssets\nlocal id = Itch.pick(\"tree\", seed)\nlocal model = game:GetService(\"InsertService\"):LoadAsset(id)"
       ],
@@ -9363,7 +9400,7 @@
           "returns": "{ Entry }",
           "summary": "",
           "examples": [],
-          "line": 365
+          "line": 608
         },
         {
           "name": "ItchAssets.topics",
@@ -9372,7 +9409,7 @@
           "returns": "{ string }",
           "summary": "",
           "examples": [],
-          "line": 369
+          "line": 612
         },
         {
           "name": "ItchAssets.pick",
@@ -9381,7 +9418,7 @@
           "returns": "number?",
           "summary": "One model's id from a topic, chosen by a seed. Seeded rather than random so a world generated twice is the same world -- the thing that makes a layout something you can author against instead of something you re-roll until it looks right. `texturedOnly` skips the grey ones. Worth passing wherever a prop is the subject rather than the backdrop.",
           "examples": [],
-          "line": 388
+          "line": 631
         },
         {
           "name": "ItchAssets.describe",
@@ -9390,7 +9427,91 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 408
+          "line": 703
+        }
+      ],
+      "describes": true
+    },
+    {
+      "name": "ItchIcons",
+      "file": "forge/luau/Forge/UI/ItchIcons.lua",
+      "lines": 824,
+      "summary": "ItchIcons — CC0 UI art published to this account, keyed by what it is for. Generated by `rqe.assets.itch_ui`; rewritten on every export. Do not edit. Two kinds of entry, and the difference matters at the call site. A **whole** entry is one image that is one icon. Point an `ImageLabel` at it and you are done. A **cell** entry is one rectangle of a sprite sheet -- most UI packs ship ninety icons as a single PNG, and Roblox crops one out with `ImageRectOffset` and `ImageRectSize`. That is the better shape anyway: one asset, one texture, one fetch, instead of ninety of each. `apply` handles both, which is why it exists and why UI code should call it rather than reading `.image` and assigning it. Reading the id alone works for a whole entry and silently shows the entire sheet for a cell one. Sheets whose grid could not be established are here with `cells = 0`. They are usable as a whole image and not as icons, and that is recorded rather than guessed: a wrong grid shows every icon as a quarter of itself plus a sliver of its neighbour, and looks deliberate. 348 whole icons across 77 tokens, and 59 sheets holding 9133 cells. Published 2026-09-01.",
+      "examples": [
+        "local Icons = Forge.UI.ItchIcons\nIcons.apply(button.Icon, \"action.close\")"
+      ],
+      "functions": [
+        {
+          "name": "ItchIcons.get",
+          "signature": "ItchIcons.get(token: string)",
+          "kind": "function",
+          "returns": "Drawn?",
+          "summary": "",
+          "examples": [],
+          "line": 513
+        },
+        {
+          "name": "ItchIcons.cell",
+          "signature": "ItchIcons.cell(assetId: number, index: number)",
+          "kind": "function",
+          "returns": "Drawn?",
+          "summary": "One cell of a sheet, by index, reading left to right and top to bottom. Index rather than name because a sheet arrives unlabelled: the pack knows its own order and the filename does not carry it. Labelling one is a person's ten seconds and turns 90 cells into 90 tokens.",
+          "examples": [],
+          "line": 532
+        },
+        {
+          "name": "ItchIcons.apply",
+          "signature": "ItchIcons.apply(label: any, token: string)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": ": Set an ImageLabel or ImageButton from a token. Returns whether it found : one, so a caller can fall back rather than display a blank square.",
+          "examples": [],
+          "line": 554
+        },
+        {
+          "name": "ItchIcons.frame",
+          "signature": "ItchIcons.frame(role: string, state: string?, target: Vector2?)",
+          "kind": "function",
+          "returns": "Entry?",
+          "summary": "The best frame for a role, optionally sized against the box it must fill. Size is not \"bigger is better\", which is what this did after \"smaller is cheaper\" turned out to be wrong. A nine-slice draws its corners at their own size, so a 414x309 slot frame in a 48x88 cell has corners larger than the cell and renders as nothing at all -- the day cells lost their cards that way, and the fix for the button (prefer the largest) is what broke them. Given a target, the frames are ranked by how close their border is to the box: a border more than a third of the smaller edge cannot draw a middle, and one under a pixel or two disappears. Without a target the old rule stands, because a caller that does not know its size cannot be helped.",
+          "examples": [],
+          "line": 685
+        },
+        {
+          "name": "ItchIcons.frames",
+          "signature": "ItchIcons.frames()",
+          "kind": "function",
+          "returns": "{ string }",
+          "summary": "",
+          "examples": [],
+          "line": 786
+        },
+        {
+          "name": "ItchIcons.tokens",
+          "signature": "ItchIcons.tokens()",
+          "kind": "function",
+          "returns": "{ string }",
+          "summary": "",
+          "examples": [],
+          "line": 795
+        },
+        {
+          "name": "ItchIcons.sheets",
+          "signature": "ItchIcons.sheets()",
+          "kind": "function",
+          "returns": "{ Entry }",
+          "summary": "",
+          "examples": [],
+          "line": 804
+        },
+        {
+          "name": "ItchIcons.describe",
+          "signature": "ItchIcons.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 814
         }
       ],
       "describes": true
@@ -10897,7 +11018,7 @@
     {
       "name": "Net",
       "file": "forge/luau/Forge/Net/init.lua",
-      "lines": 391,
+      "lines": 420,
       "summary": "Net — a typed, validated, rate-limited bus between client and server. Roblox gives you RemoteEvent, which is a hole in your server. Every exploit that matters in a Roblox game goes through one: the client sends `{ price = 0 }` and the server believes it. The defence is not vigilance, it is making the unsafe path harder to write than the safe one. So: an event that is not declared does not exist, every client->server packet is shape-checked before your handler sees it, and every one is rate limited whether you remembered to think about it or not. Server: Client: Nothing here decides what your events mean. It only decides that they are declared, shaped and throttled.",
       "examples": [
         "Net.define({\nAttack    = { dir = \"c2s\", rate = 6, shape = { dir = \"Vector3\" } },\nBuyItem   = { dir = \"c2s\", rate = 4, shape = { shop = \"string\", item = \"string\" } },\nStateSync = { dir = \"s2c\" },\nGetShop   = { dir = \"c2s\", kind = \"function\", shape = { shop = \"string\" } },\n})",
@@ -10930,7 +11051,25 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 166
+          "line": 169
+        },
+        {
+          "name": "Net.handles",
+          "signature": "Net.handles(name: string)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "Whether anything is actually listening. `defined` says the remote instance exists; this says somebody called `Net.on` for it. The gap between those two is the hardest failure in a Roblox codebase to see: firing into a defined remote with no handler raises nothing anywhere, and the client simply hangs until it times out -- which looks exactly like a broken button. A game can now assert it in a live scenario instead of discovering it by pressing every control.",
+          "examples": [],
+          "line": 185
+        },
+        {
+          "name": "Net.listening",
+          "signature": "Net.listening()",
+          "kind": "function",
+          "returns": "{ string }",
+          "summary": "",
+          "examples": [],
+          "line": 189
         },
         {
           "name": "Net.manifest",
@@ -10939,7 +11078,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 170
+          "line": 198
         },
         {
           "name": "Net.fire",
@@ -10948,7 +11087,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 214
+          "line": 242
         },
         {
           "name": "Net.fireAll",
@@ -10957,7 +11096,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 219
+          "line": 247
         },
         {
           "name": "Net.fireExcept",
@@ -10966,7 +11105,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 224
+          "line": 252
         },
         {
           "name": "Net.fireNear",
@@ -10975,7 +11114,7 @@
           "returns": null,
           "summary": "Only players within `radius` of `position` receive it. In an open world this is the difference between 20 KB/s and 400 KB/s per client, and it is the single highest-leverage networking decision in the whole engine.",
           "examples": [],
-          "line": 237
+          "line": 265
         },
         {
           "name": "Net.fireList",
@@ -10984,7 +11123,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 250
+          "line": 278
         },
         {
           "name": "Net.send",
@@ -10993,7 +11132,7 @@
           "returns": null,
           "summary": "=============================== client =====================================",
           "examples": [],
-          "line": 259
+          "line": 287
         },
         {
           "name": "Net.request",
@@ -11002,7 +11141,7 @@
           "returns": "any",
           "summary": "",
           "examples": [],
-          "line": 266
+          "line": 294
         },
         {
           "name": "Net.on",
@@ -11011,7 +11150,7 @@
           "returns": "RBXScriptConnection?",
           "summary": "============================== listening =================================== One `on` for both sides. On the server the handler receives (player, payload) and only runs if the packet passed the gate; on the client it receives (payload).",
           "examples": [],
-          "line": 278
+          "line": 306
         },
         {
           "name": "Net.describe",
@@ -11020,7 +11159,7 @@
           "returns": "{ [string]: any }",
           "summary": "What a validator reads: the whole wire contract, plus how many handlers are actually attached. A declared event with no listener is a wiring bug.",
           "examples": [],
-          "line": 348
+          "line": 377
         }
       ],
       "describes": true
@@ -13384,7 +13523,7 @@
     {
       "name": "Rng",
       "file": "forge/luau/Forge/Core/Rng.lua",
-      "lines": 250,
+      "lines": 260,
       "summary": "Rng — seeded randomness in named streams. This is where determinism belongs, and the only place Forge insists on it. One shared Random is a trap: the moment loot rolls consume numbers from the same sequence as terrain, regenerating the same world with a different drop becomes impossible, and a bug reproduced yesterday will not reproduce today. Streams fix that — `Rng.stream(\"world\")` and `Rng.stream(\"loot\")` are independent, both derived from one master seed, both reproducible. The validation half can capture `Rng.describe()` with a run and replay it.",
       "examples": [
         "Rng.seed(20260819)\nlocal world = Rng.stream(\"world\")\nlocal h = world:number(0, 1)"
@@ -13466,19 +13605,19 @@
           "name": "Rng.stream",
           "signature": "Rng.stream(name: string)",
           "kind": "function",
-          "returns": "any",
-          "summary": "",
+          "returns": "Stream",
+          "summary": "Typed, so a wrong method name is a compile error rather than a crash. This returned `any`, which switches every check off at the call site: a world-dressing pass called `stream:integer(1, 6)` -- the method is `int` -- and `luau-analyze`, the doctor and the typechecker all passed it through to be discovered by a server that stopped building the world halfway.",
           "examples": [],
-          "line": 113
+          "line": 121
         },
         {
           "name": "Rng.at",
           "signature": "Rng.at(name: string, x: number, y: number)",
           "kind": "function",
-          "returns": "any",
+          "returns": "Stream",
           "summary": "Throwaway stream for a specific coordinate: same tile always rolls the same contents, without keeping any per-tile state.",
           "examples": [],
-          "line": 126
+          "line": 134
         },
         {
           "name": "Rng.fbm",
@@ -13487,7 +13626,7 @@
           "returns": "number",
           "summary": "Fractal noise. The backbone of every heightfield, moisture map and scatter mask, and deterministic for a given seed.",
           "examples": [],
-          "line": 133
+          "line": 141
         },
         {
           "name": "Rng.fbm01",
@@ -13496,7 +13635,7 @@
           "returns": "number",
           "summary": "fbm remapped to 0..1, which is what most callers actually want.",
           "examples": [],
-          "line": 152
+          "line": 160
         },
         {
           "name": "Rng.ridge",
@@ -13505,7 +13644,7 @@
           "returns": "number",
           "summary": "Ridged noise: sharp crests instead of rolling hills. Mountains, canyons.",
           "examples": [],
-          "line": 157
+          "line": 165
         },
         {
           "name": "Rng.describe",
@@ -13514,7 +13653,7 @@
           "returns": "{ [string]: any }",
           "summary": "What a run should record so it can be replayed.",
           "examples": [],
-          "line": 162
+          "line": 170
         },
         {
           "name": "Rng.xorshift",
@@ -13523,7 +13662,7 @@
           "returns": "Generator",
           "summary": "",
           "examples": [],
-          "line": 198
+          "line": 208
         },
         {
           "name": "Rng.weightedPick",
@@ -13532,7 +13671,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 214
+          "line": 224
         },
         {
           "name": "Rng.range",
@@ -13541,7 +13680,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 232
+          "line": 242
         },
         {
           "name": "Rng.int",
@@ -13550,7 +13689,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 236
+          "line": 246
         }
       ],
       "describes": true
@@ -13719,7 +13858,7 @@
     {
       "name": "Scale",
       "file": "forge/luau/Forge/Catalog/Scale.lua",
-      "lines": 379,
+      "lines": 393,
       "summary": "Scale — how big a thing of this kind should be, in studs. The problem ----------- Asset packs share no unit. One models a sofa 271 units tall, another a fuel tank at 318, a third a whole castle at 4. Nothing about a mesh says what it is supposed to measure, and every marketplace normalises nothing, so a world assembled from several packs is a world where a chair is taller than a church. The fix is to declare a target height and scale each model to reach it. The question is where that number comes from. Why it is not measured ---------------------- It cannot be. Authored height is in the pack's own arbitrary unit, so measuring 295 models tells you the median tree is 4.2 *somethings*. There is no arithmetic from that to \"a tree is about 34 studs\" -- that is knowledge about trees, not about the file. Why it is not a table of topics ------------------------------- The first version was: 67 topics, two numbers each, typed by hand. It worked and it does not survive twelve thousand models, because every new topic is a new row nobody writes and the fallback is one number for everything. So the knowledge lives in about a dozen **categories**, and topics are classified into them by name. `tree` and `dead oak tree` and `palm tree` are all foliage without anyone adding a row; an unrecognised topic lands on a neutral prop size rather than on nothing. The other half -------------- Height alone is not enough, and the failure is spectacular: a bush modelled 1 unit tall and 20 wide, scaled until it stands 5 studs, becomes 100 studs across. One of those filled a third of a frame and read as a hill. So a category also declares how wide a thing of its kind may be, as a multiple of its height, and whichever limit binds first wins. A squat model then stays squat rather than reaching its target height -- which is correct. The target says what a tree should measure, not that every model is tree-shaped.",
       "examples": [
         "local Scale = Forge.Catalog.Scale\nlocal factor = Scale.factor(\"tree\", authoredSize)"
@@ -13727,7 +13866,7 @@
       "functions": [
         {
           "name": "Scale.classify",
-          "signature": "Scale.classify(topic: string)",
+          "signature": "Scale.classify(topic: string?)",
           "kind": "function",
           "returns": "string",
           "summary": "Which category a topic falls into. Two passes, and the order is the fix for a real bug. The first version matched rule words as plain substrings anywhere in the topic. `street lamp` came back as **foliage, thirty-four studs tall**, because `street` contains `tree`: s-TREE-t. Every lamp post in the village was built as an oak. The same trap is waiting in `crate`/`rate`, `shovel`/`hovel`, `barn`/`bar` -- substring matching over natural language finds words inside other words, and it does it silently. So pass one compares whole words. A topic is words separated by spaces, and `lamp` matching the word `lamp` is what was meant all along. Pass two falls back to substrings, because compound topics arrive welded: `watchtower`, `pinetree`, `lamppost`. It only runs when no whole word matched, so it can no longer outvote the obvious answer. Cached: this runs once per prop and a thousand-prop world would otherwise walk the list a thousand times for the same dozen answers.",
@@ -13741,7 +13880,7 @@
           "returns": "Kind",
           "summary": ": The target size for a topic. `override` lets a game disagree about one : thing without restating the other sixty-six.",
           "examples": [],
-          "line": 343
+          "line": 357
         },
         {
           "name": "Scale.describe",
@@ -13750,7 +13889,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 374
+          "line": 388
         }
       ],
       "describes": true
@@ -15930,7 +16069,7 @@
     {
       "name": "Testing",
       "file": "forge/luau/Forge/Testing/init.lua",
-      "lines": 524,
+      "lines": 532,
       "summary": "Testing — assertions about a game that is actually running. Every other check in this project reads source. The compiler reads syntax, the doctor reads structure, the unit tests read text. None of them can tell you whether an attack lands, whether an enemy dies, or whether a save survives a rejoin — and those are the only questions that matter. So this runs inside the live game. It drives real characters through real systems and asserts on real state. Nothing here is mocked: a test that hits a fake enemy with a fake sword proves that the fakes agree with each other. --- Why bots and not mocks --------------------------------------------- A bot here is a real `Rig` with a real `Humanoid`, spawned into the real world, moved by the real movement code and damaged by the real damage pipeline. When one of these tests fails it is because the game is broken, not because a stub drifted. That is the entire point: this suite is the thing that was missing when every genuine bug in this project had to be found by a person watching a screen. --- Determinism --------------------------------------------------------- Scenarios are given their own RNG stream and their own container, and the world is put back afterwards. Two runs of the same suite see the same numbers, so a failure is reproducible rather than a story about one afternoon.",
       "examples": [
         "Testing.scenario(\"a third hit finishes a husk\", function(t)\nlocal enemy = t:spawnEnemy(\"husk\", Vector3.new(0, 5, 0))\nlocal hero = t:spawnBot(Vector3.new(0, 5, 6))",
@@ -16122,22 +16261,70 @@
           "line": 462
         },
         {
-          "name": "Testing.runAndPublish",
-          "signature": "Testing.runAndPublish(suite: Instance?, filter: string?)",
-          "kind": "function",
-          "returns": "{ [string]: any }",
-          "summary": "Load a game's scenarios, run them, and publish the result. One call, so a game's bootstrap can opt in with a single line and a CLI has one thing to trigger.",
-          "examples": [],
-          "line": 487
-        },
-        {
           "name": "Testing.describe",
           "signature": "Testing.describe()",
           "kind": "function",
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 515
+          "line": 523
+        }
+      ],
+      "describes": true
+    },
+    {
+      "name": "Textures",
+      "file": "forge/luau/Forge/Catalog/Textures.lua",
+      "lines": 143,
+      "summary": "Textures — CC0 surface art published to this account, keyed by what it is for. Generated by `rqe.assets.itch_textures`; rewritten on every export. Do not edit. These are `Image` assets, not Decals. The distinction is not cosmetic and cost this repository 367 assets once: Open Cloud accepts `Decal`, reports it Approved and Active, and it never renders anywhere. What to do with one ------------------- Hand the id to `Forge.Material.define` and get a `MaterialVariant`, then set a part's `Material` and `MaterialVariant` name. That tiles by studs and takes the engine's lighting. Painting it on as a `Texture` instead stretches one image over a face and reads as a sticker the moment the part is not square.",
+      "examples": [
+        "local Textures = Forge.Catalog.Textures\nlocal grass = Textures.pick(\"ground.grass\", 7)\nForge.Material.define(\"MeadowGrass\", {\nbase = Enum.Material.Grass, colorMap = grass.id, studsPerTile = 4,\n})"
+      ],
+      "functions": [
+        {
+          "name": "Textures.byRole",
+          "signature": "Textures.byRole(role: string)",
+          "kind": "function",
+          "returns": "{ Entry }",
+          "summary": "",
+          "examples": [],
+          "line": 100
+        },
+        {
+          "name": "Textures.roles",
+          "signature": "Textures.roles()",
+          "kind": "function",
+          "returns": "{ string }",
+          "summary": "",
+          "examples": [],
+          "line": 104
+        },
+        {
+          "name": "Textures.pick",
+          "signature": "Textures.pick(role: string, seed: number)",
+          "kind": "function",
+          "returns": "Entry?",
+          "summary": "One texture for a role, chosen by a seed. Seeded rather than random so a world generated twice is the same world -- the thing that makes a layout something you can author against instead of something you re-roll until it looks right.",
+          "examples": [],
+          "line": 120
+        },
+        {
+          "name": "Textures.first",
+          "signature": "Textures.first(role: string)",
+          "kind": "function",
+          "returns": "Entry?",
+          "summary": ": The first of a role, for a caller that wants the same surface every time.",
+          "examples": [],
+          "line": 129
+        },
+        {
+          "name": "Textures.describe",
+          "signature": "Textures.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 134
         }
       ],
       "describes": true
@@ -16694,7 +16881,7 @@
     {
       "name": "UI",
       "file": "forge/luau/Forge/UI/init.lua",
-      "lines": 406,
+      "lines": 703,
       "summary": "UI — tokens and widgets, so an interface looks designed instead of assembled. Agent-built Roblox UI has a signature: default fonts, primary-colour backgrounds, no consistent spacing, every panel a slightly different grey. The cause is not bad taste, it is that every widget gets invented at the point of use with whatever numbers were in mind at that second. Tokens fix that. Read colours and spacing from `UI.theme`, never literals, and a whole interface stays coherent even when twelve different systems built pieces of it.",
       "examples": [
         "local gui = UI.mount(\"HUD\")\nlocal panel = UI.panel(gui, { size = UDim2.fromOffset(320, 96), pos = ... })\nlocal hp = UI.bar(panel, { color = UI.theme.color.danger })\nhp:set(0.62)\nUI.toast(\"Level 7 reached\", { color = UI.theme.color.gold })"
@@ -16707,16 +16894,34 @@
           "returns": "ScreenGui",
           "summary": "================================= mount ====================================",
           "examples": [],
-          "line": 60
+          "line": 63
+        },
+        {
+          "name": "UI.skin",
+          "signature": "UI.skin(widget: GuiObject, role: string, state: string?)",
+          "kind": "function",
+          "returns": "(boolean, boolean, boolean)",
+          "summary": "",
+          "examples": [],
+          "line": 169
+        },
+        {
+          "name": "UI.reskin",
+          "signature": "UI.reskin(button: GuiObject, role: string, state: string)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": ": Swap a skinned button's face without rebuilding it. The face is the : button's *sibling*, so it is reached through the holder.",
+          "examples": [],
+          "line": 238
         },
         {
           "name": "UI.panel",
           "signature": "UI.panel(parent: Instance, options: any?)",
           "kind": "function",
-          "returns": "Frame",
+          "returns": "GuiObject",
           "summary": "",
           "examples": [],
-          "line": 100
+          "line": 250
         },
         {
           "name": "UI.label",
@@ -16725,7 +16930,7 @@
           "returns": "TextLabel",
           "summary": "",
           "examples": [],
-          "line": 126
+          "line": 302
         },
         {
           "name": "UI.bar",
@@ -16734,7 +16939,7 @@
           "returns": null,
           "summary": "A bar with a delayed trail. The trail is the whole point: it shows how much damage just landed, which is information the player cannot get from a bar that simply jumps to its new value.",
           "examples": [],
-          "line": 152
+          "line": 328
         },
         {
           "name": "UI.button",
@@ -16743,7 +16948,7 @@
           "returns": "TextButton",
           "summary": "",
           "examples": [],
-          "line": 248
+          "line": 424
         },
         {
           "name": "UI.list",
@@ -16752,7 +16957,7 @@
           "returns": "UIListLayout",
           "summary": "",
           "examples": [],
-          "line": 293
+          "line": 580
         },
         {
           "name": "UI.toast",
@@ -16761,7 +16966,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 308
+          "line": 595
         },
         {
           "name": "UI.describe",
@@ -16770,7 +16975,7 @@
           "returns": "{ [string]: any }",
           "summary": "What a validator reads to prove the interface exists and is populated.",
           "examples": [],
-          "line": 361
+          "line": 658
         }
       ],
       "describes": true
@@ -17508,9 +17713,11 @@
     {
       "name": "VisualIcons",
       "file": "forge/luau/Forge/UI/VisualIcons.lua",
-      "lines": 45,
-      "summary": "VisualIcons — token-keyed icon registry. Assets enter the UI by semantic token, never by a raw id scattered in code: VisualIcons.get(\"nav.shop\"). Unknown tokens fail loudly -- a silent nil becomes a blank image nobody notices until release.",
-      "examples": [],
+      "lines": 184,
+      "summary": "VisualIcons — token-keyed icon registry. Assets enter the UI by semantic token, never by a raw id scattered in code: VisualIcons.get(\"nav.shop\"). Unknown tokens fail loudly -- a silent nil becomes a blank image nobody notices until release. Where the art comes from ------------------------ The tokens below are the vocabulary; they are not the art. Every one of them shipped as `rbxassetid://0` for as long as this file has existed, which renders as a blank square -- the exact failure the paragraph above warns about, committed into the default. `ItchIcons` is the generated catalogue of CC0 art published to this account, and it is consulted first. A token it knows resolves to real art without anybody registering anything; a token it does not falls through to whatever a game registered, and then to the placeholder. It is optional on purpose. The catalogue is generated output, so a checkout that has not run the publisher has no `ItchIcons` at all, and an engine that hard-required it would fail to load rather than degrade. Why `apply` exists ------------------ Most UI packs ship ninety icons as one sprite sheet, and Roblox crops one out with `ImageRectOffset` and `ImageRectSize`. So an icon is not always an id -- it can be an id plus a rectangle, and `get` returning a string cannot say so. `get` still returns a string, because callers depend on that. But a caller that assigns it to `ImageLabel.Image` and stops will show the *entire sheet* where it wanted one glyph. `apply` sets all three properties and is what UI code should call.",
+      "examples": [
+        "VisualIcons.apply(button.Icon, \"action.close\")"
+      ],
       "functions": [
         {
           "name": "VisualIcons.get",
@@ -17519,16 +17726,34 @@
           "returns": "string",
           "summary": "",
           "examples": [],
-          "line": 24
+          "line": 86
+        },
+        {
+          "name": "VisualIcons.apply",
+          "signature": "VisualIcons.apply(label: any, token: string)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "Set an image control from a token. Returns whether it found real art. The return value is the loud failure, and it is why this does *not* assert the way `get` does. `get` returns a string and has no other channel, so an unknown token there has to throw. `apply` answers the question directly, and a caller that asked \"did you find art\" has already said what it will do if the answer is no. Asserting here cost a whole interface. A HUD asked for `economy.gift`, which no game had registered; the assert took the LocalScript down at the first rail button, and everything after it -- two more buttons, three panels, the round-result card, the toasts -- was never built. Studio logged nothing a server-side check could see, the modules compiled, the doctor was clean, and the only symptom was a screenshot with one dark square where a rail should be.",
+          "examples": [],
+          "line": 113
         },
         {
           "name": "VisualIcons.register",
           "signature": "VisualIcons.register(token: string, assetId: string)",
           "kind": "function",
           "returns": "()",
-          "summary": "",
+          "summary": "Register art for a token. Overwrites a placeholder, refuses to overwrite real art. The original refused both -- which meant the nine tokens above, every one a placeholder, could never be filled by the game that needed them.",
           "examples": [],
-          "line": 30
+          "line": 136
+        },
+        {
+          "name": "VisualIcons.resolved",
+          "signature": "VisualIcons.resolved()",
+          "kind": "function",
+          "returns": "{ string }",
+          "summary": ": Every token that resolves to something a player would actually see.",
+          "examples": [],
+          "line": 144
         },
         {
           "name": "VisualIcons.tokens",
@@ -17537,10 +17762,19 @@
           "returns": "{ string }",
           "summary": "",
           "examples": [],
-          "line": 35
+          "line": 154
+        },
+        {
+          "name": "VisualIcons.describe",
+          "signature": "VisualIcons.describe()",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": "",
+          "examples": [],
+          "line": 175
         }
       ],
-      "describes": false
+      "describes": true
     },
     {
       "name": "VisualLayouts",

@@ -26,7 +26,9 @@ local GameConfig = {
 		MaxRoundSeconds = 24 * 60 * 60,
 		RevealSeconds = 10,
 		ZombieRespawnSeconds = 3,
-		SpawnProtectionSeconds = 3,
+		--: Five, not three. Long enough to get off the pad and read where the
+		--: horde is; short enough that it cannot be carried into a fight.
+		SpawnProtectionSeconds = 5,
 		LastSurvivorsPingCount = 3, -- last N survivors get pinged
 		PingIntervalSeconds = 15,
 		PatientZeroRecentRounds = 3, -- rounds a player is deprioritized after being PZ

@@ -874,6 +874,62 @@ def check_asset_ids(root: Path, findings: list[Finding]) -> None:
             ))
 
 
+def check_reinvention(root: Path, findings: list[Finding]) -> None:
+    """A game system named after something the engine already has.
+
+    The most expensive defect in this repository is not a bug. It is writing
+    something that already exists: in one session `Rig.grip`, `Camera.Viewmodel`
+    and `Forge.Anim` were each reimplemented by hand, worse, because nobody
+    asked whether they existed.
+
+    A name collision is the cheapest possible signal for that. `Guns.lua` next
+    to `Forge.Weapon` might be a game's own layer over the engine's -- that is
+    normal and correct -- so this is a note rather than an error. It exists to
+    make somebody type one command before they keep going.
+
+    Matching is on the family and module names the engine actually exports, and
+    only for files that do not require the thing they collide with: a system
+    that already requires `Forge.Anim` has clearly found it.
+    """
+    engine = root.parent.parent / "forge" / "luau" / "Forge"
+    if not engine.is_dir():
+        engine = Path(__file__).resolve().parents[2] / "forge" / "luau" / "Forge"
+    if not engine.is_dir():
+        return
+
+    #: Family directories and their modules, which is what an author would
+    #: plausibly name a file after.
+    known: dict[str, str] = {}
+    for family in engine.iterdir():
+        if family.is_dir():
+            known[family.name.lower()] = f"Forge.{family.name}"
+            for module in family.glob("*.lua"):
+                if module.stem != "init":
+                    known[module.stem.lower()] = f"Forge.{family.name}.{module.stem}"
+
+    #: Words too generic to mean anything as a collision.
+    ignore = {"init", "config", "state", "data", "core", "world", "match",
+              "access", "events", "entity", "mark", "platform", "reference"}
+
+    for path in sorted(root.rglob("*.lua")) + sorted(root.rglob("*.luau")):
+        stem = path.stem.lower()
+        if stem in ignore or stem not in known:
+            continue
+        try:
+            text = path.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        engine_name = known[stem]
+        #: Already using it is the opposite of reinventing it.
+        leaf = engine_name.split('.')[-1]
+        if leaf in text:
+            continue
+        findings.append(Finding(
+            "note", str(path), 1,
+            f"'{path.stem}' shares its name with {engine_name}; "
+            f"run `forge find {path.stem}` before writing more of it"))
+
+
 CHECKS = (
     check_compiles,
     check_unknown_globals,
@@ -891,6 +947,7 @@ CHECKS = (
     check_asset_ids,
     check_client_server_api,
     check_field_method_shadow,
+    check_reinvention,
 )
 
 

@@ -808,6 +808,38 @@ def cmd_gametest(args: argparse.Namespace) -> int:
     return 0 if report.get("ok") else 1
 
 
+# ============================== finding things ==============================
+def cmd_find(args: argparse.Namespace) -> int:
+    """Answer "does this already exist" across the engine, the games and the kits."""
+    from forge.cli import find
+
+    print(find.render(args.query, find.search(args.query, limit=args.limit)))
+    return 0
+
+
+def cmd_kits(args: argparse.Namespace) -> int:
+    """List every kit with what is actually inside it."""
+    from forge.cli import find
+
+    print(find.render_kits())
+    return 0
+
+
+def cmd_map(args: argparse.Namespace) -> int:
+    """Every module the engine has, in one readable page."""
+    from forge.cli import find
+
+    text = find.render_map(args.family)
+    if args.write:
+        out = REPO_ROOT / "docs" / "engine-map.md"
+        out.parent.mkdir(parents=True, exist_ok=True)
+        out.write_text("```\n" + text + "\n```\n", encoding="utf-8")
+        print(f"wrote {out}")
+    else:
+        print(text)
+    return 0
+
+
 # ============================== api index ===================================
 def cmd_api(args: argparse.Namespace) -> int:
     """Describe the engine as JSON, or print one module's surface."""
@@ -1322,6 +1354,22 @@ def main(argv: list[str] | None = None) -> int:
                       help="the project to test; defaults to whatever the live session has open")
     p_gt.add_argument("--filter", default=None, help="only scenarios whose name contains this")
     p_gt.set_defaults(func=cmd_gametest)
+
+    p_find = sub.add_parser(
+        "find",
+        help="what already does this? searches the engine, the games and the kits")
+    p_find.add_argument("query", help="a concept, not a filename: 'zombie', 'hold a weapon'")
+    p_find.add_argument("--limit", type=int, default=8, help="hits per shelf")
+    p_find.set_defaults(func=cmd_find)
+
+    p_kits = sub.add_parser("kits", help="every kit, with what is inside it")
+    p_kits.set_defaults(func=cmd_kits)
+
+    p_map = sub.add_parser("map", help="every engine module in one page")
+    p_map.add_argument("family", nargs="?", default=None, help="one family only")
+    p_map.add_argument("--write", action="store_true",
+                       help="write docs/engine-map.md instead of printing")
+    p_map.set_defaults(func=cmd_map)
 
     p_api = sub.add_parser("api", help="write a machine-readable index of the engine")
     p_api.add_argument("--module", default=None, help="print one module instead")

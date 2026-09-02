@@ -735,12 +735,27 @@ end
 -- All alive survivor targets (human + bot) as {position, player?, model}.
 type Target = { pos: Vector3, player: Player?, model: Model, root: BasePart }
 
+--[[
+	A spawn-protected survivor is not a target.
+
+	Without this the horde walks to the survivor spawn and waits there, and a
+	player's whole session is: spawn, run three steps, die, repeat. The kill
+	feed filled with the same name eight times in a row, which is what a death
+	loop looks like from the outside.
+
+	The ForceField already exists and already stops the damage; the missing
+	half was the dead not bothering to queue up for it.
+]]
+local function isProtected(character: Model): boolean
+	return character:FindFirstChildOfClass("ForceField") ~= nil
+end
+
 function BotService:_survivorTargets(): { Target }
 	local out: { Target } = {}
 	for _, survivor in self._deps.getHumanSurvivors() do
 		local char = survivor.Character
 		local r = char and char:FindFirstChild("HumanoidRootPart")
-		if char and r and r:IsA("BasePart") then
+		if char and r and r:IsA("BasePart") and not isProtected(char) then
 			table.insert(out, { pos = r.Position, player = survivor, model = char, root = r })
 		end
 	end

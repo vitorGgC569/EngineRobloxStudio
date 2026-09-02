@@ -189,13 +189,17 @@ function HUD.start(remotes: any)
 	end)
 
 	remotes.on("ConversionAlert", function(alert)
+		--: Nobody turns any more. The feed said "turned..." over and over while
+		--: the player was being eaten, which described the old game happening
+		--: to somebody who was simply dying.
 		if alert.killerName then
 			pushFeed(
-				("%s was infected by %s"):format(alert.victimName, alert.killerName),
+				("%s was killed by %s"):format(alert.victimName, alert.killerName),
 				Theme.Colors.Infected
 			)
 		else
-			pushFeed(("%s turned..."):format(alert.victimName), Theme.Colors.Infected)
+			pushFeed(("%s was taken by the horde"):format(alert.victimName),
+				Theme.Colors.Infected)
 		end
 	end)
 

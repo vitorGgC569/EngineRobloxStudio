@@ -930,6 +930,166 @@ def check_reinvention(root: Path, findings: list[Finding]) -> None:
             f"run `forge find {path.stem}` before writing more of it"))
 
 
+_MODULE_SOURCE: dict[str, str] = {}
+
+
+def _module_defines(repo: Path, module: str, leaf: str) -> bool:
+    """Does the engine module's own source define this name, however oddly.
+
+    The index is a summary. This is the file.
+    """
+    text = _MODULE_SOURCE.get(module)
+    if text is None:
+        engine = repo / "forge" / "luau" / "Forge"
+        candidates = list(engine.glob(f"**/{module}.lua")) + \
+            list(engine.glob(f"{module}/init.lua"))
+        text = ""
+        for candidate in candidates:
+            try:
+                text += candidate.read_text(encoding="utf-8", errors="ignore")
+            except OSError:
+                continue
+        _MODULE_SOURCE[module] = text
+    if not text:
+        #: No source found means no evidence either way, and silence is the
+        #: honest answer to that.
+        return True
+    return bool(re.search(r"[.:]" + re.escape(leaf) + r"\s*[=(]", text))
+
+
+def check_engine_api(root: Path, findings: list[Finding]) -> None:
+    """Calling an engine function that does not exist.
+
+    Three of these were written from memory in one session and every one
+    compiled: `Actor.setPopulationMax` (no such function), `stream:integer`
+    (it is `int`), and `t.ok(...)` where the assertion API is `t:expect(...)`.
+    All three resolved to `nil` at runtime and failed somewhere else, which is
+    the most expensive shape a mistake can have.
+
+    The index `forge api` writes already knows every public name, including
+    class methods. Comparing a call against it is a lookup.
+
+    Deliberately a warning and deliberately conservative: a module may expose
+    fields this index does not model, so a name that is merely absent is only
+    reported when the module has a real surface to be absent from, and a name
+    that exists as a *method* being called with a dot is reported separately
+    because that one cannot be anything else.
+    """
+    import json
+
+    repo = Path(__file__).resolve().parents[2]
+
+    #[[
+    #   Built, not read.
+    #
+    #   `forge/catalog/api.json` is a committed artefact and it is stale the
+    #   moment somebody adds a function. Reporting against a stale index means
+    #   reporting `Place.held is not in Place` on the commit that adds
+    #   `Place.held`, which is exactly the false alarm that makes a check
+    #   worth ignoring.
+    #]]
+    try:
+        from forge.cli import apiindex
+
+        data = apiindex.build()
+    except Exception:  # noqa: BLE001 - a broken index must not fail the doctor
+        return
+
+    dotted: dict[str, set[str]] = {}
+    methods: dict[str, set[str]] = {}
+    for module in data.get("detail", []):
+        name = module.get("name", "")
+        for fn in module.get("functions", []):
+            signature = fn.get("signature", "")
+            head = signature.split("(")[0]
+            if "." in head:
+                owner, leaf = head.rsplit(".", 1)
+                dotted.setdefault(owner, set()).add(leaf)
+                if owner != name:
+                    dotted.setdefault(name, set()).add(leaf)
+            elif ":" in head:
+                owner, leaf = head.rsplit(":", 1)
+                methods.setdefault(owner, set()).add(leaf)
+
+    #: Which local name refers to which engine module. Both idioms in this repo.
+    alias_re = re.compile(
+        r"^\s*local\s+(\w+)\s*=\s*(?:Forge\.)?([A-Za-z][\w.]*)\s*$", re.M)
+
+    for path in sorted(root.rglob("*.lua")) + sorted(root.rglob("*.luau")):
+        try:
+            text = path.read_text(encoding="utf-8", errors="ignore")
+        except OSError:
+            continue
+        lines = text.split("\n")
+
+        aliases: dict[str, str] = {}
+        for match in alias_re.finditer(text):
+            local, target = match.group(1), match.group(2)
+            leaf = target.split(".")[-1]
+            if leaf in dotted:
+                aliases[local] = leaf
+
+        #: Names this file defines on the alias itself are not the engine's.
+        for local in list(aliases):
+            if re.search(r"function\s+" + re.escape(local) + r"[.:]", text):
+                aliases.pop(local, None)
+
+        for number, line in enumerate(lines, start=1):
+            if line.lstrip().startswith("--"):
+                continue
+            for local, module in aliases.items():
+                known = dotted.get(module, set())
+                if len(known) < 3:
+                    continue
+                for call in re.finditer(
+                        re.escape(local) + r"\.(\w+)\s*\(", line):
+                    leaf = call.group(1)
+                    if leaf in known:
+                        continue
+                    #[[
+                    #   Ask the module before accusing it.
+                    #
+                    #   The index does not capture every shape a Luau function
+                    #   can be declared in -- constructors assigned as fields,
+                    #   functions added to a table after the fact -- so an
+                    #   absence there is a suspicion, not a fact. Checking the
+                    #   module's own source turned nine false alarms across four
+                    #   games into zero, and a warning nobody trusts is worse
+                    #   than no warning at all.
+                    #]]
+                    if _module_defines(repo, module, leaf):
+                        continue
+                    findings.append(Finding(
+                        "warning", str(path), number,
+                        f"{local}.{leaf} is not in {module}; "
+                        f"`forge api --module {module}` lists what is"))
+
+    #[[
+    #   The other shape: a colon method called with a dot.
+    #
+    #   `t.ok(...)` and `t.expect(...)` both compile and both resolve to nil at
+    #   runtime, then fail somewhere unrelated. Inside a scenario the context
+    #   handle is always named `t`, which makes the pattern unambiguous enough
+    #   to report as an error rather than a warning.
+    #]]
+    context_methods = methods.get("Context", set())
+    if context_methods:
+        call_re = re.compile(r"\bt\.(\w+)\s*\(")
+        for path in list(root.rglob("*.lua")) + list(root.rglob("*.luau")):
+            try:
+                text = path.read_text(encoding="utf-8", errors="ignore")
+            except OSError:
+                continue
+            for number, line in enumerate(text.splitlines(), start=1):
+                for call in call_re.finditer(line):
+                    leaf = call.group(1)
+                    if leaf in context_methods:
+                        findings.append(Finding(
+                            "error", str(path), number,
+                            f"t.{leaf}(...) is a method on the scenario "
+                            f"context: write t:{leaf}(...)"))
+
+
 CHECKS = (
     check_compiles,
     check_unknown_globals,
@@ -948,6 +1108,7 @@ CHECKS = (
     check_client_server_api,
     check_field_method_shadow,
     check_reinvention,
+    check_engine_api,
 )
 
 

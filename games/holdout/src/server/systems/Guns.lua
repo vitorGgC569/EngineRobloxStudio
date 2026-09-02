@@ -65,22 +65,6 @@ local MODELS = {
 local METAL = Color3.fromRGB(52, 54, 58)
 local FURNITURE = Color3.fromRGB(74, 62, 50)
 
---[[
-	Make the thing copyable.
-
-	Models fetched through `InsertService` arrive with `Archivable = false` on
-	their contents, and `Clone()` silently skips anything non-archivable -- so
-	cloning one gives back a Model with no parts in it, no error, and nothing to
-	suggest what happened. The first-person weapon was invisible for exactly
-	this reason: the copy existed, was positioned correctly every frame, and was
-	empty.
-]]
-local function archivable(model: Instance)
-	model.Archivable = true
-	for _, instance in model:GetDescendants() do
-		instance.Archivable = true
-	end
-end
 
 local function dress(model: Instance)
 	local parts: { Instance } = if model:IsA("BasePart") then { model }
@@ -121,33 +105,6 @@ local function dress(model: Instance)
 	end
 end
 
---[[
-	Take the rig out of the weapon.
-
-	The catalogue's guns are articulated: eight mesh parts joined by Motor6Ds to
-	a root, driven by bones and an `AnimationController`, with a folder of
-	initial poses and named moving pieces -- slide, hammer, trigger, magazine.
-	Somebody built these to be animated, and one day that will be worth using.
-
-	Today it is actively harmful. A skinned mesh follows its bones, not its
-	part's CFrame, so a rigged model welded to a hand goes where the rig says
-	rather than where it was put -- and a rig with no animation playing says
-	"the pose I was exported in". Welding every part to a primary on top of that
-	leaves two systems arguing about the same geometry.
-
-	Stripped to plain meshes it is a prop, which is all a weapon needs to be
-	until this game has hold animations to drive the rig with.
-]]
-local function strip(model: Instance)
-	for _, instance in model:GetDescendants() do
-		if instance:IsA("Motor6D") or instance:IsA("Bone")
-				or instance:IsA("AnimationController")
-				or instance:IsA("Animator")
-				or (instance:IsA("Folder") and instance.Name == "InitialPoses") then
-			instance:Destroy()
-		end
-	end
-end
 
 --[[
 	One gun, built at the origin, for whoever wants to place it.
@@ -168,71 +125,21 @@ function Guns.build(id: string, parent: Instance): Model?
 	end
 
 	--[[
-		Built from the template rather than through `Place.build`.
+		`Place.held` is this, and it is the engine's now.
 
-		`Place` grounds what it places, anchors it and scales it into its topic's
-		size band -- all three correct for a tree in a field and all three wrong
-		for something about to be welded to a moving hand. What is wanted here is
-		the model at a known length, unanchored, pivoted by the caller.
+		This file grew its own copy of four things that turned out to be
+		general: making an `InsertService` model copyable, stripping the rig out
+		of an articulated prop, scaling to a known length along the longest
+		axis, and turning it so its length runs along Z. None of that is about
+		guns.
 	]]
-	local source = Place.template(assetId)
-	if not source then
+	local model = Place.held(assetId, spec.length, parent)
+	if not model then
 		return nil
 	end
-	local model = source:Clone()
-	local low, high = Place.bounds(model)
-	local size = high - low
-	local longest = math.max(size.X, size.Y, size.Z)
-	if longest > 0.01 then
-		local factor = spec.length / longest
-		if model:IsA("Model") then
-			(model :: Model):ScaleTo(factor)
-		else
-			local part = model :: BasePart
-			part.Size = part.Size * factor
-		end
-	end
-
-	--[[
-		Lie the weapon along the axis everything else assumes.
-
-		These models are exported with their length on X, and every offset that
-		places one -- in a hand, in front of a camera, on a floor -- wants to
-		think in "forward". Turning the model once here means one convention
-		instead of a rotation guess at each of the three call sites.
-	]]
-	do
-		local l, h = Place.bounds(model)
-		local extent = h - l
-		if extent.X > extent.Z then
-			Place.turn(model, math.pi / 2)
-		end
-	end
-
 	model.Name = "Gun_" .. id
-	strip(model)
-	archivable(model)
 	dress(model)
-	model.Parent = parent
-
-	--: A `Model` either way, because a caller welding this wants one thing to
-	--: pivot and one primary part to weld through.
-	if model:IsA("Model") then
-		local built = model :: Model
-		--: `RootPart` is the rig's own root and the one part every other is
-		--: positioned against, so it is the honest thing to pivot and weld
-		--: through even after the rig itself is gone.
-		built.PrimaryPart = built:FindFirstChild("RootPart") :: BasePart?
-			or built.PrimaryPart
-			or built:FindFirstChildWhichIsA("BasePart")
-		return built
-	end
-	local wrapper = Instance.new("Model")
-	wrapper.Name = model.Name
-	model.Parent = wrapper
-	wrapper.PrimaryPart = model :: BasePart
-	wrapper.Parent = parent
-	return wrapper
+	return model
 end
 
 -- ================================= in hand ==================================
@@ -253,46 +160,8 @@ function Guns.hold(character: Model, id: string): Model?
 		return nil
 	end
 
-	--[[
-		Joined into one rigid body first.
-
-		`Rig.grip` welds the primary part to the hand, which is the whole job for
-		the code-built weapons it was written for -- those are single parts. A
-		catalogue gun is eight meshes, so without this the grip carries one of
-		them and leaves the other seven standing in the field.
-	]]
-	local primary = model.PrimaryPart
-	if not primary then
-		model:Destroy()
-		return nil
-	end
-	for _, descendant in model:GetDescendants() do
-		if descendant:IsA("BasePart") and descendant ~= primary then
-			local join = Instance.new("WeldConstraint")
-			join.Part0 = primary
-			join.Part1 = descendant
-			join.Parent = descendant
-		end
-	end
-	--: Released only once every weld exists, so the assembly enters the
-	--: simulation consistent instead of being built inside it.
-	for _, descendant in model:GetDescendants() do
-		if descendant:IsA("BasePart") then
-			descendant.Anchored = false
-		end
-	end
-
-	--[[
-		`Rig.grip` does the rest, and did before any of it was written here.
-
-		The hand-rolled version was a weld to `RightHand`, a fallback to
-		`Right Arm`, `Massless` on every part so the arm is not weighed down,
-		`CanCollide` off, and a hard-coded offset -- which is `Rig.grip`, line
-		for line, minus the R6 hand lookup it gets right and the `release(keep)`
-		that drops a weapon on the floor instead of destroying it.
-
-		Reaching for the engine first would have cost one grep.
-	]]
+	--: `Rig.grip` welds the whole model, anchored-then-released, and hands back
+	--: a handle that can put it on the floor. All of that used to be here.
 	local handle = Rig.grip(character, model, { parent = character })
 	if not handle then
 		model:Destroy()

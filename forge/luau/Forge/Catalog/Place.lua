@@ -139,9 +139,137 @@ function Place.template(assetId: number): Instance?
 		return nil
 	end
 	first.Parent = ReplicatedStorage
+
+	--[[
+		Make it copyable, because Roblox does not.
+
+		`InsertService` hands back models whose contents have
+		`Archivable = false`, and `Clone()` silently skips anything
+		non-archivable -- so cloning one returns a Model with no parts in it, no
+		error, and nothing at all to suggest what happened.
+
+		A first-person weapon was invisible for a full afternoon because of
+		this: the copy existed, was positioned correctly every frame, and was
+		empty. Every caller that clones a template would have to know; the
+		template is one place instead.
+	]]
+	first.Archivable = true
+	for _, instance in first:GetDescendants() do
+		instance.Archivable = true
+	end
+
 	loaded[assetId] = first;
 	(container :: Instance):Destroy()
 	return first
+end
+
+--[[
+	Strip the rig out of a fetched model.
+
+	Catalogue props are frequently articulated: mesh parts joined by Motor6Ds to
+	a root, driven by bones and an `AnimationController`, with named moving
+	pieces. Somebody built them to be animated and one day that is worth using.
+
+	It is actively harmful the rest of the time. A skinned mesh follows its
+	bones rather than the CFrame it was welded at, so a rigged model welded to a
+	hand goes where the rig says instead of where it was put -- and a rig with
+	no animation playing says "the pose I was exported in". Welding parts
+	together on top of that leaves two systems arguing over the same geometry.
+
+	Stripped, it is a prop, which is what a held object needs to be until
+	something exists to drive the rig with.
+]]
+function Place.strip(model: Instance): Instance
+	for _, instance in model:GetDescendants() do
+		if instance:IsA("Motor6D") or instance:IsA("Bone")
+				or instance:IsA("AnimationController")
+				or instance:IsA("Animator")
+				or (instance:IsA("Folder") and instance.Name == "InitialPoses") then
+			instance:Destroy()
+		end
+	end
+	return model
+end
+
+--[[
+	A model sized to be carried, not planted.
+
+	`Place.build` grounds what it places, anchors it and scales it into its
+	topic's size band. All three are correct for a tree in a field and all three
+	are wrong for something about to be welded to a moving hand, so every caller
+	that wanted a held object had to bypass `build` and reimplement the parts of
+	it that were right.
+
+	`length` is along the model's longest axis, in studs. The result is
+	stripped, unanchored, un-grounded and turned so its length runs along Z --
+	which is what every offset that places a held thing wants to think in.
+]]
+function Place.held(assetId: number, length: number, parent: Instance?): Model?
+	local source = Place.template(assetId)
+	if not source then
+		return nil
+	end
+	local model = source:Clone()
+	Place.strip(model)
+
+	local low, high = Place.bounds(model)
+	local size = high - low
+	local longest = math.max(size.X, size.Y, size.Z)
+	if longest > 0.01 and length > 0 then
+		local factor = length / longest
+		if model:IsA("Model") then
+			(model :: Model):ScaleTo(factor)
+		else
+			local part = model :: BasePart
+			part.Size = part.Size * factor
+		end
+	end
+
+	--: These are exported with their length on X. Turning once here means one
+	--: convention rather than a rotation guess at every call site.
+	low, high = Place.bounds(model)
+	local extent = high - low
+	if extent.X > extent.Z then
+		Place.turn(model, math.pi / 2)
+	end
+
+	--[[
+		Anchored on the way out, deliberately.
+
+		The caller welds it and then releases it. Handing back unanchored parts
+		means they fall for however many frames pass before the weld exists, and
+		a weld that then snaps them several studs onto a hand is a large impulse
+		handed to the physics solver -- which answers by throwing the character
+		holding it across the map. That is not hypothetical; it is where this
+		function came from.
+	]]
+	for _, instance in model:GetDescendants() do
+		if instance:IsA("BasePart") then
+			local part = instance :: BasePart
+			part.Anchored = true
+			part.CanCollide = false
+			part.CanQuery = false
+			part.CastShadow = false
+			part.Massless = true
+		end
+	end
+
+	if not model:IsA("Model") then
+		local wrapper = Instance.new("Model")
+		wrapper.Name = model.Name
+		model.Parent = wrapper
+		wrapper.PrimaryPart = model :: BasePart
+		wrapper.Parent = parent
+		return wrapper
+	end
+	local built = model :: Model
+	--: `RootPart` when the source had a rig root, because every other part was
+	--: positioned against it.
+	built.PrimaryPart = built:FindFirstChild("RootPart") :: BasePart?
+		or built.PrimaryPart
+		or built:FindFirstChildWhichIsA("BasePart")
+	built.Parent = parent
+	return built
 end
 
 function Place.fetched(): number

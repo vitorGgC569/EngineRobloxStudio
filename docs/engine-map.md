@@ -1,6 +1,6 @@
 ```
 FORGE ENGINE MAP
-58 families, 232 modules, 1617 public functions
+58 families, 232 modules, 1619 public functions
 
 Run `forge find <concept>` before writing a system. It searches this,
 the games, and the kits at once.
@@ -51,7 +51,7 @@ Capability
 Catalog
   Catalog                Catalog - Creator Store models this project has verified  [13]
   ItchAssets             ItchAssets - CC0 models published to this account, grouped by topic  [4]
-  Place                  Place - put a catalogue model in the world so it looks like it belongs  [10]
+  Place                  Place - put a catalogue model in the world so it looks like it belongs  [12]
   Prop                   Prop - rebuild a Creator Store model from baked geometry  [4]
   Scale                  Scale - how big a thing of this kind should be, in studs  [3]
   StoreAssets            StoreAssets - Creator Store assets that were fetched, opened and read  [4]

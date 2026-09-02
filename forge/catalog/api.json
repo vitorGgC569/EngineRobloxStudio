@@ -1,8 +1,8 @@
 {
-  "generatedAt": "2026-09-02T13:39:46+00:00",
+  "generatedAt": "2026-09-02T13:57:29+00:00",
   "engine": "Forge",
   "modules": 232,
-  "functions": 1617,
+  "functions": 1619,
   "examples": [
     "Access",
     "Anim",
@@ -700,7 +700,7 @@
     {
       "name": "Place",
       "summary": "Place — put a catalogue model in the world so it looks like it belongs",
-      "functions": 10
+      "functions": 12
     },
     {
       "name": "Platform",
@@ -11770,7 +11770,7 @@
     {
       "name": "Place",
       "file": "forge/luau/Forge/Catalog/Place.lua",
-      "lines": 288,
+      "lines": 416,
       "summary": "Place — put a catalogue model in the world so it looks like it belongs. Every game built on bought or salvaged models has to solve the same four problems before anything looks right, and each one produces a distinctive kind of broken world when it is skipped: * **The pivot is not the centre.** An imported mesh's pivot is wherever * **Packs share no unit.** A sofa arrives 271 units tall and a castle 4. * **Two thirds arrive grey.** Not a failed upload -- the pack modelled * **Fetching costs a round trip.** `LoadAsset` yields. Placing a thousand So: What stays with the game is the *arrangement* -- where a road runs, which side of it the houses face. That is the part worth authoring. None of what is below is.",
       "examples": [
         "the pack's exporter left it -- under a tree's roots, inside a rock.\nPlacing at `ground + height/2` therefore floats or sinks every model by\nthat offset. A whole world hovering, from an assumption that reads as\nobviously true.",
@@ -11817,13 +11817,31 @@
           "line": 121
         },
         {
+          "name": "Place.strip",
+          "signature": "Place.strip(model: Instance)",
+          "kind": "function",
+          "returns": "Instance",
+          "summary": "Strip the rig out of a fetched model. Catalogue props are frequently articulated: mesh parts joined by Motor6Ds to a root, driven by bones and an `AnimationController`, with named moving pieces. Somebody built them to be animated and one day that is worth using. It is actively harmful the rest of the time. A skinned mesh follows its bones rather than the CFrame it was welded at, so a rigged model welded to a hand goes where the rig says instead of where it was put -- and a rig with no animation playing says \"the pose I was exported in\". Welding parts together on top of that leaves two systems arguing over the same geometry. Stripped, it is a prop, which is what a held object needs to be until something exists to drive the rig with.",
+          "examples": [],
+          "line": 182
+        },
+        {
+          "name": "Place.held",
+          "signature": "Place.held(assetId: number, length: number, parent: Instance?)",
+          "kind": "function",
+          "returns": "Model?",
+          "summary": "A model sized to be carried, not planted. `Place.build` grounds what it places, anchors it and scales it into its topic's size band. All three are correct for a tree in a field and all three are wrong for something about to be welded to a moving hand, so every caller that wanted a held object had to bypass `build` and reimplement the parts of it that were right. `length` is along the model's longest axis, in studs. The result is stripped, unanchored, un-grounded and turned so its length runs along Z -- which is what every offset that places a held thing wants to think in.",
+          "examples": [],
+          "line": 207
+        },
+        {
           "name": "Place.fetched",
           "signature": "Place.fetched()",
           "kind": "function",
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 147
+          "line": 275
         },
         {
           "name": "Place.unavailable",
@@ -11832,7 +11850,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 155
+          "line": 283
         },
         {
           "name": "Place.forget",
@@ -11841,7 +11859,7 @@
           "returns": null,
           "summary": ": For a game that regenerates its world repeatedly in one session and wants : the second run to cost what the first did.",
           "examples": [],
-          "line": 165
+          "line": 293
         },
         {
           "name": "Place.build",
@@ -11850,7 +11868,7 @@
           "returns": "Instance?",
           "summary": "Place one model, already chosen. Collision defaults to **off**, which surprises people until they see the alternative. A pack models a house as a shell; a shell given collision is a solid box you cannot walk into, because Roblox's default fidelity boxes it. Only things a player is meant to stand *on* should ask for `solid`, and those usually want authored geometry anyway.",
           "examples": [],
-          "line": 197
+          "line": 325
         },
         {
           "name": "Place.put",
@@ -11859,7 +11877,7 @@
           "returns": "Instance?",
           "summary": "Choose from a catalogue and place it. `catalogue` is anything with `pick(topic, seed, texturedOnly)` -- which is `Forge.Catalog.ItchAssets`, and is a small enough surface that a game with its own asset table can satisfy it. Textured is preferred and not required: for most topics in most catalogues there is no coloured member at all, and refusing to place anything is a worse answer than placing something `Tint` will colour.",
           "examples": [],
-          "line": 269
+          "line": 397
         },
         {
           "name": "Place.describe",
@@ -11868,7 +11886,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 280
+          "line": 408
         }
       ],
       "describes": true
@@ -13419,7 +13437,7 @@
     {
       "name": "Rig",
       "file": "forge/luau/Forge/Rig/init.lua",
-      "lines": 877,
+      "lines": 919,
       "summary": "Rig — characters authored in code. A creature's silhouette becomes a table of numbers. That matters for two reasons: an agent can create a new enemy without a modelling tool, and the difference between a rat and a golem becomes something you can tune rather than something you have to re-model. R6 by default: six joints, and `shape` changes the posture rather than the bone count -- a quadruped is an R6 rig with a pitched torso, which reads correctly and costs nothing. `rigType = \"R15\"` builds the fifteen-part skeleton instead, with elbows, knees, wrists and ankles. That exists because shoulders alone can only aim an arm, never fold one, and an archer's draw hand belongs at the cheek.",
       "examples": [
         "local model = Rig.build({\nname = \"Grass Wolf\",\nscale = 0.85,\nshape = \"quadruped\",\nbody = Color3.fromRGB(112, 106, 96),\naccent = Color3.fromRGB(64, 60, 54),\neyes = Color3.fromRGB(240, 200, 80),\nweapon = nil,\n})"
@@ -13468,7 +13486,7 @@
           "returns": "Model",
           "summary": "Weapons built in code, as models with a `Grip` primary part. They exist because a shooting system whose weapons are invisible is a shooting system nobody believes. These are simple assemblies of boxes, and they are meant to be replaced by real meshes — but a blocky bow that is actually in the character's hand communicates more than a perfect mesh that is not there.",
           "examples": [],
-          "line": 651
+          "line": 693
         },
         {
           "name": "Rig.addTrail",
@@ -13477,7 +13495,7 @@
           "returns": "Trail",
           "summary": "A trail that starts disabled. Anim markers switch it on for the swing window, which is what makes a strike read as a strike instead of a teleporting arm.",
           "examples": [],
-          "line": 717
+          "line": 759
         },
         {
           "name": "Rig.stripDefaultAnimate",
@@ -13488,7 +13506,7 @@
           "examples": [
             "joints."
           ],
-          "line": 778
+          "line": 820
         },
         {
           "name": "Rig.tint",
@@ -13497,7 +13515,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 798
+          "line": 840
         },
         {
           "name": "Rig.describeModel",
@@ -13506,7 +13524,7 @@
           "returns": "{ [string]: any }",
           "summary": "Structural facts about one rig, for a caller that has one in hand.",
           "examples": [],
-          "line": 807
+          "line": 849
         },
         {
           "name": "Rig.describe",
@@ -13515,7 +13533,7 @@
           "returns": "{ [string]: any }",
           "summary": "Module-level description, called with no arguments by Debug.snapshot. The first version of this file only had `Rig.describe(model)`, so the snapshot invoked it with nil and every reading came back as \"attempt to index nil with 'GetDescendants'\". The seam caught it on the first real read, which is exactly what the seam is for.",
           "examples": [],
-          "line": 839
+          "line": 881
         }
       ],
       "describes": true

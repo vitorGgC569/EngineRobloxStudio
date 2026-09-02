@@ -593,10 +593,52 @@ function Rig.grip(character: Model, thing: Instance, options: any?): any?
 	end
 
 	local offset = opts.offset or defaultGrip(hand)
+
+	--[[
+		Join the whole thing before moving it, not just the part being welded.
+
+		This welded `primary` to the hand and nothing else, which is the entire
+		job for the code-built weapons this was written for -- those are single
+		parts. A model from the catalogue is eight meshes, and gripping one
+		carried a trigger guard across the map while the other seven stayed
+		standing in a field.
+
+		Ordering matters as much as the welds do. Everything is anchored while
+		the joints are made and released afterwards, because unanchored parts
+		that get welded several studs onto a moving hand hand the physics solver
+		a large impulse, and it answers by throwing the character. That was
+		diagnosed as four different bugs before it was diagnosed as this one.
+	]]
+	local loose: { BasePart } = {}
+	for _, d in thing:GetDescendants() do
+		if d:IsA("BasePart") and d ~= primary then
+			local part = d :: BasePart
+			if not part.Anchored then
+				table.insert(loose, part)
+				part.Anchored = true
+			end
+			local join = Instance.new("WeldConstraint")
+			join.Part0 = primary
+			join.Part1 = part
+			join.Parent = part
+		end
+	end
+
+	local primaryWasLoose = not primary.Anchored
+	primary.Anchored = true
 	primary.CFrame = hand.CFrame * offset
 	local w = weld(hand, primary, offset)
 	w.Name = "Grip"
 	thing.Parent = opts.parent or character
+
+	--: Released only once every joint exists, so the assembly enters the
+	--: simulation already consistent rather than being built inside it.
+	if primaryWasLoose then
+		primary.Anchored = false
+	end
+	for _, part in loose do
+		part.Anchored = false
+	end
 
 	local handle = {
 		part = primary,

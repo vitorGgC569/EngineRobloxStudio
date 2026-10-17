@@ -401,6 +401,34 @@ def key_for(text: str) -> Key:
     lit as a farm at noon in the first place.
     """
 
+    key, _ = key_for_with_provenance(text)
+    return key
+
+
+def key_for_with_provenance(text: str) -> tuple[Key, bool]:
+    """The art key a brief implies, and whether the brief actually implied it.
+
+    Why the second value exists
+    ---------------------------
+
+    There are five art keys, and `siege` is the fallback. Measured across the
+    briefs this factory is given, the fallback is not an edge case -- it is the
+    common path:
+
+        "gacha de eggs de anime"          -> siege   (nothing matched)
+        "sobrevivencia zumbi noturna"     -> siege   (nothing matched)
+        "torre de defesa medieval"        -> siege   (matched)
+
+    An anime gacha and a zombie survival were lit as a medieval siege, and the
+    output was indistinguishable from a brief that genuinely asked for one.
+    Nineteen generated games in this repository share a palette for exactly this
+    reason, and the stage that produced them says in its own docstring that
+    deriving the key per game "is what makes two games look like two games".
+
+    A fallback is a legitimate answer. A fallback that cannot be told apart from
+    a decision is not, so this returns both the key and whether it was chosen.
+    """
+
     lowered = _fold(text)
     best: tuple[int, Key] | None = None
     for key in KEYS:
@@ -408,8 +436,8 @@ def key_for(text: str) -> Key:
         if hits and (best is None or hits > best[0]):
             best = (hits, key)
     if best is not None:
-        return best[1]
-    return next(key for key in KEYS if key.name == DEFAULT_KEY)
+        return best[1], True
+    return next(key for key in KEYS if key.name == DEFAULT_KEY), False
 
 
 def _fold(text: str) -> str:
@@ -789,7 +817,11 @@ def direct(
     What is replaced: every palette role's `srgb`, and the whole mood set.
     """
 
-    chosen = next((entry for entry in KEYS if entry.name == key), None) if key else key_for(brief)
+    if key:
+        chosen = next((entry for entry in KEYS if entry.name == key), None)
+        inferred = True
+    else:
+        chosen, inferred = key_for_with_provenance(brief)
     if chosen is None:
         raise ArtDirectionError(
             f"unknown art key {key!r}; keys: {', '.join(entry.name for entry in KEYS)}"
@@ -829,7 +861,8 @@ def direct(
     document["revision"] = int(base.get("revision", 1))
     document["description"] = (
         f"Art direction for {game_id}: {chosen.description} "
-        f"Values from the shared ladder; hues from the {chosen.name} key."
+        f"Values from the shared ladder; hues from the {chosen.name} key"
+        + ("." if inferred else ", which is the fallback -- the brief matched no key.")
     )
     # `art-direction-decision` is the honest one of the four the schema allows.
     # Not `external-reference`: nothing here was read off a reference frame.
@@ -845,7 +878,14 @@ def direct(
         "authoredBy": "rqe.art.direction",
         "authoredAt": str(base.get("provenance", {}).get("authoredAt", "")),
         "note": (
-            f"Art key {chosen.name!r}, selected from the brief. Derived from base "
+            (f"Art key {chosen.name!r}, selected from the brief. "
+             if inferred else
+             f"Art key {chosen.name!r}, WHICH THE BRIEF DID NOT ASK FOR: no word "
+             f"in it matched any of the {len(KEYS)} keys, so this game was given "
+             f"the fallback. Two games that both fall through here are lit "
+             f"identically, and nothing downstream can tell that apart from two "
+             f"games that were each decided. ")
+            + f"Derived from base "
             f"token set {base.get('tokenSetId', 'unknown')!r}, whose scale, spacing, "
             "typography, motion, cameras and audio come through unchanged; only the "
             "palette colours and the moods are re-decided. Role luminances come from "

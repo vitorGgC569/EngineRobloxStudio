@@ -19,13 +19,30 @@ type Self = {
 
 TeamSpawns.__index = TeamSpawns
 
+-- table.clone keeps each point. Moving x after register then changes the
+-- next pick. pick() already returns a fresh table of numbers.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 function TeamSpawns.new(rng: (() -> number)?): Self
 	return setmetatable({ spawns = {}, rng = rng or math.random, liftY = 3 }, TeamSpawns)
 end
 
 function TeamSpawns.register(self: Self, team: string, points: { SpawnPoint }): ()
 	assert(#points > 0, ("team %q needs at least one spawn"):format(team))
-	self.spawns[team] = table.clone(points)
+	self.spawns[team] = deepCopy(points, {}) :: { SpawnPoint }
 end
 
 function TeamSpawns.pick(self: Self, team: string): (SpawnPoint?, string?)

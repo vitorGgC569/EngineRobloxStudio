@@ -1,0 +1,58 @@
+{
+  "schemaVersion": 1,
+  "continuous": true,
+  "status": "PROVISIONAL_UNCALIBRATED",
+  "domains": {
+    "structural": {
+      "targetScore": 100,
+      "focus": "project topology and product identity"
+    },
+    "assets": {
+      "targetScore": 100,
+      "focus": "approved, licensed, integrated production assets"
+    },
+    "security": {
+      "targetScore": 100,
+      "focus": "source, asset and remote safety"
+    },
+    "geometry": {
+      "targetScore": 100,
+      "focus": "support, overlap and play-volume integrity"
+    },
+    "navigation": {
+      "targetScore": 100,
+      "focus": "player-reachable objectives"
+    },
+    "performance": {
+      "targetScore": 100,
+      "focus": "runtime budgets on target devices"
+    },
+    "runtime": {
+      "targetScore": 100,
+      "focus": "stable server and client sessions with zero errors"
+    },
+    "ui": {
+      "targetScore": 100,
+      "focus": "legible and operable player-facing surfaces"
+    },
+    "gameplay": {
+      "targetScore": 100,
+      "focus": "the declared core loop completed by a player-equivalent actor"
+    },
+    "visual": {
+      "targetScore": 100,
+      "focus": "deterministic captures and calibrated review"
+    },
+    "persistence": {
+      "targetScore": 100,
+      "focus": "rejoin-safe progress"
+    }
+  },
+  "visualReview": {
+    "requiredSnapshots": [
+      "initial-desktop",
+      "initial-phone"
+    ],
+    "minimumRawVisualScore": 100
+  }
+}

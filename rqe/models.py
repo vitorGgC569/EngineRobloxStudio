@@ -3,6 +3,8 @@ from __future__ import annotations
 from dataclasses import dataclass, field
 from typing import Any
 
+from . import __version__ as _engine_version
+
 
 STATUSES = {"PASS", "WARN", "FAIL"}
 SEVERITIES = {"critical", "major", "minor", "info"}
@@ -96,7 +98,7 @@ class AuditReport:
 
     def to_dict(self) -> dict[str, Any]:
         return {
-            "engine": {"name": "Roblox Quality Engine", "version": "0.1.0"},
+            "engine": {"name": "Roblox Quality Engine", "version": _engine_version},
             "project": self.project,
             "generatedAt": self.generated_at,
             "summary": self.summary,

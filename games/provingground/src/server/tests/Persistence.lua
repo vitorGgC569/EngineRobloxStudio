@@ -145,11 +145,11 @@ return function(Testing)
 			Granting per delivery instead of per receipt id is the difference
 			between selling a sword and giving it away.
 		]]
-		local granted = 0
+		local before = 0
 		Monetization.defineProduct("SuiteTestProduct", {
 			productId = 9999001,
-			grant = function()
-				granted += 1
+			apply = function(profile)
+				profile.suiteReceiptGrants = (profile.suiteReceiptGrants or 0) + 1
 			end,
 		})
 
@@ -168,6 +168,11 @@ return function(Testing)
 			return
 		end
 
+		local profile = Save.get(subject)
+		t:expect(profile ~= nil, "no owned profile is loaded")
+		if not profile then return end
+		before = profile.suiteReceiptGrants or 0
+
 		local receiptId = "suite-" .. tostring(math.random(1, 1e9))
 		local fakeReceipt = {
 			PurchaseId = receiptId,
@@ -179,21 +184,13 @@ return function(Testing)
 		local first = Monetization.processReceipt(fakeReceipt)
 		local second = Monetization.processReceipt(fakeReceipt)
 
-		t:expect(first ~= nil, "processReceipt is not reachable")
-		--[[
-			Zero grants here is usually not a transaction bug.
+		t:expectEqual(first, Enum.ProductPurchaseDecision.PurchaseGranted,
+			"receipt was not durably committed; this test requires real DataStore access")
+		t:expectEqual(second, Enum.ProductPurchaseDecision.PurchaseGranted,
+			"a committed receipt retry must be acknowledged")
+		t:expectEqual(profile.suiteReceiptGrants or 0, before + 1,
+			"one receipt must produce exactly one durable profile reward")
 
-			`processReceipt` refuses to grant when it has no receipt store, and
-			it is right to: granting without a durable record means granting
-			again on the next retry. In an unpublished place there is no store,
-			so this scenario is really reporting the same missing DataStore as
-			the four above it.
-		]]
-		t:expectEqual(granted, 1, granted == 0
-			and "no grant happened -- most likely no receipt store, which needs "
-				.. "a published place; the refusal itself is correct"
-			or ("the same receipt granted " .. granted .. " times"))
-		t:expect(second ~= nil, "a repeated receipt must still be acknowledged")
 	end, { timeout = 40 })
 
 	Testing.scenario("experiment buckets are stable for a player", function(t)

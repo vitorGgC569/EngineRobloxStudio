@@ -9,9 +9,11 @@ only a short SHA-256 fingerprint is safe to report.
 from __future__ import annotations
 
 import hashlib
+import hmac
 import os
 import re
 import secrets
+import base64
 from pathlib import Path
 
 
@@ -19,6 +21,21 @@ TOKEN_ENVIRONMENT = "RQE_BRIDGE_TOKEN"
 TOKEN_FILENAME = "bridge-token"
 MIN_TOKEN_BYTES = 32
 TOKEN_PATTERN = re.compile(r"^[A-Za-z0-9._~+/=-]+$")
+# Wire credentials are capabilities, not identities.  In particular, a token
+# that can inspect a place must not also be enough to mutate it or execute an
+# arbitrary Luau chunk.  ``publisher`` is intentionally separate even though
+# the Studio command manifest currently contains no publication command: Open
+# Cloud publishing uses it at the application boundary rather than smuggling
+# publication authority through a generic "agent" credential.
+ROLES = frozenset({"reader", "mutator", "executor", "publisher", "plugin", "admin"})
+
+COMMAND_ROLE_BY_EFFECT = {
+    "read": "reader",
+    "transient": "mutator",
+    "mutation": "mutator",
+    "context-transition": "mutator",
+    "arbitrary": "executor",
+}
 
 
 class BridgeAuthError(ValueError):
@@ -48,6 +65,52 @@ def validate_token(value: str) -> str:
 def token_fingerprint(token: str) -> str:
     validated = validate_token(token)
     return hashlib.sha256(validated.encode("utf-8")).hexdigest()[:16]
+
+
+def derive_role_token(root_token: str, role: str) -> str:
+    """Derive a purpose-bound bearer credential from the machine secret.
+
+    The root credential never crosses HTTP and is never embedded in the Studio
+    plugin.  Compromise of a plugin credential therefore cannot authorize agent
+    RPC calls or administrative session retirement.
+    """
+
+    root = validate_token(root_token)
+    if role not in ROLES:
+        raise BridgeAuthError(f"unknown bridge credential role: {role}")
+    digest = hmac.new(
+        root.encode("utf-8"),
+        f"rqe.bridge/1:{role}".encode("ascii"),
+        hashlib.sha256,
+    ).digest()
+    return base64.urlsafe_b64encode(digest).decode("ascii").rstrip("=")
+
+
+def derive_role_tokens(root_token: str) -> dict[str, str]:
+    """Return all wire credentials derived from one local root secret."""
+
+    return {role: derive_role_token(root_token, role) for role in sorted(ROLES)}
+
+
+def derive_installation_id(root_token: str) -> str:
+    """Stable, non-secret identity for this machine's installed plugin."""
+
+    root = validate_token(root_token)
+    digest = hmac.new(
+        root.encode("utf-8"),
+        b"rqe.bridge/2:installation",
+        hashlib.sha256,
+    ).hexdigest()
+    return f"inst-{digest[:32]}"
+
+
+def role_for_command_effect(effect: str) -> str:
+    """Return the one wire capability required by a manifest effect."""
+
+    try:
+        return COMMAND_ROLE_BY_EFFECT[effect]
+    except KeyError as exc:
+        raise BridgeAuthError(f"unknown bridge command effect: {effect}") from exc
 
 
 def load_bridge_token(

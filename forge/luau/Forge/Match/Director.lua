@@ -22,10 +22,28 @@ type Self = {
 
 Director.__index = Director
 
+-- The playlist used to keep the caller's entry tables. Renaming an id after
+-- `new`, or renaming the table `next` handed back, rewrote the stored map
+-- and a later vote could no longer find it.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 function Director.new(playlist: { PlaylistEntry }, clock: (() -> number)?): Self
 	assert(#playlist > 0, "director needs a playlist")
 	return setmetatable({
-		playlist = table.clone(playlist),
+		playlist = deepCopy(playlist, {}),
 		votes = {},
 		forcedNext = nil,
 		currentIndex = 0,
@@ -122,7 +140,7 @@ function Director.next(self: Self): PlaylistEntry
 	end
 
 	self.lastEntryId = chosen.id
-	return chosen
+	return deepCopy(chosen, {})
 end
 
 return Director

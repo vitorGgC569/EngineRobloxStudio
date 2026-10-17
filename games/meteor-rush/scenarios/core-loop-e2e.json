@@ -1,0 +1,99 @@
+{
+  "id": "meteor-rush-core-loop-e2e",
+  "description": "Prove the shipped large-scale Meteor Rush loop with a real player: wait for the deterministic first meteor, traverse the expanded field, capture through its public ProximityPrompt, return to the assigned Base1 decoder, decode a specimen, and observe server-owned passive income.",
+  "requires": {
+    "playSession": true,
+    "clientBridge": true
+  },
+  "steps": [
+    {
+      "reset": {},
+      "comment": "core loop begins from a fresh exact-build Play Solo session"
+    },
+    {
+      "attach": {},
+      "fatal": true
+    },
+    {
+      "wait": {
+        "seconds": 7.2
+      },
+      "comment": "Meteor_1 is scheduled after 6 seconds; allow bridge/object replication slack."
+    },
+    {
+      "navigate_to": {
+        "target": "game.Workspace.MeteorRush.Meteors.Meteor_1.Core.CapturePrompt",
+        "tolerance": 5,
+        "timeout": 85
+      },
+      "fatal": true
+    },
+    {
+      "expect_prompt_in_range": {
+        "prompt": "Meteor_1.Core.CapturePrompt",
+        "radius": 18
+      },
+      "fatal": true
+    },
+    {
+      "interact": {
+        "prompt": "game.Workspace.MeteorRush.Meteors.Meteor_1.Core.CapturePrompt",
+        "holdSeconds": 0.3
+      },
+      "fatal": true
+    },
+    {
+      "assert": {
+        "CarryingMeteor": true
+      },
+      "fatal": true
+    },
+    {
+      "navigate_to": {
+        "target": "game.Workspace.MeteorRush.Bases.Base1.Decoder.DecodePrompt",
+        "tolerance": 6,
+        "timeout": 85
+      },
+      "fatal": true
+    },
+    {
+      "interact": {
+        "prompt": "game.Workspace.MeteorRush.Bases.Base1.Decoder.DecodePrompt",
+        "holdSeconds": 0.4
+      },
+      "fatal": true
+    },
+    {
+      "wait": {
+        "seconds": 1.2
+      }
+    },
+    {
+      "assert": {
+        "CarryingMeteor": false,
+        "Specimens": ">= 1",
+        "StardustPerSecond": "> 0",
+        "delta": {
+          "Stardust": "> 0"
+        }
+      },
+      "fatal": true
+    }
+  ],
+  "releaseEvidence": [
+    {
+      "id": "meteor_capture_decode",
+      "probe": "core_loop_collect",
+      "category": "gameplay",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED"
+    },
+    {
+      "id": "passive_income_progresses",
+      "probe": "core_loop_unlock",
+      "category": "gameplay",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED"
+    }
+  ]
+}

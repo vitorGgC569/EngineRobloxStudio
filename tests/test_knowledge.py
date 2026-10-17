@@ -17,6 +17,7 @@ having no retention question at all.
 from __future__ import annotations
 
 import shutil
+import pytest
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -45,6 +46,17 @@ BRIEFS = [
     ("kb-mine-tyc", "Tycoon de mina com automacao, esteiras e producao."),
 ]
 
+
+#: Marked slow: every class here runs a real production pipeline in
+#: `setUpClass` -- rojo, geometry, the whole producer -- which is 77 seconds
+#: per class and is the work, not waste. `test_engine.py` was the other kind:
+#: 107 seconds of copying 34 GB to edit one JSON field, and that was fixed
+#: rather than marked.
+#:
+#: The full suite is the gate and CI runs all of it. `pytest -m "not slow"` is
+#: the working loop, and the deselected count is printed so the difference is
+#: never invisible.
+pytestmark = pytest.mark.slow
 
 class KnowledgeCase(unittest.TestCase):
     """Three real producer runs, recorded into a throwaway store."""

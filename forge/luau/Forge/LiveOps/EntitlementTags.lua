@@ -10,6 +10,23 @@
 
 local EntitlementTags = {}
 
+-- `new` kept the caller's definition map. Changing `assetId` after that
+-- made `refresh` look up a different asset than the one registered.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 export type TagDef = {
 	assetId: number?,
 	badgeId: number?,
@@ -35,7 +52,7 @@ function EntitlementTags.new(defs: { [string]: TagDef }, checker: Checker): Self
 		assert(def.assetId or def.badgeId or def.groupId, ("tag %q has no source"):format(tag))
 	end
 	return setmetatable({
-		defs = defs,
+		defs = deepCopy(defs, {}) :: { [string]: TagDef },
 		checker = checker,
 		current = {},
 	}, EntitlementTags)

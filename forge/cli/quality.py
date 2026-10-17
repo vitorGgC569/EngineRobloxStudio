@@ -109,429 +109,6 @@ def _config_value(game: str, key: str, default: Any = None) -> Any:
 #: published place with a real DataStore — and `Platform.audit` measures phone
 #: layout from inside the running game. Two gates, each honest about its reach,
 #: beats one that claims both and proves neither.
-def forge_requirements(game: str) -> list[dict[str, Any]]:
-    return [
-        # Structure — the cheapest checks, and the ones that catch a broken
-        # project before anything expensive runs.
-        {"id": "project_topology", "probe": "structural_integrity",
-         "type": "structural", "severity": "critical"},
-        {"id": "contract_is_valid", "probe": "contract_schema",
-         "type": "structural", "severity": "critical"},
-        {"id": "visual_spec_is_valid", "probe": "visual_spec_schema",
-         "type": "structural", "severity": "critical"},
-        # No fixture may reach the gate: a JSON file somebody wrote is not
-        # evidence about a running game, and this is the check that says so.
-        {"id": "no_fixture_evidence", "probe": "fixture_excluded",
-         "type": "structural", "severity": "critical"},
-        {"id": "the_build_is_what_it_claims", "probe": "product_truth_alignment",
-         "type": "structural", "severity": "major"},
-
-        # Security — asset provenance and what the source is allowed to do.
-        {"id": "assets_are_traceable", "probe": "asset_security",
-         "type": "security", "severity": "critical"},
-
-        # Runtime — a console error is a defect regardless of what else passed.
-        {"id": "no_console_errors", "probe": "runtime_error",
-         "type": "runtime", "severity": "critical"},
-
-        # Performance — measured in the session against the contract's budgets,
-        # rather than profiled by hand afterwards.
-        {"id": "within_frame_budget", "probe": "performance_budget",
-         "type": "performance", "severity": "major"},
-
-        # Navigation — answerable now that Forge has a navmesh layer.
-        {"id": "objectives_are_reachable", "probe": "objective_reachable",
-         "type": "navigation", "severity": "major"},
-
-        # Visual — the entire reason this marriage is worth making. The last
-        # two are measured from the tags `Forge.Mark` puts on the world: the
-        # subject of the scene is found, and it is visible from the viewpoint
-        # a player actually gets.
-        {"id": "assets_look_authored", "probe": "visual_asset_quality",
-         "type": "visual", "severity": "minor"},
-        {"id": "the_landmark_reads", "probe": f"visual.landmark.{LANDMARK_ID}.visibility",
-         "type": "visual", "severity": "major"},
-        {"id": "the_place_photographs", "probe": "visual.viewpoint.play-desktop.capture",
-         "type": "visual", "severity": "major"},
-    ]
-
-
-# ============================== the visual spec ==============================
-#: The names the game marks its world with, and the spec looks for.
-#:
-#: One constant here, one in the game's Arena. They must agree, and the test
-#: suite asserts they do — a mismatch is silent on both sides: the spec finds
-#: nothing and the game marks something nobody asked about.
-LANDMARK_ID = "arena-ring"
-REGION_PROFILE = "arena"
-
-
-def palette_of(game: str, wanted: int = 10) -> list[dict[str, Any]]:
-    """The colours this game actually uses.
-
-    Read out of its own source rather than invented. A palette somebody typed
-    is a palette the game drifts away from within a week; a palette derived
-    from every `Color3.fromRGB` in the project *is* the game, which is the
-    only thing worth holding it to.
-
-    Ordered by how often each colour appears, so the dominant role goes to the
-    colour that actually dominates.
-    """
-    counts: Counter = Counter()
-    for path in (game_dir(game) / "src").rglob("*.lua"):
-        text = path.read_text(encoding="utf-8", errors="ignore")
-        for match in re.finditer(
-                r"Color3\.fromRGB\(\s*(\d+)\s*,\s*(\d+)\s*,\s*(\d+)\s*\)", text):
-            counts[tuple(int(value) for value in match.groups())] += 1
-
-    swatches: list[dict[str, Any]] = []
-    for index, (rgb, _count) in enumerate(counts.most_common(wanted)):
-        if index == 0:
-            roles = ["dominant"]
-        elif index < 4:
-            roles = ["supporting"]
-        else:
-            roles = ["accent"]
-        swatches.append({"id": "swatch-%02d" % index, "rgb": list(rgb), "roles": roles})
-
-    # The schema demands at least three. A game with fewer than three distinct
-    # colours has a real problem, and it is not this file's job to hide it.
-    while len(swatches) < 3:
-        index = len(swatches)
-        swatches.append({
-            "id": "swatch-%02d" % index,
-            "rgb": [128, 128, 128],
-            "roles": ["supporting"],
-        })
-    return swatches
-
-
-def measured_viewport(game: str | None = None,
-                      default: tuple[int, int] = (1920, 1080)) -> list[int]:
-    """The resolution this rig can actually photograph.
-
-    The Quality Engine compares a shot's viewport against the declared one
-    exactly, so that two runs a week apart are comparable and a phone shot is
-    never mistaken for a desktop one. Nothing here can resize a Studio window,
-    so a declared 1920x1080 against a 1096x675 window is a gate that can never
-    close — the number has to come from the rig rather than from a wish.
-
-    Measured once, at generation time, over the bridge. If the window is later
-    resized the gate fails, and that is right: the evidence is no longer
-    comparable to what the contract was written against. Regenerate, and the
-    change is a visible edit to a committed file.
-    """
-    try:
-        proc = subprocess.run(
-            [sys.executable, str(REPO / "rqe.py"), "studio", "call", "camera.get"],
-            capture_output=True, text=True, timeout=60, cwd=str(REPO))
-        # `rqe studio call` prints its envelope on stderr, not stdout. Reading
-        # only stdout got an empty string, fell through to the default, and the
-        # spec quietly declared a resolution no window here has.
-        envelope = json.loads(proc.stdout.strip() or proc.stderr.strip() or "{}")
-        size = ((envelope.get("result") or {}).get("viewportSize")) or []
-        if isinstance(size, list) and len(size) == 2 and int(size[0]) > 64:
-            return [int(size[0]), int(size[1])]
-    except Exception:  # noqa: BLE001 - a missing Studio is not an error here
-        pass
-
-    # [[
-    #     Keep the last calibration rather than inventing one.
-    #
-    #     Measuring fails whenever Studio is mid-session: a running server
-    #     answers (1, 1), which is rejected above, and the fallback then wrote
-    #     a resolution no window on this machine has. Every regenerate during
-    #     a run therefore quietly undid the calibration and the gate blocked on
-    #     a number nobody chose.
-    #
-    #     So a spec that already carries a measured resolution keeps it. The
-    #     bare default is for a project that has never been calibrated at all.
-    # ]]
-    if game:
-        existing = game_dir(game) / "contracts" / "visual" / "visual-quality.json"
-        if existing.exists():
-            try:
-                spec = json.loads(existing.read_text(encoding="utf-8"))
-                previous = spec["viewpoints"]["play-desktop"]["resolution"]
-                if isinstance(previous, list) and len(previous) == 2:
-                    return [int(previous[0]), int(previous[1])]
-            except (OSError, json.JSONDecodeError, KeyError, TypeError, ValueError):
-                pass
-    return [int(default[0]), int(default[1])]
-
-
-def build_visual_spec(game: str) -> dict[str, Any]:
-    """A visual quality spec derived from what the game marks and uses.
-
-    Everything here is either read from the project or is a stated default a
-    person is meant to argue with. The thresholds are the second kind: they
-    are the bar, and the bar is a decision about a specific game.
-    """
-    resolution = measured_viewport(game)
-    rubric = {
-        # Legibility weighted highest on purpose. A scene can be beautifully
-        # composed and unreadable, and an unreadable scene is a broken game
-        # while an unbalanced one is only a plain game.
-        "composition": 0.2,
-        "hierarchy": 0.2,
-        "legibility": 0.25,
-        "materiality": 0.15,
-        "polish": 0.2,
-    }
-
-    return {
-        # Relative, and resolved inside the game directory: the Quality Engine
-        # refuses a schema path that escapes the project, so that a release run
-        # is self-contained and cannot be changed by editing something outside
-        # it. `generate` copies the canonical schema in for exactly that reason.
-        "$schema": "../../schemas/visual-quality-spec.v1.schema.json",
-        "schemaVersion": 1,
-        "specId": "forge.%s.visual" % game,
-        "productId": game,
-        "productTruth": {
-            "intentId": "forge.%s.intent" % game,
-            "calibrationId": "forge.%s.visual-calibration" % game,
-            "semanticBindings": {
-                "worldRoles": {
-                    LANDMARK_ID: {
-                        "landmarkIds": [LANDMARK_ID],
-                        "regionSetIds": ["play-regions"],
-                        "viewpointIds": ["play-desktop"],
-                    },
-                },
-                "uiSurfaces": {
-                    "hud": {
-                        "landmarkIds": [],
-                        "regionSetIds": [],
-                        "viewpointIds": ["play-desktop"],
-                    },
-                },
-            },
-        },
-        "revision": 1,
-        "units": {
-            "distance": "stud",
-            "density": "visualRootsPer1000SquareStuds",
-            "colorDifference": "CIEDE2000",
-        },
-        # Verbatim from `Forge.Mark.TAGS` and `Forge.Mark.ATTRIBUTES`. This is
-        # the join between the two halves, and the reason a Forge world can be
-        # looked at at all.
-        "classification": {
-            "candidateTag": "RQEVisualCandidate",
-            "rootTag": "RQEVisualRoot",
-            "typeAttribute": "VisualType",
-            "variantAttribute": "VisualVariant",
-            "assetKeyAttribute": "AssetKey",
-            "regionTag": "RQEVisualRegion",
-            "regionProfileAttribute": "VisualRegionProfile",
-            "landmarkTag": "RQELandmark",
-            "landmarkAnchorTag": "RQELandmarkAnchor",
-            "excludeTag": "RQEVisualExclude",
-            # Not 1.0: a live game has effects and debris that appear between
-            # the tagging pass and the photograph, and demanding perfection
-            # here fails a build for a particle.
-            "minimumClassifiedFraction": 0.9,
-        },
-        "palette": {
-            "swatches": palette_of(game),
-            "maximumDeltaE": 12,
-            "maximumOffPaletteFraction": 0.2,
-        },
-        "objectTypes": {
-            "rock": {
-                "selector": {"tag": "RQEVisualRoot",
-                             "attributeEquals": {"VisualType": "rock"}},
-                "minimumInstances": 12,
-                "scale": {
-                    "boundsMethod": "oriented-box",
-                    "minimumSize": [1, 1, 1],
-                    "maximumSize": [40, 40, 40],
-                    # Scatter draws from a catalogue of real props whose sizes
-                    # genuinely differ, so a tight deviation here would fail
-                    # the variety that makes a field look natural.
-                    "maximumRelativeMad": 0.9,
-                },
-            },
-            "plant": {
-                "selector": {"tag": "RQEVisualRoot",
-                             "attributeEquals": {"VisualType": "plant"}},
-                "minimumInstances": 12,
-                "scale": {
-                    "boundsMethod": "oriented-box",
-                    "minimumSize": [0.5, 0.5, 0.5],
-                    "maximumSize": [40, 60, 40],
-                    "maximumRelativeMad": 0.9,
-                },
-            },
-        },
-        "regionProfiles": {
-            REGION_PROFILE: {
-                "density": {
-                    # An arena floor is meant to be mostly clear. Scenery
-                    # belongs at its edges, and a fighting surface packed with
-                    # props is a fighting surface nobody can fight on.
-                    "minimumRootsPer1000SquareStuds": 0.5,
-                    "maximumRootsPer1000SquareStuds": 12,
-                    "minimumFootprintCoverage": 0.01,
-                },
-                "heightVariation": {
-                    "minimumP90MinusP10": 1,
-                    "maximumP90MinusP10": 60,
-                },
-                "materialVariety": {
-                    "minimumDistinctMaterials": 2,
-                    "maximumDominantFraction": 0.9,
-                },
-                "repetition": {
-                    "maximumIdenticalVariantRun": 6,
-                    "minimumVariantEntropy": 0.5,
-                },
-            },
-        },
-        "regionSets": {
-            "play-regions": {
-                "selector": {"tag": "RQEVisualRegion",
-                             "attributeEquals": {"VisualRegionProfile": REGION_PROFILE}},
-                "profile": REGION_PROFILE,
-                "minimumRegions": 1,
-                "maximumRegions": 4,
-                "minimumProfileCoverage": 1,
-            },
-        },
-        "landmarks": {
-            LANDMARK_ID: {
-                "selector": {"tag": "RQELandmark",
-                             "attributeEquals": {"LandmarkId": LANDMARK_ID}},
-                "anchorSelector": {"tag": "RQELandmarkAnchor",
-                                   "attributeEquals": {"LandmarkId": LANDMARK_ID}},
-                "maximumDistance": 400.0,
-                "sampleSpacing": 12,
-                "eyeHeight": 5,
-                "raysPerAnchor": 9,
-                # Not all eight: the ring surrounds the player, so from inside
-                # it some anchors are always behind them. Demanding every one
-                # would fail a landmark that works precisely because you stand
-                # inside it.
-                "minimumVisibleAnchorFraction": 0.5,
-                "maximumBlindSpotDegrees": 60,
-                "minimumRegionsVisibleFrom": 1,
-            },
-        },
-        "viewpoints": {
-            "play-desktop": {
-                "device": "desktop",
-                "resolution": resolution,
-                "landmark": LANDMARK_ID,
-                "state": "play",
-                # `look-at-landmark`, not `player-follow`.
-                #
-                # A follow camera depends on where a player happens to be
-                # standing, so two runs frame different pictures and a visual
-                # regression cannot be told from somebody walking left. The
-                # capture provider refuses the mode outright for that reason —
-                # it is the deterministic provider, and a follow shot is not
-                # deterministic.
-                "camera": {"mode": "look-at-landmark", "distance": 190,
-                           "height": 72, "fieldOfView": 70, "yawDegrees": 30},
-                "rubric": rubric,
-            },
-        },
-        "evaluationStates": {
-            "play": {
-                # A path, not a description. The state is "the game, running,
-                # with a real player attached", and the only honest way to
-                # declare that is to point at the steps that produce it.
-                "scenario": "scenarios/play.json",
-                "requiredViewpoints": ["play-desktop"],
-                "minimumRuleCoverage": 0.6,
-            },
-        },
-    }
-
-
-def build_scenario(game: str) -> dict[str, Any]:
-    """The runtime state every visual measurement is taken from.
-
-    Deliberately minimal, and deliberately makes no claim about the game. It
-    resets to a clean session and attaches to a real player, which is the only
-    precondition a photograph of a Forge game needs: a running place with
-    somebody standing in it.
-
-    Anything more would be this file deciding what the game is, which is the
-    one thing Forge does not do.
-    """
-    return {
-        "id": f"forge-{game}-play",
-        "description": (
-            "Start a fresh session of the exact build and attach to a real "
-            "player before any capture. Proves the place runs and can be "
-            "stood in; makes no claim about the core loop."),
-        "requires": {"playSession": True, "clientBridge": True},
-        # [[
-        #     One step, and it is the one that matters.
-        #
-        #     A `reset` step was declared first, on the reasoning that visual
-        #     evidence must come from a fresh session. It failed with "this
-        #     scenario needs a fresh session, but no reset was configured", and
-        #     the honest fix is to remove it rather than to wire it: the
-        #     release run builds an immutable place, opens a Studio on that
-        #     exact file and starts a new Play Solo before any of this — the
-        #     session is fresh by construction, and asking for it again would
-        #     be ceremony that costs a minute and proves nothing.
-        #
-        #     `attach` is the real precondition. It is fatal because a capture
-        #     taken before the bridge controls a player is a picture of
-        #     whatever the camera happened to be pointed at.
-        # ]]
-        "steps": [
-            # The timeout belongs *inside* the step's payload; at the top
-            # level it reads as another step kind and is silently ignored.
-            #
-            # Four minutes because a Forge game writes terrain and scatters a
-            # world before it accepts anybody, and the server log shows it
-            # still working long after the client has said it is ready. The
-            # default twenty-five seconds gave up on a game that was fine.
-            {"attach": {"timeout": 240}, "fatal": True,
-             "comment": "capture only once the bridge controls a real player"},
-        ],
-        "releaseEvidence": [],
-    }
-
-
-def build_quality_focus(game: str, viewpoints: list[str]) -> dict[str, Any]:
-    """The domain targets, with a snapshot list this game can actually satisfy.
-
-    The canonical focus asks for snapshots named `shop`, `mine`, `plot` and
-    `mobile-store`, because it was written for one tycoon. An arena has none
-    of those, and copying it wholesale produces a gate that fails for reasons
-    unrelated to quality — which is how gates get switched off.
-
-    So the domain scores are taken as they are, being genuinely general, and
-    the snapshot list is replaced with the viewpoints the spec declares.
-    """
-    canonical = REPO / "quality" / "quality-focus.json"
-    focus: dict[str, Any] = {}
-    if canonical.exists():
-        focus = json.loads(canonical.read_text(encoding="utf-8"))
-
-    focus.setdefault("schemaVersion", 1)
-
-    # A required category with no target is refused by the measurement plan,
-    # and the canonical focus has no notion of observability — it was written
-    # before anything asked whether the validator had actually reached Studio.
-    # A hundred, because "the bridge answered" is not a thing to be partly true.
-    domains = focus.setdefault("domains", {})
-    domains.setdefault("observability", {
-        "targetScore": 100,
-        "focus": "the run could prove it was talking to a live Studio session",
-    })
-    review = focus.setdefault("visualReview", {})
-    review["requiredSnapshots"] = viewpoints
-    # 95 is the canonical bar and it is a decision, not a fact. Left where it
-    # was found so that lowering it is a visible edit rather than a default.
-    review.setdefault("minimumRawVisualScore", 95)
-    return focus
 
 
 #: How an asset reference is written in Luau, in either of its two forms.
@@ -1287,6 +864,7 @@ def build_descriptor(game: str) -> dict[str, Any]:
     return {
         "name": game,
         "contract": "contract.robloxqa.json",
+        "productIntent": "definition/product-intent.json",
         "rojoProject": "default.project.json",
         # Local copies, not repository paths. The Quality Engine refuses any
         # file outside the project so a release run cannot be altered by an
@@ -1321,10 +899,17 @@ def generate(game: str) -> tuple[Path, Path]:
     contract_path = directory / "contract.robloxqa.json"
     descriptor_path = directory / "rqe.project.json"
 
-    contract_path.write_text(
-        json.dumps(build_contract(game), indent=2, ensure_ascii=False), encoding="utf-8")
+    # These are authored release policy once created. Regeneration may add
+    # missing support files, but cannot silently replace the project's bar.
+    if not contract_path.exists():
+        contract_path.write_text(
+            json.dumps(build_contract(game), indent=2, ensure_ascii=False), encoding="utf-8")
+    descriptor = build_descriptor(game)
+    if descriptor_path.exists():
+        existing = json.loads(descriptor_path.read_text(encoding="utf-8"))
+        descriptor.update(existing)
     descriptor_path.write_text(
-        json.dumps(build_descriptor(game), indent=2, ensure_ascii=False), encoding="utf-8")
+        json.dumps(descriptor, indent=2, ensure_ascii=False), encoding="utf-8")
 
     # The visual spec: the half of the Quality Engine that was unreachable
     # until the engine grew a way to mark a world.
@@ -1348,30 +933,35 @@ def generate(game: str) -> tuple[Path, Path]:
         if source.exists():
             destination = directory / relative
             destination.parent.mkdir(parents=True, exist_ok=True)
-            destination.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
+            if not destination.exists():
+                destination.write_text(source.read_text(encoding="utf-8"), encoding="utf-8")
 
     spec = build_visual_spec(game)
     visual_path = directory / "contracts" / "visual" / "visual-quality.json"
     visual_path.parent.mkdir(parents=True, exist_ok=True)
-    visual_path.write_text(json.dumps(spec, indent=2, ensure_ascii=False), encoding="utf-8")
+    if not visual_path.exists():
+        visual_path.write_text(json.dumps(spec, indent=2, ensure_ascii=False), encoding="utf-8")
 
     manifest_path = directory / "assets" / "asset-manifest.json"
     manifest_path.parent.mkdir(parents=True, exist_ok=True)
-    manifest_path.write_text(
-        json.dumps(build_asset_manifest(game), indent=2, ensure_ascii=False),
-        encoding="utf-8")
+    if not manifest_path.exists():
+        manifest_path.write_text(
+            json.dumps(build_asset_manifest(game), indent=2, ensure_ascii=False),
+            encoding="utf-8")
 
     scenario_path = directory / "scenarios" / "play.json"
     scenario_path.parent.mkdir(parents=True, exist_ok=True)
-    scenario_path.write_text(
-        json.dumps(build_scenario(game), indent=2, ensure_ascii=False), encoding="utf-8")
+    if not scenario_path.exists():
+        scenario_path.write_text(
+            json.dumps(build_scenario(game), indent=2, ensure_ascii=False), encoding="utf-8")
 
     # Generated rather than copied: see `build_quality_focus`.
     focus_path = directory / "quality" / "quality-focus.json"
     focus_path.parent.mkdir(parents=True, exist_ok=True)
-    focus_path.write_text(
-        json.dumps(build_quality_focus(game, sorted(spec["viewpoints"])),
-                   indent=2, ensure_ascii=False), encoding="utf-8")
+    if not focus_path.exists():
+        focus_path.write_text(
+            json.dumps(build_quality_focus(game, sorted(spec["viewpoints"])),
+                       indent=2, ensure_ascii=False), encoding="utf-8")
 
     (directory / "reports").mkdir(exist_ok=True)
     return descriptor_path, contract_path
@@ -1395,7 +985,10 @@ def audit(game: str, static_only: bool = False, timeout: int = 1800) -> dict[str
     if not (directory / "rqe.project.json").exists():
         generate(game)
 
-    command = [sys.executable, str(REPO / "rqe.py"), "release", str(directory)]
+    from rqe.run_artifacts import new_run_id
+    from rqe.orchestrator.metrics import verify_finalized_run, MetricsError
+    run_id = new_run_id()
+    command = [sys.executable, str(REPO / "rqe.py"), "release", str(directory), "--run-id", run_id]
     if static_only:
         command.append("--static-only")
 
@@ -1403,25 +996,17 @@ def audit(game: str, static_only: bool = False, timeout: int = 1800) -> dict[str
                           timeout=timeout, cwd=str(REPO))
     output = (proc.stdout or "") + (proc.stderr or "")
 
-    #: The newest release run's own record, which is richer than its stdout.
     report = None
-    artifacts = directory / "artifacts"
-    if artifacts.exists():
-        runs = sorted((path for path in artifacts.iterdir() if path.is_dir()),
-                      key=lambda path: path.name, reverse=True)
-        for run in runs:
-            for name in ("release.json", "report.json", "evidence.json"):
-                candidate = run / name
-                if candidate.exists():
-                    try:
-                        report = json.loads(candidate.read_text(encoding="utf-8"))
-                    except (json.JSONDecodeError, OSError):
-                        continue
-                    break
-            if report is not None:
-                break
-
-    return {"exit": proc.returncode, "output": output.strip(), "report": report}
+    verification_error = None
+    try:
+        run = verify_finalized_run(directory / "artifacts" / run_id)
+        report = run.read_json_artifact(run.manifest.get("gate"))
+        report = {**report, "manifestSha256": run.manifest_sha256}
+    except (OSError, MetricsError) as exc:
+        verification_error = str(exc)
+    return {"exit": proc.returncode if report is not None else (proc.returncode or 1),
+            "output": output.strip(), "report": report, "runId": run_id,
+            "verificationError": verification_error}
 
 
 def render(result: dict[str, Any]) -> str:

@@ -38,11 +38,13 @@ end
 
 function Permissions.new(config: Config?): Self
 	local cfg = config or {}
-	local levels = cfg.levels or { Owner = 3, Manager = 2, Trusted = 1 }
-	local actions = cfg.actions or {}
-	for _, actionName in buildIndex({ "Owner", "Manager", "Trusted", "Default", "Banned" }) do
-		if actionName == "Default" or actionName == "Banned" then
-			assert(not levels[actionName], "Default/Banned are reserved level names")
+	local levels = table.clone(cfg.levels or { Owner = 3, Manager = 2, Trusted = 1 })
+	local actions = table.clone(cfg.actions or {})
+	-- The set's value is always true. Binding that value made this assert look
+	-- up levels[true], so Default and Banned were stored as ordinary levels.
+	for levelName in buildIndex({ "Owner", "Manager", "Trusted", "Default", "Banned" }) do
+		if levelName == "Default" or levelName == "Banned" then
+			assert(not levels[levelName], "Default/Banned are reserved level names")
 		end
 	end
 	return setmetatable({

@@ -35,10 +35,29 @@ class Finding:
 LUA_SUFFIXES = (".lua", ".luau")
 
 
+#: Directories whose Luau is not this project's to fix.
+#:
+#: `forge doctor .` reported 1423 errors and 1389 of them -- 97.6% -- came from
+#: `forge/kits/*/salvage/`: source harvested verbatim from other people's
+#: projects, which nobody here wrote and nobody is going to correct. The one
+#: finding that mattered, `Audio does not expose Bank`, sat at line 1400 of that
+#: report as a warning and survived for exactly that reason.
+#:
+#: A checker that reports a thousand things you will not act on has not found a
+#: thousand problems. It has hidden one.
+IGNORED_PARTS = frozenset({".tmp", ".git", "__pycache__", "node_modules", "salvage"})
+
+
+def _ignored(path: Path) -> bool:
+    """Whether a file is somebody else's, or a build artefact."""
+
+    return bool(IGNORED_PARTS.intersection(path.parts))
+
+
 def _sources(root: Path) -> list[Path]:
     out: list[Path] = []
     for suffix in LUA_SUFFIXES:
-        out.extend(p for p in root.rglob(f"*{suffix}") if ".tmp" not in p.parts)
+        out.extend(p for p in root.rglob(f"*{suffix}") if not _ignored(p))
     return sorted(out)
 
 
@@ -84,6 +103,20 @@ def _raw_lines(path: Path) -> list[str]:
 # undeclared.
 _DEFINE_BLOCK = re.compile(r"Net\.define\s*\(\s*\{(.*?)\n[ \t]*\}\s*\)", re.S)
 _DEFINE_KEY = re.compile(r"^\s*([A-Za-z_][A-Za-z0-9_]*)\s*=\s*\{", re.M)
+
+# The fields of a `Net` definition, which are not channel names.
+#
+# This regex walks the whole block, so a channel whose payload shape is written
+# on its own line —
+#
+#     Fly = { dir = "c2s", rate = 4,
+#         shape = { on = "boolean" } },
+#
+# — produces a second, phantom "channel" called `shape`, which is then reported
+# as declared and never used. It is a warning for a channel that does not
+# exist, on a file where nothing is wrong, and the only way to silence it was
+# to reformat the game's code to suit the linter.
+_DEFINE_FIELDS = frozenset({"shape", "check"})
 # `Net.define` handed a variable rather than a table literal.
 #
 # A game with a server and a client has to define the same channels in both
@@ -137,6 +170,8 @@ def check_net(root: Path, findings: list[Finding]) -> None:
 
         for body, offset in blocks:
             for key in _DEFINE_KEY.finditer(body):
+                if key.group(1) in _DEFINE_FIELDS:
+                    continue
                 line = offset + body[: key.start()].count("\n") + 1
                 declared.setdefault(key.group(1), (path, line))
 
@@ -391,7 +426,7 @@ def check_module_graph(root: Path, findings: list[Finding]) -> None:
     pattern = re.compile(r"require\(script((?:\.[A-Za-z_][A-Za-z0-9_]*)+)\)")
 
     for base in roots:
-        for path in sorted(base.rglob("*.lua")):
+        for path in sorted(p for p in base.rglob("*.lua") if not _ignored(p)):
             text = _strip_comments(path.read_text(encoding="utf-8", errors="replace"))
             here = path.parent
             # `init.server.lua` and `init.client.lua` make the *folder* the
@@ -622,6 +657,27 @@ _ROBLOX_GLOBALS = {
     "tostring", "type", "unpack", "next", "ipairs", "pairs", "setmetatable",
     "getmetatable", "rawget", "rawset", "rawequal", "rawlen", "string", "table",
     "math", "os", "coroutine", "bit32", "utf8", "debug", "_G", "_VERSION",
+    #[[
+    #   Real globals this list was missing, and what their absence cost.
+    #
+    #   `version` is Roblox's own build-string function. Both of its uses are in
+    #   the Studio plugin -- the piece every other tool in this repository runs
+    #   on -- and both are correctly wrapped in `pcall`. They were reported as
+    #   two hard errors, in a report where the only actionable finding was one
+    #   line among fourteen hundred.
+    #
+    #   `Content` is the newer content-reference global (`Content.fromUri`),
+    #   used by `WorldKit.Mesh`.
+    #
+    #   `Require` is not Roblox's: it is injected by `rqe/luau_harness.py` at
+    #   line 235, for the headless runner that executes pure Luau outside the
+    #   engine. A script written for that runner is not wrong for using it.
+    #
+    #   A checker with a stale allowlist does not merely miss things. It
+    #   manufactures noise, and noise is what taught everyone to stop reading
+    #   this report.
+    #]]
+    "version", "Content", "Require",
 }
 
 _UNKNOWN_GLOBAL = re.compile(
@@ -743,7 +799,7 @@ def check_field_method_shadow(root: Path, findings: list[Finding]) -> None:
 
     seen: set[Path] = set()
     for where in roots:
-        for path in sorted(where.rglob("*.lua")):
+        for path in sorted(p for p in where.rglob("*.lua") if not _ignored(p)):
             if path in seen:
                 continue
             seen.add(path)
@@ -799,7 +855,7 @@ def check_client_server_api(root: Path, findings: list[Finding]) -> None:
     if not client_dir.is_dir():
         return
 
-    for path in sorted(client_dir.rglob("*.lua")):
+    for path in sorted(p for p in client_dir.rglob("*.lua") if not _ignored(p)):
         try:
             text = path.read_text(encoding="utf-8")
         except OSError:
@@ -911,7 +967,7 @@ def check_reinvention(root: Path, findings: list[Finding]) -> None:
     ignore = {"init", "config", "state", "data", "core", "world", "match",
               "access", "events", "entity", "mark", "platform", "reference"}
 
-    for path in sorted(root.rglob("*.lua")) + sorted(root.rglob("*.luau")):
+    for path in _sources(root):
         stem = path.stem.lower()
         if stem in ignore or stem not in known:
             continue
@@ -1015,7 +1071,7 @@ def check_engine_api(root: Path, findings: list[Finding]) -> None:
     alias_re = re.compile(
         r"^\s*local\s+(\w+)\s*=\s*(?:Forge\.)?([A-Za-z][\w.]*)\s*$", re.M)
 
-    for path in sorted(root.rglob("*.lua")) + sorted(root.rglob("*.luau")):
+    for path in _sources(root):
         try:
             text = path.read_text(encoding="utf-8", errors="ignore")
         except OSError:
@@ -1075,7 +1131,7 @@ def check_engine_api(root: Path, findings: list[Finding]) -> None:
     context_methods = methods.get("Context", set())
     if context_methods:
         call_re = re.compile(r"\bt\.(\w+)\s*\(")
-        for path in list(root.rglob("*.lua")) + list(root.rglob("*.luau")):
+        for path in _sources(root):
             try:
                 text = path.read_text(encoding="utf-8", errors="ignore")
             except OSError:

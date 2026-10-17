@@ -9,6 +9,8 @@ from unittest.mock import patch
 
 from rqe.hub.auth import (
     BridgeAuthError,
+    derive_installation_id,
+    derive_role_token,
     load_bridge_token,
     load_or_create_bridge_token,
     token_fingerprint,
@@ -49,15 +51,37 @@ class HubAuthenticationTests(unittest.TestCase):
             result = install_plugin(ROOT, plugins, bearer_token=token)
             installed = plugins / PLUGIN_FILENAME
             self.assertTrue(installed.is_file())
-            self.assertIn(token, installed.read_text(encoding="utf-8"))
+            installed_source = installed.read_text(encoding="utf-8")
+            self.assertIn(derive_role_token(token, "plugin"), installed_source)
+            self.assertIn(derive_installation_id(token), installed_source)
+            self.assertNotIn(token, installed_source)
             serialized = json.dumps(result, sort_keys=True)
             self.assertNotIn(token, serialized)
             self.assertEqual(result["authentication"]["tokenFingerprint"], token_fingerprint(token))
+            self.assertEqual(result["authentication"]["credentialModel"], "derived-capability-v2")
+            self.assertEqual(result["authentication"]["installationId"], derive_installation_id(token))
             self.assertFalse(result["authentication"]["secretIncluded"])
             self.assertEqual(
                 (ROOT / "apps/studio-plugin/src/Auth.lua").read_text(encoding="utf-8").count(token),
                 0,
             )
+
+    def test_role_credentials_are_stable_and_not_interchangeable(self) -> None:
+        root = "role-root-token-with-at-least-thirty-two-bytes-123456"
+        roles = ("reader", "mutator", "executor", "publisher", "plugin", "admin")
+        credentials = {role: derive_role_token(root, role) for role in roles}
+        self.assertEqual(credentials["plugin"], derive_role_token(root, "plugin"))
+        self.assertEqual(len(set(credentials.values())), len(roles))
+        self.assertNotIn(root, set(credentials.values()))
+        with self.assertRaises(BridgeAuthError):
+            derive_role_token(root, "agent")
+
+    def test_installation_identity_is_stable_but_not_the_root_secret(self) -> None:
+        root = "installation-root-token-with-at-least-thirty-two-bytes-123456"
+        identity = derive_installation_id(root)
+        self.assertEqual(identity, derive_installation_id(root))
+        self.assertTrue(identity.startswith("inst-"))
+        self.assertNotIn(root, identity)
 
 
 if __name__ == "__main__":

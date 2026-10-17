@@ -14,6 +14,23 @@
 local ClassRegistry = {}
 ClassRegistry.__index = ClassRegistry
 
+-- register and get used to hand back the stored definition. Setting health
+-- or a move cooldown on that table rewrote the registry.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 export type MoveDefinition = {
 	cooldown: number,
 	stacks: number,
@@ -84,11 +101,15 @@ function ClassRegistry:register(classId: string, definition: RawClass): ClassDef
 		moves = moves,
 	}
 	self._classes[classId] = normalized
-	return normalized
+	return deepCopy(normalized, {}) :: ClassDefinition
 end
 
 function ClassRegistry:get(classId: string): ClassDefinition?
-	return self._classes[classId]
+	local definition = self._classes[classId]
+	if definition == nil then
+		return nil
+	end
+	return deepCopy(definition, {}) :: ClassDefinition
 end
 
 function ClassRegistry:has(classId: string): boolean

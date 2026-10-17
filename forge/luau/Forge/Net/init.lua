@@ -139,13 +139,14 @@ end
 function Net.define(defs: { [string]: Definition })
 	for name, def in defs do
 		assert(def.dir == "c2s" or def.dir == "s2c", string.format("[Net] '%s': dir must be 'c2s' or 's2c'", name))
+		def = table.clone(def)
+		if def.shape then
+			def.shape = table.clone(def.shape)
+		end
 		definitions[name] = def
 
 		if def.dir == "c2s" then
 			buckets[name] = Sched.bucket(def.rate or 8, def.burst)
-			if def.shape and not def.check then
-				def.check = Net.shape(def.shape)
-			end
 		end
 
 		if IS_SERVER then
@@ -317,16 +318,24 @@ function Net.on(name: string, handler: (...any) -> ...any): RBXScriptConnection?
 		end
 		local allow = buckets[name]
 		local check = def.check
+		local shapeCheck = def.shape and Net.shape(def.shape)
 
 		local function gate(player: Player, payload: any): (boolean, any)
 			if not allow(player) then
 				Net.violated:Fire(player, name, "rate")
 				return false, nil
 			end
-			if check and not check(payload) then
+			if shapeCheck and not shapeCheck(payload) then
 				Net.violated:Fire(player, name, "shape")
 				warn(string.format("[Net] %s sent a malformed '%s'", player.Name, name))
 				return false, nil
+			end
+			if check then
+				local ok, accepted = pcall(check, payload)
+				if not ok or accepted ~= true then
+					Net.violated:Fire(player, name, if ok then "check" else "validator-error")
+					return false, nil
+				end
 			end
 			return true, payload
 		end

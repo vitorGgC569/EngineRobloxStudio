@@ -39,11 +39,13 @@ from pathlib import Path
 from typing import Any
 
 from . import local_credentials
+from ..http_safety import HttpBoundaryError, error_body_limited, json_object_limited
 
 ROOT = Path("assets/itch")
 PUBLISHED = Path("forge/kits/itch-textures.json")
 CATALOGUE = Path("forge/luau/Forge/Catalog/Textures.lua")
 DELAY = 1.1
+MAX_API_RESPONSE_BYTES = 4 * 1024 * 1024
 
 #[[
 #   The surfaces a game actually asks for.
@@ -283,7 +285,11 @@ def _post(body: bytes, boundary: str, key: str, timeout: float = 120.0) -> dict[
         headers={"x-api-key": key,
                  "Content-Type": f"multipart/form-data; boundary={boundary}"})
     with urllib.request.urlopen(request, timeout=timeout) as response:
-        return json.loads(response.read())
+        return json_object_limited(
+            response,
+            MAX_API_RESPONSE_BYTES,
+            label="Roblox texture upload response",
+        )
 
 
 def _await_operation(operation: str, key: str, tries: int = 14,
@@ -295,10 +301,14 @@ def _await_operation(operation: str, key: str, tries: int = 14,
         try:
             request = urllib.request.Request(url, headers={"x-api-key": key})
             with urllib.request.urlopen(request, timeout=45) as response:
-                body = json.loads(response.read())
+                body = json_object_limited(
+                    response,
+                    MAX_API_RESPONSE_BYTES,
+                    label="Roblox texture operation response",
+                )
             if body.get("done"):
                 return body
-        except urllib.error.HTTPError:
+        except (urllib.error.HTTPError, urllib.error.URLError, OSError, HttpBoundaryError):
             pass
         time.sleep(delay)
     return {}
@@ -436,7 +446,7 @@ def publish(chosen: list[dict[str, Any]], creator_user_id: str = "5812220258",
                     progress(f"  throttled; waiting {wait:.0f}s")
                     time.sleep(wait)
                     continue
-                text = error.read()[:200].decode("utf-8", "replace")
+                text = error_body_limited(error, 200).decode("utf-8", "replace")
                 book["assets"][marker] = {"error": f"HTTP {error.code}: {text[:120]}"}
                 #: An account-level stop, not a failure of this file. Walking
                 #: the rest collects the same answer hundreds of times and
@@ -445,7 +455,7 @@ def publish(chosen: list[dict[str, Any]], creator_user_id: str = "5812220258",
                     progress("  ! the account is moderated for uploads; stopping")
                     stopped = True
                 break
-            except (urllib.error.URLError, OSError) as error:
+            except (urllib.error.URLError, OSError, HttpBoundaryError) as error:
                 book["assets"][marker] = {"error": str(error)[:150]}
                 break
 

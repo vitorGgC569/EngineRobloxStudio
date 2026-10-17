@@ -42,8 +42,11 @@ import os
 from pathlib import Path
 from typing import Any
 
+from rqe.http_safety import HttpBoundaryError, error_body_limited, text_limited
+
 REPO = Path(__file__).resolve().parents[2]
 CONFIG = REPO / "forge" / "catalog" / "publish.json"
+MAX_API_RESPONSE_BYTES = 4 * 1024 * 1024
 
 #: Where a key may be kept locally. Excluded from git by `.gitignore`'s
 #: blanket `*.txt` rule, which exists for exactly this reason.
@@ -100,9 +103,16 @@ def _request(method: str, url: str, key: str, body: bytes | None = None,
     request = urllib.request.Request(url, data=body, headers=headers, method=method)
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
-            return response.status, response.read().decode("utf-8", "replace")
+            return response.status, text_limited(
+                response,
+                MAX_API_RESPONSE_BYTES,
+                label="Roblox publication response",
+                errors="replace",
+            )
     except urllib.error.HTTPError as exc:
-        return exc.code, exc.read().decode("utf-8", "replace")
+        return exc.code, error_body_limited(exc).decode("utf-8", "replace")
+    except HttpBoundaryError as exc:
+        raise PublishError(str(exc)) from exc
     except urllib.error.URLError as exc:
         raise PublishError(f"cannot reach Roblox: {exc.reason}")
 
@@ -132,8 +142,20 @@ def check_key(universe_id: str = "1") -> dict[str, Any]:
 
 
 def publish(game: str, release: bool = False,
-            universe_id: str | None = None, place_id: str | None = None) -> dict[str, Any]:
-    """Upload the built place file as a new version."""
+            universe_id: str | None = None, place_id: str | None = None,
+            source: Path | None = None, rolled_back_from: Any = None,
+            run_directory: Path | None = None) -> dict[str, Any]:
+    """Verify and upload one frozen payload under an exclusive publish lease."""
+    from rqe.workspace import Workspace
+    if run_directory is None:
+        raise PublishError("publication requires --run <finalized release directory>; playtest pointers and --force cannot authorize it")
+    with Workspace(REPO).lease("publish", purpose=f"publish {game}"):
+        return _publish(game, release, universe_id, place_id, source, rolled_back_from, run_directory)
+
+
+def _publish(game: str, release: bool, universe_id: str | None,
+             place_id: str | None, source: Path | None, rolled_back_from: Any,
+             run_directory: Path) -> dict[str, Any]:
     known = targets().get(game, {})
     universe = universe_id or known.get("universeId")
     place = place_id or known.get("placeId")
@@ -146,11 +168,17 @@ def publish(game: str, release: bool = False,
             "roblox.com/games/<placeId>/... and the universe id is on the "
             "Creator Dashboard.")
 
-    built = REPO / "games" / game / f"{game}.rbxlx"
+    built = source or (REPO / "games" / game / f"{game}.rbxlx")
     if not built.exists():
         raise PublishError(f"nothing built at {built.relative_to(REPO)}; run 'forge build {game}'")
 
     payload = built.read_bytes()
+    from rqe.release_authority import verify_release_payload
+    from rqe.orchestrator.metrics import MetricsError
+    try:
+        authority = verify_release_payload(run_directory, payload)
+    except (OSError, MetricsError) as exc:
+        raise PublishError(f"publication authority refused: {exc}") from exc
     version_type = "Published" if release else "Saved"
     key = load_key()
 
@@ -170,9 +198,26 @@ def publish(game: str, release: bool = False,
         except json.JSONDecodeError:
             parsed = {"raw": body[:200]}
         remember(game, universe, place)
-        return {"ok": True, "versionType": version_type,
-                "versionNumber": parsed.get("versionNumber"),
-                "bytes": len(payload)}
+        result = {"ok": True, "versionType": version_type,
+                  "versionNumber": parsed.get("versionNumber"),
+                  "bytes": len(payload), "releaseAuthority": authority}
+        #: Keep the exact bytes that went up. Roblox has no restore endpoint,
+        #: so this copy is the only thing that makes a rollback possible -- and
+        #: it is taken from what was *sent* rather than rebuilt from source,
+        #: because a rebuild can differ and a rollback to something nobody
+        #: published is not a rollback.
+        try:
+            from forge.cli import rollback as rb
+
+            result["kept"] = rb.keep(
+                game, built, result, universe_id=universe, place_id=place,
+                rolled_back_from=rolled_back_from, payload=payload).kept
+        except OSError:
+            #: A full disk must not fail a publish that already succeeded. The
+            #: version is live either way; what is lost is the ability to undo
+            #: it from here, and the result says so.
+            result["kept"] = None
+        return result
 
     hint = ""
     if status == 401:

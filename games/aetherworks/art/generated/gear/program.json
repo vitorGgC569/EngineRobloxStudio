@@ -1,0 +1,419 @@
+{
+  "schemaVersion": 1,
+  "id": "gear",
+  "result": "asset",
+  "units": "studs",
+  "steps": [
+    {
+      "op": "box",
+      "name": "tooth0",
+      "size": [
+        0.35,
+        0.28,
+        0.22
+      ],
+      "location": [
+        1.04,
+        0.0,
+        0
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "tooth0",
+      "width": 0.03,
+      "segments": 2
+    },
+    {
+      "op": "rotate",
+      "target": "tooth0",
+      "angles": [
+        0,
+        0,
+        0.0
+      ]
+    },
+    {
+      "op": "box",
+      "name": "tooth1",
+      "size": [
+        0.35,
+        0.28,
+        0.22
+      ],
+      "location": [
+        0.9006664199358163,
+        0.5199999999999999,
+        0
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "tooth1",
+      "width": 0.03,
+      "segments": 2
+    },
+    {
+      "op": "rotate",
+      "target": "tooth1",
+      "angles": [
+        0,
+        0,
+        29.999999999999996
+      ]
+    },
+    {
+      "op": "box",
+      "name": "tooth2",
+      "size": [
+        0.35,
+        0.28,
+        0.22
+      ],
+      "location": [
+        0.5200000000000001,
+        0.9006664199358162,
+        0
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "tooth2",
+      "width": 0.03,
+      "segments": 2
+    },
+    {
+      "op": "rotate",
+      "target": "tooth2",
+      "angles": [
+        0,
+        0,
+        59.99999999999999
+      ]
+    },
+    {
+      "op": "box",
+      "name": "tooth3",
+      "size": [
+        0.35,
+        0.28,
+        0.22
+      ],
+      "location": [
+        6.368163355566237e-17,
+        1.04,
+        0
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "tooth3",
+      "width": 0.03,
+      "segments": 2
+    },
+    {
+      "op": "rotate",
+      "target": "tooth3",
+      "angles": [
+        0,
+        0,
+        90.0
+      ]
+    },
+    {
+      "op": "box",
+      "name": "tooth4",
+      "size": [
+        0.35,
+        0.28,
+        0.22
+      ],
+      "location": [
+        -0.5199999999999998,
+        0.9006664199358163,
+        0
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "tooth4",
+      "width": 0.03,
+      "segments": 2
+    },
+    {
+      "op": "rotate",
+      "target": "tooth4",
+      "angles": [
+        0,
+        0,
+        119.99999999999999
+      ]
+    },
+    {
+      "op": "box",
+      "name": "tooth5",
+      "size": [
+        0.35,
+        0.28,
+        0.22
+      ],
+      "location": [
+        -0.9006664199358163,
+        0.5199999999999999,
+        0
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "tooth5",
+      "width": 0.03,
+      "segments": 2
+    },
+    {
+      "op": "rotate",
+      "target": "tooth5",
+      "angles": [
+        0,
+        0,
+        150.0
+      ]
+    },
+    {
+      "op": "box",
+      "name": "tooth6",
+      "size": [
+        0.35,
+        0.28,
+        0.22
+      ],
+      "location": [
+        -1.04,
+        1.2736326711132475e-16,
+        0
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "tooth6",
+      "width": 0.03,
+      "segments": 2
+    },
+    {
+      "op": "rotate",
+      "target": "tooth6",
+      "angles": [
+        0,
+        0,
+        180.0
+      ]
+    },
+    {
+      "op": "box",
+      "name": "tooth7",
+      "size": [
+        0.35,
+        0.28,
+        0.22
+      ],
+      "location": [
+        -0.9006664199358164,
+        -0.5199999999999997,
+        0
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "tooth7",
+      "width": 0.03,
+      "segments": 2
+    },
+    {
+      "op": "rotate",
+      "target": "tooth7",
+      "angles": [
+        0,
+        0,
+        210.0
+      ]
+    },
+    {
+      "op": "box",
+      "name": "tooth8",
+      "size": [
+        0.35,
+        0.28,
+        0.22
+      ],
+      "location": [
+        -0.5200000000000005,
+        -0.9006664199358161,
+        0
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "tooth8",
+      "width": 0.03,
+      "segments": 2
+    },
+    {
+      "op": "rotate",
+      "target": "tooth8",
+      "angles": [
+        0,
+        0,
+        239.99999999999997
+      ]
+    },
+    {
+      "op": "box",
+      "name": "tooth9",
+      "size": [
+        0.35,
+        0.28,
+        0.22
+      ],
+      "location": [
+        -1.910449006669871e-16,
+        -1.04,
+        0
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "tooth9",
+      "width": 0.03,
+      "segments": 2
+    },
+    {
+      "op": "rotate",
+      "target": "tooth9",
+      "angles": [
+        0,
+        0,
+        270.0
+      ]
+    },
+    {
+      "op": "box",
+      "name": "tooth10",
+      "size": [
+        0.35,
+        0.28,
+        0.22
+      ],
+      "location": [
+        0.5200000000000001,
+        -0.9006664199358162,
+        0
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "tooth10",
+      "width": 0.03,
+      "segments": 2
+    },
+    {
+      "op": "rotate",
+      "target": "tooth10",
+      "angles": [
+        0,
+        0,
+        300.0
+      ]
+    },
+    {
+      "op": "box",
+      "name": "tooth11",
+      "size": [
+        0.35,
+        0.28,
+        0.22
+      ],
+      "location": [
+        0.900666419935816,
+        -0.5200000000000005,
+        0
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "tooth11",
+      "width": 0.03,
+      "segments": 2
+    },
+    {
+      "op": "rotate",
+      "target": "tooth11",
+      "angles": [
+        0,
+        0,
+        330.0
+      ]
+    },
+    {
+      "op": "cylinder",
+      "name": "hub",
+      "radius": 1,
+      "depth": 0.2,
+      "location": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 24
+    },
+    {
+      "op": "cylinder",
+      "name": "bore",
+      "radius": 0.28,
+      "depth": 0.6,
+      "location": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 24
+    },
+    {
+      "op": "boolean",
+      "target": "hub",
+      "tool": "bore",
+      "operation": "difference"
+    },
+    {
+      "op": "join",
+      "name": "asset",
+      "targets": [
+        "tooth0",
+        "tooth1",
+        "tooth2",
+        "tooth3",
+        "tooth4",
+        "tooth5",
+        "tooth6",
+        "tooth7",
+        "tooth8",
+        "tooth9",
+        "tooth10",
+        "tooth11",
+        "hub"
+      ]
+    },
+    {
+      "op": "uv_unwrap",
+      "target": "asset",
+      "method": "smart"
+    },
+    {
+      "op": "triangulate",
+      "target": "asset"
+    }
+  ],
+  "metadata": {
+    "author": "Aetherworks",
+    "license": "project-original",
+    "purpose": "finished modular industrial art"
+  }
+}

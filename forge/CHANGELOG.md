@@ -26,9 +26,14 @@ upgrading.
 
 ---
 
-## 0.2.0 — unreleased
+## 0.2.0 — 2026-09-02
 
 The release where the engine started telling you whether a game works.
+
+Dated rather than left as *unreleased*, because nine games in this
+repository already pin `Forge.require("0.2.0")`. A version that games
+depend on and a changelog that says it never shipped cannot both be true,
+and the games are the ones that run.
 
 ### Added
 
@@ -55,6 +60,62 @@ The release where the engine started telling you whether a game works.
 - **`Weapon`** — cadence, deterministic spread, ammo, reload, recoil, falloff.
 - `Rig.grip`, `Rig.buildWeapon` and `rigType = "R15"`.
 - Animation **layers** and **root motion**.
+- **`Economy`** — big numbers, formula curves, multi-currency wallets, an
+  income engine and a faucet/sink audit. Six modules.
+- **`Progression`** — the retention layer: daily-reward calendars, season
+  passes, playtime ladders, rebirth and prestige, quest engine and rotation,
+  crate rolls with a pity timer, offline earnings, upgrade trees. Eighteen
+  modules. **Executed for the first time in this release**: sixteen of them had
+  never been called by a game, a kit, a tool or a test, and
+  `tests/test_forge_retention_runtime.py` now runs them headlessly.
+- **`Social`** — parties, guilds, trade sessions, plot permissions, moderation
+  and staff flags. The player's relationship with everyone outside the server.
+- **`Tycoon`** — build-and-earn primitives: plots, droppers, conveyors,
+  resource nodes, ground loot, blueprint serialisation. Eleven modules.
+- **`Match`** — competitive match primitives: rounds, arenas, deploy zones,
+  team spawns, wave spawners, a director. Eleven modules.
+- **`AI`** — crowd and companion intelligence: behaviour trees, ground
+  locomotion, perception, snapshot interpolation, a mob catalogue.
+- **`Movement`** — player feel and shooting validation: strafe jumping,
+  teleport pads, a scoreboard.
+- **`Camera`** — where the player is looking and who decides, including the
+  first-person `Viewmodel`.
+- **`Companion`** — things that follow you and stay readable while they do:
+  formations and idle wander, generalised from a shipped simulator.
+- **`State`** — the session's own truth, and who is allowed to see it.
+- **`Travel`** — moving players between places, and arriving with something.
+- **`Cluster`** — the engine stops assuming there is one server.
+- **`Platform`** — is this game actually playable on the device in front of you.
+- **`Access`** — the game is playable by people this engine had not considered.
+- **`Reference`** — what a reasonable number looks like.
+- **`Mark`** — tell the Quality Engine what it is looking at.
+- `Forge.<Family>.<Sibling>` resolves lazily on **every** family. Five of them
+  (`Audio`, `Companion`, `Core`, `State`, `Weapon`) had no resolver, so a module
+  beside the index was reachable only by requiring the instance directly --
+  `Forge.Audio.Bank` was nil while `Bank.lua` documented its own usage as
+  `Forge.Audio.Bank.specs()`.
+- `Debug.ready(name)` is emitted by `forge new` and by the production
+  implementer, so every new game announces when it has finished starting.
+- **`Loop`** — the degree between a primitive and a game, which this engine did
+  not have. A Loop composes the primitives, carries numbers that came from a
+  *measurement* rather than from taste, owns the moment it pays out, and
+  **declares its own funnel** so a game built on one produces a drop-off report
+  the moment it has players. `Loop.Hatch` is the first: open a thing, get a
+  thing, want the next thing. Every constant in it cites the line of
+  `forge/kits/halo/.../retention/*.json` it came from.
+- `Telemetry.defineFunnel` and `Telemetry.seen`: funnel steps carry **names**
+  and a **clock**. Steps were integers, so a report said "step 4" where a
+  designer needs "hatch_another"; and there was no time, so a funnel could say
+  how many people stopped and never where the time went. The only fatal gap in
+  the only real retention record here hid behind a 79% conversion rate and was
+  visible only as 82s becoming 218s.
+- `forge analytics` reports `meanSecondsToReach` and flags dead time. It read
+  the two published experiences for the first time in this release; both are
+  live and neither declares a funnel, which is what `Loop` exists to end.
+- `forge cost` and the production ledger: round trips to Studio, seconds,
+  restarts and failures, per run.
+- `forge publish --rollback` and `--list`.
+- `forge preflight`, `forge inspect`, and `rqe stamp`.
 - `forge publish`, `forge scene`, `forge pose`, `forge api`, `forge toolbox`,
   `forge assets`, `forge gametest`, `forge example`.
 

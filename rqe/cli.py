@@ -4,6 +4,7 @@ import argparse
 import json
 import logging
 import subprocess
+import sys
 import time
 from pathlib import Path
 
@@ -13,12 +14,17 @@ from .bridge.adapters import HeadlessGameAdapter, StudioGameAdapter
 from .bridge.core import GameAgentBridge
 from .bridge.rpc import serve
 from .bridge.transport import HttpJsonRpcTransport
+from .bridge.studio_mcp import (
+    FederatedStudioTransport,
+    RobloxStudioMcpTransport,
+)
 from .continuous import run_cycle, run_forever
+from .exits import INTERRUPTED
 from .factory_cli import add_factory_parsers, run_factory_command
 from .fixes import write_fix_plan
 from .hub.client import StudioBridge
 from .hub.install import install_plugin
-from .hub.lifecycle import restart_for_bridge, start_play_solo
+from .hub.lifecycle import ensure_studio_session, restart_for_bridge, start_play_solo, stop_play_solo
 from .hub.protocol import BridgeError
 from .hub.server import BridgeHub, serve_forever
 from .observe import measure_place, write_observation
@@ -27,11 +33,12 @@ from .release import execute_release, release_terminal_summary
 from .scenario import ScenarioRunner, load_scenario, write_scenario_result
 from .reporting import terminal_summary, write_reports
 from .visual_cli import VisualCliError, add_visual_parser, run_visual_command
+from .workspace import hub_port, hub_url
 
 
 LOGGER = logging.getLogger("rqe")
 
-DEFAULT_HUB_URL = "http://127.0.0.1:8790"
+DEFAULT_HUB_URL = hub_url()
 
 
 def build_parser() -> argparse.ArgumentParser:
@@ -62,7 +69,34 @@ def build_parser() -> argparse.ArgumentParser:
     serve_parser = bridge_sub.add_parser("serve", help="serve the bridge over localhost JSON-RPC")
     serve_parser.add_argument("path", nargs="?", default=".", help="project root")
     serve_parser.add_argument("--port", type=int, default=8765)
-    serve_parser.add_argument("--studio-url", help="Studio/MCP relay URL; omit for headless backend")
+    serve_parser.add_argument(
+        "--backend",
+        choices=["headless", "relay", "federated"],
+        help=(
+            "execution backend; default preserves legacy behavior "
+            "(relay when --studio-url is set, otherwise headless)"
+        ),
+    )
+    serve_parser.add_argument(
+        "--studio-url",
+        help=(
+            "RQE/Studio relay URL. Required by relay and federated backends; "
+            "in federated mode this carries RQE-only semantic probes"
+        ),
+    )
+    serve_parser.add_argument(
+        "--studio-id",
+        help="exact built-in Roblox Studio MCP instance id for federated mode",
+    )
+    serve_parser.add_argument(
+        "--studio-place-name",
+        help="exact place name used to select the Studio MCP instance",
+    )
+    serve_parser.add_argument(
+        "--studio-place-id",
+        type=int,
+        help="published place id used to disambiguate Studio MCP instances",
+    )
     serve_parser.add_argument("--token", help="optional bearer token")
     bridge_sub.add_parser("operations", help="list the bridge operation surface")
 
@@ -71,7 +105,7 @@ def build_parser() -> argparse.ArgumentParser:
 
     hub_serve = studio_sub.add_parser("serve", help="run the bridge hub the Studio plugin connects to")
     hub_serve.add_argument("--host", default="127.0.0.1", help="bind address; loopback only by default")
-    hub_serve.add_argument("--port", type=int, default=8790)
+    hub_serve.add_argument("--port", type=int, default=hub_port())
     hub_serve.add_argument("--token", help="optional bearer token required from agents")
     hub_serve.add_argument(
         "--require-mutation-leases",
@@ -88,17 +122,36 @@ def build_parser() -> argparse.ArgumentParser:
     hub_call.add_argument("--params", default="{}", help="JSON object of parameters")
     hub_call.add_argument("--timeout", type=float, default=15.0)
     hub_call.add_argument("--hub", default=DEFAULT_HUB_URL)
+    hub_call.add_argument(
+        "--allow-arbitrary",
+        action="store_true",
+        help="explicitly authorize commands such as bridge.exec and test.run",
+    )
 
     hub_scenario = studio_sub.add_parser("scenario", help="run a gameplay scenario against the live game")
     hub_scenario.add_argument("file", help="scenario JSON, e.g. contracts/scenarios/first-purchase-e2e.json")
     hub_scenario.add_argument("path", nargs="?", default=".", help="project root")
     hub_scenario.add_argument("--hub", default=DEFAULT_HUB_URL)
     hub_scenario.add_argument("--run-id", help="artifact run id to file the result under")
-    hub_scenario.add_argument("--place", help="place to reload for a 'reset' step; scenarios may set 'place' themselves")
+    hub_scenario.add_argument("--place", help="place to use for reset steps; scenarios may set 'place' themselves")
+    hub_scenario.add_argument(
+        "--allow-cold-launch",
+        action="store_true",
+        help="explicitly allow a destructive Studio cold launch if no compatible background session exists",
+    )
 
-    hub_play = studio_sub.add_parser("play_solo", help="start Play Solo to get a real Player (briefly focuses Studio; F5 cannot be synthesised)")
+    hub_play = studio_sub.add_parser(
+        "play_solo",
+        help="start Play Solo through StudioTestService without foreground focus",
+    )
     hub_play.add_argument("--hub", default=DEFAULT_HUB_URL)
     hub_play.add_argument("--timeout", type=float, default=90.0)
+
+    hub_native = studio_sub.add_parser("test", help="run and close an identity-bound native Studio test (transport smoke only)")
+    hub_native.add_argument("--hub", default=DEFAULT_HUB_URL)
+    hub_native.add_argument("--mode", choices=["play", "run", "multiplayer"], default="play")
+    hub_native.add_argument("--players", type=int, default=2)
+    hub_native.add_argument("--timeout", type=float, default=120.0)
 
     hub_exec = studio_sub.add_parser("exec", help="run a Luau file inside the live Studio and print what it returns")
     hub_exec.add_argument("file", help="path to a .lua/.luau file; its return value comes back as JSON")
@@ -115,7 +168,7 @@ def build_parser() -> argparse.ArgumentParser:
     hub_restart.add_argument("--hub", default=DEFAULT_HUB_URL)
     hub_restart.add_argument("--timeout", type=float, default=180.0)
     hub_restart.add_argument("--no-wait", action="store_true", help="launch without waiting for the plugin handshake")
-    hub_restart.add_argument("--foreground", action="store_true", help="let Studio take the screen; by default it starts minimised and stays out of the way")
+    hub_restart.add_argument("--foreground", action="store_true", help="allow the explicit cold launch to foreground; background launch requests minimised/no-activate but Studio or Windows may still surface it briefly — prefer persistent sessions for true background work")
 
     hub_measure = studio_sub.add_parser("measure", help="measure the live place and write runtime-sourced evidence")
     hub_measure.add_argument("path", nargs="?", default=".", help="project root")
@@ -123,6 +176,14 @@ def build_parser() -> argparse.ArgumentParser:
     hub_measure.add_argument("--run-id", help="artifact run id; generated when omitted")
     hub_measure.add_argument("--start-run", action="store_true", help="start the simulation, measure it, then return Studio to edit mode")
     hub_measure.add_argument("--keep-running", action="store_true", help="with --start-run, leave the simulation running")
+
+    stamp = subparsers.add_parser(
+        "stamp",
+        help="check the derived hashes checked into this repository, and re-cut them")
+    stamp.add_argument("path", nargs="?", default=".", help="repository root")
+    stamp.add_argument("--write", action="store_true",
+                       help="re-cut every drifted stamp, then read the diff")
+    stamp.add_argument("--json", action="store_true", help="machine-readable")
 
     add_assets_parser(subparsers)
     add_factory_parsers(subparsers)
@@ -164,10 +225,30 @@ def _run_bridge(args: argparse.Namespace) -> int:
         LOGGER.info(json.dumps(result, indent=2, ensure_ascii=False))
         LOGGER.info("Agent evidence: %s", session_path)
         return 0 if result["status"] == "PASS" else 1
-    if args.studio_url:
-        adapter = StudioGameAdapter(HttpJsonRpcTransport(args.studio_url, token=args.token))
-    else:
+    backend = args.backend or ("relay" if args.studio_url else "headless")
+    if backend == "headless":
         adapter = HeadlessGameAdapter(project)
+    elif backend == "relay":
+        if not args.studio_url:
+            raise SystemExit("rqe bridge serve: --backend relay requires --studio-url")
+        adapter = StudioGameAdapter(
+            HttpJsonRpcTransport(args.studio_url, token=args.token)
+        )
+    else:
+        if not args.studio_url:
+            raise SystemExit(
+                "rqe bridge serve: --backend federated requires --studio-url "
+                "for the RQE semantic-probe extension"
+            )
+        official = RobloxStudioMcpTransport(
+            studio_id=args.studio_id,
+            place_name=args.studio_place_name,
+            place_id=args.studio_place_id,
+        )
+        extension = HttpJsonRpcTransport(args.studio_url, token=args.token)
+        adapter = StudioGameAdapter(
+            FederatedStudioTransport(official, extension)
+        )
     bridge = GameAgentBridge(adapter, "graybox")
     serve(bridge, port=args.port, token=args.token)
     return 0
@@ -211,6 +292,12 @@ def _run_studio(args: argparse.Namespace) -> int:
         LOGGER.info(json.dumps(status, indent=2, ensure_ascii=False))
         return 0 if status.get("sessions") else 1
 
+    if args.studio_command == "test":
+        from .hub.native_test import run_native_test
+        result = run_native_test(bridge, mode=args.mode, players=args.players, timeout=args.timeout)
+        LOGGER.info(json.dumps(result, indent=2, ensure_ascii=False))
+        return 0 if result["status"] == "COMPLETED" else 1
+
     if args.studio_command == "scenario":
         root = Path(args.path).resolve()
         scenario = load_scenario(Path(args.file))
@@ -219,23 +306,67 @@ def _run_studio(args: argparse.Namespace) -> int:
         archive_root = root / "artifacts" / "_archive"
 
         def reset_session() -> dict:
-            """Give the scenario a clean game: fresh place, fresh player.
+            """Give the scenario a clean player without stealing desktop focus.
 
-            A full Studio restart rather than Shift+F5/F5 cycling. Measured: the
-            plugin is not reliably loaded into the play DataModel after a
-            stop/start cycle within one Studio process -- both sessions came back
-            reporting `edit` while a play session was visibly running, so
-            gameplay commands had nowhere correct to go. Restarting is slower and
-            it is deterministic.
+            Reuse an identity-matched persistent edit session and transition the
+            test through StudioTestService. A destructive cold launch is allowed
+            only when the caller explicitly passes --allow-cold-launch.
             """
             if not place:
                 return {"started": False, "reason": "scenario needs a 'place' (or --place) to reset from"}
-            steps = restart_for_bridge(Path(place).resolve(), archive_root, bridge=bridge, wait_seconds=240)
-            if not steps["handshake"].get("sessions"):
-                return {"started": False, "reason": "Studio did not reconnect after the restart", "restart": steps}
-            bridge.call("bridge.install_client", timeout=40)
-            played = start_play_solo(bridge, wait_seconds=120)
-            played["restart"] = {"minimized": steps.get("minimized"), "recovery": steps.get("recovery")}
+            bridge.unpin()
+            ensured = ensure_studio_session(
+                Path(place).resolve(),
+                archive_root,
+                bridge,
+                wait_seconds=45,
+                background=True,
+                allow_cold_launch=bool(args.allow_cold_launch),
+            )
+            if not ensured.get("ready"):
+                return {
+                    "started": False,
+                    "reason": ensured.get("reason") or "compatible background Studio session unavailable",
+                    "needsColdLaunch": ensured.get("needsColdLaunch", False),
+                    "session": ensured,
+                }
+            try:
+                sessions = bridge.status().get("sessions", [])
+            except Exception:
+                sessions = []
+            runtime = [
+                item for item in sessions
+                if item.get("context") in {"run", "server", "client"}
+                and int(item.get("polls") or 0) > 0
+            ]
+
+            stopped = None
+            if runtime:
+                stopped = stop_play_solo(
+                    bridge,
+                    wait_seconds=30,
+                    allow_foreground_fallback=False,
+                )
+                if not stopped.get("stopped"):
+                    return {
+                        "started": False,
+                        "reason": "native StudioTestService could not reset the active scenario",
+                        "stop": stopped,
+                    }
+
+            bridge.unpin()
+            played = start_play_solo(
+                bridge,
+                wait_seconds=120,
+                allow_foreground_fallback=False,
+            )
+            played["sessionReuse"] = {
+                "reused": ensured.get("reused", False),
+                "coldLaunched": ensured.get("coldLaunched", False),
+                "stoppedPreviousRun": bool(runtime),
+            }
+            if stopped is not None:
+                played["stop"] = stopped
             return played
 
         result = ScenarioRunner(bridge, reset_session=reset_session).run(scenario)
@@ -246,17 +377,25 @@ def _run_studio(args: argparse.Namespace) -> int:
         return 0 if result.status == "PASS" else 1
 
     if args.studio_command == "play_solo":
-        result = start_play_solo(bridge, wait_seconds=args.timeout)
+        result = start_play_solo(bridge, wait_seconds=args.timeout, allow_foreground_fallback=False)
         LOGGER.info(json.dumps(result, indent=2, ensure_ascii=False))
         return 0 if result.get("started") else 1
 
     if args.studio_command == "exec":
         source = Path(args.file).read_text(encoding="utf-8")
-        response = bridge.call_response(
-            "bridge.exec",
-            {"source": source, "chunkName": Path(args.file).name},
-            timeout=args.timeout,
-        )
+        # Choosing the dedicated `studio exec` command is the operator's
+        # explicit opt-in; ordinary StudioBridge clients stay fail-closed.
+        executor = StudioBridge(args.hub, allow_arbitrary=True)
+        with executor.lease_scope(
+            agent_id="rqe-cli-exec",
+            context="edit",
+            ttl_seconds=max(30.0, min(float(args.timeout) + 30.0, 300.0)),
+        ):
+            response = executor.call_response(
+                "bridge.exec",
+                {"source": source, "chunkName": Path(args.file).name},
+                timeout=args.timeout,
+            )
         if response.ok:
             LOGGER.info(json.dumps(response.result.get("returned"), indent=2, ensure_ascii=False))
         else:
@@ -268,7 +407,37 @@ def _run_studio(args: argparse.Namespace) -> int:
         if not isinstance(params, dict):
             LOGGER.error("--params must be a JSON object")
             return 2
-        response = bridge.call_response(args.method, params, timeout=args.timeout)
+        caller = StudioBridge(args.hub, allow_arbitrary=bool(args.allow_arbitrary))
+        from .hub.commands import load_default_registry
+
+        try:
+            spec = load_default_registry(verify_dispatcher=False).require(args.method)
+        except Exception:
+            spec = None
+        if spec is not None and spec.lease_targeted and "_lease" not in params:
+            requested_context = str(params.get("_context") or "")
+            if not requested_context:
+                if args.method == "run.start" or args.method.startswith("assets.") or args.method.startswith("bridge."):
+                    requested_context = "edit"
+                elif (
+                    args.method == "run.stop"
+                    or args.method.startswith("actor.")
+                    or args.method.startswith("client.")
+                    or args.method in {"product.identity", "quality.snapshot"}
+                ):
+                    requested_context = "running"
+                else:
+                    requested_context = "any"
+            scoped_params = dict(params)
+            scoped_params.pop("_context", None)
+            with caller.lease_scope(
+                agent_id="rqe-cli-call",
+                context=requested_context,
+                ttl_seconds=max(30.0, min(float(args.timeout) + 30.0, 300.0)),
+            ):
+                response = caller.call_response(args.method, scoped_params, timeout=args.timeout)
+        else:
+            response = caller.call_response(args.method, params, timeout=args.timeout)
         LOGGER.info(json.dumps(response.to_dict(), indent=2, ensure_ascii=False))
         return 0 if response.ok else 1
 
@@ -291,9 +460,40 @@ def _run_studio(args: argparse.Namespace) -> int:
 
 
 def main(argv: list[str] | None = None) -> int:
+    try:
+        return _dispatch(argv)
+    except KeyboardInterrupt:
+        print("rqe: interrupted", file=sys.stderr)
+        return INTERRUPTED
+
+
+def _dispatch(argv: list[str] | None = None) -> int:
     args = build_parser().parse_args(argv)
     # Without this the CLI is silent: every command reports through LOGGER.
     logging.basicConfig(level=logging.INFO, format="%(message)s")
+
+    if args.command == "stamp":
+        from .stamps import StampError, refresh, verify
+
+        root = Path(args.path).resolve()
+        try:
+            if args.write:
+                refresh(root)
+            results = verify(root)
+        except StampError as exc:
+            LOGGER.error("stamp: %s", exc)
+            return 2
+
+        if args.json:
+            LOGGER.info(json.dumps([item.to_dict() for item in results], indent=2))
+        else:
+            for item in results:
+                LOGGER.info(item.render())
+        bad = [item for item in results if not item.ok]
+        if bad and not args.write:
+            LOGGER.info("")
+            LOGGER.info("  re-cut them with:  python rqe.py stamp --write")
+        return 1 if bad else 0
 
     if args.command == "assets":
         try:
@@ -345,9 +545,6 @@ def main(argv: list[str] | None = None) -> int:
         except (ProjectError, OSError, RuntimeError, ValueError, json.JSONDecodeError) as exc:
             LOGGER.error("Studio command failed: %s", exc)
             return 2
-        except KeyboardInterrupt:
-            LOGGER.info("stopped")
-            return 0
 
     if args.command == "bridge":
         try:

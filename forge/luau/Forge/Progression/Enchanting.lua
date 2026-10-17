@@ -42,6 +42,23 @@ type Self = {
 
 Enchanting.__index = Enchanting
 
+-- define used to keep the caller's modifier list. Zeroing a weight after
+-- define made the next roll report that the enchant had no modifiers.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 local function rollInRange(rng: () -> number, min: number, max: number): number
 	return min + rng() * (max - min)
 end
@@ -58,7 +75,7 @@ function Enchanting.define(self: Self, def: EnchantDef): ()
 	for _, range in def.modifiers do
 		assert(range.weight >= 0, "weight >= 0")
 	end
-	self.defs[def.id] = table.clone(def)
+	self.defs[def.id] = deepCopy(def, {})
 end
 
 function Enchanting.costOf(self: Self, defId: string): (string?, number?)
@@ -80,10 +97,9 @@ function Enchanting.roll(self: Self, defId: string, slot: SlotData, rng: () -> n
 		return nil, "max_upgrades"
 	end
 
-	local newSlot = table.clone(slot) :: any
-	newSlot.modifiers = table.clone(slot.modifiers)
+	local newSlot = deepCopy(slot, {})
 
-	local blessed = self.rngChance(def, rng)
+	local blessed = self:rngChance(def, rng)
 	local widen = if blessed then (def.blessedMultiplier or 2) else 1
 
 	-- Weighted pick of which stat gets modified.

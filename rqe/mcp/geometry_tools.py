@@ -25,6 +25,7 @@ from pathlib import Path
 from typing import Any
 
 from .server import EngineMcpServer, Tool, ToolError
+from ..security import SecurityBoundaryError, resolve_inside
 
 
 DEFAULT_WORKSPACE = ".tmp/geometry"
@@ -32,12 +33,10 @@ DEFAULT_WORKSPACE = ".tmp/geometry"
 
 def _workspace(root: Path, arguments: dict[str, Any]) -> Path:
     relative = arguments.get("workspace") or DEFAULT_WORKSPACE
-    path = (root / relative).resolve()
     try:
-        path.relative_to(root.resolve())
-    except ValueError as exc:
-        raise ToolError("workspace must stay inside the project root") from exc
-    return path
+        return resolve_inside(root, relative, label="geometry workspace")
+    except SecurityBoundaryError as exc:
+        raise ToolError(str(exc)) from exc
 
 
 def _load_brief(arguments: dict[str, Any]):
@@ -196,11 +195,16 @@ def register_geometry_tools(server: EngineMcpServer) -> EngineMcpServer:
     def _open_package(arguments: dict[str, Any]):
         from ..geometry import AssetPackage, PackageError
 
-        path = (root / arguments["package"]).resolve()
         try:
-            path.relative_to(root.resolve())
-        except ValueError as exc:
-            raise ToolError("package must be inside the project root") from exc
+            path = resolve_inside(
+                root,
+                arguments["package"],
+                label="asset package",
+                must_exist=True,
+                directory_only=True,
+            )
+        except SecurityBoundaryError as exc:
+            raise ToolError(str(exc)) from exc
         try:
             return AssetPackage.open(path)
         except PackageError as exc:
@@ -275,9 +279,17 @@ def register_geometry_tools(server: EngineMcpServer) -> EngineMcpServer:
     def mesh_validate(arguments: dict[str, Any]) -> dict[str, Any]:
         from ..geometry import Budget, GeometryWorker, BlenderUnavailable, validate_analysis
 
-        path = (root / arguments["mesh"]).resolve()
-        if not path.is_file():
-            raise ToolError(f"mesh not found: {path}")
+        try:
+            path = resolve_inside(
+                root,
+                arguments["mesh"],
+                label="mesh",
+                must_exist=True,
+                file_only=True,
+                suffixes=(".fbx", ".obj", ".gltf", ".glb"),
+            )
+        except SecurityBoundaryError as exc:
+            raise ToolError(str(exc)) from exc
         try:
             worker = GeometryWorker()
         except BlenderUnavailable as exc:
@@ -365,9 +377,16 @@ def register_geometry_tools(server: EngineMcpServer) -> EngineMcpServer:
             source: Any = package
             label = package.asset_id
         else:
-            directory = Path(arguments["previews"])
-            if not directory.is_dir():
-                raise ToolError(f"{directory} is not a directory of renders")
+            try:
+                directory = resolve_inside(
+                    root,
+                    arguments["previews"],
+                    label="preview directory",
+                    must_exist=True,
+                    directory_only=True,
+                )
+            except SecurityBoundaryError as exc:
+                raise ToolError(str(exc)) from exc
             source = sorted(directory.glob("*.png"))
             # Renders live in a directory called "previews", so its own name
             # identifies nothing -- every asset would report the same subject.

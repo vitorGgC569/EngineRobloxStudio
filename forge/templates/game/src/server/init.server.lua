@@ -132,3 +132,22 @@ end)
 
 Debug.info(string.format("%s up in %.2fs", Config.name, os.clock() - startedAt))
 print(string.format("[%s] server ready in %.2fs (seed %d)", Config.name, os.clock() - startedAt, Config.seed))
+
+--[[
+	8. The last line, and it must stay last.
+
+	Everything that photographs, measures or tests this game has to know when
+	it is up, and without this line each of them guesses. The guesses are all
+	versions of watching the screen stop changing, and they are all wrong in
+	the same way: a HUD builds its labels in the first frame and fills them as
+	answers arrive, so a watcher settles while the game is still starting.
+
+	`CLAUDE.md` has asked for this line since it was written, and it was in two
+	of thirty-nine games -- because it was a rule in a document rather than a
+	line in this file. A convention the scaffold does not produce is a
+	convention that does not exist.
+
+	Anything you add below this line runs after the game has announced itself
+	as ready, which is exactly the thing this prevents.
+]]
+Debug.ready(Config.name)

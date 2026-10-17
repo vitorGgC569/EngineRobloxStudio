@@ -70,13 +70,29 @@ game.start → game.observe → game.walk → game.interact → game.assert
 
 `python rqe.py bridge demo . --mode blackbox` executa uma partida humana headless. Cada ação grava evidência BEFORE/ACTION/AFTER, screenshot lógico, estado visível, resultado e motivo. O modo blackbox não entrega `Workspace` nem posição interna ao agente; graybox fornece estado de jogador/UI/prompts; whitebox acrescenta diagnósticos, remotes e caminho interno.
 
-Para conectar um relay local do Studio/MCP:
+Para usar o transporte legado via relay local:
 
 ```powershell
-python rqe.py bridge serve . --studio-url http://127.0.0.1:8765 --token dev-token
+python rqe.py bridge serve . --backend relay --studio-url http://127.0.0.1:8765 --token dev-token
 ```
 
-O servidor JSON-RPC do bridge escuta apenas em `127.0.0.1` por padrão e possui `/health` e `/rpc`. O `StudioGameAdapter` traduz ações para `playtest_start`, `screen_capture`, `console_read`, `character_navigation`, `user_keyboard_input` e `user_mouse_input`; o relay Luau oferece as leituras `quality_probe_observe`, `quality_probe_player`, `quality_probe_ui`, `quality_probe_nearby` e `quality_probe_raycast`.
+Para o caminho atual, use federação: o MCP embutido do Roblox Studio executa
+play/stop, captura, console, navegação e input; a extensão RQE fica responsável
+apenas pelos probes semânticos e capacidades avançadas que o MCP oficial não
+expõe. A seleção do Studio é explícita — por `studio_id`, nome do place ou
+`placeId` — e nunca depende da janela em foreground.
+
+```powershell
+python rqe.py bridge serve . --backend federated \
+  --studio-url http://127.0.0.1:8765 \
+  --studio-place-name EchoRiot
+```
+
+O backend federado inicia somente o processo stdio do MCP (`mcp.bat` no
+Windows); ele **não abre Roblox Studio**. Se não houver uma instância já aberta
+e inequivocamente selecionável, falha fechado. O servidor JSON-RPC público do
+Game Agent Bridge continua preso a `127.0.0.1` por padrão e mantém
+`/health` e `/rpc`.
 
 ## Executar o jogo no Roblox Studio
 

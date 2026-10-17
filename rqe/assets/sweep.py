@@ -37,6 +37,7 @@ from pathlib import Path
 from typing import Any
 
 from . import inspection, toolbox
+from ..workspace import hub_url
 
 CATALOGUE = Path("forge/kits/store-catalogue.json")
 
@@ -138,14 +139,13 @@ _LOST_SESSION = "no connected session"
 
 
 def _revive(progress: Any) -> bool:
-    """Bring Studio's bridge back, and say whether it came.
+    """Reuse the sweep's Studio session without ever cold-launching it.
 
-    A long sweep loses the session. Not a hypothetical: the first full run got
-    112 assets in and then every remaining call failed, with Studio still
-    running and its plugin no longer connected.
-
-    Restarting is cheap -- about thirteen seconds -- and the alternative is a
-    sweep that quietly turns into a list of fetch failures.
+    A dropped bridge is infrastructure failure, not an asset failure. The old
+    recovery restarted Studio automatically, which could raise a visible window
+    over the user's desktop. Recovery now only accepts an already-open,
+    compatible persistent session. If none is available the checkpoint remains
+    on disk and the sweep stops cleanly.
     """
     from pathlib import Path as _Path
 
@@ -161,19 +161,29 @@ def _revive(progress: Any) -> bool:
     archive = _Path(".tmp/studio-recovery").resolve()
     archive.mkdir(parents=True, exist_ok=True)
 
-    progress("  ... bridge session lost; restarting Studio")
+    progress("  ... bridge session lost; attempting background-safe reuse")
     try:
-        steps = lifecycle.restart_for_bridge(
-            place, archive, bridge=StudioBridge("http://127.0.0.1:8790"),
-            wait_seconds=240)
+        ensured = lifecycle.ensure_studio_session(
+            place,
+            archive,
+            StudioBridge(hub_url()),
+            wait_seconds=30,
+            background=True,
+            allow_cold_launch=False,
+        )
     except Exception as error:  # noqa: BLE001
-        progress(f"  ... restart failed: {error}")
+        progress(f"  ... background-safe recovery failed: {error}")
         return False
 
-    handshake = steps.get("handshake") or {}
-    revived = bool(handshake.get("sessions"))
-    progress(f"  ... {'back' if revived else 'still down'} "
-             f"after {handshake.get('seconds', 0):.0f}s")
+    revived = bool(ensured.get("ready"))
+    progress(
+        "  ... "
+        + (
+            "reused persistent Studio session"
+            if revived
+            else "no compatible session; refusing to cold-launch Studio"
+        )
+    )
     return revived
 
 

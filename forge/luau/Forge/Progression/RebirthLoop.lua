@@ -61,11 +61,29 @@ export type RebirthLoop = typeof(setmetatable({} :: Internal, RebirthLoop))
 local MAX_SKIP_DEPTH = 20
 local SKIP_RATIO_STEP = 1e3
 
+-- The caller keeps the tables it passed in, and a plan's awards must not be
+-- the stored tables either. Editing a count after new, or on a previous plan,
+-- would change the next execute.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 function RebirthLoop.new(config: LoopConfig): RebirthLoop
 	assert(type(config.price) == "function", "[RebirthLoop] price function is required")
 	local self: Internal = setmetatable({}, RebirthLoop)
 	self.price = config.price
-	self.rewardsOnLife = config.rewardsOnLife or {}
+	self.rewardsOnLife = deepCopy(config.rewardsOnLife or {}, {})
 	return self :: any
 end
 
@@ -114,7 +132,7 @@ function RebirthLoop.execute(self: RebirthLoop, state: RebirthState): RebirthPla
 	local awards = {}
 	for life = state.life + 1, newLife do
 		for _, reward in (self.rewardsOnLife[life] or {}) do
-			table.insert(awards, reward)
+			table.insert(awards, deepCopy(reward, {}))
 		end
 	end
 

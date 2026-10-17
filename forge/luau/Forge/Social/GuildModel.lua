@@ -67,6 +67,15 @@ local function countMembers(state: State): number
 	return n
 end
 
+-- Invite and exile already copied the member map. Donate and upgrade cloned
+-- only the top table, so writing a member on the returned state rewrote the
+-- guild the caller still held.
+local function copyState(state: State): State
+	local newState = table.clone(state) :: any
+	newState.members = table.clone(state.members)
+	return newState
+end
+
 function GuildModel.invite(self: Self, state: State, byUserId: number, newUserId: number): (State?, string?)
 	local rank = rankOf(state, newUserId)
 	if rank then
@@ -78,8 +87,12 @@ function GuildModel.invite(self: Self, state: State, byUserId: number, newUserId
 	if countMembers(state) >= self.maxMembers then
 		return nil, "guild_full"
 	end
-	local newState = table.clone(state) :: any
-	newState.members = table.clone(state.members)
+	-- NaN is not equal to itself, so a member stored under 0/0 cannot be
+	-- found on the next lookup. Reject that id before the map is copied.
+	if type(newUserId) ~= "number" or newUserId ~= newUserId then
+		return nil, "invalid_user"
+	end
+	local newState = copyState(state)
 	newState.members[newUserId] = self.memberRank
 	return newState, nil
 end
@@ -93,8 +106,7 @@ function GuildModel.exile(self: Self, state: State, byUserId: number, targetId: 
 	if actorRank < self.officerRank or (targetRank >= actorRank and byUserId ~= targetId) then
 		return nil, "insufficient_rank"
 	end
-	local newState = table.clone(state) :: any
-	newState.members = table.clone(state.members)
+	local newState = copyState(state)
 	newState.members[targetId] = nil
 	return newState, nil
 end
@@ -103,10 +115,13 @@ function GuildModel.donate(self: Self, state: State, userId: number, amount: num
 	if not rankOf(state, userId) then
 		return nil, "not_a_member"
 	end
-	if amount <= 0 then
+	-- NaN is not <= 0, and math.huge is a positive number, so either one
+	-- lands in the returned funds. A missing type, a NaN, a non-positive
+	-- amount, or an amount that is not below math.huge is invalid.
+	if type(amount) ~= "number" or amount ~= amount or amount <= 0 or not (amount < math.huge) then
 		return nil, "invalid_amount"
 	end
-	local newState = table.clone(state) :: any
+	local newState = copyState(state)
 	newState.funds = state.funds + amount
 	return newState, nil
 end
@@ -116,11 +131,17 @@ function GuildModel.upgradeCost(self: Self, state: State): number
 end
 
 function GuildModel.applyUpgrade(self: Self, state: State): (State?, string?)
+	-- NaN is not < cost, and math.huge is not < cost either, so both buy
+	-- the upgrade. A missing type, a NaN, or a balance that is not below
+	-- math.huge is not payable.
+	if type(state.funds) ~= "number" or state.funds ~= state.funds or not (state.funds < math.huge) then
+		return nil, "insufficient_funds"
+	end
 	local cost = self:upgradeCost(state)
 	if state.funds < cost then
 		return nil, "insufficient_funds"
 	end
-	local newState = table.clone(state) :: any
+	local newState = copyState(state)
 	newState.funds = state.funds - cost
 	newState.level = state.level + 1
 	return newState, nil

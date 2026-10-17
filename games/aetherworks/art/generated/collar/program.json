@@ -1,0 +1,63 @@
+{
+  "schemaVersion": 1,
+  "id": "collar",
+  "result": "wheel",
+  "units": "studs",
+  "steps": [
+    {
+      "op": "cylinder",
+      "name": "wheel",
+      "radius": 1,
+      "depth": 0.2,
+      "location": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 32
+    },
+    {
+      "op": "cylinder",
+      "name": "hole",
+      "radius": 0.5,
+      "depth": 0.5,
+      "location": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 24
+    },
+    {
+      "op": "boolean",
+      "target": "wheel",
+      "tool": "hole",
+      "operation": "difference"
+    },
+    {
+      "op": "bevel",
+      "target": "wheel",
+      "width": 0.05,
+      "segments": 2
+    },
+    {
+      "op": "smooth_shade",
+      "target": "wheel",
+      "angle": 35
+    },
+    {
+      "op": "uv_unwrap",
+      "target": "wheel",
+      "method": "smart"
+    },
+    {
+      "op": "triangulate",
+      "target": "wheel"
+    }
+  ],
+  "metadata": {
+    "author": "Aetherworks",
+    "license": "project-original",
+    "purpose": "finished modular industrial art"
+  }
+}

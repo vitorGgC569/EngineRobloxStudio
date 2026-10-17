@@ -1,0 +1,25 @@
+{
+  "schemaVersion": 1,
+  "profileId": "release-quality",
+  "productId": "lumenfall-rift-salvagers",
+  "status": "BLOCKED",
+  "appliesTo": [
+    "GAMEPLAY",
+    "VISUAL",
+    "ASSETS",
+    "RELEASE"
+  ],
+  "tokenSet": "tokens/release-tokens.json",
+  "minimumVisualScore": null,
+  "blockers": [
+    "HUMAN_PRODUCT_APPROVAL_REQUIRED",
+    "TARGET_DEVICE_APPROVAL_REQUIRED",
+    "PERFORMANCE_BUDGET_CALIBRATION_REQUIRED",
+    "INDEPENDENT_REFERENCE_BENCHMARK_REQUIRED",
+    "VISUAL_CALIBRATION_REQUIRED",
+    "PRODUCTION_ASSET_MANIFEST_REQUIRED",
+    "CORE_LOOP_E2E_EVIDENCE_REQUIRED",
+    "EXACT_BUILD_RUNTIME_EVIDENCE_REQUIRED"
+  ],
+  "notes": "This profile is derived from GameModel. Values requiring human or external authority remain absent and block the industrial release gate."
+}

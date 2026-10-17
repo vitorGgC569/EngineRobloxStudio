@@ -25,7 +25,7 @@ bridge against a live Studio.
 |---|---|
 | `RunService:Run()` **is** scriptable from a plugin | An agent can bring a world to life and measure it with no keyboard input. |
 | Run mode does **not** revert what game scripts built | Measured 372 → 742 Workspace descendants across two cycles. Every count after the first run is contaminated. Reopen the place between measurements. |
-| Play Solo (a real `Player`) is **not** scriptable | It needs one real foreground keypress. Studio ignores `PostMessage`; synthetic key messages do nothing. |
+| Studio 0.738 supports a real player via `StudioTestService:ExecutePlayModeAsync` | Measured in Aetherworks: `games/aetherworks/artifacts/habitat-runtime.json` records a completed native player test. The older `studio play_solo` foreground-key route remains available; its limitations do not apply to the native test API. Multiplayer must be validated separately: the latest attempted test timed out before a verified runtime. |
 | `Players:CreateLocalPlayer` → `lacking capability LocalUser` | A Player cannot be conjured. |
 | `Instance.new("Player")` → `lacking capability WritePlayer` | Same. |
 | A Studio killed mid-playtest leaves a session that still looks alive | Its poll handler stays blocked until it tries to write. The caller that killed it must retire the session explicitly. |
@@ -37,7 +37,7 @@ bridge against a live Studio.
 | `ProximityPrompt:InputHoldBegin()` from the **server** is accepted and `Triggered` never fires | Prompt activation must come from the client. |
 | `ProximityPromptExclusivity` defaults to `OnePerButton` | The nearest prompt sharing a key **silently suppresses** the others. A prompt can be visible, in range, enabled and impossible to trigger. Use `AlwaysShow` and a distinct `KeyboardKeyCode` for prompts that must coexist. |
 | A prompt on a fast **unanchored** part never fires | A card riding a belt cannot be taken. Present it anchored. |
-| `VirtualInputManager:SendMouseButtonEvent` → `lacking capability RobloxScript` from a LocalScript **and** from a plugin | GUI clicks cannot be synthesised at all. Test what the button *does* by firing the same RemoteEvent. |
+| The old `VirtualInputManager:SendMouseButtonEvent` route was refused, but Studio 0.738 provides `UserInputService:CreateVirtualInput()` | `client.input` delivered real UI purchases in the Aetherworks native test. A delivered pointer event alone is not proof of button activation: verify the intended state change. Direct RemoteEvents remain gray-box diagnostics, not evidence of successful human interaction. |
 
 ## Addressing and state
 

@@ -1,0 +1,20 @@
+{
+  "$schema": "../schemas/visual-calibration-receipt.v1.schema.json",
+  "schemaVersion": 1,
+  "calibrationId": "producer-probe.visual-calibration",
+  "revision": 1,
+  "productId": "producer-probe",
+  "status": "BLOCKED",
+  "benchmark": {
+    "benchmarkId": "producer-probe.reference-benchmark",
+    "sha256": "2fb13d5b39c144405b571bfcfd76e1072c31fbb8bfac74c587d5621227ea46d4"
+  },
+  "methodology": {
+    "calibratedAt": null,
+    "calibratedBy": null,
+    "freezeBeforeCandidateEvaluation": true,
+    "candidateInputsUsed": false,
+    "method": "PENDING_INDEPENDENT_REFERENCE_MEASUREMENT"
+  },
+  "thresholds": []
+}

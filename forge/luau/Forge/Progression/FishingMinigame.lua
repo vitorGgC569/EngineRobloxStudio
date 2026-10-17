@@ -40,6 +40,23 @@ type Self = {
 	session: Session?,
 }
 
+-- table.clone keeps each drop. Zeroing a weight after new, or after
+-- addDrop inserts the caller's table, makes the next roll return nothing.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 FishingMinigame.__index = FishingMinigame
 
 function FishingMinigame.new(config: {
@@ -53,7 +70,7 @@ function FishingMinigame.new(config: {
 }): Self
 	assert(#config.drops > 0, "fishing needs drops")
 	return setmetatable({
-		drops = table.clone(config.drops),
+		drops = deepCopy(config.drops, {}) :: { Drop },
 		waitMin = config.waitMin or 3,
 		waitMax = config.waitMax or 12,
 		biteWindow = config.biteWindow or 1.2,
@@ -65,7 +82,12 @@ function FishingMinigame.new(config: {
 end
 
 function FishingMinigame.addDrop(self: Self, drop: Drop): ()
-	table.insert(self.drops, drop)
+	assert(type(drop.weight) == "number" and drop.weight >= 0, "drop weight must be a number >= 0")
+	assert(type(drop.id) == "string" and #drop.id > 0, "drop id must be a non-empty string")
+	-- A string level throws inside rollLoot when compared with a number, and the carp already in the pool never rolls.
+	assert(type(drop.minProfessionLevel) == "number", "minProfessionLevel must be a number")
+	assert(type(drop.minRodTier) == "number", "minRodTier must be a number")
+	table.insert(self.drops, deepCopy(drop, {}) :: Drop)
 end
 
 -- Casts a line; returns the session GUID. One session at a time.

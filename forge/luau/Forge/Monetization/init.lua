@@ -15,7 +15,7 @@
 
 		Monetization.defineProduct("small_coins", {
 			productId = 123456,
-			grant = function(player) addCoins(player, 500) end,
+			apply = function(profile) profile.gold += 500 end,
 		})
 
 		Monetization.definePass("vip", {
@@ -28,11 +28,11 @@
 ]]
 
 local MarketplaceService = game:GetService("MarketplaceService")
-local DataStoreService = game:GetService("DataStoreService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
 local Signal = require(script.Parent.Core.Signal)
+local Save = require(script.Parent.Save)
 
 local Monetization = {}
 
@@ -41,7 +41,7 @@ Monetization.passGranted = Signal.new() -- (player, name)
 
 type Product = {
 	productId: number,
-	grant: (player: Player) -> boolean?,
+	apply: (profile: any, receipt: any) -> boolean?,
 	label: string?,
 	price: number?,
 }
@@ -56,12 +56,10 @@ local products: { [string]: Product } = {}
 local productsById: { [number]: string } = {}
 local passes: { [string]: Pass } = {}
 local ownership: { [Player]: { [string]: boolean } } = {}
-local receiptStore: DataStore? = nil
 local started = false
 local stats = { granted = 0, duplicates = 0, failed = 0 }
 
 Monetization.config = {
-	receiptStoreName = "ForgeReceipts_v1",
 	ownershipCacheSeconds = 60,
 	enabled = true,
 }
@@ -164,17 +162,9 @@ function Monetization.prompt(player: Player, name: string): boolean
 end
 
 -- ================================ receipts ==================================
-local function receiptKey(receipt: any): string
-	return "r_" .. tostring(receipt.PurchaseId)
-end
-
---[[
-	The grant path.
-
-	`UpdateAsync` is what makes this idempotent: the read and the write are one
-	atomic operation, so two servers processing the same retry cannot both see
-	"not yet granted".
-]]
+-- Paid state and receipt are committed through the owning Save profile in
+-- one UpdateAsync. Product.apply is a pure, non-yielding profile reducer.
+-- Side effects belong in purchased listeners after the durable commit.
 local function processReceipt(receipt: any): Enum.ProductPurchaseDecision
 	if not Monetization.config.enabled then
 		return Enum.ProductPurchaseDecision.NotProcessedYet
@@ -195,38 +185,20 @@ local function processReceipt(receipt: any): Enum.ProductPurchaseDecision
 		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
 
-	if not receiptStore then
-		warn("[Monetization] no receipt store; refusing to grant without a record")
-		return Enum.ProductPurchaseDecision.NotProcessedYet
-	end
-
-	local alreadyGranted = false
-	local ok, err = pcall(function()
-		(receiptStore :: DataStore):UpdateAsync(receiptKey(receipt), function(existing)
-			if existing then
-				alreadyGranted = true
-				return existing -- untouched: a retry of something already done
-			end
-			-- The grant happens inside the transaction. If it throws, nothing
-			-- is written and Roblox retries cleanly.
-			local granted = product.grant(player)
-			if granted == false then
-				error("grant refused")
-			end
-			return {
-				at = os.time(),
-				userId = receipt.PlayerId,
-				product = name,
-				spent = receipt.CurrencySpent,
-			}
-		end)
-	end)
-
-	if not ok then
+	if type(product.apply) ~= "function" then
 		stats.failed += 1
-		warn(string.format("[Monetization] grant failed for %s: %s", tostring(name), tostring(err)))
+		warn("[Monetization] product requires a pure apply(profile, receipt) reducer")
 		return Enum.ProductPurchaseDecision.NotProcessedYet
 	end
+	local receiptId = tostring(receipt.PurchaseId or "")
+	local committed, isNew = Save.commitReceipt(player, receiptId, function(profile)
+		return product.apply(profile, receipt)
+	end)
+	if not committed then
+		stats.failed += 1
+		return Enum.ProductPurchaseDecision.NotProcessedYet
+	end
+	local alreadyGranted = not isNew
 
 	if alreadyGranted then
 		stats.duplicates += 1
@@ -254,14 +226,6 @@ function Monetization.start()
 		return
 	end
 	started = true
-
-	local ok, store = pcall(function()
-		return DataStoreService:GetDataStore(Monetization.config.receiptStoreName)
-	end)
-	receiptStore = ok and store or nil
-	if not receiptStore then
-		warn("[Monetization] receipt store unavailable; purchases will not be granted")
-	end
 
 	MarketplaceService.ProcessReceipt = processReceipt
 
@@ -300,7 +264,7 @@ function Monetization.describe(): { [string]: any }
 		granted = stats.granted,
 		duplicatesRefused = stats.duplicates,
 		failed = stats.failed,
-		receiptStore = receiptStore ~= nil,
+		receiptStore = "owning-save-profile",
 		started = started,
 	}
 end

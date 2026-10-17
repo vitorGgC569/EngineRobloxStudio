@@ -1,0 +1,63 @@
+{
+  "id": "meteor-rush-persistence-rejoin-e2e",
+  "description": "Require real persistence, remember a server-written profile join counter, restart Play Solo and prove the counter survives and advances. Studio memory-only fallback must fail closed.",
+  "requires": {
+    "playSession": true,
+    "clientBridge": true
+  },
+  "steps": [
+    {
+      "reset": {},
+      "comment": "begin with a clean Play Solo session"
+    },
+    {
+      "attach": {},
+      "fatal": true
+    },
+    {
+      "assert": {
+        "SavePersistent": true,
+        "SaveMemoryOnly": false
+      },
+      "fatal": true,
+      "comment": "memory-only Studio fallback is not persistence evidence"
+    },
+    {
+      "remember": {
+        "attribute": "ProfileJoinCount",
+        "as": "joinCountBefore"
+      },
+      "fatal": true
+    },
+    {
+      "reset": {},
+      "comment": "leave and rejoin through a fresh session"
+    },
+    {
+      "attach": {},
+      "fatal": true
+    },
+    {
+      "assert": {
+        "SavePersistent": true,
+        "SaveMemoryOnly": false,
+        "rememberedDelta": {
+          "ProfileJoinCount": {
+            "from": "joinCountBefore",
+            "expect": ">= 1"
+          }
+        }
+      },
+      "fatal": true
+    }
+  ],
+  "releaseEvidence": [
+    {
+      "id": "profile_survives_rejoin",
+      "probe": "persistence_rejoin",
+      "category": "persistence",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED"
+    }
+  ]
+}

@@ -1,0 +1,67 @@
+{
+  "schemaVersion": 1,
+  "id": "producer-probe",
+  "genre": "simulator",
+  "theme": "reef cave",
+  "pitch": "Quero um simulator de criaturas inspirado em recifes e cavernas, publico 9-15 anos, mobile-first, com loja e sessoes de 12 minutos.",
+  "coreLoop": [
+    "collect",
+    "sell",
+    "upgrade",
+    "unlock",
+    "buy"
+  ],
+  "world": {
+    "topology": "hub_and_zones",
+    "zones": [
+      {
+        "id": "reef",
+        "theme": "reef",
+        "difficulty": 1,
+        "unlockedAtTier": 0
+      },
+      {
+        "id": "cave",
+        "theme": "cave",
+        "difficulty": 2,
+        "unlockedAtTier": 2
+      }
+    ]
+  },
+  "progression": {
+    "kind": "tiered",
+    "tiers": 8,
+    "firstTierSeconds": 25.0,
+    "sessionMinutes": 12.0
+  },
+  "economy": {
+    "currencies": [
+      {
+        "id": "cash",
+        "displayName": "Cash",
+        "earnedBy": [
+          "collect",
+          "sell"
+        ],
+        "spentOn": [
+          "upgrade",
+          "unlock",
+          "buy"
+        ],
+        "premium": false
+      }
+    ]
+  },
+  "systems": [
+    "economy",
+    "progression",
+    "save",
+    "inventory",
+    "analytics",
+    "shop"
+  ],
+  "monetization": [],
+  "tokenSet": "games/producer-probe/tokens/producer-probe-siege.json",
+  "concurrentPlayers": 1,
+  "privateSpace": false
+}

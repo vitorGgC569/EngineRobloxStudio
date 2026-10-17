@@ -154,7 +154,10 @@ def _workspace_argument(parser: argparse.ArgumentParser) -> None:
 def _provider_from_environment() -> RobloxOpenCloudProvider:
     return RobloxOpenCloudProvider(
         RobloxOpenCloudConfig(
-            api_key=os.environ.get("RQE_ROBLOX_OPEN_CLOUD_API_KEY"),
+            api_key=(
+                os.environ.get("ROBLOX_OPEN_CLOUD_KEY")
+                or os.environ.get("RQE_ROBLOX_OPEN_CLOUD_API_KEY")
+            ),
             oauth_token=os.environ.get("RQE_ROBLOX_OAUTH_TOKEN"),
         )
     )

@@ -65,6 +65,7 @@ FAMILIES: dict[str, str] = {
     "pattern": "code shapes worth copying, with the source",
     "federated": "what Roblox own MCP server can do and this bridge cannot",
     "sdk": "what exists in the library: signatures, search by intent, source, skeletons",
+    "reuse": "does it already exist? all four shelves -- engine, library, games, kits",
     "code": "write scripts into the place and reload without a restart",
     "run": "raw Luau, in any context -- the escape hatch",
     "compile": "does this parse, without spending a run",
@@ -110,10 +111,29 @@ FAMILIES: dict[str, str] = {
 #: territory is worse than no map, because it is still believed.
 ROUTES: list[dict[str, Any]] = [
     {
+        "goal": "Before you write a system, find out whether it exists",
+        "when": "always, and especially when you are sure it does not",
+        "steps": [
+            "reuse_search -- ask with a sentence: 'hold a weapon in the hand'",
+            "sdk_search -- narrower: library signatures only, by intent",
+            "sdk_source -- read what you found before deciding it does not fit",
+            "sdk_signature -- what it takes, parsed from the source",
+        ],
+        "note": (
+            "`reuse_search` searches the Forge engine, roblox/lib, every game's "
+            "source and the kits at once. A kit is a *finished game*: an agent "
+            "began writing a zombie system with a complete, running zombie "
+            "survival game one directory away, and hand-wrote `Rig.grip`, a "
+            "viewmodel and a joint poser that all already existed. That was not "
+            "missing information. It was not having asked."
+        ),
+    },
+    {
         "goal": "Find your way around",
         "when": "first contact, or you cannot remember what exists",
         "steps": [
             "rqe_guide -- this map; pass a family name for its tools",
+            "reuse_search -- does the thing you are about to build already exist",
             "engine_capabilities -- what is installed and reachable right now",
             "capabilities_report -- what the engine can and cannot do, with gaps",
             "system_catalogue -- processes, ports and health",

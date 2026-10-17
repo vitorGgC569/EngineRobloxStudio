@@ -39,7 +39,7 @@ class BridgeError(RuntimeError):
 def _exec(source: str, timeout: int = 240) -> Any:
     proc = subprocess.run(
         [sys.executable, str(REPO / "rqe.py"), "studio", "call", "bridge.exec",
-         "--params", json.dumps({"source": source}), "--timeout", str(timeout)],
+         "--allow-arbitrary", "--params", json.dumps({"source": source}), "--timeout", str(timeout)],
         capture_output=True, text=True, timeout=timeout + 30, cwd=str(REPO),
     )
     raw = proc.stdout.strip() or proc.stderr.strip()

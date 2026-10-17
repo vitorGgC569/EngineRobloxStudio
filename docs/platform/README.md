@@ -217,10 +217,11 @@ LocalUser`), and `Instance.new("Player")` is blocked (`lacking capability
 WritePlayer`), so a Player cannot be conjured. Two paths exist and both are
 implemented:
 
-| Path | Player object | Focus stolen | Good for |
+| Path | Player object | Foreground required | Good for |
 |---|---|---|---|
-| `run.start` + `actor.spawn` | no | none | physics, navigation, geometry, budgets |
-| `play_solo` + `actor.attach` | **yes** | one keystroke | the full gameplay loop |
+| `run.start` + `actor.spawn` | no | no | physics, navigation, geometry, budgets |
+| native `StudioTestService` Play + `actor.attach` | **yes** | **no** | the full gameplay loop |
+| legacy F5 Play fallback | **yes** | yes | compatibility only; explicit opt-in |
 
 `actor.spawn` builds an R15 rig from a `HumanoidDescription` and drops it into
 the world: measured falling from y=6.5 to y=4.37 and settling on Slate, then
@@ -229,9 +230,12 @@ walking 13.5 studs under `Humanoid:MoveTo`. Real physics, no Player.
 `actor.attach` binds every actor command to a Play Solo player's own character —
 the body the game assigned `PlotA` and `Currency: 1000` to.
 
-Studio ignores synthesised keystrokes (`PostMessage` was measured doing nothing
-to a minimised window), so Play Solo needs one real foreground keypress. Every
-other action is scripted.
+Historically Play Solo was started with a foreground F5 because
+`PostMessage` was measured doing nothing to a minimised Studio window. That
+path is now compatibility-only. Current automation starts/stops Play and
+multiplayer tests through the plugin-only `StudioTestService` surface; the
+normal background path fails closed instead of silently falling back to
+foreground keystrokes.
 
 **Reaching the client.** Prompt activation and GUI clicks are client-only, and a
 plugin only ever lives in the edit and server DataModels — measured:
@@ -268,12 +272,13 @@ gameplay state survives, so the second pass began already owning the pack and
 the purchase assertion failed for the wrong reason. Scenarios now open with a
 `reset` step.
 
-Reset is a **full Studio restart**, not a Shift+F5/F5 cycle. Measured why: after
-stopping and restarting a play session inside one Studio process, both bridge
-sessions came back reporting `edit` while a play session was visibly running on
-screen — the plugin is not reliably loaded into the play DataModel on a second
-cycle, so gameplay commands had nowhere correct to go. Restarting is slower and
-it is deterministic: two consecutive isolated runs, 11/11 steps each.
+Historical isolation used a **full Studio restart** because the old
+Shift+F5/F5 lifecycle could leave bridge sessions in the wrong context after a
+second cycle. The current lifecycle uses `StudioTestService` test identities
+and waits for context transitions explicitly. Routine playtest/gametest flows
+reuse a compatible persistent edit session through `ensure_studio_session()`;
+cold restart is now an explicit recovery/bootstrap operation rather than the
+normal reset path.
 
 That diagnosis came from a screenshot. Logs showed two `edit` sessions and
 nothing else; one frame of the Studio window showed the game running with
@@ -298,7 +303,7 @@ its place the first time it was needed.
 | **Agent plays the game** (walk, interact, buy) | **`E2E_VALIDATED`** (10/10 steps) |
 | Objective reachability by navmesh | `RUNTIME_VALIDATED` (`world.path`, with a control probe) |
 | GUI tree / GUI click | implemented, **not exercised** |
-| Screenshots as evidence | `NOT_VALIDATED` — window grabs only |
+| Screenshots as evidence | `STATICALLY_VALIDATED` native `StudioCaptureService` pipeline; live background revalidation required after plugin 2.1 reload. Legacy window grabs are opt-in fallback only. |
 | Multiplayer, persistence | `NOT_VALIDATED` — Python fixture only |
 | The legacy 38-probe audit's 100.0 scores | fixture-backed; unchanged by this slice |
 

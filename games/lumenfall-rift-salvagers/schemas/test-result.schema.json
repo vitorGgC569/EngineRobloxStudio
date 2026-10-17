@@ -1,0 +1,34 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rqe.local/schemas/test-result.v1.schema.json",
+  "title": "Roblox Quality Engine Evidence Item v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "id", "probe", "category", "status", "severity", "message", "details",
+    "source", "validationLevel", "observedAt", "runId", "buildHash",
+    "coverage", "conclusive", "truncated"
+  ],
+  "properties": {
+    "id": {"type": "string", "minLength": 1},
+    "probe": {"type": "string", "minLength": 1},
+    "category": {"type": "string", "minLength": 1},
+    "status": {"enum": ["PASS", "WARN", "FAIL"]},
+    "severity": {"enum": ["critical", "major", "minor", "info"]},
+    "message": {"type": "string", "minLength": 1},
+    "details": {"type": "object"},
+    "source": {"type": "string", "minLength": 1},
+    "validationLevel": {
+      "enum": [
+        "NOT_VALIDATED", "STATICALLY_VALIDATED", "RUNTIME_VALIDATED",
+        "VISUALLY_VALIDATED", "E2E_VALIDATED"
+      ]
+    },
+    "observedAt": {"type": ["string", "null"]},
+    "runId": {"type": ["string", "null"]},
+    "buildHash": {"type": ["string", "null"]},
+    "coverage": {"type": ["number", "null"], "minimum": 0, "maximum": 1},
+    "conclusive": {"type": "boolean"},
+    "truncated": {"type": "boolean"}
+  }
+}

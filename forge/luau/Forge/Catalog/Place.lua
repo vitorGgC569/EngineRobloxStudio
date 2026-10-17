@@ -158,6 +158,37 @@ function Place.template(assetId: number): Instance?
 		instance.Archivable = true
 	end
 
+	--[[
+		Texture packs go, for a reason that is not cosmetic.
+
+		Catalogue parts arrive carrying `SurfaceAppearance` -- the pack's PBR
+		textures, owned by the pack's uploader. On every save of the place,
+		Studio republishes those packs, and in a place that cannot be
+		published (memory-only Studio, an evaluation place) the save answers
+		`Failed to upload TexturePack ... HTTP Status Code: 500`. That line
+		lands in the server log at *error* severity, fails every
+		runtime-cleanliness gate that reads the log, and points at nothing in
+		the game's code. A missing `MaterialVariant` behind a non-empty name
+		draws the same publish attempt, so the name is cleared too.
+
+		The template is a shape and colour source -- `Tint` re-colours it on
+		the way out -- so the pack was rarely the thing being looked at.
+		Stripped once per asset here, instead of behind every fetch.
+	]]
+	local function stripTexturePacks(instance: Instance)
+		if instance:IsA("SurfaceAppearance") then
+			instance:Destroy()
+			return
+		end
+		if instance:IsA("BasePart") and instance.MaterialVariant ~= "" then
+			instance.MaterialVariant = ""
+		end
+	end
+	stripTexturePacks(first)
+	for _, instance in first:GetDescendants() do
+		stripTexturePacks(instance)
+	end
+
 	loaded[assetId] = first;
 	(container :: Instance):Destroy()
 	return first

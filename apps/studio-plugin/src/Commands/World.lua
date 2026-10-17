@@ -18,10 +18,9 @@ local function collectIgnored(paths: { string }?): { Instance }
 	local ignored = {}
 	if paths then
 		for _, path in ipairs(paths) do
-			local ok, instance = pcall(Resolve.instance, path)
-			if ok then
-				table.insert(ignored, instance)
-			end
+			-- Resolve raises. Swallowing that used to drop the exclude and
+			-- still return a hit, which is a measurement of the wrong set.
+			table.insert(ignored, Resolve.instance(path))
 		end
 	end
 	return ignored

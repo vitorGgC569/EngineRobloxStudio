@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "id": "rock",
+  "result": "rock",
+  "units": "studs",
+  "steps": [
+    {
+      "op": "sphere",
+      "name": "rock",
+      "radius": 1,
+      "segments": 12,
+      "rings": 8
+    },
+    {
+      "op": "scale",
+      "target": "rock",
+      "factor": [
+        1.5,
+        1,
+        1.3
+      ]
+    },
+    {
+      "op": "displace",
+      "target": "rock",
+      "strength": 0.25,
+      "scale": 0.7,
+      "detail": 2
+    },
+    {
+      "op": "uv_unwrap",
+      "target": "rock",
+      "method": "smart"
+    },
+    {
+      "op": "triangulate",
+      "target": "rock"
+    }
+  ],
+  "metadata": {
+    "author": "Aetherworks",
+    "license": "project-original",
+    "purpose": "finished modular industrial art"
+  }
+}

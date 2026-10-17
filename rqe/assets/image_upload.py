@@ -91,13 +91,18 @@ def upload(bridge: Any, path: Path, name: str, size: int = DEFAULT_SIZE,
            timeout: float = 240.0) -> dict[str, Any]:
     """Publish one image and return what Roblox said about it."""
     pixels, width, height = prepare(path, size)
-    result = bridge.call("assets.create_image", {
-        "name": name,
-        "description": f"{path.name} via rqe.assets.image_upload",
-        "width": width,
-        "height": height,
-        "pixels": pixels,
-    }, timeout=timeout)
+    with bridge.lease_scope(
+        agent_id="asset-image-upload",
+        context="edit",
+        ttl_seconds=max(30.0, min(timeout + 30.0, 300.0)),
+    ):
+        result = bridge.call("assets.create_image", {
+            "name": name,
+            "description": f"{path.name} via rqe.assets.image_upload",
+            "width": width,
+            "height": height,
+            "pixels": pixels,
+        }, timeout=timeout)
 
     entry = {
         "assetId": result.get("assetId"),

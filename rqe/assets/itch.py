@@ -32,8 +32,12 @@ lets that decision be made later rather than reconstructed.
 
 from __future__ import annotations
 
+import hashlib
+import ipaddress
 import json
+import os
 import re
+import tempfile
 import time
 import urllib.error
 import urllib.parse
@@ -41,6 +45,13 @@ import urllib.request
 from html import unescape
 from pathlib import Path
 from typing import Any
+
+from ..http_safety import HttpBoundaryError, json_object_limited, read_limited
+
+
+MAX_PAGE_RESPONSE_BYTES = 8 * 1024 * 1024
+MAX_API_RESPONSE_BYTES = 4 * 1024 * 1024
+MAX_DOWNLOAD_BYTES = 2 * 1024 * 1024 * 1024
 
 CATALOGUE = Path("forge/kits/itch-assets.json")
 
@@ -151,7 +162,11 @@ def _get(url: str, timeout: float = 30.0, tries: int = 4) -> bytes:
     for attempt in range(tries):
         try:
             with urllib.request.urlopen(request, timeout=timeout) as response:
-                return response.read()
+                return read_limited(
+                    response,
+                    MAX_PAGE_RESPONSE_BYTES,
+                    label="itch.io page response",
+                )
         except urllib.error.HTTPError as error:
             #: 429 and 5xx are worth waiting for. A 404 is an answer.
             if error.code != 429 and error.code < 500:
@@ -196,7 +211,7 @@ def _walk(tag: str, pages: int, found: list[dict[str, Any]],
     for page in range(1, pages + 1):
         try:
             payload = json.loads(_get(BROWSE.format(tag=tag, page=page)))
-        except (urllib.error.URLError, OSError, json.JSONDecodeError) as error:
+        except (urllib.error.URLError, OSError, json.JSONDecodeError, HttpBoundaryError) as error:
             progress(f"  {tag} page {page}: {error}")
             break
 
@@ -303,7 +318,7 @@ def inspect(pack: dict[str, Any], timeout: float = 30.0) -> dict[str, Any]:
     """Fetch one pack's page and read its terms. Still no download."""
     try:
         html = _get(pack["url"], timeout=timeout).decode("utf-8", "replace")
-    except (urllib.error.URLError, OSError) as error:
+    except (urllib.error.URLError, OSError, HttpBoundaryError) as error:
         return {**pack, "licence": {"verdict": "unreachable",
                                     "names": [], "forbids": [],
                                     "quotes": [str(error)[:120]]}}
@@ -420,14 +435,18 @@ def _authed(url: str, key: str, timeout: float = 30.0) -> Any:
     request = urllib.request.Request(
         url, headers={"Authorization": key, **AGENT})
     with urllib.request.urlopen(request, timeout=timeout) as response:
-        return json.load(response)
+        return json_object_limited(
+            response,
+            MAX_API_RESPONSE_BYTES,
+            label="itch.io API response",
+        )
 
 
 def uploads(game_id: str | int, key: str, timeout: float = 30.0) -> list[dict[str, Any]]:
     """Every file a pack offers, with size and hash. No download."""
     try:
         payload = _authed(UPLOADS.format(game=game_id), key, timeout)
-    except (urllib.error.HTTPError, urllib.error.URLError, OSError):
+    except (urllib.error.HTTPError, urllib.error.URLError, OSError, HttpBoundaryError):
         return []
     return payload.get("uploads") or []
 
@@ -464,8 +483,42 @@ def measure(packs: list[dict[str, Any]], key: str | None = None,
             "files": sum(len(r["uploads"]) for r in rows)}
 
 
-def fetch_upload(upload_id: int | str, destination: Path, key: str,
-                 timeout: float = 300.0) -> int:
+def _validate_download_url(value: str) -> str:
+    parsed = urllib.parse.urlsplit(str(value or ""))
+    if (
+        parsed.scheme.lower() != "https"
+        or not parsed.hostname
+        or parsed.username is not None
+        or parsed.password is not None
+        or parsed.fragment
+    ):
+        raise RuntimeError("itch download redirect is not a credential-free HTTPS URL")
+    try:
+        if parsed.port not in (None, 443):
+            raise RuntimeError("itch download redirect uses a non-HTTPS port")
+    except ValueError as exc:
+        raise RuntimeError("itch download redirect has an invalid port") from exc
+    host = parsed.hostname.lower()
+    if host == "localhost" or host.endswith(".localhost"):
+        raise RuntimeError("itch download redirect points at loopback")
+    try:
+        address = ipaddress.ip_address(host)
+    except ValueError:
+        address = None
+    if address is not None and not address.is_global:
+        raise RuntimeError("itch download redirect points at a non-public address")
+    return urllib.parse.urlunsplit(parsed)
+
+
+def fetch_upload(
+    upload_id: int | str,
+    destination: Path,
+    key: str,
+    timeout: float = 300.0,
+    *,
+    expected_size: int | None = None,
+    expected_md5: str | None = None,
+) -> int:
     """Download one file. Returns bytes written."""
     opener = urllib.request.build_opener(_NoRedirect)
     request = urllib.request.Request(
@@ -474,26 +527,78 @@ def fetch_upload(upload_id: int | str, destination: Path, key: str,
 
     target: str | None = None
     try:
-        opener.open(request, timeout=timeout)
+        with opener.open(request, timeout=timeout):
+            pass
     except urllib.error.HTTPError as error:
-        if error.code in (301, 302, 303, 307, 308):
-            target = str(error.reason)
-        else:
-            raise
+        try:
+            if error.code in (301, 302, 303, 307, 308):
+                target = str(error.headers.get("Location") or error.reason)
+            else:
+                raise
+        finally:
+            error.close()
     if not target:
         raise RuntimeError(f"upload {upload_id}: no download redirect")
+    target = _validate_download_url(target)
+
+    size_limit = MAX_DOWNLOAD_BYTES
+    if expected_size is not None:
+        if isinstance(expected_size, bool) or not isinstance(expected_size, int) or expected_size < 0:
+            raise RuntimeError("itch upload size metadata is invalid")
+        if expected_size > MAX_DOWNLOAD_BYTES:
+            raise RuntimeError(f"itch upload exceeds the {MAX_DOWNLOAD_BYTES}-byte safety limit")
+        if expected_size > 0:
+            size_limit = expected_size
+    expected_digest = str(expected_md5 or "").lower()
+    if expected_digest and re.fullmatch(r"[0-9a-f]{32}", expected_digest) is None:
+        raise RuntimeError("itch upload MD5 metadata is invalid")
 
     #: Clean request. The signed URL carries its own authorisation and the itch
     #: key would be misread as an AWS one.
     written = 0
     destination.parent.mkdir(parents=True, exist_ok=True)
     plain = urllib.request.Request(target, headers=AGENT)
-    with urllib.request.urlopen(plain, timeout=timeout) as response:
-        with destination.open("wb") as handle:
-            while True:
-                chunk = response.read(1 << 16)
-                if not chunk:
-                    break
-                handle.write(chunk)
-                written += len(chunk)
+    descriptor, temporary_name = tempfile.mkstemp(
+        prefix=f".{destination.name}.",
+        suffix=".part",
+        dir=destination.parent,
+    )
+    temporary = Path(temporary_name)
+    digest = hashlib.md5()
+    try:
+        with os.fdopen(descriptor, "wb") as handle:
+            with urllib.request.urlopen(plain, timeout=timeout) as response:
+                declared_raw = response.headers.get("Content-Length")
+                if declared_raw is not None:
+                    try:
+                        declared = int(declared_raw)
+                    except ValueError as exc:
+                        raise RuntimeError("itch download returned an invalid Content-Length") from exc
+                    if declared < 0 or declared > size_limit:
+                        raise RuntimeError("itch download exceeds its declared safety limit")
+                    if expected_size and declared != expected_size:
+                        raise RuntimeError(
+                            f"itch download size changed: expected {expected_size}, server declared {declared}"
+                        )
+                while True:
+                    chunk = response.read(1 << 16)
+                    if not chunk:
+                        break
+                    written += len(chunk)
+                    if written > size_limit:
+                        raise RuntimeError("itch download exceeded its safety limit while streaming")
+                    handle.write(chunk)
+                    digest.update(chunk)
+            handle.flush()
+            os.fsync(handle.fileno())
+        if expected_size and written != expected_size:
+            raise RuntimeError(f"itch download size mismatch: got {written}, expected {expected_size}")
+        if expected_digest and digest.hexdigest() != expected_digest:
+            raise RuntimeError(
+                f"itch download MD5 mismatch: got {digest.hexdigest()}, expected {expected_digest}"
+            )
+        os.replace(temporary, destination)
+    except BaseException:
+        temporary.unlink(missing_ok=True)
+        raise
     return written

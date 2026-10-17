@@ -1,0 +1,60 @@
+{
+  "schemaVersion": 1,
+  "continuous": true,
+  "domains": {
+    "structural": {
+      "targetScore": 100,
+      "focus": "required files and project topology"
+    },
+    "visual": {
+      "targetScore": 95,
+      "focus": "composition, lighting, readable landmarks and visual snapshots"
+    },
+    "ui": {
+      "targetScore": 95,
+      "focus": "hierarchy, legibility, responsive layout and interaction feedback"
+    },
+    "geometry": {
+      "targetScore": 100,
+      "focus": "support, overlaps, floating and buried objects"
+    },
+    "navigation": {
+      "targetScore": 100,
+      "focus": "walkable routes from spawn to every objective"
+    },
+    "gameplay": {
+      "targetScore": 95,
+      "focus": "usable interactions and server-authoritative progression"
+    },
+    "persistence": {
+      "targetScore": 100,
+      "focus": "reconnect-safe player progress"
+    },
+    "multiplayer": {
+      "targetScore": 90,
+      "focus": "plot and inventory isolation"
+    },
+    "performance": {
+      "targetScore": 95,
+      "focus": "frame time, memory and instance budgets"
+    },
+    "security": {
+      "targetScore": 100,
+      "focus": "asset provenance, script scan and remote validation"
+    },
+    "runtime": {
+      "targetScore": 100,
+      "focus": "zero console errors and stable sessions"
+    },
+    "observability": {
+      "targetScore": 100,
+      "focus": "the run could prove it was talking to a live Studio session"
+    }
+  },
+  "visualReview": {
+    "requiredSnapshots": [
+      "play-desktop"
+    ],
+    "minimumRawVisualScore": 95
+  }
+}

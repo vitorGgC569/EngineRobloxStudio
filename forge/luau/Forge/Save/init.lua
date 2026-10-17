@@ -37,6 +37,7 @@ local Save = {}
 Save.onLoaded = Signal.new() -- (player, profile)
 Save.onSaving = Signal.new() -- (player, profile) — last chance to write into it
 Save.onReleased = Signal.new() -- (player)
+Save.onFailed = Signal.new() -- (player, reason); no writable fallback on failure
 
 local config = {
 	store = "ForgeProfiles",
@@ -47,12 +48,18 @@ local config = {
 	retries = 4,
 	sessionLock = true,
 	enabled = true,
+	allowStudioMemory = true,
+	lockTimeout = 300,
+	shutdownTimeout = 25,
 }
 
 local store: DataStore? = nil
 local profiles: { [Player]: any } = {}
 local loading: { [Player]: boolean } = {}
 local started = false
+local closing = false
+local sessions: { [Player]: any } = {}
+local failures: { [Player]: string } = {}
 
 -- In Studio without API access, DataStore calls fail. Rather than spraying
 -- errors, Forge falls back to memory so the whole game still runs — and says
@@ -60,17 +67,21 @@ local started = false
 local memoryOnly = false
 
 function Save.configure(options: any)
+	assert(not started, "[Save] configure must run before start")
 	for key, value in options do
 		config[key] = value
 	end
+	assert(config.autosaveInterval < config.lockTimeout / 2, "[Save] autosave must renew the lock before expiry")
+	memoryOnly = not config.enabled
+	store = nil
 	if config.enabled then
 		local ok, result = pcall(function()
 			return DataStoreService:GetDataStore(config.store)
 		end)
 		store = ok and result or nil
 		if not ok then
-			memoryOnly = true
-			warn("[Save] DataStore unavailable; running in MEMORY-ONLY mode. Nothing will persist.")
+			memoryOnly = RunService:IsStudio() and config.allowStudioMemory == true
+			warn(if memoryOnly then "[Save] Studio MEMORY-ONLY mode. Nothing will persist." else "[Save] DataStore unavailable; profile loads will be refused.")
 		else
 			-- `GetDataStore` succeeds even with API access switched off; only the
 			-- calls fail. Without this one probe every player load burns the full
@@ -80,8 +91,8 @@ function Save.configure(options: any)
 				(store :: DataStore):GetAsync("__forge_probe")
 			end)
 			if not reachable then
-				memoryOnly = true
-				warn("[Save] DataStore is not reachable (Studio API access off?); running in MEMORY-ONLY mode. Nothing will persist.")
+				memoryOnly = RunService:IsStudio() and config.allowStudioMemory == true
+				warn(if memoryOnly then "[Save] Studio MEMORY-ONLY mode. Nothing will persist." else "[Save] DataStore probe failed; loads require a successful transaction.")
 			end
 		end
 	else
@@ -114,17 +125,15 @@ end
 
 local function migrate(data: any)
 	local from = data.__version or 1
-	if from >= config.version then
-		data.__version = config.version
+	assert(type(from) == "number" and from % 1 == 0 and from >= 1, "invalid profile version")
+	assert(from <= config.version, "profile was written by a newer schema; upgrade required")
+	if from == config.version then
 		return
 	end
 	for v = from + 1, config.version do
 		local step = config.migrations[v]
 		if step then
-			local ok, err = pcall(step, data)
-			if not ok then
-				warn(string.format("[Save] migration to v%d failed: %s", v, tostring(err)))
-			end
+			step(data) -- exceptions abort UpdateAsync; never stamp partial migrations
 		end
 	end
 	data.__version = config.version
@@ -231,67 +240,62 @@ local function retry<T>(label: string, fn: () -> T): (boolean, T?)
 end
 
 -- =============================== load / save ================================
-local jobId = game.JobId ~= "" and game.JobId or "studio"
+local function failProfile(player: Player, reason: string)
+	failures[player] = reason
+	warn(string.format("[Save] %s: %s", player.Name, reason))
+	Save.onFailed:Fire(player, reason)
+end
 
 local function load(player: Player): any
-	local data: any = nil
-
-	if store and not memoryOnly then
-		local ok, result = retry("load " .. player.Name, function()
-			return (store :: DataStore):UpdateAsync(keyFor(player), function(old)
-				if old and config.sessionLock and old.__lock then
-					-- A lock older than five minutes is a crashed server, not a
-					-- live one. Without this check a crash locks a player out.
-					local age = os.time() - (old.__lockTime or 0)
-					if old.__lock ~= jobId and age < 300 then
-						return nil -- refuse: another server holds it
-					end
-				end
-				local next_ = old or {}
-				next_.__lock = jobId
-				next_.__lockTime = os.time()
-				return next_
-			end)
-		end)
-		if ok and result then
-			data = result
-		elseif ok then
-			warn(string.format("[Save] %s is locked by another server; using a temporary profile", player.Name))
-		end
+	if memoryOnly then
+		local data = deepCopy(config.template)
+		data.__version = config.version
+		return data
 	end
-
-	-- Integrity gate. A profile that does not match its own checksum is not
-	-- handed to the game: the newest backup that verifies is used instead, and
-	-- the damaged copy is kept under `__quarantine` so it can be inspected
-	-- rather than overwritten on the next autosave.
-	if data and data.__checksum and not verify(data) then
-		warn(string.format("[Save] %s: profile failed its checksum", player.Name))
-		local recovered = nil
-		for _, backup in (data.__backups or {}) do
-			if verify(backup) then
-				recovered = deepCopy(backup)
-				break
+	if not store then
+		failProfile(player, "DATASTORE_UNAVAILABLE")
+		return nil
+	end
+	local token = HttpService:GenerateGUID(false)
+	local reason = "LOAD_FAILED"
+	local ok, result = retry("load " .. player.Name, function()
+		return (store :: DataStore):UpdateAsync(keyFor(player), function(old)
+			if old ~= nil and type(old) ~= "table" then
+				reason = "CORRUPT_RECORD"
+				return nil
 			end
-		end
-		if recovered then
-			warn(string.format(
-				"[Save] %s: rolled back to a backup from %s",
-				player.Name, os.date("!%Y-%m-%d %H:%M", recovered.__savedAt or 0)
-			))
-			recovered.__quarantine = { reason = "checksum", at = os.time() }
-			recovered.__backups = data.__backups
-			data = recovered
-		else
-			warn(string.format("[Save] %s: no usable backup; starting from the template", player.Name))
-			data = { __quarantine = { reason = "checksum-nobackup", at = os.time() } }
-		end
+			if old and old.__lock and old.__lock ~= token
+				and os.time() - (old.__lockTime or 0) < config.lockTimeout then
+				reason = "SESSION_LOCKED"
+				return nil
+			end
+			local next_ = deepCopy(old or {})
+			-- Leave corrupt data intact for explicit support recovery. Automatic
+			-- rollback can also undo paid rewards while retaining their receipts.
+			if next_.__checksum and not verify(next_) then
+				reason = "CHECKSUM_FAILED"
+				return nil
+			end
+			local migrated, migrationError = pcall(migrate, next_)
+			if not migrated then
+				reason = "MIGRATION_REFUSED: " .. tostring(migrationError)
+				return nil
+			end
+			reconcile(next_, config.template)
+			next_.__fence = if next_.__lock == token then next_.__fence else (next_.__fence or 0) + 1
+			next_.__lock = token
+			next_.__lockTime = os.time()
+			next_.__checksum = checksum(next_)
+			return next_
+		end)
+	end)
+	if not ok or not result or result.__lock ~= token then
+		failProfile(player, reason)
+		return nil
 	end
-
-	data = data or {}
-	migrate(data)
-	reconcile(data, config.template)
-	data.__version = config.version
-	return data
+	sessions[player] = { token = token, fence = result.__fence, active = true, busy = false }
+	failures[player] = nil
+	return result
 end
 
 --[[
@@ -325,7 +329,7 @@ end
 ]]
 function Save.rollback(player: Player, index: number): boolean
 	local profile = profiles[player]
-	if not profile then
+	if not profile or (sessions[player] and sessions[player].busy) then
 		return false
 	end
 	local backup = (profile.__backups or {})[index]
@@ -334,6 +338,14 @@ function Save.rollback(player: Player, index: number): boolean
 	end
 	if not verify(backup) then
 		warn(string.format("[Save] %s: backup %d does not verify; refusing", player.Name, index))
+		return false
+	end
+	-- A backup predating a paid grant cannot undo the reward and keep the
+	-- receipt consumed, or erase the receipt and permit a duplicate purchase.
+	if HttpService:JSONEncode(profile.__receipts or {}) ~= HttpService:JSONEncode(backup.__receipts or {}) then
+		return false
+	end
+	if backup.__version ~= config.version then
 		return false
 	end
 
@@ -357,21 +369,27 @@ function Save.rollback(player: Player, index: number): boolean
 	return true
 end
 
-function Save.write(player: Player, release: boolean?): boolean
+local function writeUnlocked(player: Player, release: boolean?, override: any?): boolean
 	local profile = profiles[player]
 	if not profile then
 		return false
 	end
-	Save.onSaving:Fire(player, profile)
-
-	if memoryOnly or not store then
+	local session = sessions[player]
+	if memoryOnly or not store or not session or not session.active then
 		return false
 	end
 
-	local payload = deepCopy(profile)
+	local payload = deepCopy(override or profile)
 	payload.__version = config.version
-	payload.__lock = release and nil or jobId
-	payload.__lockTime = os.time()
+	if release then
+		payload.__lock = nil
+		payload.__lockTime = nil
+	else
+		payload.__lock = session.token
+		payload.__lockTime = os.time()
+	end
+	payload.__fence = session.fence
+	payload.__writeId = HttpService:GenerateGUID(false)
 	payload.__savedAt = os.time()
 
 	-- Rotate history, then checksum. The checksum covers the profile's own
@@ -408,17 +426,117 @@ function Save.write(player: Player, release: boolean?): boolean
 		end
 	end
 
-	local written = retry("save " .. player.Name, function()
-		(store :: DataStore):SetAsync(keyFor(player), payload)
+	local written, result = retry("save " .. player.Name, function()
+		return (store :: DataStore):UpdateAsync(keyFor(player), function(old)
+			-- Retry after an uncertain response returns the committed operation.
+			if type(old) == "table" and old.__writeId == payload.__writeId then
+				return old
+			end
+			if type(old) ~= "table" or old.__lock ~= session.token or old.__fence ~= session.fence then
+				return nil
+			end
+			return deepCopy(payload)
+		end)
+	end)
+	if written and result and result.__writeId == payload.__writeId then
+		profile.__backups = kept
+		if release then
+			session.active = false
+		end
+		return true
+	end
+	-- After an uncertain write, allowing another snapshot could erase a
+	-- purchase that did commit. Require recovery through a fresh load.
+	session.active = false
+	failProfile(player, if written then "SESSION_LOST" else "WRITE_UNCERTAIN")
+	return false
+end
+
+function Save.write(player: Player, release: boolean?): boolean
+	local session = sessions[player]
+	if not session or not session.active or session.busy then
+		return false
+	end
+	session.busy = true
+	local ok, written = pcall(function()
+		Save.onSaving:Fire(player, profiles[player])
+		return writeUnlocked(player, release)
+	end)
+	session.busy = false
+	if not ok then
+		failProfile(player, "WRITE_FAILED: " .. tostring(written))
+	end
+	return ok and written == true
+end
+
+-- Reducers may run more than once. They must only edit their argument, must
+-- not yield, and must not grant instances, fire remotes or mutate other state.
+local function reduce(fn: (any) -> any, data: any): boolean
+	local thread = coroutine.create(fn)
+	local ok, accepted = coroutine.resume(thread, data)
+	if coroutine.status(thread) ~= "dead" then
+		coroutine.close(thread)
+		return false
+	end
+	return ok and accepted ~= false
+end
+
+function Save.commitReceipt(player: Player, receiptId: string, reducer: (any) -> any): (boolean, boolean)
+	local profile = profiles[player]
+	local session = sessions[player]
+	if type(receiptId) ~= "string" or receiptId == "" or not profile or not session
+		or not session.active or session.busy or memoryOnly then
+		return false, false
+	end
+	if (profile.__receipts or {})[receiptId] then
+		return true, false
+	end
+	session.busy = true
+	local ok, committed = pcall(function()
+		Save.onSaving:Fire(player, profile)
+		local payload = deepCopy(profile)
+		if not reduce(reducer, payload) then
+			return false
+		end
+		payload.__receipts = payload.__receipts or {}
+		payload.__receipts[receiptId] = { at = os.time() }
+		if not writeUnlocked(player, false, payload) then
+			return false
+		end
+		-- Gameplay may have accumulated more unsaved progress while the store
+		-- yielded. Apply the same pure reward to that current state, preserving
+		-- the profile reference held by systems observing Save.onLoaded.
+		if not reduce(reducer, profile) then
+			session.active = false
+			profiles[player] = nil
+			failProfile(player, "RECEIPT_LOCAL_RECONCILIATION_FAILED")
+			return false
+		end
+		profile.__receipts = deepCopy(payload.__receipts)
 		return true
 	end)
-	if written then
-		profile.__backups = kept
+	session.busy = false
+	if not ok then
+		failProfile(player, "RECEIPT_FAILED: " .. tostring(committed))
 	end
-	return written
+	return ok and committed == true, ok and committed == true
+end
+
+function Save.status(player: Player): any
+	local session = sessions[player]
+	return {
+		loaded = profiles[player] ~= nil,
+		persistent = session ~= nil and session.active and not memoryOnly,
+		busy = session ~= nil and session.busy,
+		memoryOnly = memoryOnly,
+		error = failures[player],
+	}
 end
 
 function Save.get(player: Player): any?
+	if sessions[player] and not sessions[player].active then
+		return nil
+	end
 	return profiles[player]
 end
 
@@ -443,7 +561,7 @@ function Save.observe(fn: (Player, any) -> ()): any
 end
 
 function Save.isLoaded(player: Player): boolean
-	return profiles[player] ~= nil
+	return Save.get(player) ~= nil
 end
 
 -- Waits for the profile, with a timeout. Any system that needs a profile on
@@ -451,7 +569,7 @@ end
 function Save.await(player: Player, timeout: number?): any?
 	local deadline = os.clock() + (timeout or 15)
 	while os.clock() < deadline do
-		local profile = profiles[player]
+		local profile = Save.get(player)
 		if profile then
 			return profile
 		end
@@ -466,7 +584,7 @@ end
 
 -- ============================== lifecycle ===================================
 local function handlePlayer(player: Player)
-	if profiles[player] or loading[player] then
+	if closing or profiles[player] or loading[player] then
 		return
 	end
 	loading[player] = true
@@ -475,11 +593,16 @@ local function handlePlayer(player: Player)
 	loading[player] = nil
 
 	-- they may have left while we were loading
-	if not player.Parent then
+	if not profile then
 		return
 	end
 
 	profiles[player] = profile
+	if not player.Parent or closing then
+		Save.write(player, true)
+		profiles[player] = nil
+		return
+	end
 	Save.onLoaded:Fire(player, profile)
 end
 
@@ -487,9 +610,36 @@ local function releasePlayer(player: Player)
 	if not profiles[player] then
 		return
 	end
-	Save.write(player, true)
-	profiles[player] = nil
-	Save.onReleased:Fire(player)
+	local deadline = os.clock() + config.shutdownTimeout
+	while sessions[player] and sessions[player].busy and os.clock() < deadline do
+		task.wait(0.05)
+	end
+	if memoryOnly or Save.write(player, true) then
+		profiles[player] = nil
+		sessions[player] = nil
+		Save.onReleased:Fire(player)
+	end
+end
+
+function Save.flush(timeoutSeconds: number?): any
+	closing = true
+	local deadline = os.clock() + (timeoutSeconds or config.shutdownTimeout)
+	local pending = 0
+	local failed = 0
+	for player in profiles do
+		pending += 1
+		task.spawn(function()
+			releasePlayer(player)
+			if profiles[player] then
+				failed += 1
+			end
+			pending -= 1
+		end)
+	end
+	while (pending > 0 or next(loading) ~= nil) and os.clock() < deadline do
+		task.wait(0.05)
+	end
+	return { complete = pending == 0 and failed == 0 and next(loading) == nil, pending = pending, failed = failed }
 end
 
 function Save.start()
@@ -508,8 +658,9 @@ function Save.start()
 	Players.PlayerRemoving:Connect(releasePlayer)
 
 	task.spawn(function()
-		while true do
+		while not closing do
 			task.wait(config.autosaveInterval)
+			if closing then break end
 			for player in profiles do
 				Save.write(player)
 			end
@@ -517,10 +668,10 @@ function Save.start()
 	end)
 
 	game:BindToClose(function()
-		for player in profiles do
-			task.spawn(releasePlayer, player)
+		local result = Save.flush()
+		if not result.complete then
+			warn("[Save] shutdown did not flush every profile before its deadline")
 		end
-		task.wait(RunService:IsStudio() and 1 or 4)
 	end)
 end
 

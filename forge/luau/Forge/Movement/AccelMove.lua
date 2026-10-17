@@ -26,16 +26,37 @@ function AccelMove.new(config: {
 	accelMoving: number?,
 	accelStopping: number?,
 }): Self
+	-- A negative max speed is truthy, so `or 16` would keep it. step then
+	-- aims backward and the velocity points the wrong way.
+	local maxSpeed = if config.maxSpeed ~= nil then config.maxSpeed else 16
+	assert(
+		type(maxSpeed) == "number" and maxSpeed > 0 and maxSpeed < math.huge,
+		"maxSpeed must be a finite number > 0"
+	)
+	-- A negative moving rate is truthy, so `or 8` would keep it. step then
+	-- uses 1 - exp(-rate * dt), and a negative rate pushes velocity away
+	-- from the target.
+	local accelMoving = if config.accelMoving ~= nil then config.accelMoving else 8
+	assert(type(accelMoving) == "number" and accelMoving >= 0, "accelMoving must be a number >= 0")
+	-- A negative braking rate is truthy, so `or 6` would keep it. step uses
+	-- that rate when the wish is zero, and a negative factor pushes velocity
+	-- away from rest.
+	local accelStopping = if config.accelStopping ~= nil then config.accelStopping else 6
+	assert(type(accelStopping) == "number" and accelStopping >= 0, "accelStopping must be a number >= 0")
 	return setmetatable({
-		maxSpeed = config.maxSpeed or 16,
-		accelMoving = config.accelMoving or 8,
-		accelStopping = config.accelStopping or 6,
+		maxSpeed = maxSpeed,
+		accelMoving = accelMoving,
+		accelStopping = accelStopping,
 		velocity = { x = 0, z = 0 },
 	}, AccelMove)
 end
 
 -- desiredDir need not be normalized; zero means "brake".
 function AccelMove.step(self: Self, desiredDir: Vec2, dt: number): Vec2
+	-- A NaN dt makes 1 - exp(-rate * dt) NaN, and every later step stays NaN.
+	if type(dt) ~= "number" or dt ~= dt or dt < 0 or dt >= math.huge then
+		return { x = self.velocity.x, z = self.velocity.z }
+	end
 	local dirLenSq = desiredDir.x * desiredDir.x + desiredDir.z * desiredDir.z
 	local targetX, targetZ = 0, 0
 	if dirLenSq > 1e-8 then

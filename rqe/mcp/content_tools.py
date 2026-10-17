@@ -19,6 +19,8 @@ from typing import Any
 
 from .ir_tools import GAME_MODEL_SCHEMA
 from .server import EngineMcpServer, Tool, ToolError
+from ..safe_io import SafeIoError, atomic_write_text
+from ..security import SecurityBoundaryError, resolve_inside
 
 
 SCHEMA_PROPERTIES = {
@@ -64,16 +66,22 @@ def register_content_tools(server: EngineMcpServer) -> EngineMcpServer:
         if not arguments.get("includeEntries", True):
             payload["catalogue"].pop("entries", None)
         if arguments.get("write"):
-            target = (root / arguments["write"]).resolve()
             try:
-                target.relative_to(root.resolve())
-            except ValueError as exc:
-                raise ToolError("write path must stay inside the project root") from exc
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(
+                target = resolve_inside(
+                    root,
+                    arguments["write"],
+                    label="write path",
+                    suffixes=(".json",),
+                )
+                status = atomic_write_text(
+                    target,
                 json.dumps(payload["catalogue"], indent=2, ensure_ascii=False) + "\n",
-                encoding="utf-8")
+                    overwrite=bool(arguments.get("overwrite")),
+                )
+            except (SecurityBoundaryError, SafeIoError) as exc:
+                raise ToolError(str(exc)) from exc
             payload["written"] = str(target.relative_to(root))
+            payload["writeStatus"] = status
         return payload
 
     server.register(Tool(
@@ -99,6 +107,7 @@ def register_content_tools(server: EngineMcpServer) -> EngineMcpServer:
                 },
                 "includeEntries": {"type": "boolean"},
                 "write": {"type": "string"},
+                "overwrite": {"type": "boolean"},
             },
         },
         handler=content_generate,

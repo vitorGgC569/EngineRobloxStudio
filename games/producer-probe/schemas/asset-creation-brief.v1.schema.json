@@ -1,0 +1,119 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rqe.local/schemas/asset-creation-brief.v1.schema.json",
+  "title": "RQE Original Asset Creation Brief v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "schemaVersion",
+    "briefId",
+    "asset",
+    "provider",
+    "generation",
+    "references",
+    "rights",
+    "output",
+    "metadata"
+  ],
+  "properties": {
+    "schemaVersion": {"const": 1},
+    "briefId": {"type": "string", "minLength": 1, "maxLength": 200},
+    "asset": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["logicalId", "kind", "displayName", "description", "requirement"],
+      "properties": {
+        "logicalId": {"type": "string", "minLength": 1, "maxLength": 200},
+        "kind": {"enum": ["mesh", "audio", "animation", "icon"]},
+        "displayName": {"type": "string", "minLength": 1, "maxLength": 200},
+        "description": {"type": "string", "minLength": 1, "maxLength": 2000},
+        "requirement": {"enum": ["production-required", "optional", "development"]}
+      }
+    },
+    "provider": {"type": "string", "minLength": 1, "maxLength": 200},
+    "generation": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["prompt", "tool", "toolVersion", "model", "modelVersion", "seed"],
+      "properties": {
+        "prompt": {"type": "string", "minLength": 1, "maxLength": 20000},
+        "negativePrompt": {"type": "string", "minLength": 1, "maxLength": 10000},
+        "tool": {"type": "string", "minLength": 1, "maxLength": 200},
+        "toolVersion": {"type": "string", "minLength": 1, "maxLength": 200},
+        "model": {"type": "string", "minLength": 1, "maxLength": 200},
+        "modelVersion": {"type": "string", "minLength": 1, "maxLength": 200},
+        "seed": {"type": "integer"}
+      }
+    },
+    "references": {
+      "type": "array",
+      "maxItems": 100,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["referenceId", "uri", "sha256", "mediaType", "purpose", "provenance", "rights"],
+        "properties": {
+          "referenceId": {"type": "string", "minLength": 1, "maxLength": 200},
+          "uri": {"type": "string", "minLength": 1, "maxLength": 4000},
+          "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+          "mediaType": {"type": "string", "minLength": 1, "maxLength": 200},
+          "purpose": {"type": "string", "minLength": 1, "maxLength": 1000},
+          "provenance": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["provider", "sourceUri", "retrievedAt"],
+            "properties": {
+              "provider": {"type": "string", "minLength": 1, "maxLength": 200},
+              "sourceUri": {"type": "string", "minLength": 1, "maxLength": 4000},
+              "retrievedAt": {"type": "string", "minLength": 1, "maxLength": 100},
+              "creatorId": {"type": "string", "minLength": 1, "maxLength": 200}
+            }
+          },
+          "rights": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": ["name", "termsUrl", "usageScope", "verified", "commercialUse", "evidence", "attributionRequired"],
+            "properties": {
+              "name": {"type": "string", "minLength": 1, "maxLength": 200},
+              "termsUrl": {"type": "string", "minLength": 1, "maxLength": 4000},
+              "usageScope": {"type": "string", "minLength": 1, "maxLength": 1000},
+              "verified": {"type": "boolean"},
+              "commercialUse": {"type": "boolean"},
+              "evidence": {"type": "string", "minLength": 1, "maxLength": 4000},
+              "attributionRequired": {"type": "boolean"},
+              "attribution": {"type": "string", "minLength": 1, "maxLength": 2000}
+            }
+          }
+        }
+      }
+    },
+    "rights": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["name", "termsUrl", "usageScope", "verified", "commercialUse", "evidence", "attributionRequired"],
+      "properties": {
+        "name": {"type": "string", "minLength": 1, "maxLength": 200},
+        "termsUrl": {"type": "string", "minLength": 1, "maxLength": 4000},
+        "usageScope": {"type": "string", "minLength": 1, "maxLength": 1000},
+        "verified": {"type": "boolean"},
+        "commercialUse": {"type": "boolean"},
+        "evidence": {"type": "string", "minLength": 1, "maxLength": 4000},
+        "attributionRequired": {"type": "boolean"},
+        "attribution": {"type": "string", "minLength": 1, "maxLength": 2000}
+      }
+    },
+    "output": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["fileName", "mediaType", "validationProfile", "requirePreview", "placeholderAllowed"],
+      "properties": {
+        "fileName": {"type": "string", "minLength": 1, "maxLength": 255},
+        "mediaType": {"type": "string", "minLength": 1, "maxLength": 200},
+        "validationProfile": {"type": "string", "minLength": 1, "maxLength": 200},
+        "requirePreview": {"type": "boolean"},
+        "placeholderAllowed": {"const": false}
+      }
+    },
+    "metadata": {"type": "object"}
+  }
+}

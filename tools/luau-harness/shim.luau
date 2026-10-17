@@ -110,7 +110,6 @@ end
 Vector3.__index = vectorIndex
 
 local Vector2 = {}
-Vector2.__index = Vector2
 function Vector2.new(x, y)
 	return setmetatable({ X = x or 0, Y = y or 0, __brand = "Vector2" }, Vector2)
 end
@@ -120,6 +119,46 @@ end
 Vector2.__tostring = function(self)
 	return string.format("Vector2(%g, %g)", self.X, self.Y)
 end
+--[[
+	Subtraction, `Magnitude`, `Unit` and the scalar/negation operators.
+
+	`Config.zoneAt` decides which water a position is in with
+	`(point - zone.center).Magnitude`, which is the plainest possible use of
+	a Vector2 -- but without these two the harness failed on it, and a
+	module that fails for a missing datatype teaches nothing about the
+	game. `Unit`/`__mul`/`__unm` came next, when docking moved from a fixed
+	bearing to a direction facing the map centre. Mirrors the Vector3 index
+	above.
+]]
+Vector2.__sub = function(a, b)
+	return Vector2.new(a.X - b.X, a.Y - b.Y)
+end
+Vector2.__add = function(a, b)
+	return Vector2.new(a.X + b.X, a.Y + b.Y)
+end
+Vector2.__mul = function(a, b)
+	if type(b) == "number" then
+		return Vector2.new(a.X * b, a.Y * b)
+	end
+	return Vector2.new(a.X * b.X, a.Y * b.Y)
+end
+Vector2.__unm = function(a)
+	return Vector2.new(-a.X, -a.Y)
+end
+local vector2Index = function(self, key)
+	if key == "Magnitude" then
+		return math.sqrt(self.X * self.X + self.Y * self.Y)
+	end
+	if key == "Unit" then
+		local magnitude = math.sqrt(self.X * self.X + self.Y * self.Y)
+		if magnitude == 0 then
+			return Vector2.new(0, 0)
+		end
+		return Vector2.new(self.X / magnitude, self.Y / magnitude)
+	end
+	return rawget(Vector2, key)
+end
+Vector2.__index = vector2Index
 
 local UDim = {}
 UDim.__index = UDim
@@ -888,6 +927,70 @@ local services = {
 			return nil
 		end,
 		PlayerRemoving = { Connect = function() end },
+	},
+	--[[
+		ScriptContext, for the one thing anybody uses it for.
+
+		`Telemetry` subscribes to `ScriptContext.Error` so a crash reaches the
+		same sink the metrics do. That is a signal *out* of a module, not an
+		engine feature it depends on, so shimming it does not weaken what this
+		harness is for -- a module that genuinely needs a DataModel still fails
+		here, loudly, which is the property worth keeping.
+		
+		Without it, `Telemetry` was not runnable outside Roblox, and neither
+		was anything that composes it -- which is every retention loop in the
+		engine.
+	]]
+	ScriptContext = {
+		__isInstance = true,
+		Error = { Connect = function() return { Disconnect = function() end } end },
+	},
+	--[[
+		HttpService, for `GenerateGUID` and JSON only.
+
+		Deliberately without `RequestAsync`: a module that reaches the network
+		is not portable and must still fail here. What is shimmed is the two
+		pure functions everybody actually calls it for, which Roblox happens to
+		have put on a service.
+	]]
+	HttpService = {
+		__isInstance = true,
+		GenerateGUID = function(_, braces)
+			local hex = "0123456789abcdef"
+			local out = {}
+			for index = 1, 32 do
+				local pick = math.random(1, 16)
+				out[index] = string.sub(hex, pick, pick)
+			end
+			local id = table.concat(out)
+			return if braces == false then id else "{" .. id .. "}"
+		end,
+		JSONEncode = function(_, value)
+			return JSON(value)
+		end,
+	},
+	--[[
+		`DataStoreService` is deliberately NOT here.
+
+		It was added once, on the reasoning that a store is "something a module
+		writes into rather than a feature it depends on". That reasoning is
+		wrong and a test said so within the minute: `GameKit.Save` became
+		portable, and a save that does not persist is not a save.
+
+		The line is whether a module can be *believed* without a DataModel.
+		`ScriptContext.Error` and `HttpService:JSONEncode` are a signal out and
+		a pure function; persistence is not either. A harness that shims it
+		stops being able to answer the one question it exists for.
+	]]
+	--: Stats, which `Telemetry` samples for its heartbeat. Zeros rather than
+	--: fabricated numbers: a portability harness must not invent a frame time.
+	Stats = {
+		__isInstance = true,
+		GetTotalMemoryUsageMb = function() return 0 end,
+		DataReceiveKbps = 0,
+		DataSendKbps = 0,
+		HeartbeatTimeMs = 0,
+		InstanceCount = 0,
 	},
 }
 

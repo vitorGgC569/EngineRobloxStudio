@@ -27,6 +27,24 @@ type Self = {
 
 LiveConfig.__index = LiveConfig
 
+-- The cache used to keep the caller's table. Changing a nested price after
+-- `new`, or after the store handed the record over, rewrote the value every
+-- later read returned.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 function LiveConfig.new(config: {
 	store: Store?,
 	storeKey: string?,
@@ -37,7 +55,7 @@ function LiveConfig.new(config: {
 	return setmetatable({
 		store = config.store,
 		storeKey = config.storeKey or "live_config",
-		defaults = table.clone(config.defaults),
+		defaults = deepCopy(config.defaults, {}),
 		overrides = nil,
 		lastFetch = -math.huge,
 		refreshSeconds = config.refreshSeconds or 60,
@@ -59,15 +77,13 @@ function LiveConfig.refresh(self: Self): ()
 	self.fetchCount += 1
 	local ok, raw = store:get(self.storeKey)
 	if ok and type(raw) == "table" then
-		self.overrides = raw :: { [string]: any }
+		self.overrides = deepCopy(raw, {})
 	end
 end
 
 function LiveConfig.get(self: Self, key: string): any
-	if self.overrides and self.overrides[key] ~= nil then
-		return self.overrides[key]
-	end
-	return self.defaults[key]
+	local value: any = if self.overrides and self.overrides[key] ~= nil then self.overrides[key] else self.defaults[key]
+	return deepCopy(value, {})
 end
 
 -- Reads always return a number; missing keys are a boot error at call site.

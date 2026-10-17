@@ -8,6 +8,9 @@ the second one is invisible until you have shipped ten titles.
 
 from __future__ import annotations
 
+import stat
+import zipfile
+
 import pytest
 
 from rqe.geometry.kit import backend_for
@@ -191,3 +194,53 @@ def test_an_attribution_licence_is_carried_through_the_catalogue():
 
     icons = [entry for entry in catalogues("icon")]
     assert icons and any(entry["attributionRequired"] for entry in icons)
+
+
+def test_every_direct_download_is_pinned_by_hash_and_size():
+    from rqe.sourcing.connectors import catalogues
+
+    direct = [item for item in catalogues() if item["fetchable"]]
+    assert direct
+    assert all(item["integrityPinned"] for item in direct)
+
+
+def test_zip_slip_is_checked_by_path_containment_not_string_prefix(tmp_path):
+    from rqe.sourcing.connectors import ConnectorError, _extract_archive
+
+    archive = tmp_path / "malicious.zip"
+    with zipfile.ZipFile(archive, "w") as bundle:
+        bundle.writestr("../files-evil/payload.lua", "bad")
+    with pytest.raises(ConnectorError, match="unsafe path|escapes"):
+        _extract_archive(archive, tmp_path / "files", "malicious")
+    assert not (tmp_path / "files-evil" / "payload.lua").exists()
+
+
+def test_zip_symlinks_are_refused(tmp_path):
+    from rqe.sourcing.connectors import ConnectorError, _extract_archive
+
+    archive = tmp_path / "symlink.zip"
+    link = zipfile.ZipInfo("link")
+    link.create_system = 3
+    link.external_attr = (stat.S_IFLNK | 0o777) << 16
+    with zipfile.ZipFile(archive, "w") as bundle:
+        bundle.writestr(link, "../outside")
+    with pytest.raises(ConnectorError, match="symbolic link"):
+        _extract_archive(archive, tmp_path / "files", "symlink")
+
+
+def test_cached_download_with_wrong_checksum_is_deleted_and_refused(tmp_path):
+    from rqe.sourcing.connectors import CACHE, ConnectorError, fetch
+
+    archive = tmp_path / CACHE / "kenney" / "ui-audio" / "ui-audio.zip"
+    archive.parent.mkdir(parents=True)
+    archive.write_bytes(b"tampered")
+    with pytest.raises(ConnectorError, match="integrity verification"):
+        fetch("kenney", "ui-audio", root=tmp_path)
+    assert not archive.exists()
+
+
+def test_source_and_pack_identifiers_cannot_escape_the_cache(tmp_path):
+    from rqe.sourcing.connectors import ConnectorError, assets
+
+    with pytest.raises(ConnectorError, match="safe"):
+        assets("../outside", "pack", root=tmp_path)

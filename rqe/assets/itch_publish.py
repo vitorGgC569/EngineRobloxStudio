@@ -54,10 +54,12 @@ from typing import Any
 
 from . import local_credentials
 from .sweep import TOPICS
+from ..http_safety import HttpBoundaryError, error_body_limited, json_object_limited
 
 ROOT = Path("assets/itch")
 INVENTORY = Path("forge/kits/itch-inventory.json")
 PUBLISHED = Path("forge/kits/itch-published.json")
+MAX_API_RESPONSE_BYTES = 4 * 1024 * 1024
 
 ASSETS_URL = "https://apis.roblox.com/assets/v1/assets"
 OPERATION_URL = "https://apis.roblox.com/assets/v1/operations/{op}"
@@ -435,7 +437,11 @@ def _post(body: bytes, boundary: str, key: str, timeout: float = 120.0) -> dict[
         headers={"x-api-key": key,
                  "Content-Type": f"multipart/form-data; boundary={boundary}"})
     with urllib.request.urlopen(request, timeout=timeout) as response:
-        return json.load(response)
+        return json_object_limited(
+            response,
+            MAX_API_RESPONSE_BYTES,
+            label="Roblox asset upload response",
+        )
 
 
 def _await_operation(operation: str, key: str, tries: int = 12,
@@ -451,8 +457,12 @@ def _await_operation(operation: str, key: str, tries: int = 12,
             OPERATION_URL.format(op=operation), headers={"x-api-key": key})
         try:
             with urllib.request.urlopen(request, timeout=30) as response:
-                state = json.load(response)
-        except (urllib.error.HTTPError, urllib.error.URLError, OSError):
+                state = json_object_limited(
+                    response,
+                    MAX_API_RESPONSE_BYTES,
+                    label="Roblox asset operation response",
+                )
+        except (urllib.error.HTTPError, urllib.error.URLError, OSError, HttpBoundaryError):
             time.sleep(pause)
             continue
         if state.get("done"):
@@ -525,7 +535,7 @@ def publish(chosen: list[dict[str, Any]], creator_user_id: str = "5812220258",
                     progress(f"  throttled; waiting {wait:.0f}s")
                     time.sleep(wait)
                     continue
-                body = error.read()[:200].decode("utf-8", "replace")
+                body = error_body_limited(error, 200).decode("utf-8", "replace")
                 records[marker] = {
                     "error": f"HTTP {error.code}: {body[:120]}",
                     **_source(mesh)}
@@ -538,7 +548,7 @@ def publish(chosen: list[dict[str, Any]], creator_user_id: str = "5812220258",
                              "stopping the batch")
                     stopped = True
                 break
-            except (urllib.error.URLError, OSError) as error:
+            except (urllib.error.URLError, OSError, HttpBoundaryError) as error:
                 records[marker] = {"error": str(error)[:160], **_source(mesh)}
                 break
 
@@ -1041,7 +1051,12 @@ end
 return out
 """ % ", ".join(f'"{i}"' for i in chunk)
         try:
-            answer = bridge.exec_luau(source, timeout=240).get("returned") or {}
+            with bridge.lease_scope(
+                agent_id="itch-texture-audit",
+                context="edit",
+                ttl_seconds=300.0,
+            ):
+                answer = bridge.exec_luau(source, timeout=240).get("returned") or {}
         except Exception as exc:  # noqa: BLE001
             progress(f"  ! batch failed: {exc}")
             continue

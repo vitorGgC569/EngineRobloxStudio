@@ -1,0 +1,63 @@
+{
+  "name": "lumenfall-rift-salvagers",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Forge": { "$path": "../../forge/luau/Forge" },
+      "Shared": { "$path": "src/shared" }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Lumenfall": { "$path": "src/gameplay" }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$properties": {
+        "CameraMaxZoomDistance": 72,
+        "CameraMinZoomDistance": 7,
+        "EnableMouseLockOption": true,
+        "HealthDisplayDistance": 0,
+        "NameDisplayDistance": 40
+      },
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Lumenfall": { "$path": "src/interface" }
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "StreamingEnabled": true,
+        "StreamingMinRadius": 160,
+        "StreamingTargetRadius": 720,
+        "FallenPartsDestroyHeight": -180,
+        "Gravity": 178
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": "Future",
+        "Ambient": [0.12, 0.10, 0.19],
+        "OutdoorAmbient": [0.27, 0.24, 0.38],
+        "Brightness": 2.0,
+        "ClockTime": 19.2,
+        "FogColor": [0.18, 0.12, 0.29],
+        "FogStart": 170,
+        "FogEnd": 880,
+        "GlobalShadows": true,
+        "EnvironmentDiffuseScale": 0.35,
+        "EnvironmentSpecularScale": 0.55
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "$properties": { "ResetPlayerGuiOnSpawn": false }
+    },
+    "Players": {
+      "$className": "Players",
+      "$properties": { "RespawnTime": 3 }
+    }
+  }
+}

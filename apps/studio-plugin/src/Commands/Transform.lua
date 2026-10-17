@@ -12,6 +12,7 @@
 -- to screenshot.
 
 local Errors = require(script.Parent.Parent.Errors)
+local History = require(script.Parent.Parent.History)
 
 local TransformCommands = {}
 
@@ -314,6 +315,42 @@ function TransformCommands.overlaps(params: { [string]: any }): any
 		gap = if intersecting then 0
 			else math.max(-overlap.X, -overlap.Y, -overlap.Z),
 	}
+end
+
+local moveImpl=TransformCommands.move
+local orientImpl=TransformCommands.orient
+local alignImpl=TransformCommands.align
+local snapImpl=TransformCommands.snap
+local settleImpl=TransformCommands.settle
+
+TransformCommands.move=function(params:{[string]:any}):any
+	return History.record("RQE transform.move",function()
+		return moveImpl(params)
+	end)
+end
+
+TransformCommands.orient=function(params:{[string]:any}):any
+	return History.record("RQE transform.orient",function()
+		return orientImpl(params)
+	end)
+end
+
+TransformCommands.align=function(params:{[string]:any}):any
+	return History.record("RQE transform.align",function()
+		return alignImpl(params)
+	end)
+end
+
+TransformCommands.snap=function(params:{[string]:any}):any
+	return History.record("RQE transform.snap",function()
+		return snapImpl(params)
+	end)
+end
+
+TransformCommands.settle=function(params:{[string]:any}):any
+	return History.record("RQE transform.settle",function()
+		return settleImpl(params)
+	end)
 end
 
 return TransformCommands

@@ -100,6 +100,10 @@ end
 
 local function setupPlayer(player)
 	local data = persistenceService:load(player, defaults())
+	if not data then
+		player:Kick("Your save could not be loaded safely. Please rejoin shortly.")
+		return
+	end
 	progressionService:initialize(data)
 	data.plot = plotService:assign(player)
 	progressionService:applyFloorVisual(player, data)
@@ -132,7 +136,6 @@ local function cleanupPlayer(player)
 		farmService:release(data.plot)
 	end
 	pendingCard[player.UserId] = nil
-	persistenceService:save(player)
 	storeService:clearPlayer(player)
 	plotService:release(player)
 	persistenceService:clear(player)
@@ -724,4 +727,36 @@ task.spawn(function()
 			syncBoosts(player)
 		end
 	end
+end)
+
+-- Preserve the final farm snapshot before releasing ownership at shutdown.
+task.spawn(function()
+    while true do
+        task.wait(30)
+        for _, player in Players:GetPlayers() do
+            task.spawn(function()
+                local data = persistenceService:get(player)
+                if data and data.plot then
+                    data.farm = farmService:serialize(data.plot)
+                    data.lastSeenAt = os.time()
+                end
+                if data and not persistenceService:save(player) then
+                    if persistenceService:get(player) == nil then
+                        player:Kick("Your save session was interrupted. Please rejoin.")
+                    end
+                end
+            end)
+        end
+    end
+end)
+
+game:BindToClose(function()
+    for _, player in Players:GetPlayers() do
+        local data = persistenceService:get(player)
+        if data and data.plot then
+            data.farm = farmService:serialize(data.plot)
+            data.lastSeenAt = os.time()
+        end
+    end
+    persistenceService:close()
 end)

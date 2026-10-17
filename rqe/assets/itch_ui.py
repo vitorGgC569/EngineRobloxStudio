@@ -52,6 +52,7 @@ from typing import Any
 from . import local_credentials
 from .itch_publish import (ASSETS_URL, OPERATION_URL, _await_operation,
                            _multipart, _post)
+from ..http_safety import HttpBoundaryError, error_body_limited
 
 ROOT = Path("assets/itch-ui")
 INVENTORY = Path("forge/kits/itch-ui-inventory.json")
@@ -861,7 +862,7 @@ def publish(chosen: list[dict[str, Any]], creator_user_id: str = "5812220258",
         try:
             operation = _post(body, boundary, key)
         except urllib.error.HTTPError as error:
-            detail = error.read().decode("utf-8", errors="replace")
+            detail = error_body_limited(error).decode("utf-8", errors="replace")
             book["assets"][marker] = {
                 "error": f"HTTP {error.code}: {detail[:200]}", **_provenance(image)}
             failed += 1
@@ -869,7 +870,7 @@ def publish(chosen: list[dict[str, Any]], creator_user_id: str = "5812220258",
             _write(book, uploaded, failed, skipped, started)
             time.sleep(delay)
             continue
-        except (urllib.error.URLError, OSError) as error:
+        except (urllib.error.URLError, OSError, HttpBoundaryError) as error:
             book["assets"][marker] = {"error": str(error)[:160], **_provenance(image)}
             failed += 1
             time.sleep(delay)

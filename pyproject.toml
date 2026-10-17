@@ -4,13 +4,90 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "roblox-quality-engine"
-version = "0.1.0"
-description = "Deterministic quality auditing and release gates for Roblox games."
+version = "0.2.0"
+description = "Forge and the Roblox Quality Engine: an engine agents build games with, and the gate that proves the games work."
 requires-python = ">=3.11"
-dependencies = ["Pillow>=10.0"]
+
+# What a fresh checkout actually needs to run.
+#
+# This said `Pillow>=10.0` and nothing else while `rqe/image_metrics.py` opened
+# with `import numpy as np` -- so `pip install -e .` produced an installation
+# that raised ImportError on the first visual measurement, in a module three
+# imports deep from the command the user ran. A declared dependency list that
+# is not the real one is worse than none: it is a promise the install makes and
+# the runtime breaks.
+dependencies = [
+    "Pillow>=10.0",
+    "numpy>=1.24",
+]
+
+# Windows, and the reason is not a preference.
+#
+# Driving a live Roblox Studio needs the Win32 window and input APIs: `capture`
+# takes the window rectangle through `GetWindowRect`, `hub.lifecycle` restarts
+# Studio through the process table, and `hub.teamtest` reaches the multi-client
+# menu by keystroke because Roblox exposes no API for it. Four modules import
+# `ctypes` for that.
+#
+# Nothing said so anywhere. On Linux the failure is an ImportError or an empty
+# window list several frames from the command that caused it, and it reads as a
+# bug in this project rather than as an unsupported platform. Declaring it here
+# is the cheapest place a person or a resolver finds out.
+#
+# The static half -- the Luau compiler, the headless runtime, the authoring
+# checks, the whole Python suite -- is portable, and CI runs it on Linux. Only
+# the live-Studio half is Windows, which is why this is a classifier and not a
+# `sys_platform` marker that would refuse the install outright.
+classifiers = [
+    "Programming Language :: Python :: 3.11",
+    "Programming Language :: Python :: 3.12",
+    "Operating System :: Microsoft :: Windows",
+    "Environment :: Console",
+    "Topic :: Games/Entertainment",
+]
+
+[project.optional-dependencies]
+# The suite. Kept out of the runtime set because a game being built does not
+# need a test runner installed beside it.
+dev = [
+    "pytest>=8.0",
+    "pytest-subtests>=0.11",
+]
 
 [project.scripts]
 rqe = "rqe.cli:main"
+# `forge` was reachable only as `python forge/forge.py`, from the repository
+# root, with the working directory correct. Every document here writes it as
+# `forge <command>`; now that is true.
+forge = "forge.forge:main"
+
+[project.urls]
+Documentation = "https://github.com/vitorGgC569/RobloxGamesMCP/blob/main/CLAUDE.md"
+
+[tool.setuptools.packages.find]
+where = ["."]
+include = ["rqe*", "forge*"]
+exclude = ["tests*", "games*", "references*", "corpus*"]
+
+[tool.setuptools.package-data]
+rqe = ["**/*.json", "**/*.lua", "**/*.luau", "**/*.tmpl"]
+forge = [
+    "catalog/*.json",
+    "docs/*.md",
+    "templates/**/*",
+    "luau/**/*.lua",
+    "luau/**/*.luau",
+    "CHANGELOG.md",
+    "GETTING-STARTED.md",
+]
+
+[tool.pytest.ini_options]
+# Markers are declared, and `--strict-markers` makes a typo a failure rather
+# than a silently unfiltered test.
+addopts = "--strict-markers"
+markers = [
+    "slow: runs a whole production pipeline or a real build. Minutes, not seconds.",
+]
 
 [tool.rqe]
 contract = "contracts/mining-tycoon.robloxqa.json"

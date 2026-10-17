@@ -10,6 +10,7 @@
 -- that takes a path also accepts "ref:<id>".
 
 local Refs = {}
+local HttpService = game:GetService("HttpService")
 
 -- Strong references, bounded.
 --
@@ -22,24 +23,31 @@ local MAX_ENTRIES = 20000
 
 local registry: { [string]: Instance } = {}
 local order: { string } = {}
+local ids: { [Instance]: string } = setmetatable({}, { __mode = "k" }) :: any
+local first = 1
 
 --- Register an instance and return its stable id for this Studio session.
 function Refs.of(instance: Instance): string
-	local ok, id = pcall(function()
-		return instance:GetDebugId(24)
-	end)
-	if not ok or type(id) ~= "string" then
-		-- GetDebugId is plugin-only; fall back to the path so a ref field is
-		-- always present even if the API is unavailable in this context.
-		id = instance:GetFullName()
+	local id = ids[instance]
+	if not id or registry[id] ~= instance then
+		id = HttpService:GenerateGUID(false)
+		ids[instance] = id
 	end
 	if registry[id] == nil then
 		table.insert(order, id)
-		if #order > MAX_ENTRIES then
-			local oldest = table.remove(order, 1)
+		if #order - first + 1 > MAX_ENTRIES then
+			local oldest = order[first]
+			first += 1
 			if oldest then
+				local expired = registry[oldest]
+				if expired then ids[expired] = nil end
 				registry[oldest] = nil
 			end
+		end
+		if first > MAX_ENTRIES then
+			local kept = {}
+			for index = first, #order do table.insert(kept, order[index]) end
+			order, first = kept, 1
 		end
 	end
 	registry[id] = instance
@@ -66,7 +74,7 @@ function Refs.get(id: string): Instance?
 end
 
 function Refs.size(): number
-	return #order
+	return #order - first + 1
 end
 
 --- Drop everything. Called when the DataModel changes underneath us, since
@@ -74,6 +82,8 @@ end
 function Refs.clear()
 	registry = {}
 	order = {}
+	ids = setmetatable({}, { __mode = "k" }) :: any
+	first = 1
 end
 
 return Refs

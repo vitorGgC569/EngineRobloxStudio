@@ -1,0 +1,102 @@
+{
+  "name": "tidebound",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Forge": { "$path": "../../forge/luau/Forge" },
+      "Shared": { "$path": "src/shared" }
+    },
+
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "$properties": {
+        "LoadStringEnabled": true
+      },
+      "Server": { "$path": "src/server" }
+    },
+
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$properties": {
+        "CameraMaxZoomDistance": 60,
+        "CameraMinZoomDistance": 8,
+        "EnableMouseLockOption": false,
+        "HealthDisplayDistance": 0,
+        "NameDisplayDistance": 60,
+        "DevComputerMovementMode": "KeyboardMouse",
+        "CharacterWalkSpeed": 16
+      },
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": { "$path": "src/client" }
+      }
+    },
+
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "FilteringEnabled": true,
+        "StreamingEnabled": true,
+        "StreamingMinRadius": 256,
+        "StreamingTargetRadius": 768,
+        "FallenPartsDestroyHeight": -160,
+        "Gravity": 178
+      },
+      "Terrain": {
+        "$className": "Terrain",
+        "$properties": {
+          "WaterColor": [0.12, 0.45, 0.58],
+          "WaterTransparency": 0.28,
+          "WaterWaveSize": 0.28,
+          "WaterWaveSpeed": 6,
+          "WaterReflectance": 0.12
+        }
+      }
+    },
+
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": "Future",
+        "Ambient": [0.16, 0.18, 0.24],
+        "OutdoorAmbient": [0.42, 0.46, 0.54],
+        "Brightness": 2.4,
+        "ClockTime": 14,
+        "GeographicLatitude": 21,
+        "FogColor": [0.72, 0.78, 0.84],
+        "FogStart": 260,
+        "FogEnd": 1500,
+        "GlobalShadows": true,
+        "EnvironmentDiffuseScale": 0.45,
+        "EnvironmentSpecularScale": 0.4,
+        "ShadowSoftness": 0.35
+      }
+    },
+
+    "StarterGui": {
+      "$className": "StarterGui",
+      "$properties": {
+        "ResetPlayerGuiOnSpawn": false,
+        "ScreenOrientation": "LandscapeSensor"
+      }
+    },
+
+    "Players": {
+      "$className": "Players",
+      "$properties": {
+        "RespawnTime": 4,
+        "CharacterAutoLoads": true
+      }
+    },
+
+    "SoundService": {
+      "$className": "SoundService",
+      "$properties": {
+        "RespectFilteringEnabled": true,
+        "AmbientReverb": "Plain"
+      }
+    }
+  }
+}

@@ -1,0 +1,309 @@
+{
+  "$schema": "../../schemas/visual-quality-spec.v1.schema.json",
+  "schemaVersion": 1,
+  "specId": "forge.shonenyard.visual",
+  "productId": "shonenyard",
+  "productTruth": {
+    "intentId": "forge.shonenyard.intent",
+    "calibrationId": "forge.shonenyard.visual-calibration",
+    "semanticBindings": {
+      "worldRoles": {
+        "arena-ring": {
+          "landmarkIds": [
+            "arena-ring"
+          ],
+          "regionSetIds": [
+            "play-regions"
+          ],
+          "viewpointIds": [
+            "play-desktop"
+          ]
+        }
+      },
+      "uiSurfaces": {
+        "hud": {
+          "landmarkIds": [],
+          "regionSetIds": [],
+          "viewpointIds": [
+            "play-desktop"
+          ]
+        }
+      }
+    }
+  },
+  "revision": 1,
+  "units": {
+    "distance": "stud",
+    "density": "visualRootsPer1000SquareStuds",
+    "colorDifference": "CIEDE2000"
+  },
+  "classification": {
+    "candidateTag": "RQEVisualCandidate",
+    "rootTag": "RQEVisualRoot",
+    "typeAttribute": "VisualType",
+    "variantAttribute": "VisualVariant",
+    "assetKeyAttribute": "AssetKey",
+    "regionTag": "RQEVisualRegion",
+    "regionProfileAttribute": "VisualRegionProfile",
+    "landmarkTag": "RQELandmark",
+    "landmarkAnchorTag": "RQELandmarkAnchor",
+    "excludeTag": "RQEVisualExclude",
+    "minimumClassifiedFraction": 0.9
+  },
+  "palette": {
+    "swatches": [
+      {
+        "id": "swatch-00",
+        "rgb": [
+          148,
+          152,
+          162
+        ],
+        "roles": [
+          "dominant"
+        ]
+      },
+      {
+        "id": "swatch-01",
+        "rgb": [
+          104,
+          190,
+          126
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "swatch-02",
+        "rgb": [
+          88,
+          158,
+          232
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "swatch-03",
+        "rgb": [
+          206,
+          142,
+          62
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "swatch-04",
+        "rgb": [
+          226,
+          88,
+          108
+        ],
+        "roles": [
+          "accent"
+        ]
+      },
+      {
+        "id": "swatch-05",
+        "rgb": [
+          240,
+          236,
+          230
+        ],
+        "roles": [
+          "accent"
+        ]
+      },
+      {
+        "id": "swatch-06",
+        "rgb": [
+          198,
+          176,
+          120
+        ],
+        "roles": [
+          "accent"
+        ]
+      },
+      {
+        "id": "swatch-07",
+        "rgb": [
+          150,
+          152,
+          162
+        ],
+        "roles": [
+          "accent"
+        ]
+      },
+      {
+        "id": "swatch-08",
+        "rgb": [
+          198,
+          74,
+          92
+        ],
+        "roles": [
+          "accent"
+        ]
+      },
+      {
+        "id": "swatch-09",
+        "rgb": [
+          180,
+          182,
+          190
+        ],
+        "roles": [
+          "accent"
+        ]
+      }
+    ],
+    "maximumDeltaE": 12,
+    "maximumOffPaletteFraction": 0.2
+  },
+  "objectTypes": {
+    "rock": {
+      "selector": {
+        "tag": "RQEVisualRoot",
+        "attributeEquals": {
+          "VisualType": "rock"
+        }
+      },
+      "minimumInstances": 12,
+      "scale": {
+        "boundsMethod": "oriented-box",
+        "minimumSize": [
+          1,
+          1,
+          1
+        ],
+        "maximumSize": [
+          40,
+          40,
+          40
+        ],
+        "maximumRelativeMad": 0.9
+      }
+    },
+    "plant": {
+      "selector": {
+        "tag": "RQEVisualRoot",
+        "attributeEquals": {
+          "VisualType": "plant"
+        }
+      },
+      "minimumInstances": 12,
+      "scale": {
+        "boundsMethod": "oriented-box",
+        "minimumSize": [
+          0.5,
+          0.5,
+          0.5
+        ],
+        "maximumSize": [
+          40,
+          60,
+          40
+        ],
+        "maximumRelativeMad": 0.9
+      }
+    }
+  },
+  "regionProfiles": {
+    "arena": {
+      "density": {
+        "minimumRootsPer1000SquareStuds": 0.5,
+        "maximumRootsPer1000SquareStuds": 12,
+        "minimumFootprintCoverage": 0.01
+      },
+      "heightVariation": {
+        "minimumP90MinusP10": 1,
+        "maximumP90MinusP10": 60
+      },
+      "materialVariety": {
+        "minimumDistinctMaterials": 2,
+        "maximumDominantFraction": 0.9
+      },
+      "repetition": {
+        "maximumIdenticalVariantRun": 6,
+        "minimumVariantEntropy": 0.5
+      }
+    }
+  },
+  "regionSets": {
+    "play-regions": {
+      "selector": {
+        "tag": "RQEVisualRegion",
+        "attributeEquals": {
+          "VisualRegionProfile": "arena"
+        }
+      },
+      "profile": "arena",
+      "minimumRegions": 1,
+      "maximumRegions": 4,
+      "minimumProfileCoverage": 1
+    }
+  },
+  "landmarks": {
+    "arena-ring": {
+      "selector": {
+        "tag": "RQELandmark",
+        "attributeEquals": {
+          "LandmarkId": "arena-ring"
+        }
+      },
+      "anchorSelector": {
+        "tag": "RQELandmarkAnchor",
+        "attributeEquals": {
+          "LandmarkId": "arena-ring"
+        }
+      },
+      "maximumDistance": 400.0,
+      "sampleSpacing": 12,
+      "eyeHeight": 5,
+      "raysPerAnchor": 9,
+      "minimumVisibleAnchorFraction": 0.5,
+      "maximumBlindSpotDegrees": 60,
+      "minimumRegionsVisibleFrom": 1
+    }
+  },
+  "viewpoints": {
+    "play-desktop": {
+      "device": "desktop",
+      "resolution": [
+        1920,
+        1080
+      ],
+      "landmark": "arena-ring",
+      "state": "play",
+      "camera": {
+        "mode": "look-at-landmark",
+        "distance": 190,
+        "height": 72,
+        "fieldOfView": 70,
+        "yawDegrees": 30
+      },
+      "rubric": {
+        "composition": 0.2,
+        "hierarchy": 0.2,
+        "legibility": 0.25,
+        "materiality": 0.15,
+        "polish": 0.2
+      }
+    }
+  },
+  "evaluationStates": {
+    "play": {
+      "scenario": "scenarios/play.json",
+      "requiredViewpoints": [
+        "play-desktop"
+      ],
+      "minimumRuleCoverage": 0.6
+    }
+  }
+}

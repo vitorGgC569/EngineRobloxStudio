@@ -1,0 +1,126 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://rqe.local/schemas/product-intent.v1.schema.json",
+  "title": "RQE Product Intent v1",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "$schema", "schemaVersion", "intentId", "revision", "productId", "title",
+    "productClass", "pillars", "audience", "coreLoop", "semantics",
+    "authorship", "calibrationPolicy", "bindings"
+  ],
+  "properties": {
+    "$schema": {"type": "string", "minLength": 1},
+    "schemaVersion": {"const": 1},
+    "intentId": {"$ref": "#/$defs/qualifiedId"},
+    "revision": {"type": "integer", "minimum": 1},
+    "productId": {"$ref": "#/$defs/qualifiedId"},
+    "title": {"type": "string", "minLength": 1, "maxLength": 200},
+    "productClass": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["genre", "templateFamily"],
+      "properties": {
+        "genre": {"type": "string", "minLength": 1, "maxLength": 100},
+        "templateFamily": {"$ref": "#/$defs/id"}
+      }
+    },
+    "pillars": {
+      "type": "array", "minItems": 1,
+      "items": {"$ref": "#/$defs/semanticItem"}
+    },
+    "audience": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["description", "targetDevices"],
+      "properties": {
+        "description": {"type": "string", "minLength": 1, "maxLength": 1000},
+        "targetDevices": {
+          "type": "array", "minItems": 1, "uniqueItems": true,
+          "items": {"enum": ["desktop", "phone", "tablet", "console", "vr"]}
+        }
+      }
+    },
+    "coreLoop": {
+      "type": "array", "minItems": 1,
+      "items": {"type": "string", "minLength": 1, "maxLength": 500}
+    },
+    "semantics": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["worldRoles", "uiSurfaces", "gameplayVerbs"],
+      "properties": {
+        "worldRoles": {"$ref": "#/$defs/semanticList"},
+        "uiSurfaces": {"$ref": "#/$defs/semanticList"},
+        "gameplayVerbs": {"$ref": "#/$defs/semanticList"}
+      }
+    },
+    "authorship": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["authorityKind", "authorityId", "approvedAt", "candidateDerived"],
+      "properties": {
+        "authorityKind": {"enum": ["human-product-director", "human-approved-product-brief"]},
+        "authorityId": {"type": "string", "minLength": 1, "maxLength": 200},
+        "approvedAt": {"$ref": "#/$defs/timestamp"},
+        "candidateDerived": {"const": false}
+      }
+    },
+    "calibrationPolicy": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "requireIndependentReferences", "forbidCandidateDerivedThresholds",
+        "requireCompleteThresholdCoverage"
+      ],
+      "properties": {
+        "requireIndependentReferences": {"const": true},
+        "forbidCandidateDerivedThresholds": {"const": true},
+        "requireCompleteThresholdCoverage": {"const": true}
+      }
+    },
+    "bindings": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["contract", "visualQualitySpec", "referenceBenchmark", "visualCalibration"],
+      "properties": {
+        "contract": {"$ref": "#/$defs/artifactBinding"},
+        "visualQualitySpec": {"$ref": "#/$defs/artifactBinding"},
+        "referenceBenchmark": {"$ref": "#/$defs/artifactBinding"},
+        "visualCalibration": {"$ref": "#/$defs/artifactBinding"}
+      }
+    }
+  },
+  "$defs": {
+    "id": {"type": "string", "pattern": "^[a-z][a-z0-9_-]*$"},
+    "qualifiedId": {"type": "string", "pattern": "^[a-z][a-z0-9._-]+$"},
+    "sha256": {"type": "string", "pattern": "^[0-9a-f]{64}$"},
+    "timestamp": {
+      "type": "string",
+      "pattern": "^[0-9]{4}-[0-9]{2}-[0-9]{2}T[0-9]{2}:[0-9]{2}:[0-9]{2}(\\.[0-9]+)?Z$"
+    },
+    "semanticItem": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["id", "description"],
+      "properties": {
+        "id": {"$ref": "#/$defs/id"},
+        "description": {"type": "string", "minLength": 1, "maxLength": 1000}
+      }
+    },
+    "semanticList": {
+      "type": "array", "minItems": 1,
+      "items": {"$ref": "#/$defs/semanticItem"}
+    },
+    "artifactBinding": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["path", "artifactId", "sha256"],
+      "properties": {
+        "path": {"type": "string", "minLength": 1},
+        "artifactId": {"$ref": "#/$defs/qualifiedId"},
+        "sha256": {"$ref": "#/$defs/sha256"}
+      }
+    }
+  }
+}

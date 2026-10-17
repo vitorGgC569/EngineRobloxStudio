@@ -1,76 +1,38 @@
-local DataStoreService = game:GetService("DataStoreService")
-local RunService = game:GetService("RunService")
-
+-- Compatibility facade over the shared, session-owned profile store.
+local Save = require(game:GetService("ServerScriptService").GameKit.Save)
 local PersistenceService = {}
 PersistenceService.__index = PersistenceService
 
 function PersistenceService.new(storeName)
-	local self = setmetatable({}, PersistenceService)
-	self.store = nil
-	self.memoryStore = {}
-	self.persistenceMode = "datastore"
-	local success, store = pcall(function()
-		return DataStoreService:GetDataStore(storeName)
-	end)
-	if success then
-		self.store = store
-	elseif RunService:IsStudio() then
-		-- Unpublished local places cannot access DataStore. Keep the same
-		-- server-authoritative API with an in-session store for Studio QA only.
-		self.persistenceMode = "studio-memory-fallback"
-	else
-		error("DataStore unavailable outside Studio: " .. tostring(store))
-	end
-	self.cache = {}
-	return self
+    return setmetatable({ storeName = storeName, profiles = nil }, PersistenceService)
 end
 
 function PersistenceService:load(player, defaults)
-	local key = "player_" .. player.UserId
-	if self.store == nil then
-		local value = self.memoryStore[key]
-		if type(value) == "table" then
-			self.cache[player.UserId] = table.clone(value)
-		else
-			self.cache[player.UserId] = table.clone(defaults)
-		end
-		return self.cache[player.UserId]
-	end
-	local success, value = pcall(function()
-		return self.store:GetAsync(key)
-	end)
-	if success and type(value) == "table" then
-		self.cache[player.UserId] = value
-	else
-		self.cache[player.UserId] = table.clone(defaults)
-	end
-	return self.cache[player.UserId]
+    if self.profiles == nil then
+        self.profiles = Save.store(self.storeName, defaults, {
+            autoWire = false, keyPrefix = "player_", legacyFlat = true,
+        })
+        self.persistenceMode = if self.profiles:statistics().persistent then "datastore" else "studio-memory-fallback"
+    end
+    local profile = self.profiles:load(player)
+    return if profile then profile.data else nil
 end
 
 function PersistenceService:save(player)
-	local value = self.cache[player.UserId]
-	if value == nil then
-		return false
-	end
-	local key = "player_" .. player.UserId
-	if self.store == nil then
-		self.memoryStore[key] = table.clone(value)
-		return true
-	end
-	local success = pcall(function()
-		self.store:UpdateAsync(key, function()
-			return value
-		end)
-	end)
-	return success
+    return self.profiles ~= nil and self.profiles:save(player)
 end
 
 function PersistenceService:get(player)
-	return self.cache[player.UserId]
+    local profile = if self.profiles then self.profiles:get(player) else nil
+    return if profile then profile.data else nil
 end
 
 function PersistenceService:clear(player)
-	self.cache[player.UserId] = nil
+    return self.profiles ~= nil and self.profiles:release(player)
+end
+
+function PersistenceService:close()
+    return if self.profiles then self.profiles:releaseAll() else 0
 end
 
 return PersistenceService

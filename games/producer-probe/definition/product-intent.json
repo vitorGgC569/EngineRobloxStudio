@@ -1,0 +1,117 @@
+{
+  "$schema": "../schemas/product-intent.v1.schema.json",
+  "schemaVersion": 1,
+  "intentId": "producer-probe.intent",
+  "revision": 1,
+  "productId": "producer-probe",
+  "title": "Producer Probe",
+  "productClass": {
+    "genre": "simulator",
+    "templateFamily": "simulator"
+  },
+  "pillars": [
+    {
+      "id": "verb-collect",
+      "description": "The product loop explicitly includes collect."
+    },
+    {
+      "id": "verb-sell",
+      "description": "The product loop explicitly includes sell."
+    },
+    {
+      "id": "verb-upgrade",
+      "description": "The product loop explicitly includes upgrade."
+    },
+    {
+      "id": "verb-unlock",
+      "description": "The product loop explicitly includes unlock."
+    },
+    {
+      "id": "verb-buy",
+      "description": "The product loop explicitly includes buy."
+    }
+  ],
+  "audience": {
+    "description": "Provisional platform baseline for desktop and phone, pending human audience approval; up to 1 concurrent player(s).",
+    "targetDevices": [
+      "desktop",
+      "phone"
+    ]
+  },
+  "coreLoop": [
+    "collect",
+    "sell",
+    "upgrade",
+    "unlock",
+    "buy"
+  ],
+  "semantics": {
+    "worldRoles": [
+      {
+        "id": "primary-landmark",
+        "description": "The primary navigational landmark selected by the hub_and_zones world."
+      }
+    ],
+    "uiSurfaces": [
+      {
+        "id": "initial-interface",
+        "description": "The player-facing interface visible in the initial session."
+      }
+    ],
+    "gameplayVerbs": [
+      {
+        "id": "collect",
+        "description": "Player-observable behavior for the collect loop verb."
+      },
+      {
+        "id": "sell",
+        "description": "Player-observable behavior for the sell loop verb."
+      },
+      {
+        "id": "upgrade",
+        "description": "Player-observable behavior for the upgrade loop verb."
+      },
+      {
+        "id": "unlock",
+        "description": "Player-observable behavior for the unlock loop verb."
+      },
+      {
+        "id": "buy",
+        "description": "Player-observable behavior for the buy loop verb."
+      }
+    ]
+  },
+  "authorship": {
+    "authorityKind": "pending-human-approval",
+    "authorityId": null,
+    "approvedAt": null,
+    "candidateDerived": false
+  },
+  "calibrationPolicy": {
+    "requireIndependentReferences": true,
+    "forbidCandidateDerivedThresholds": true,
+    "requireCompleteThresholdCoverage": true
+  },
+  "bindings": {
+    "contract": {
+      "path": "contracts/game-contract.json",
+      "artifactId": "producer-probe.release",
+      "sha256": "329689ea1d1b2be5d7c12057316e73a554e9dff4e4affa9cb46d532c724bb1ab"
+    },
+    "visualQualitySpec": {
+      "path": "contracts/visual/visual-quality.json",
+      "artifactId": "producer-probe.visual",
+      "sha256": "1c7978a5f3feb465b812e0a28071d6d84b4b07c8b90a637b072bf962097771dc"
+    },
+    "referenceBenchmark": {
+      "path": "definition/reference-benchmark.json",
+      "artifactId": "producer-probe.reference-benchmark",
+      "sha256": "2fb13d5b39c144405b571bfcfd76e1072c31fbb8bfac74c587d5621227ea46d4"
+    },
+    "visualCalibration": {
+      "path": "definition/visual-calibration.json",
+      "artifactId": "producer-probe.visual-calibration",
+      "sha256": "25ca020e1f958c211eccbbb0d6aaf4af925f6409095f7dcdf99cf0d9cd8edb48"
+    }
+  }
+}

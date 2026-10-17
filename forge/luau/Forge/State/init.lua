@@ -21,4 +21,28 @@ local State = {}
 State.Store = require(script.Store)
 State.Replication = require(script.Replication)
 
-return State
+--[[
+	Siblings, resolved on the first thing that asks for one.
+
+	One convention for the whole engine, because half the families had this and
+	half did not, and in the half that did not a module beside this file was
+	reachable only by requiring the instance directly. Two conventions in one
+	engine is not a style difference; it is `attempt to index nil` in the first
+	game that trusts the wrong one.
+
+	Lazy rather than eager, matching `Forge` itself. Touching one family must
+	not drag in every module it contains -- several build tables and open
+	connections at load, and paying for all of that to read one constant is how
+	a require graph becomes a frame budget.
+]]
+return setmetatable(State, {
+	__index = function(self, key: string): any
+		local child = script:FindFirstChild(key)
+		if not child or not child:IsA("ModuleScript") then
+			return nil
+		end
+		local module = require(child) :: any
+		rawset(self, key, module)
+		return module
+	end,
+})

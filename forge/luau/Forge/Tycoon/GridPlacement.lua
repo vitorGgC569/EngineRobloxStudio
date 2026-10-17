@@ -37,6 +37,24 @@ local function rectOverlaps(a: Rect, b: Rect): boolean
 	return a.minX < b.maxX and a.maxX > b.minX and a.minZ < b.maxZ and a.maxZ > b.minZ
 end
 
+-- The caller keeps the tables it passed in. Storing them by reference lets a
+-- later edit of a footprint, a plot edge, or an obstacle rect change a plan
+-- that already exists. `table.clone` of the obstacle list still shares each rect.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 function GridPlacement.new(config: {
 	cellSize: number?,
 	bounds: Rect,
@@ -50,19 +68,25 @@ function GridPlacement.new(config: {
 	for _, item in config.items or {} do
 		assert(not items[item.id], ("duplicate item id %q"):format(item.id))
 		assert(item.footprintX > 0 and item.footprintZ > 0, ("item %q needs positive footprints"):format(item.id))
-		items[item.id] = item
+		items[item.id] = deepCopy(item, {})
 	end
 	return setmetatable({
 		cellSize = cellSize,
-		bounds = config.bounds,
-		obstacles = table.clone(config.obstacles or {}),
+		bounds = deepCopy(config.bounds, {}),
+		obstacles = deepCopy(config.obstacles or {}, {}),
 		items = items,
 		occupied = {},
 	}, GridPlacement)
 end
 
 function GridPlacement.item(self: Self, id: string): ItemSpec?
-	return self.items[id]
+	local stored = self.items[id]
+	if not stored then
+		return nil
+	end
+	-- The stored spec is the plan. Handing it back lets a caller grow the
+	-- footprint and change every later fits check.
+	return deepCopy(stored, {})
 end
 
 -- Rotation in quarter turns clockwise; odd turns swap the footprint axes.

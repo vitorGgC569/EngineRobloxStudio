@@ -122,7 +122,7 @@ def bridge_exec(source: str, timeout: int = 300) -> Any:
     payload = json.dumps({"source": source})
     proc = subprocess.run(
         [sys.executable, str(REPO / "rqe.py"), "studio", "call", "bridge.exec",
-         "--params", payload, "--timeout", str(timeout)],
+         "--allow-arbitrary", "--params", payload, "--timeout", str(timeout)],
         capture_output=True, text=True, timeout=timeout + 30, cwd=str(REPO),
     )
     if proc.returncode != 0:

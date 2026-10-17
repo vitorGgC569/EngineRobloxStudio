@@ -1,7 +1,7 @@
 {
   "$schema": "https://json-schema.org/draft/2020-12/schema",
   "schemaVersion": 1,
-  "protocol": "rqe.bridge/1",
+  "protocol": "rqe.bridge/2",
   "description": "Versioned command contracts and control-plane policy for every public Studio Bridge command.",
   "$defs": {
     "vector3": {
@@ -145,15 +145,15 @@
         },
         "maximumDistance": {
           "type": "number",
-          "minimum": 1e-06
+          "minimum": 0.000001
         },
         "sampleSpacing": {
           "type": "number",
-          "minimum": 1e-06
+          "minimum": 0.000001
         },
         "eyeHeight": {
           "type": "number",
-          "minimum": 1e-06
+          "minimum": 0.000001
         },
         "raysPerAnchor": {
           "type": "integer",
@@ -323,7 +323,7 @@
                     },
                     "surfaceArea": {
                       "type": "number",
-                      "minimum": 1e-06
+                      "minimum": 0.000001
                     }
                   },
                   "additionalProperties": false
@@ -351,7 +351,7 @@
                     },
                     "surfaceArea": {
                       "type": "number",
-                      "minimum": 1e-06
+                      "minimum": 0.000001
                     }
                   },
                   "additionalProperties": false
@@ -1366,6 +1366,18 @@
               "type": "integer",
               "minimum": 1
             }
+          },
+          "normals": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "uvs": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
           }
         },
         "additionalProperties": false
@@ -2030,7 +2042,12 @@
       },
       "params": {
         "type": "object",
-        "additionalProperties": false
+        "additionalProperties": false,
+        "properties": {
+          "player": {
+            "type": "string"
+          }
+        }
       },
       "result": {
         "type": "object",
@@ -2088,6 +2105,9 @@
             "type": "number",
             "exclusiveMinimum": 0,
             "maximum": 120
+          },
+          "player": {
+            "type": "string"
           }
         }
       },
@@ -2657,6 +2677,38 @@
         "$ref": "#/$defs/objectResult"
       }
     },
+    "client.prediction": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "sampleSeconds": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 5
+          },
+          "player": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
     "client.player_state": {
       "methodVersion": 1,
       "effect": "read",
@@ -3125,6 +3177,11 @@
           },
           "topLevelOnly": {
             "type": "boolean"
+          },
+          "cursor": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1
           }
         },
         "additionalProperties": false
@@ -3285,6 +3342,79 @@
           }
         },
         "additionalProperties": false
+      }
+    },
+    "instance.serialize": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "paths"
+        ],
+        "properties": {
+          "paths": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 64,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "instance.deserialize": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "parent",
+          "dataBase64"
+        ],
+        "properties": {
+          "parent": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dataBase64": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2796224
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object"
       }
     },
     "instance.children": {
@@ -4549,6 +4679,493 @@
         "additionalProperties": false
       }
     },
+    "studio.capture_permission": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "studio.capture_background": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "includeUi": {
+            "type": "boolean"
+          }
+        }
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "studio.save_place": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "confirmOverwrite": {
+            "type": "boolean"
+          },
+          "saveWithoutPublish": {
+            "type": "boolean"
+          },
+          "confirmPublish": {
+            "type": "boolean"
+          },
+          "placeId": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "confirmOverwrite"
+        ]
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "studio.list_places": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "maxPages": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          },
+          "maxPlaces": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          }
+        }
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "studio.create_place": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "confirmCreate": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "templatePlaceId": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "confirmCreate",
+          "name",
+          "templatePlaceId"
+        ]
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "test.start": {
+      "methodVersion": 1,
+      "effect": "context-transition",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "enum": [
+              "play",
+              "run",
+              "multiplayer"
+            ]
+          },
+          "players": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8
+          },
+          "args": {
+            "type": "object"
+          }
+        },
+        "required": []
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "test.status": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "server",
+        "run"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {},
+        "required": []
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "test.finish": {
+      "methodVersion": 1,
+      "effect": "context-transition",
+      "contexts": [
+        "server",
+        "run"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "testId": {
+            "type": "string"
+          },
+          "result": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "testId"
+        ]
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "test.device": {
+      "methodVersion": 1,
+      "effect": "transient",
+      "contexts": [
+        "edit",
+        "server",
+        "run"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reset": {
+            "type": "boolean"
+          },
+          "deviceId": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 240,
+            "maximum": 8192
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 240,
+            "maximum": 8192
+          },
+          "pixelDensity": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "orientation": {
+            "enum": [
+              "LandscapeLeft",
+              "LandscapeRight",
+              "Portrait",
+              "Sensor"
+            ]
+          },
+          "scalingMode": {
+            "enum": [
+              "ScaleToPhysicalSize",
+              "ActualResolution",
+              "FitToWindow"
+            ]
+          },
+          "memoryMb": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 262144
+          }
+        },
+        "required": []
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "test.device_status": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "server",
+        "run"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {},
+        "required": []
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "test.device_info": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "server",
+        "run"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "deviceId"
+        ],
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "test.network": {
+      "methodVersion": 1,
+      "effect": "transient",
+      "contexts": [
+        "edit",
+        "server",
+        "run"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reset": {
+            "type": "boolean"
+          },
+          "preset": {
+            "enum": [
+              "zero",
+              "ideal_fiber",
+              "wired_broadband",
+              "home_wifi",
+              "mobile_4g",
+              "bad_3g"
+            ]
+          },
+          "inboundLatencyMs": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "inboundJitterMs": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "inboundLossPercent": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 0.5
+          },
+          "outboundLatencyMs": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "outboundJitterMs": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "outboundLossPercent": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 0.5
+          },
+          "randomizeJoinInstanceOrder": {
+            "type": "boolean"
+          }
+        },
+        "required": []
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "test.network_status": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "server",
+        "run"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {},
+        "required": []
+      },
+      "result": {
+        "type": "object"
+      }
+    },
     "studio.info": {
       "methodVersion": 1,
       "effect": "read",
@@ -5551,6 +6168,301 @@
           }
         },
         "additionalProperties": false
+      }
+    },
+    "client.camera_get": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "player": {
+            "type": "string"
+          }
+        }
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "position",
+          "lookVector",
+          "fieldOfView",
+          "viewportSize",
+          "cameraType",
+          "cameraSource",
+          "player"
+        ],
+        "properties": {
+          "applied": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "lookVector": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "fieldOfView": {
+            "type": "number"
+          },
+          "cameraType": {
+            "type": "string"
+          },
+          "viewportSize": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "cameraSource": {
+            "const": "client"
+          },
+          "player": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "client.input": {
+      "methodVersion": 1,
+      "effect": "transient",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "enum": [
+              "keys",
+              "click",
+              "text"
+            ]
+          },
+          "keys": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": {
+              "type": "string",
+              "maxLength": 40
+            }
+          },
+          "duration": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 3
+          },
+          "x": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 16384
+          },
+          "y": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 16384
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "player": {
+            "type": "string"
+          }
+        }
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "delivered",
+          "source",
+          "player"
+        ],
+        "properties": {
+          "delivered": {
+            "type": "boolean"
+          },
+          "source": {
+            "const": "VirtualInput"
+          },
+          "player": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "test.leave": {
+      "methodVersion": 1,
+      "effect": "context-transition",
+      "contexts": [
+        "server",
+        "run",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "test.add_players": {
+      "methodVersion": 1,
+      "effect": "context-transition",
+      "contexts": [
+        "server",
+        "run"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8
+          }
+        },
+        "required": [
+          "count"
+        ]
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "studio.environment": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "studio.selection": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "studio.select": {
+      "methodVersion": 1,
+      "effect": "transient",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "enum": [
+              "set",
+              "add",
+              "remove"
+            ]
+          },
+          "paths": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      },
+      "result": {
+        "type": "object"
       }
     }
   }

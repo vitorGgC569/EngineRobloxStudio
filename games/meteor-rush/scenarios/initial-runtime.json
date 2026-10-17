@@ -1,0 +1,41 @@
+{
+  "id": "meteor-rush-initial-runtime",
+  "description": "Fresh Play Solo smoke for the exact Meteor Rush build: attach to a real player and prove the primary objective HUD is visible before visual capture. It does not claim the dynamic meteor loop or persistence.",
+  "requires": {
+    "playSession": true,
+    "clientBridge": true
+  },
+  "steps": [
+    {
+      "reset": {},
+      "comment": "visual evidence starts from a fresh exact-build session"
+    },
+    {
+      "attach": {},
+      "fatal": true,
+      "comment": "continue only with a real player"
+    },
+    {
+      "wait": {
+        "seconds": 1
+      },
+      "comment": "allow the HUD and base assignment to settle"
+    },
+    {
+      "gui": {
+        "visibleText": "CAPTURE A METEOR"
+      },
+      "fatal": true,
+      "comment": "prove the main loop instruction is visible on the real client"
+    }
+  ],
+  "releaseEvidence": [
+    {
+      "id": "ui_initial_surface",
+      "probe": "ui_initial_surface",
+      "category": "ui",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED"
+    }
+  ]
+}

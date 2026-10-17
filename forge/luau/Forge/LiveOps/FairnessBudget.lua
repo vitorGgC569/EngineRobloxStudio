@@ -21,9 +21,20 @@ type Self = {
 FairnessBudget.__index = FairnessBudget
 
 function FairnessBudget.new(config: { maxAssists: number?, windowSeconds: number?, refillPerWindow: number?, clock: (() -> number)? }): Self
+	-- nil is the default. 0 is a real window. A negative window puts the
+	-- cutoff in the future, so a grant stored at now is dropped at once.
+	local windowSeconds = config.windowSeconds
+	if windowSeconds == nil then
+		windowSeconds = 600
+	end
+	assert(type(windowSeconds) == "number" and windowSeconds >= 0, "windowSeconds must be >= 0")
+	-- `or` keeps -1: Luau treats it as truthy, and the first real request
+	-- then sees the budget already exhausted. 0 stays and means no assists.
+	local maxAssists = config.maxAssists or 5
+	assert(type(maxAssists) == "number" and maxAssists >= 0, "maxAssists must be >= 0")
 	return setmetatable({
-		maxAssists = config.maxAssists or 5,
-		windowSeconds = config.windowSeconds or 600,
+		maxAssists = maxAssists,
+		windowSeconds = windowSeconds,
 		refillPerWindow = config.refillPerWindow or 1,
 		used = {},
 		clock = config.clock or os.time,
@@ -41,9 +52,10 @@ local function prune(self: Self): ()
 	self.used = kept
 end
 
--- hasLegalMove is the EVIDENCE callback (pure rules check); no move = grant eligible.
+-- Only an explicit false is evidence that no legal move existed. nil and
+-- true are not that evidence, so they must not debit the budget.
 function FairnessBudget.requestAssist(self: Self, hasLegalMove: boolean): (boolean, string?)
-	if hasLegalMove then
+	if hasLegalMove ~= false then
 		return false, "legal_move_exists"
 	end
 	prune(self)

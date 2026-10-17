@@ -432,4 +432,31 @@ function Audio.describe(): { [string]: any }
 	}
 end
 
-return Audio
+--[[
+	Siblings, resolved on the first thing that asks for one.
+
+	`Bank` is the reason this is here rather than a tidy-up. `Bank.lua` states
+	its own usage, in its own header, as
+
+		Forge.Audio.defineMany(Forge.Audio.Bank.specs())
+
+	and `rqe/assets/soundbank.py` *generates* that exact line into the file
+	every time the bank is rebuilt. `Forge.Audio.Bank` was nil, so the canonical
+	example of a generated module has never been able to run -- and nothing said
+	so, because indexing a plain table for a missing key is not an error until
+	the nil is called.
+
+	Lazy rather than eager, matching `Forge` itself: touching one family must
+	not drag in every module it contains.
+]]
+return setmetatable(Audio, {
+	__index = function(self, key: string): any
+		local child = script:FindFirstChild(key)
+		if not child or not child:IsA("ModuleScript") then
+			return nil
+		end
+		local module = require(child) :: any
+		rawset(self, key, module)
+		return module
+	end,
+})

@@ -21,6 +21,7 @@
 -- never started.
 
 local AssetService = game:GetService("AssetService")
+local History = require(script.Parent.Parent.History)
 
 local Errors = require(script.Parent.Parent.Errors)
 
@@ -277,14 +278,13 @@ end
 	comment about the afternoon that cost -- and a play session is exactly
 	where nobody can afford a stall.
 ]]
-local InsertService = game:GetService("InsertService")
 local RunService = game:GetService("RunService")
 
 --: Where fetched models are parked. Named so a human opening the place can
 --: see immediately that these came from the library and are not authored here.
 local IMPORT_FOLDER = "RQEToolboxImports"
 
-function Assets.insert(params: { [string]: any }): any
+local function insertImpl(params: { [string]: any }): any
 	local assetId = tonumber(params.assetId)
 	if not assetId or assetId <= 0 then
 		Errors.raise(Errors.BAD_PARAMS, "assetId must be a positive number")
@@ -292,42 +292,49 @@ function Assets.insert(params: { [string]: any }): any
 
 	if RunService:IsRunning() then
 		Errors.raise(Errors.UNSUPPORTED_CONTEXT,
-			"assets.insert is edit-only: LoadAsset hangs rather than fails in a "
-			.. "running place, and a hung insert stalls the whole session")
+			"assets.insert is edit-only: asset loading mutates the place and belongs in the editor")
 	end
 
 	--[[
-		`game:GetObjects`, not `InsertService:LoadAsset`.
+		Current Studio exposes AssetService:LoadAssetAsync, which is the primary
+		loader here. It is preferable to the old InsertService path because it is
+		the current asset-loading surface and returns the imported model directly.
 
-		This started as LoadAsset and LoadAsset refuses almost everything worth
-		fetching: it answers "User is not authorized to access Asset" for any
-		asset the signed-in user does not own, free public models included. That
-		is not a guess -- measured across 36 free models spanning 2015 to 2023,
-		different creators and popularities, it loaded **none** of them. The
-		only third-party assets it accepts are the ones Roblox itself created.
-
-		`GetObjects` is the plugin-context path, and on the same 36 it loaded
-		33. The three it missed answer HTTP 403, which is the creator having
-		restricted distribution -- a real refusal rather than an API limitation,
-		and the only kind that should reach the caller.
-
-		LoadAsset is kept as a fallback for the one thing it still has: it takes
-		a bare numeric id, so it works if a future Roblox build ever changes how
-		`rbxassetid://` resolves here.
+		`game:GetObjects` remains compatibility-only for older Studio builds that
+		do not expose LoadAssetAsync. The fallback is intentionally bounded and
+		reported through `loader`; it is not evidence that the modern API failed
+		and must never silently become the preferred path again.
 	]]
 	local finished, ok, result = false, false, nil
+	local loadedContainer: Instance? = nil
+	local loader = "AssetService.LoadAssetAsync"
+	local sandboxed: boolean? = nil
+
 	task.spawn(function()
-		ok, result = pcall(function()
-			return game:GetObjects("rbxassetid://" .. assetId)
-		end)
-		if not ok or typeof(result) ~= "table" or #(result :: any) == 0 then
-			local fallbackOk, fallback = pcall(function()
-				return InsertService:LoadAsset(assetId)
+		local modern = (AssetService :: any).LoadAssetAsync
+		if type(modern) == "function" then
+			local loadOk, loaded = pcall(function()
+				return (AssetService :: any):LoadAssetAsync(assetId)
 			end)
-			if fallbackOk and typeof(fallback) == "Instance" then
-				ok, result = true, (fallback :: Instance):GetChildren()
-				fallback:Destroy()
+			if loadOk and typeof(loaded) == "Instance" then
+				loadedContainer = loaded :: Instance
+				result = (loaded :: Instance):GetChildren()
+				ok = typeof(result) == "table" and #(result :: any) > 0
+				pcall(function()
+					sandboxed = (loaded :: any).Sandboxed == true
+				end)
+			else
+				ok = false
+				result = loaded
 			end
+		else
+			-- Compatibility only. Current Studio exposes LoadAssetAsync; this
+			-- path exists so an older Studio reports degraded capability instead
+			-- of crashing the bridge.
+			loader = "game.GetObjects.compat"
+			ok, result = pcall(function()
+				return game:GetObjects("rbxassetid://" .. assetId)
+			end)
 		end
 		finished = true
 	end)
@@ -348,8 +355,6 @@ function Assets.insert(params: { [string]: any }): any
 			string.format("asset %d could not be loaded: %s", assetId, tostring(result)))
 	end
 
-	--: `GetObjects` hands back the roots directly; there is no wrapper model to
-	--: unwrap and destroy the way `LoadAsset` produces one.
 	local roots = result :: { Instance }
 
 	--[[
@@ -387,9 +392,14 @@ function Assets.insert(params: { [string]: any }): any
 		root.Parent = parent
 		table.insert(names, root.Name)
 	end
+	if loadedContainer then
+		loadedContainer:Destroy()
+	end
 
 	return {
 		assetId = assetId,
+		loader = loader,
+		sandboxed = sandboxed,
 		roots = names,
 		parts = parts,
 		scripts = scripts,
@@ -397,6 +407,14 @@ function Assets.insert(params: { [string]: any }): any
 		path = parent:GetFullName(),
 	}
 end
+
+
+Assets.insert = function(params: { [string]: any }): any
+	return History.record("RQE assets.insert", function()
+		return insertImpl(params)
+	end)
+end
+
 
 -- ============================== verification ================================
 --[[
@@ -577,6 +595,8 @@ function Assets.createMesh(params: { [string]: any }): any
 			"triangles must be a flat array of vertex indices in threes")
 	end
 
+	if params.normals and #params.normals ~= #vertices then Errors.raise(Errors.BAD_PARAMS, "normals must match vertex count") end
+	if params.uvs and #params.uvs ~= #vertices // 3 * 2 then Errors.raise(Errors.BAD_PARAMS, "uvs must contain two values per vertex") end
 	local created, mesh = pcall(function()
 		return (AssetService :: any):CreateEditableMesh({})
 	end)
@@ -587,17 +607,22 @@ function Assets.createMesh(params: { [string]: any }): any
 	--: One-based indices in, whatever the engine hands back out. The caller
 	--: writes ordinary Lua indices and never learns the engine's ids.
 	local ids: { any } = {}
+	local normals, uvs = {}, {}
 	local built, buildError = pcall(function()
 		for index = 1, #vertices, 3 do
 			table.insert(ids, mesh:AddVertex(
 				Vector3.new(vertices[index], vertices[index + 1], vertices[index + 2])))
+			if params.normals then table.insert(normals, mesh:AddNormal(Vector3.new(params.normals[index], params.normals[index+1], params.normals[index+2]))) end
 		end
+		if params.uvs then for index=1,#params.uvs,2 do table.insert(uvs,mesh:AddUV(Vector2.new(params.uvs[index],params.uvs[index+1]))) end end
 		for index = 1, #triangles, 3 do
 			local a, b, c = triangles[index], triangles[index + 1], triangles[index + 2]
 			if not (ids[a] and ids[b] and ids[c]) then
 				error(string.format("triangle %d references a vertex that was never added", index))
 			end
-			mesh:AddTriangle(ids[a], ids[b], ids[c])
+			local face=mesh:AddTriangle(ids[a], ids[b], ids[c])
+			if params.normals then mesh:SetFaceNormals(face,{normals[a],normals[b],normals[c]}) end
+			if params.uvs then mesh:SetFaceUVs(face,{uvs[a],uvs[b],uvs[c]}) end
 		end
 	end)
 	if not built then

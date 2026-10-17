@@ -31,6 +31,7 @@ from pathlib import Path
 from typing import Any
 
 from .itch import DELAY, _key, fetch_upload
+from ..security import SecurityBoundaryError, validate_filename
 
 ROOT = Path("assets/itch")
 MANIFEST = ROOT / "manifest.json"
@@ -74,7 +75,20 @@ def run(packs: list[dict[str, Any]], root: Path = ROOT,
         folder = root / _slug(pack.get("author") or "unknown") / _slug(pack["title"])
 
         for upload in pack.get("uploads") or []:
-            name = upload.get("filename") or f"{upload['id']}.bin"
+            try:
+                name = validate_filename(
+                    upload.get("filename") or f"{upload['id']}.bin",
+                    label="itch upload filename",
+                )
+            except SecurityBoundaryError as error:
+                failed += 1
+                records[str(upload.get("id") or "invalid")] = {
+                    "pack": pack["title"],
+                    "author": pack.get("author"),
+                    "url": pack.get("url"),
+                    "error": str(error)[:160],
+                }
+                continue
             destination = folder / name
             marker = str(upload["id"])
             expected = int(upload.get("size") or 0)
@@ -89,7 +103,13 @@ def run(packs: list[dict[str, Any]], root: Path = ROOT,
                 continue
 
             try:
-                written = fetch_upload(upload["id"], destination, key)
+                written = fetch_upload(
+                    upload["id"],
+                    destination,
+                    key,
+                    expected_size=expected or None,
+                    expected_md5=upload.get("md5") if verify else None,
+                )
             except (urllib.error.HTTPError, urllib.error.URLError,
                     OSError, RuntimeError) as error:
                 failed += 1

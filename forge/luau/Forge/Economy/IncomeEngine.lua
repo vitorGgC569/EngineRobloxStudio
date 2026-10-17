@@ -49,7 +49,14 @@ end
 function IncomeEngine.addContributor(self: IncomeEngine, id: string, contributor: Contributor)
 	local kind = contributor.kind
 	assert(kind == "add" or kind == "mul" or kind == "pow", "IncomeEngine.addContributor expects kind 'add', 'mul' or 'pow'")
-	self.contributors[id] = { kind = kind, value = contributor.value }
+	local value = contributor.value
+	-- math.huge is a number, so it used to be stored and total() stayed infinite.
+	-- -math.huge is still less than math.huge, so both ends have to be excluded.
+	assert(
+		type(value) == "number" and value == value and value > -math.huge and value < math.huge,
+		"contributor value must be a finite number"
+	)
+	self.contributors[id] = { kind = kind, value = value }
 	self.dirty = true
 end
 
@@ -63,6 +70,11 @@ end
 -- ========================== external multipliers =============================
 
 function IncomeEngine.setMultiplier(self: IncomeEngine, kind: ContributorKind, value: number)
+	-- The contributor check did not cover this path, so math.huge still made total() infinite.
+	assert(
+		type(value) == "number" and value == value and value > -math.huge and value < math.huge,
+		"multiplier must be a finite number"
+	)
 	self.multipliers[kind] = value
 	self.dirty = true
 end
@@ -104,6 +116,10 @@ function IncomeEngine.total(self: IncomeEngine): number
 end
 
 function IncomeEngine.tick(self: IncomeEngine, dt: number): number
+	-- A negative step used to pay negative income, so a rewind debited the player.
+	if type(dt) ~= "number" or dt ~= dt or dt < 0 or not (dt < math.huge) then
+		dt = 0
+	end
 	return self:total() * dt
 end
 

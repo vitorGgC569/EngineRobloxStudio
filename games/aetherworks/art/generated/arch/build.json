@@ -1,0 +1,49 @@
+{
+  "program": "arch",
+  "result": "outer",
+  "steps": [
+    {
+      "index": 0,
+      "op": "box"
+    },
+    {
+      "index": 1,
+      "op": "bevel"
+    },
+    {
+      "index": 2,
+      "op": "box"
+    },
+    {
+      "index": 3,
+      "op": "bevel"
+    },
+    {
+      "index": 4,
+      "op": "boolean"
+    },
+    {
+      "index": 5,
+      "op": "uv_unwrap"
+    },
+    {
+      "index": 6,
+      "op": "triangulate"
+    }
+  ],
+  "blend": "C:\\Users\\vitor\\OneDrive\\Desktop\\RobloxGamesMCP\\games\\aetherworks\\art\\generated\\arch\\project\\arch.blend",
+  "glb": "C:\\Users\\vitor\\OneDrive\\Desktop\\RobloxGamesMCP\\games\\aetherworks\\art\\generated\\arch\\export\\arch.glb",
+  "fbx": "C:\\Users\\vitor\\OneDrive\\Desktop\\RobloxGamesMCP\\games\\aetherworks\\art\\generated\\arch\\export\\arch.fbx",
+  "meshData": "C:\\Users\\vitor\\OneDrive\\Desktop\\RobloxGamesMCP\\games\\aetherworks\\art\\generated\\arch\\export\\arch.mesh.json",
+  "runtimeTriangles": 160,
+  "runtimeVertices": 336,
+  "triangles": 160,
+  "vertices": 80,
+  "materials": [],
+  "dimensions": [
+    8.0,
+    3.0,
+    9.0
+  ],
+  "hasUv": true
+}

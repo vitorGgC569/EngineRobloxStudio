@@ -55,6 +55,10 @@ function RegeneratingResource.spend(self: Self, amount: number): boolean
 end
 
 function RegeneratingResource.tick(self: Self, dt: number): ()
+	-- A rewind is not a spend. Only spend() may take value off the bar.
+	if dt < 0 then
+		dt = 0
+	end
 	self.value = math.min(self.cap, self.value + self.regenPerSecond * self.phaseMultiplier * dt)
 end
 

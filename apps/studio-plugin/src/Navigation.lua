@@ -68,7 +68,7 @@ function Navigation.approachPoints(instance: Instance, clearance: number?): { Ap
 
 	for _, pad in ipairs(pads) do
 		for _, direction in ipairs(directions) do
-			local offset = direction.axis * (direction.half + pad)
+			local offset = cframe:VectorToWorldSpace(direction.axis * (direction.half + pad))
 			local grounded = Navigation.standablePoint(centre + offset)
 			if grounded then
 				table.insert(points, { name = string.format("%s+%.1f", direction.name, pad), point = grounded })
@@ -86,8 +86,20 @@ function Navigation.targetsFrom(params: { [string]: any }, positionKey: string, 
 		return { { name = "explicit", point = Vector3.new(tonumber(value[1]) or 0, tonumber(value[2]) or 0, tonumber(value[3]) or 0) } }
 	end
 	if params[pathKey] ~= nil then
+		local original = Resolve.instance(tostring(params[pathKey]))
 		local instance = Resolve.spatial(tostring(params[pathKey]))
-		return Navigation.approachPoints(instance, tonumber(params.approachClearance))
+		local candidates = Navigation.approachPoints(instance, tonumber(params.approachClearance))
+		if original:IsA("ProximityPrompt") then
+			local center = Resolve.boundingBox(instance).Position
+			local usable = {}
+			for _, candidate in candidates do
+				if (candidate.point - center).Magnitude <= original.MaxActivationDistance then
+					table.insert(usable, candidate)
+				end
+			end
+			return usable
+		end
+		return candidates
 	end
 	return {}
 end

@@ -281,7 +281,7 @@ function PlayerCommands.activate(params: { [string]: any }): any
 		(tool :: Tool):Activate()
 	end)
 	if not ok then
-		Errors.raise("E_RUNTIME", "activation failed: " .. tostring(failure))
+		Errors.raise(Errors.EXEC, "activation failed: " .. tostring(failure))
 	end
 
 	return {

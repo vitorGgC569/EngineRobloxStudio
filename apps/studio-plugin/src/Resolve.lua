@@ -140,6 +140,14 @@ end
 --- Resolve a path that must be a BasePart or a Model with a bounding box.
 function Resolve.spatial(path: string?): Instance
 	local instance = Resolve.instance(path)
+	if instance:IsA("ProximityPrompt") then
+		if instance.Parent then
+			instance = instance.Parent
+		end
+	end
+	if instance:IsA("Attachment") then
+		return instance
+	end
 	if instance:IsA("BasePart") or instance:IsA("Model") or instance:IsA("Folder") or instance:IsA("Workspace") then
 		return instance
 	end
@@ -149,6 +157,9 @@ end
 
 --- Compute a world-space bounding box for any container or part.
 function Resolve.boundingBox(instance: Instance): (CFrame, Vector3)
+	if instance:IsA("Attachment") then
+		return instance.WorldCFrame, Vector3.zero
+	end
 	if instance:IsA("BasePart") then
 		return instance.CFrame, instance.Size
 	end

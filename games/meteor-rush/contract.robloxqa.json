@@ -1,0 +1,174 @@
+{
+  "$schema": "../../schemas/game-contract.schema.json",
+  "schemaVersion": 1,
+  "contractId": "meteor-rush.contract",
+  "game": {
+    "name": "Meteor Rush",
+    "genre": "collection",
+    "max_players": 6,
+    "target_devices": [
+      "desktop",
+      "phone"
+    ]
+  },
+  "performance_budget": {
+    "client": {
+      "target_fps": 60,
+      "max_frame_ms": 16.667
+    },
+    "instances": {
+      "max_workspace": 4000
+    },
+    "mobile": {
+      "mandatory": true
+    }
+  },
+  "visualQuality": {
+    "spec": "contracts/visual-quality.json",
+    "specId": "meteor-rush.visual-quality",
+    "schemaMajor": 1,
+    "required": true,
+    "release": {
+      "minimumScore": 80,
+      "minimumRuleCoverage": 0.8,
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "missingEvidence": "FAIL"
+    }
+  },
+  "release_gate": {
+    "required_categories": [
+      "structural",
+      "runtime",
+      "ui",
+      "gameplay",
+      "persistence"
+    ],
+    "forbidden_sources": [
+      "headless-runtime",
+      "fixture"
+    ],
+    "minimum_requirement_coverage": 1,
+    "minimum_category_coverage": {
+      "structural": 1,
+      "runtime": 1,
+      "ui": 1,
+      "gameplay": 1,
+      "persistence": 1
+    },
+    "minimum_validation_by_type": {
+      "structural": "STATICALLY_VALIDATED",
+      "runtime": "RUNTIME_VALIDATED",
+      "ui": "E2E_VALIDATED",
+      "gameplay": "E2E_VALIDATED",
+      "persistence": "E2E_VALIDATED"
+    },
+    "maximum_evidence_age_seconds_by_level": {
+      "STATICALLY_VALIDATED": 604800,
+      "RUNTIME_VALIDATED": 86400,
+      "VISUALLY_VALIDATED": 86400,
+      "E2E_VALIDATED": 86400
+    },
+    "minimum_visual_score": 80,
+    "require_trustworthy_captures": true
+  },
+  "requirements": [
+    {
+      "id": "required_project_topology_exists",
+      "probe": "structural_integrity",
+      "type": "structural",
+      "category": "structural",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "filesystem"
+        ]
+      }
+    },
+    {
+      "id": "release_contract_is_valid",
+      "probe": "contract_schema",
+      "type": "structural",
+      "category": "structural",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "contract-validator"
+        ]
+      }
+    },
+    {
+      "id": "runtime_has_no_errors",
+      "probe": "runtime_error",
+      "type": "runtime",
+      "category": "runtime",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "RUNTIME_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "studio-bridge"
+        ]
+      }
+    },
+    {
+      "id": "ui_initial_surface",
+      "probe": "ui_initial_surface",
+      "type": "ui",
+      "category": "ui",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "E2E_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "studio-scenario"
+        ]
+      }
+    },
+    {
+      "id": "meteor_capture_decode",
+      "probe": "core_loop_collect",
+      "type": "gameplay",
+      "category": "gameplay",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "E2E_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "studio-scenario"
+        ]
+      }
+    },
+    {
+      "id": "passive_income_progresses",
+      "probe": "core_loop_unlock",
+      "type": "gameplay",
+      "category": "gameplay",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "E2E_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "studio-scenario"
+        ]
+      }
+    },
+    {
+      "id": "profile_survives_rejoin",
+      "probe": "persistence_rejoin",
+      "type": "persistence",
+      "category": "persistence",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "E2E_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "studio-scenario"
+        ]
+      }
+    }
+  ]
+}

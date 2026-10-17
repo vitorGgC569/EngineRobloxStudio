@@ -5,4 +5,5 @@
 
 return table.freeze({
 	bearerToken = "",
+	installationId = "",
 })

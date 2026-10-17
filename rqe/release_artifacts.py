@@ -855,12 +855,21 @@ def execute_declared_scenarios(
     context: str,
     place_name: str,
     reset_session: Any | None = None,
+    additional_scenarios: list[str] | None = None,
 ) -> dict[str, str]:
     """Run each evaluation-state scenario or preserve why it could not run."""
 
     outcomes: dict[str, str] = {}
-    for state_id, state in visual_spec.data.get("evaluationStates", {}).items():
-        scenario_path = assembler.project_root / str(state.get("scenario") or "")
+    targets: list[tuple[str | None, Path]] = [
+        (str(state_id), assembler.project_root / str(state.get("scenario") or ""))
+        for state_id, state in visual_spec.data.get("evaluationStates", {}).items()
+    ]
+    targets.extend(
+        (None, assembler.project_root / str(relative))
+        for relative in (additional_scenarios or [])
+        if isinstance(relative, str) and relative.strip()
+    )
+    for state_id, scenario_path in targets:
         try:
             scenario = load_scenario(scenario_path)
             requires = scenario.get("requires") if isinstance(scenario, dict) else {}
@@ -873,28 +882,31 @@ def execute_declared_scenarios(
                     blocked_reason=(
                         f"scenario requires a Play Solo player; pinned Studio context is {context!r}"
                     ),
-                    state_id=str(state_id),
+                    state_id=state_id,
                 )
-                outcomes[str(state_id)] = "BLOCKED"
+                outcome_key = state_id or f"scenario:{scenario_path.stem}"
+                outcomes[outcome_key] = "BLOCKED"
                 continue
             result = ScenarioRunner(bridge, reset_session=reset_session).run(scenario)
+            recorded_session = str(getattr(bridge, "pinned_session", None) or session_id)
             assembler.record_scenario(
                 scenario_path,
                 result=result,
-                session_id=session_id,
+                session_id=recorded_session,
                 place_name=place_name,
-                state_id=str(state_id),
+                state_id=state_id,
             )
-            outcomes[str(state_id)] = result.status
+            outcome_key = state_id or f"scenario:{result.scenario}"
+            outcomes[outcome_key] = result.status
         except Exception as exc:
             try:
                 assembler.record_scenario(
                     scenario_path,
                     result=None,
-                    session_id=session_id,
+                    session_id=str(getattr(bridge, "pinned_session", None) or session_id),
                     place_name=place_name,
                     blocked_reason=f"{type(exc).__name__}: {exc}",
-                    state_id=str(state_id),
+                    state_id=state_id,
                 )
             except Exception as record_exc:
                 assembler.command_errors.append({
@@ -902,7 +914,8 @@ def execute_declared_scenarios(
                     "stateId": state_id,
                     "message": f"{type(record_exc).__name__}: {record_exc}",
                 })
-            outcomes[str(state_id)] = "BLOCKED"
+            outcome_key = state_id or f"scenario:{scenario_path.stem}"
+            outcomes[outcome_key] = "BLOCKED"
     return outcomes
 
 

@@ -15,6 +15,7 @@ already done.
 from __future__ import annotations
 
 import shutil
+import pytest
 import unittest
 from pathlib import Path
 from tempfile import TemporaryDirectory
@@ -28,6 +29,17 @@ REPO = Path(__file__).resolve().parents[1]
 BRIEF = ("Quero um simulator de criaturas inspirado em recifes e cavernas, "
          "publico 9-15 anos, mobile-first, com loja e sessoes de 12 minutos.")
 
+
+#: Marked slow: every class here runs a real production pipeline in
+#: `setUpClass` -- rojo, geometry, the whole producer -- which is 77 seconds
+#: per class and is the work, not waste. `test_engine.py` was the other kind:
+#: 107 seconds of copying 34 GB to edit one JSON field, and that was fixed
+#: rather than marked.
+#:
+#: The full suite is the gate and CI runs all of it. `pytest -m "not slow"` is
+#: the working loop, and the deselected count is printed so the difference is
+#: never invisible.
+pytestmark = pytest.mark.slow
 
 class TestTheGraph(unittest.TestCase):
     def test_the_graph_is_readable_before_anything_runs(self):

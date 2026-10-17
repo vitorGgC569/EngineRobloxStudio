@@ -1,0 +1,83 @@
+{
+  "name": "dreadhollow",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "WorldKit": {
+        "$path": "../../roblox/lib/WorldKit"
+      },
+      "GameKit": {
+        "$path": "../../roblox/lib/GameKit"
+      },
+      "Core": {
+        "$path": "../../roblox/lib/Core"
+      },
+      "Behaviours": {
+        "$path": "../../roblox/lib/Behaviours"
+      },
+      "Shared": {
+        "$path": "src/shared"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Server": {
+        "$path": "src/server"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": {
+          "$path": "src/client"
+        }
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "Gravity": 196.2,
+        "FallenPartsDestroyHeight": -50
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": "Future",
+        "ClockTime": 0,
+        "Brightness": 2,
+        "Ambient": [50, 55, 75],
+        "OutdoorAmbient": [55, 62, 82],
+        "FogColor": [18, 22, 35],
+        "FogStart": 60,
+        "FogEnd": 400,
+        "GlobalShadows": true
+      }
+    },
+    "Atmosphere": {
+      "$className": "Atmosphere",
+      "$properties": {
+        "Density": 0.25,
+        "Offset": 0.15,
+        "Color": [12, 14, 24],
+        "Decay": [8, 10, 18],
+        "Glare": 0.25,
+        "Haze": 0.6
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "$properties": {
+        "ResetPlayerGuiOnSpawn": false
+      }
+    },
+    "Players": {
+      "$className": "Players",
+      "$properties": {
+        "RespawnTime": 3
+      }
+    }
+  }
+}

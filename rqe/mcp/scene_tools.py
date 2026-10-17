@@ -137,12 +137,19 @@ def register_scene_tools(server: Any) -> Any:
 
         from ..hub.client import StudioBridge
 
-        bridge = StudioBridge()
+        bridge = StudioBridge(allow_arbitrary=True)
         try:
-            bridge.pin_to_running()
-            return bridge.call("client.gui_click", {
-                "path": str(arguments["path"]),
-            }, timeout=float(arguments.get("timeout") or 30.0))
+            timeout = float(arguments.get("timeout") or 30.0)
+            with bridge.lease_scope(
+                agent_id="mcp-scene-ui-click",
+                context="running",
+                ttl_seconds=max(30.0, min(timeout + 30.0, 300.0)),
+            ):
+                return bridge.call(
+                    "client.gui_click",
+                    {"path": str(arguments["path"])},
+                    timeout=timeout,
+                )
         except Exception as error:  # noqa: BLE001
             return {
                 "clicked": False,

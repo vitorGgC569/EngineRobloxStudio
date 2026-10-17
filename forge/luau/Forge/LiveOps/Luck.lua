@@ -75,7 +75,10 @@ function Luck.best(sources: { Source }): (number, string?)
 	for _, source in sources do
 		if source.active ~= false then
 			local value = source.multiplier or 1
-			if value > best then
+			-- math.huge is greater than every finite multiplier, so it
+			-- wins and the returned multiplier is infinite. NaN is not
+			-- greater than best either, but it must not be stored.
+			if type(value) == "number" and value == value and value > best and value < math.huge then
 				best = value
 				from = source.source
 			end
@@ -97,11 +100,27 @@ end
 	be completed stops motivating the moment players work that out.
 ]]
 function Luck.fromCompletion(discovered: number, obtainable: number, maxBonus: number?): number
-	if obtainable <= 0 then
+	-- NaN is not <= 0, so the old check divided by it and returned NaN.
+	-- A missing type, a NaN, a count that is not above 0, or an infinite
+	-- count is not a collection that can be completed.
+	if type(obtainable) ~= "number" or obtainable ~= obtainable or not (obtainable > 0) or not (obtainable < math.huge) then
 		return 1
 	end
-	local fraction = math.clamp(discovered / obtainable, 0, 1)
-	return 1 + fraction * (maxBonus or 1)
+	-- A NaN discovered count divides to NaN and the multiplier stays NaN.
+	-- A missing type, a NaN, a negative, or an infinite count is none found.
+	local found = discovered
+	if type(found) ~= "number" or found ~= found or found < 0 or not (found < math.huge) then
+		found = 0
+	end
+	local fraction = math.clamp(found / obtainable, 0, 1)
+	-- math.huge is truthy, so `or 1` kept it and a full collection
+	-- returned infinity. A missing, non-numeric, NaN, negative, or
+	-- infinite bonus is the same default of 1.
+	local bonus = maxBonus
+	if type(bonus) ~= "number" or bonus ~= bonus or bonus < 0 or not (bonus < math.huge) then
+		bonus = 1
+	end
+	return 1 + fraction * bonus
 end
 
 --[[
@@ -121,7 +140,9 @@ function Luck.apply(drops: { any }, multiplier: number, minRarity: number?): { a
 	local out = {}
 	for _, drop in drops do
 		local weight = drop.weight
-		if multiplier > 1 and (drop.rarity or 0) >= threshold then
+		-- math.huge is greater than 1, so it used to scale the rare weight
+		-- to infinity. NaN must not scale either.
+		if type(multiplier) == "number" and multiplier == multiplier and multiplier > 1 and multiplier < math.huge and (drop.rarity or 0) >= threshold then
 			weight *= multiplier
 		end
 		table.insert(out, {
@@ -142,16 +163,31 @@ end
 	notice anything else.
 ]]
 function Luck.odds(drops: { any }): { [string]: number }
+	-- math.huge makes the total infinite, so a real weight divided by it
+	-- is 0. A missing type, a NaN, a negative, or an infinite weight is
+	-- not a chance.
+	local function usable(weight: any): number?
+		if type(weight) == "number" and weight == weight and weight >= 0 and weight < math.huge then
+			return weight
+		end
+		return nil
+	end
 	local total = 0
 	for _, drop in drops do
-		total += drop.weight
+		local weight = usable(drop.weight)
+		if weight ~= nil then
+			total += weight
+		end
 	end
 	local out: { [string]: number } = {}
 	if total <= 0 then
 		return out
 	end
 	for _, drop in drops do
-		out[drop.id] = drop.weight / total
+		local weight = usable(drop.weight)
+		if weight ~= nil then
+			out[drop.id] = weight / total
+		end
 	end
 	return out
 end

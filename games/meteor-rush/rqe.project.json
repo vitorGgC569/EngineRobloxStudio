@@ -1,0 +1,35 @@
+{
+  "name": "meteor-rush",
+  "contract": "contract.robloxqa.json",
+  "rojoProject": "default.project.json",
+  "scripts": "src",
+  "scanPaths": [
+    "src"
+  ],
+  "agentScenario": "scenarios/initial-runtime.json",
+  "reports": "reports",
+  "release": {
+    "seed": 20260929
+  },
+  "expectedPaths": [
+    "default.project.json",
+    "contract.robloxqa.json",
+    "contracts/visual-quality.json",
+    "scenarios/initial-runtime.json",
+    "src/shared/Config.lua",
+    "src/shared/Content.lua",
+    "src/shared/Wire.lua",
+    "src/server/Rules.lua",
+    "src/server/World.lua",
+    "src/server/init.server.lua",
+    "src/server/tests/Rules.lua",
+    "src/client/init.client.lua",
+    "scenarios/core-loop-e2e.json",
+    "scenarios/persistence-rejoin-e2e.json"
+  ],
+  "releaseScenarios": [
+    "scenarios/core-loop-e2e.json",
+    "scenarios/persistence-rejoin-e2e.json"
+  ],
+  "visualContract": "contracts/visual-quality.json"
+}

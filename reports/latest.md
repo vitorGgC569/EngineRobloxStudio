@@ -1,7 +1,7 @@
 # Roblox Quality Engine
 
 Projeto: `C:\Users\vitor\OneDrive\Desktop\RobloxGamesMCP`
-Gerado: `2026-08-22T20:20:06.506847+00:00`
+Gerado: `2026-09-04T18:39:05.419154+00:00`
 
 ## Resultado
 
@@ -38,35 +38,35 @@ Gerado: `2026-08-22T20:20:06.506847+00:00`
 | PASS | info | `contract_schema` | Game Contract válido |
 | FAIL | critical | `contract_coverage` | Há requisitos sem probe executável |
 | PASS | major | `ground_support` | A área alvo possui suporte dentro do gap permitido |
-| PASS | critical | `spawn_clearance` | Spawn sem obstrução |
-| PASS | critical | `spawn_support` | Spawn apoiado em superfície válida |
+| PASS | critical | `spawn_clearance` | spawn is clear |
+| PASS | critical | `spawn_support` | spawn rests on valid ground |
 | PASS | critical | `path_exists` | Caminho Spawn → PlayerPlot encontrado |
-| PASS | critical | `objective_reachable` | Objetivo básico alcançável |
-| PASS | major | `collision_overlap` | Nenhuma colisão estrutural detectada |
+| PASS | critical | `objective_reachable` | the basic objective is reachable |
+| PASS | major | `collision_overlap` | no structural overlaps |
 | PASS | major | `floating_objects` | Nenhum objeto flutuando |
 | PASS | minor | `buried_objects` | Nenhum objeto enterrado |
-| PASS | major | `door_clearance` | Portas têm passagem suficiente |
+| PASS | major | `door_clearance` | doorways have enough clearance |
 | PASS | major | `stairs_validity` | Escadas utilizáveis |
-| PASS | major | `interaction_distance` | Interações dentro do alcance |
-| PASS | major | `floor_progression` | Compra do próximo andar disponível no elevador |
-| PASS | minor | `camera_obstruction` | Câmeras de teste sem obstrução |
-| PASS | major | `ui_visibility` | Elementos de UI visíveis |
+| PASS | major | `interaction_distance` | interactions are within reach |
+| PASS | major | `floor_progression` | the next floor can be bought at the lift |
+| PASS | minor | `camera_obstruction` | test cameras are unobstructed |
+| PASS | major | `ui_visibility` | UI elements are visible |
 | PASS | major | `ui_overflow` | UI mobile dentro do viewport |
-| PASS | major | `card_gallery` | Galeria de cartas visível e responsiva |
-| PASS | critical | `button_interaction` | Botão de compra responde ao input |
-| PASS | critical | `remote_security` | Payload inválido rejeitado, rate limit e distância server-side ativos |
+| PASS | major | `card_gallery` | card gallery is visible and responsive |
+| PASS | critical | `button_interaction` | the purchase button responds to input |
+| PASS | critical | `remote_security` | invalid payloads refused; rate limit and distance enforced server-side |
 | PASS | critical | `runtime_error` | Fluxo sem erros de console |
-| PASS | major | `memory_growth` | Crescimento de memória dentro do orçamento |
-| PASS | major | `instance_growth` | Nenhum vazamento de instâncias |
-| PASS | major | `duplicate_connections` | Nenhuma conexão duplicada |
-| PASS | critical | `persistence` | Estado preservado após reconnect |
+| PASS | major | `memory_growth` | memory growth is within budget |
+| PASS | major | `instance_growth` | no instance leaks |
+| PASS | major | `duplicate_connections` | no duplicate connections |
+| PASS | critical | `persistence` | state survived a reconnect |
 | PASS | critical | `multiplayer_isolation` | Estado e plots isolados entre jogadores |
-| PASS | major | `performance_budget` | Performance dentro do orçamento |
+| PASS | major | `performance_budget` | performance is within budget |
 | PASS | critical | `asset_security` | Assets e scripts passaram pelo sandbox scanner |
 | PASS | minor | `visual_quality` | Snapshots visuais e artes acima do limiar |
 | PASS | major | `visual_snapshot_bundle` | Pacote de prints visuais validado |
 | PASS | major | `studio_runtime_capture` | Capturas runtime do Studio validadas |
-| PASS | critical | `agent_blackbox_scenario` | Agente completou o fluxo humano de compra |
+| PASS | critical | `agent_blackbox_scenario` | the agent completed the human purchase flow |
 
 ## Bloqueios
 

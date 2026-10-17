@@ -81,8 +81,25 @@ FormulaClass.__index = FormulaClass
 
 export type Formula = typeof(setmetatable({} :: { ops: { Op }, impl: Ops }, FormulaClass))
 
+-- table.clone of the ops array still shares each operation table. A later
+-- write to f.ops[i].value would change every formula derived from f.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 local function extended(self: Formula, op: Op): Formula
-	local copied = table.clone(self.ops)
+	local copied = deepCopy(self.ops, {})
 	table.insert(copied, op)
 	return setmetatable({ ops = copied, impl = self.impl }, FormulaClass)
 end
@@ -91,7 +108,7 @@ function Formula.start(base: Formula?, ops: Ops?): Formula
 	local chain: { Op } = {}
 	local impl = ops or NUMBER_OPS
 	if base ~= nil then
-		chain = table.clone(base.ops)
+		chain = deepCopy(base.ops, {})
 		impl = ops or base.impl
 	end
 	return setmetatable({ ops = chain, impl = impl }, FormulaClass)

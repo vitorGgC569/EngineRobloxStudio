@@ -32,6 +32,8 @@ from pathlib import Path
 from typing import Any, Mapping
 
 from rqe.schema_validation import SchemaDefinitionError, validate_schema_instance
+from rqe.safe_io import SafeIoError, read_bytes_limited, read_text_limited
+from rqe.security import SecurityBoundaryError, resolve_inside
 
 from ..orchestrator import (
     CampaignStage,
@@ -88,8 +90,8 @@ def _canonical_sha256(value: Any) -> str:
 
 def _read_object(path: Path, label: str) -> dict[str, Any]:
     try:
-        payload = json.loads(path.read_text(encoding="utf-8"))
-    except (OSError, json.JSONDecodeError) as exc:
+        payload = json.loads(read_text_limited(path, 16 * 1024 * 1024, label=label))
+    except (SafeIoError, json.JSONDecodeError) as exc:
         raise FactoryExecutionError(f"cannot read {label} {path}: {exc}") from exc
     if not isinstance(payload, dict):
         raise FactoryExecutionError(f"{label} root must be an object")
@@ -146,12 +148,10 @@ def _tasks_from_serialized_plan(root: Path, payload: dict[str, Any]) -> tuple[Ta
 
 
 def _safe_reference_path(root: Path, relative: str) -> tuple[Path | None, str | None]:
-    candidate = (root / relative).resolve()
     try:
-        candidate.relative_to(root.resolve())
-    except ValueError:
-        return None, f"reference path escapes the project root: {relative}"
-    return candidate, None
+        return resolve_inside(root, relative, label="reference path"), None
+    except SecurityBoundaryError as exc:
+        return None, str(exc)
 
 
 def _verify_json_reference(
@@ -177,7 +177,12 @@ def _verify_json_reference(
         receipt["verified"] = False
         return receipt, None, blockers
 
-    raw = resolved.read_bytes()
+    try:
+        raw = read_bytes_limited(resolved, 16 * 1024 * 1024, label=label)
+    except SafeIoError as exc:
+        blockers.append(str(exc))
+        receipt["verified"] = False
+        return receipt, None, blockers
     observed = hashlib.sha256(raw).hexdigest()
     receipt.update(
         {
@@ -239,7 +244,14 @@ def _verify_nested_references(
             blockers.append(f"{label} reference does not exist: {relative}")
             receipt["verified"] = False
         else:
-            observed = hashlib.sha256(resolved.read_bytes()).hexdigest()
+            try:
+                raw = read_bytes_limited(resolved, 16 * 1024 * 1024, label=f"{label} reference")
+            except SafeIoError as exc:
+                blockers.append(str(exc))
+                receipt["verified"] = False
+                receipts.append(receipt)
+                continue
+            observed = hashlib.sha256(raw).hexdigest()
             receipt["observedSha256"] = observed
             receipt["verified"] = observed == expected
             if observed != expected:

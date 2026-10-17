@@ -11,23 +11,44 @@ compiler is a blocked check, never a passed one.
 
 from __future__ import annotations
 
+import hashlib
 import io
 import os
 import platform
-import shutil
 import stat
 import subprocess
+import tempfile
 import urllib.request
 import zipfile
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Iterable
 
+from .http_safety import HttpBoundaryError, read_limited
+
 
 #: Pinned so a toolchain upgrade is a reviewed change rather than a surprise on
 #: whichever machine happens to run the suite next.
 LUAU_VERSION = "0.733"
 LUAU_RELEASE_URL = "https://github.com/luau-lang/luau/releases/download/{version}/luau-{platform}.zip"
+LUAU_RELEASES = {
+    "0.733": {
+        "macos": {
+            "size": 5_475_331,
+            "sha256": "9ae1e43068eb10e508e19a23c3a657b638aaf20c0c0b2179dbadde87148a5766",
+        },
+        "ubuntu": {
+            "size": 7_432_239,
+            "sha256": "2f37bbe79a6389ea2304531e2b4bba333bd0c2076bdc90256dfe30ace16f3c03",
+        },
+        "windows": {
+            "size": 3_051_605,
+            "sha256": "af6ccdb2dba70469297aab6436f5e46a68943de62a035f875eb3c777c3894d2b",
+        },
+    },
+}
+MAX_TOOLCHAIN_ARCHIVE_BYTES = 16 * 1024 * 1024
+MAX_TOOLCHAIN_BINARY_BYTES = 64 * 1024 * 1024
 
 _PLATFORM_ASSET = {"Windows": "windows", "Linux": "ubuntu", "Darwin": "macos"}
 
@@ -68,28 +89,74 @@ def bootstrap(root: Path, *, version: str = LUAU_VERSION, timeout: float = 180.0
     asset = _PLATFORM_ASSET.get(system)
     if asset is None:
         raise ToolchainUnavailable(f"no pinned Luau build for platform {system!r}")
+    release = LUAU_RELEASES.get(version, {}).get(asset)
+    if release is None:
+        raise ToolchainUnavailable(
+            f"Luau {version!r} for {asset!r} has no reviewed size and SHA-256 pin"
+        )
 
     target = toolchain_dir(root)
     target.mkdir(parents=True, exist_ok=True)
     url = LUAU_RELEASE_URL.format(version=version, platform=asset)
     try:
         with urllib.request.urlopen(url, timeout=timeout) as response:
-            payload = response.read()
-    except Exception as exc:  # pragma: no cover - network dependent
+            payload = read_limited(
+                response,
+                MAX_TOOLCHAIN_ARCHIVE_BYTES,
+                label="Luau toolchain archive",
+            )
+    except (OSError, TimeoutError, HttpBoundaryError) as exc:  # pragma: no cover - network dependent
         raise ToolchainUnavailable(f"could not download {url}: {exc}") from exc
+    if len(payload) != int(release["size"]):
+        raise ToolchainUnavailable(
+            f"Luau archive size mismatch: got {len(payload)}, expected {release['size']}"
+        )
+    digest = hashlib.sha256(payload).hexdigest()
+    if digest != release["sha256"]:
+        raise ToolchainUnavailable(
+            f"Luau archive SHA-256 mismatch: got {digest}, expected {release['sha256']}"
+        )
 
     wanted = {_executable_name("luau-compile"), _executable_name("luau-analyze")}
-    with zipfile.ZipFile(io.BytesIO(payload)) as archive:
-        for member in archive.namelist():
-            name = Path(member).name
-            if name in wanted:
-                with archive.open(member) as source, (target / name).open("wb") as sink:
-                    shutil.copyfileobj(source, sink)
+    try:
+        with zipfile.ZipFile(io.BytesIO(payload)) as archive, tempfile.TemporaryDirectory(
+            prefix=".install-",
+            dir=target,
+        ) as temporary_name:
+            temporary = Path(temporary_name)
+            selected: dict[str, zipfile.ZipInfo] = {}
+            for member in archive.infolist():
+                name = Path(member.filename).name
+                if name not in wanted or member.is_dir():
+                    continue
+                if name in selected:
+                    raise ToolchainUnavailable(f"Luau archive contains duplicate {name}")
+                if member.file_size < 1 or member.file_size > MAX_TOOLCHAIN_BINARY_BYTES:
+                    raise ToolchainUnavailable(f"Luau archive member {name} exceeds the binary limit")
+                selected[name] = member
+            missing = sorted(wanted - selected.keys())
+            if missing:
+                raise ToolchainUnavailable(
+                    f"{url} did not contain required Luau tools: {', '.join(missing)}"
+                )
+            for name, member in selected.items():
+                with archive.open(member) as source, (temporary / name).open("wb") as sink:
+                    remaining = member.file_size
+                    while remaining:
+                        chunk = source.read(min(1 << 20, remaining))
+                        if not chunk:
+                            raise ToolchainUnavailable(f"Luau archive member {name} ended early")
+                        sink.write(chunk)
+                        remaining -= len(chunk)
+                    if source.read(1):
+                        raise ToolchainUnavailable(f"Luau archive member {name} exceeded its declared size")
+            for name in wanted:
+                os.replace(temporary / name, target / name)
+    except zipfile.BadZipFile as exc:
+        raise ToolchainUnavailable("downloaded Luau toolchain is not a valid ZIP archive") from exc
 
     compiler = compiler_path(root)
-    if not compiler.is_file():
-        raise ToolchainUnavailable(f"{url} did not contain a Luau compiler")
-    for path in (compiler, analyzer_path(root)):
+    for path in (compiler, analyzer_path(root), toolchain_dir(root) / _executable_name("luau")):
         if path.is_file():
             path.chmod(path.stat().st_mode | stat.S_IEXEC | stat.S_IXGRP | stat.S_IXOTH)
     return compiler
@@ -110,11 +177,13 @@ def ensure_compiler(root: Path, *, allow_download: bool = True) -> Path:
 #: explicit: a glob over the whole tree would also compile whatever a user
 #: dropped in a scratch folder and turn an unrelated file into a release blocker.
 DEFAULT_SOURCE_ROOTS = (
-    "roblox/lib",
-    "roblox/mvp/src",
-    "roblox/runtime",
-    "apps/studio-plugin/src",
     "forge/luau",
+    "games",
+    "roblox/lib",
+    "roblox/mvp",
+    "roblox/runtime",
+    "apps",
+    "tools",
     "sdk",
 )
 
@@ -127,9 +196,13 @@ def discover(root: Path, source_roots: Iterable[str] = DEFAULT_SOURCE_ROOTS) -> 
         if not base.exists():
             continue
         # `.lua.disabled` is how this repository retires a script without
-        # deleting it. Retired code is not required to compile.
-        found.extend(sorted(path for path in base.rglob("*.lua") if path.is_file()))
-        found.extend(sorted(path for path in base.rglob("*.luau") if path.is_file()))
+        # deleting it. Third-party salvage kits are intentionally outside the
+        # first-party compile contract, matching the CI gate.
+        def eligible(path: Path) -> bool:
+            return path.is_file() and "salvage" not in path.parts
+
+        found.extend(sorted(path for path in base.rglob("*.lua") if eligible(path)))
+        found.extend(sorted(path for path in base.rglob("*.luau") if eligible(path)))
     return found
 
 

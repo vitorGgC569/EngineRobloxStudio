@@ -1,0 +1,196 @@
+{
+  "$schema": "../../../schemas/game-contract.schema.json",
+  "schemaVersion": 1,
+  "contractId": "tidebound-release",
+  "game": {
+    "name": "Tidebound",
+    "genre": "fishing-adventure",
+    "max_players": 8,
+    "target_devices": ["desktop", "phone", "tablet"]
+  },
+  "performance_budget": {
+    "client": {
+      "target_fps": 30,
+      "max_frame_ms": 33.34
+    },
+    "instances": {
+      "max_workspace": 15000
+    },
+    "mobile": {
+      "mandatory": true
+    }
+  },
+  "visualQuality": {
+    "spec": "visual/tidebound.visual-quality.v1.json",
+    "specId": "tidebound.visual-quality",
+    "schemaMajor": 1,
+    "required": true,
+    "release": {
+      "minimumScore": 75,
+      "minimumRuleCoverage": 0.8,
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "missingEvidence": "FAIL"
+    }
+  },
+  "release_gate": {
+    "required_categories": ["structural", "geometry", "runtime", "performance"],
+    "forbidden_sources": ["headless-runtime"],
+    "minimum_requirement_coverage": 1.0,
+    "minimum_category_coverage": {
+      "structural": 1.0,
+      "geometry": 1.0,
+      "runtime": 1.0,
+      "performance": 1.0
+    },
+    "minimum_validation_by_type": {
+      "structural": "STATICALLY_VALIDATED",
+      "geometry": "RUNTIME_VALIDATED",
+      "runtime": "RUNTIME_VALIDATED",
+      "performance": "RUNTIME_VALIDATED"
+    },
+    "maximum_evidence_age_seconds_by_level": {
+      "STATICALLY_VALIDATED": 604800,
+      "RUNTIME_VALIDATED": 86400,
+      "VISUALLY_VALIDATED": 86400,
+      "E2E_VALIDATED": 86400
+    },
+    "minimum_visual_score": 75,
+    "require_trustworthy_captures": true
+  },
+  "requirements": [
+    {
+      "id": "tidebound_project_topology",
+      "probe": "structural_integrity",
+      "type": "structural",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "tidebound_contract_is_valid",
+      "probe": "contract_schema",
+      "type": "structural",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "tidebound_visual_spec_is_valid",
+      "probe": "visual_spec_schema",
+      "type": "structural",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "tidebound_no_fixture_evidence",
+      "probe": "fixture_excluded",
+      "type": "structural",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "tidebound_runtime_reports_no_errors",
+      "probe": "runtime_error",
+      "type": "runtime",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "RUNTIME_VALIDATED",
+        "allowed_sources": ["studio-bridge"]
+      }
+    },
+    {
+      "id": "tidebound_spawn_stands_on_ground",
+      "probe": "ground_support",
+      "type": "geometry",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "RUNTIME_VALIDATED",
+        "allowed_sources": ["studio-bridge"]
+      }
+    },
+    {
+      "id": "tidebound_performance_aggregate_passes",
+      "probe": "performance_budget",
+      "type": "performance",
+      "severity": "major",
+      "validation": {
+        "minimum_level": "RUNTIME_VALIDATED",
+        "allowed_sources": ["studio-bridge"]
+      }
+    }
+  ]
+}

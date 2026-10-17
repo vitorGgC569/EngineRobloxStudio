@@ -152,6 +152,665 @@ class TestTransactionJournal(unittest.TestCase):
         assert "pure" in out
 
 
+class TestServerProfile(unittest.TestCase):
+    def test_a_migration_grant_is_stamped_so_reload_does_not_grant_again(self) -> None:
+        """The schema version has to survive the save or the next load is blind.
+
+        Reconcile used to build a new table without `version`, and the migration
+        loop advanced a local that was thrown away. A grant inside that step
+        could not be told apart from one that had never run, and a later step
+        had nothing to key off.
+        """
+        out = _run([FORGE / "Save"], """
+            local ServerProfile = Require("ServerProfile")
+            local stored = {
+                version = 1,
+                entityKey = "keep",
+                settings = { coins = 5 },
+                managerUserIds = { 9 },
+            }
+            local grants = 0
+            local function open()
+                return ServerProfile.new({
+                    store = {
+                        get = function()
+                            return true, stored
+                        end,
+                        update = function(_, _, transform)
+                            stored = transform(stored)
+                            return true, stored
+                        end,
+                    },
+                    entityKey = "keep",
+                    reconcile = ServerProfile.reconciler({ settings = { coins = 0 } }),
+                })
+            end
+
+            local profile = open()
+            profile:addMigration(1, function(data)
+                grants += 1
+                data.settings.coins += 100
+                return data
+            end)
+            assert(profile:load(), "load")
+            local data = profile:get()
+            assert(data.version == 2, "version after the step, got " .. tostring(data.version))
+            assert(data.settings.coins == 105, "one grant")
+            assert(data.managerUserIds[1] == 9, "saved managers survived reconcile")
+            assert(profile:mutate(function(d)
+                return {
+                    entityKey = d.entityKey,
+                    ownerUserId = d.ownerUserId,
+                    managerUserIds = d.managerUserIds,
+                    bannedUserIds = d.bannedUserIds,
+                    settings = d.settings,
+                }
+            end), "save")
+            assert(stored.version == 2, "save dropped the schema version")
+
+            local again = open()
+            again:addMigration(1, function(d)
+                grants += 1
+                d.settings.coins += 100
+                return d
+            end)
+            local later = 0
+            again:addMigration(2, function(d)
+                later += 1
+                d.settings.coins += 1
+                return d
+            end)
+            assert(again:load(), "reload")
+            assert(grants == 1, "replay granted again, grants=" .. tostring(grants))
+            assert(later == 1, "the stamped version must unlock the next step")
+            assert(again:get().version == 3, "version after the second step")
+            assert(again:get().settings.coins == 106, "coins=" .. tostring(again:get().settings.coins))
+            assert(again:get().managerUserIds[1] == 9, "managers survived reload")
+            print('{"schema":true}')
+        """)
+        assert "schema" in out
+
+    def test_a_missing_schema_version_is_zero_and_a_later_step_does_not_replay(self) -> None:
+        """An unstamped save is older than schema 1, not a second copy of it."""
+        out = _run([FORGE / "Save"], """
+            local ServerProfile = Require("ServerProfile")
+            local stored = {
+                entityKey = "keep",
+                settings = { coins = 105 },
+                managerUserIds = { 4 },
+            }
+            local function open()
+                return ServerProfile.new({
+                    store = {
+                        get = function()
+                            return true, stored
+                        end,
+                        update = function(_, _, transform)
+                            stored = transform(stored)
+                            return true, stored
+                        end,
+                    },
+                    entityKey = "keep",
+                    reconcile = ServerProfile.reconciler({ settings = { coins = 0 } }),
+                })
+            end
+
+            local fromOne = 0
+            local legacy = open()
+            legacy:addMigration(1, function(data)
+                fromOne += 1
+                data.settings.coins += 100
+                return data
+            end)
+            assert(legacy:load(), "legacy load")
+            assert(fromOne == 0, "missing version must not qualify for step 1")
+            assert(legacy:get().version == 0, "missing version stamps as 0")
+            assert(legacy:get().settings.coins == 105, "coins stayed")
+            assert(legacy:get().managerUserIds[1] == 4, "managers stayed")
+
+            stored = { entityKey = "keep", settings = { coins = 1 } }
+            local fromZero = 0
+            local fresh = open()
+            fresh:addMigration(0, function(data)
+                fromZero += 1
+                data.settings.coins += 10
+                return data
+            end)
+            assert(fresh:load(), "unstamped load")
+            assert(fresh:mutate(function(d) return d end), "save unstamped")
+            assert(fromZero == 1, "step 0 runs once for a missing stamp")
+            assert(fresh:get().version == 1, "step 0 advances to 1")
+            assert(stored.version == 1, "advanced version was saved")
+            assert(fresh:get().settings.coins == 11, "step 0 grant")
+
+            local replay = open()
+            replay:addMigration(0, function(data)
+                fromZero += 1
+                data.settings.coins += 10
+                return data
+            end)
+            assert(replay:load(), "replay")
+            assert(fromZero == 1, "step 0 replayed, grants=" .. tostring(fromZero))
+            assert(replay:get().version == 1, "version stayed 1")
+            assert(replay:get().settings.coins == 11, "grant was not repeated")
+            print('{"unstamped":true}')
+        """)
+        assert "unstamped" in out
+
+    def test_saved_settings_tables_keep_missing_default_keys(self) -> None:
+        """A saved settings table must not replace the default table.
+
+        `audio = { volume = 0.2 }` against `{ volume = 1, muted = false }`
+        has to load with the saved volume and the default mute. A saved
+        scalar still wins. Id lists are not merged.
+        """
+        out = _run([FORGE / "Save"], """
+            local ServerProfile = Require("ServerProfile")
+            local managers = { 9 }
+            local banned = { 4 }
+            local reconcile = ServerProfile.reconciler({
+                settings = {
+                    coins = 0,
+                    audio = {
+                        volume = 1,
+                        muted = false,
+                        eq = { bass = 1, treble = 2 },
+                    },
+                },
+            })
+            local data = reconcile({
+                version = 1,
+                settings = {
+                    coins = 5,
+                    audio = { volume = 0.2, eq = { bass = 4 } },
+                },
+                managerUserIds = managers,
+                bannedUserIds = banned,
+            })
+            assert(data.settings.audio.volume == 0.2, "saved volume lost")
+            assert(data.settings.audio.muted == false, "nested default muted was dropped")
+            assert(data.settings.audio.eq.bass == 4, "saved nested scalar lost")
+            assert(data.settings.audio.eq.treble == 2, "deeper default was dropped")
+            assert(data.settings.coins == 5, "saved scalar was replaced by the default")
+            assert(data.managerUserIds == managers, "manager ids were merged or copied")
+            assert(data.bannedUserIds == banned, "banned ids were merged or copied")
+            print('{"settings":true}')
+        """)
+        assert "settings" in out
+
+    def test_mutate_keeps_a_settings_key_only_the_store_has(self) -> None:
+        """The transform has to edit the stored record, not the stale session.
+
+        Memory has coins = 1. The record the store passes in also has gems = 7.
+        Adding 1 to coins must write coins = 2 and gems = 7, and the transform
+        runs once. A rejected update leaves the session profile unchanged.
+        """
+        out = _run([FORGE / "Save"], """
+            local ServerProfile = Require("ServerProfile")
+            local stored = {
+                version = 1,
+                entityKey = "keep",
+                settings = { coins = 1 },
+                managerUserIds = { 3 },
+            }
+            local runs = 0
+            local reject = false
+            local profile = ServerProfile.new({
+                store = {
+                    get = function()
+                        return true, stored
+                    end,
+                    update = function(_, _, transform)
+                        local current = {
+                            version = 1,
+                            entityKey = "keep",
+                            settings = { coins = 1, gems = 7 },
+                            managerUserIds = stored.managerUserIds,
+                        }
+                        local written = transform(current)
+                        if reject then
+                            return false, nil
+                        end
+                        stored = written
+                        return true, written
+                    end,
+                },
+                entityKey = "keep",
+                reconcile = ServerProfile.reconciler({ settings = { coins = 0 } }),
+            })
+            assert(profile:load(), "load")
+            assert(profile:get().settings.coins == 1, "memory coins")
+            assert(profile:get().settings.gems == nil, "memory must not already have gems")
+            assert(profile:mutate(function(data)
+                runs += 1
+                data.settings.coins += 1
+                return data
+            end), "mutate")
+            assert(runs == 1, "transform ran " .. tostring(runs) .. " times")
+            assert(stored.settings.coins == 2, "coins=" .. tostring(stored.settings.coins))
+            assert(stored.settings.gems == 7, "gems were dropped")
+            assert(profile:get().settings.coins == 2, "session did not adopt the write")
+            assert(profile:get().settings.gems == 7, "session dropped gems")
+
+            reject = true
+            assert(profile:mutate(function(data)
+                runs += 1
+                data.settings.coins += 1
+                return data
+            end) == false, "failed update reported success")
+            assert(runs == 2, "failed update did not attempt the transform")
+            assert(profile:get().settings.coins == 2, "failed update changed the session")
+            assert(profile:get().settings.gems == 7, "failed update dropped gems")
+            print('{"mutate":true}')
+        """)
+        assert "mutate" in out
+
+
+class TestMigrator(unittest.TestCase):
+    def test_an_in_place_step_keeps_fields_and_a_new_table_still_replaces(self) -> None:
+        """A nil return is the step editing the copy, not a request to empty it.
+
+        The old branch turned that nil into `{}` and then stamped the target
+        version, so the wipe was the saved profile. A returned table is still
+        the new profile. A non-table return keeps the copy too.
+        """
+        out = _run([FORGE / "Save"], """
+            local Migrator = Require("Migrator")
+
+            local inplace = Migrator.new({
+                version = 2,
+                migrations = {
+                    [1] = function(data)
+                        data.renamed = data.old
+                    end,
+                },
+                defaults = { renamed = "fallback", level = 1 },
+            })
+            local kept = inplace:migrate({ version = 1, old = "kept", extra = 7 })
+            assert(kept.data.renamed == "kept", "mutated field lost: " .. tostring(kept.data.renamed))
+            assert(kept.data.old == "kept", "source field dropped")
+            assert(kept.data.extra == 7, "untouched field dropped")
+            assert(kept.data.level == 1, "defaults still fill gaps")
+            assert(kept.data.version == 2, "target version was not stamped")
+            assert(kept.fromVersion == 1 and kept.toVersion == 2, "version range")
+
+            local replacing = Migrator.new({
+                version = 2,
+                migrations = {
+                    [1] = function(data)
+                        return { renamed = data.old, carried = data.extra }
+                    end,
+                },
+            })
+            local replaced = replacing:migrate({ version = 1, old = "kept", extra = 7, dropped = true })
+            assert(replaced.data.renamed == "kept", "returned table was ignored")
+            assert(replaced.data.carried == 7, "returned table lost its own field")
+            assert(replaced.data.dropped == nil, "old fields leaked onto the new table")
+            assert(replaced.data.old == nil, "old table was kept beside the return")
+            assert(replaced.data.version == 2, "returned table was not stamped")
+
+            local refused = Migrator.new({
+                version = 2,
+                migrations = {
+                    [1] = function(data)
+                        data.renamed = data.old
+                        return false
+                    end,
+                },
+                defaults = { renamed = "fallback" },
+            })
+            local held = refused:migrate({ version = 1, old = "kept", extra = 7 })
+            assert(held.data.renamed == "kept", "non-table return wiped the edit")
+            assert(held.data.extra == 7, "non-table return dropped untouched fields")
+            assert(held.data.version == 2, "surviving copy was not stamped")
+            print('{"migrated":true}')
+        """)
+        assert "migrated" in out
+
+
+class TestVersionRollback(unittest.TestCase):
+    def test_a_later_edit_does_not_rewrite_nested_history(self) -> None:
+        """The snapshot has to keep the bag that existed at record time.
+
+        A shallow copy shares nested tables with the live profile. Changing
+        the sword after the save rewrites the history, and a restore then
+        returns that edited bag as if it were the recorded one.
+        """
+        out = _run([FORGE / "Save"], """
+            local History = Require("VersionRollback")
+            local now = 10
+            local ring = History.new({
+                maxHistory = 4,
+                clock = function()
+                    return now
+                end,
+            })
+            local live = { coins = 3, bag = { sword = true, gems = 2 } }
+            local snap = ring:record(live)
+            live.coins = 99
+            live.bag.sword = false
+            live.bag.gems = 0
+
+            local recorded = ring:list()[1].payload
+            assert(recorded.coins == 3, "top-level value leaked into history")
+            assert(recorded.bag.sword == true, "nested history was rewritten")
+            assert(recorded.bag.gems == 2, "nested field was dropped")
+
+            snap.payload.coins = 0
+            snap.payload.bag.sword = false
+            assert(ring:list()[1].payload.coins == 3, "record returned the stored coins")
+            assert(ring:list()[1].payload.bag.sword == true, "record returned the stored bag")
+
+            local restored = ring:restore(snap.version)
+            assert(restored.bag.sword == true, "restore returned the edited bag")
+            assert(restored.coins == 3, "restore returned the edited coins")
+            restored.bag.sword = false
+            restored.coins = 0
+            assert(ring:list()[1].payload.bag.sword == true, "restore aliased the old snapshot")
+            assert(ring:list()[1].payload.coins == 3, "restore aliased the old coins")
+            assert(restored.bag.sword == false, "the forward copy did not take the edit")
+
+            local listed = ring:list()[1].payload
+            listed.bag.sword = false
+            listed.coins = 0
+            assert(ring:list()[1].payload.bag.sword == true, "list handed out the live snapshot")
+            assert(ring:list()[1].payload.coins == 3, "list handed out the live coins")
+            print('{"history":true}')
+        """)
+        assert "history" in out
+
+
+class TestVersionRollbackStore(unittest.TestCase):
+    def test_each_player_keeps_their_own_oldest_and_a_later_edit_does_not_rewrite_the_payload(self) -> None:
+        """The index used to be one global store of zeros.
+
+        GetSortedAsync orders by value, so a page of zeros is not oldest-first,
+        and two players writing in the same second shared a key. Trimming that
+        page could delete the other player's snapshot.
+        """
+        out = _run([FORGE / "Save"], """
+            local Store = Require("VersionRollbackStore")
+
+            local function memoryIndex()
+                local rows = {}
+                return {
+                    rows = rows,
+                    SetAsync = function(_, key, value)
+                        rows[key] = value
+                    end,
+                    RemoveAsync = function(_, key)
+                        rows[key] = nil
+                    end,
+                    GetSortedAsync = function(_, ascending, count)
+                        local page = {}
+                        for key, value in rows do
+                            table.insert(page, { key = key, value = value })
+                        end
+                        table.sort(page, function(a, b)
+                            if a.value == b.value then
+                                return tostring(a.key) < tostring(b.key)
+                            end
+                            if ascending then
+                                return a.value < b.value
+                            end
+                            return a.value > b.value
+                        end)
+                        local limited = {}
+                        for i = 1, math.min(count, #page) do
+                            limited[i] = page[i]
+                        end
+                        return { GetCurrentPage = function() return limited end }
+                    end,
+                }
+            end
+
+            local function memoryPayload()
+                local rows = {}
+                return {
+                    rows = rows,
+                    SetAsync = function(_, key, value)
+                        rows[key] = value
+                    end,
+                    RemoveAsync = function(_, key)
+                        rows[key] = nil
+                    end,
+                }
+            end
+
+            local payload = memoryPayload()
+            local alice = Store.new("alice", 2, { payload = payload, index = memoryIndex() })
+            local bob = Store.new("bob", 2, { payload = payload, index = memoryIndex() })
+            assert(alice.indexName ~= bob.indexName, "two players share one index")
+            assert(string.find(alice.indexName, "alice", 1, true), "alice's index is not hers")
+
+            local first = { n = 1, bag = { sword = true } }
+            assert(alice:record(first) ~= nil, "first record failed")
+            first.bag.sword = false
+            local kept = false
+            for _, stored in payload.rows do
+                if type(stored) == "table" and stored.n == 1 and stored.bag and stored.bag.sword == true then
+                    kept = true
+                end
+            end
+            assert(kept, "the stored bag was rewritten after record")
+
+            assert(alice:record({ n = 2, bag = { sword = true } }) ~= nil, "second")
+            assert(alice:record({ n = 3, bag = { sword = true } }) ~= nil, "third")
+            local left = {}
+            for _, stored in payload.rows do
+                if type(stored) == "table" and stored.n then
+                    table.insert(left, stored.n)
+                end
+            end
+            table.sort(left)
+            assert(#left == 2, "trim did not keep two snapshots, got " .. #left)
+            assert(left[1] == 2 and left[2] == 3, "the oldest snapshot was not the one removed")
+
+            assert(bob:record({ n = 9, bag = { sword = true } }) ~= nil, "bob")
+            local bobKept = false
+            for _, stored in payload.rows do
+                if type(stored) == "table" and stored.n == 9 then
+                    bobKept = true
+                end
+            end
+            assert(bobKept, "alice's trim deleted bob")
+
+            local crowded = Store.new("crowded", 2, { payload = payload, index = memoryIndex() })
+            for n = 1, 12 do
+                assert(crowded:record({ n = n, bag = { sword = true } }) ~= nil, "crowded record")
+            end
+            local prefix = "crowded:"
+            local survived = {}
+            for key, stored in payload.rows do
+                if type(stored) == "table" and type(key) == "string" and string.sub(key, 1, #prefix) == prefix and stored.n then
+                    table.insert(survived, stored.n)
+                end
+            end
+            table.sort(survived)
+            assert(#survived == 2, "a same-second burst did not keep two, got " .. #survived)
+            assert(survived[1] == 11 and survived[2] == 12, "the trim kept an older snapshot than the newest two")
+
+            local rolled = Store.new("rolled", 2, { payload = payload, index = memoryIndex() })
+            rolled.seq = 999998
+            for n = 1, 3 do
+                assert(rolled:record({ n = n, bag = { sword = true } }) ~= nil, "rolled record")
+            end
+            local after = {}
+            local rolledPrefix = "rolled:"
+            for key, stored in payload.rows do
+                if type(stored) == "table" and type(key) == "string" and string.sub(key, 1, #rolledPrefix) == rolledPrefix and stored.n then
+                    table.insert(after, stored.n)
+                end
+            end
+            table.sort(after)
+            assert(#after == 2, "the sequence rollover did not keep two, got " .. #after)
+            assert(after[1] == 2 and after[2] == 3, "the trim treated 1000000 as older than 999999")
+            print('{"isolated":true}')
+        """)
+        assert "isolated" in out
+
+
+class TestReceiptLedger(unittest.TestCase):
+    def test_a_later_edit_does_not_rewrite_the_granted_payload(self) -> None:
+        """The grant used to keep the caller's table.
+
+        Changing the sword after the receipt was recorded rewrote the entry,
+        and the next state still pointed at that same bag.
+        """
+        out = _run([FORGE / "Save"], """
+            local Ledger = Require("ReceiptLedger")
+            local ledger = Ledger.new()
+            local payload = { items = { sword = true, gems = 2 } }
+            local state, isNew = ledger:grant(nil, "r1", payload)
+            assert(isNew, "first grant")
+            payload.items.sword = false
+            payload.items.gems = 0
+            assert(state.r1.items.sword == true, "the granted bag was rewritten")
+            assert(state.r1.items.gems == 2, "the granted gems were rewritten")
+
+            local nextState, alsoNew = ledger:grant(state, "r2", { items = { gem = 1 } })
+            assert(alsoNew, "second grant")
+            state.r1.items.sword = false
+            assert(nextState.r1.items.sword == true, "the new state aliased the old payload")
+            assert(nextState.r2.items.gem == 1, "the second payload was dropped")
+            print('{"receipt":true}')
+        """)
+        assert "receipt" in out
+
+
+class TestLiveConfig(unittest.TestCase):
+    def test_a_later_edit_does_not_rewrite_the_cached_price(self) -> None:
+        """Defaults and store records used to stay shared with the caller.
+
+        Changing a nested price after construction, or after the store handed
+        the record over, changed the value every later read returned.
+        """
+        out = _run([FORGE / "Save"], """
+            local LiveConfig = Require("LiveConfig")
+            local bag = { prices = { sword = 99 } }
+            local store = {}
+            function store:get(_key)
+                return true, bag
+            end
+            local defaults = { prices = { sword = 10 } }
+            local live = LiveConfig.new({
+                store = store,
+                defaults = defaults,
+                refreshSeconds = 60,
+                clock = function() return 1000 end,
+            })
+            defaults.prices.sword = 1
+            local before = live:get("prices")
+            assert(before.sword == 10, "the default was rewritten")
+            before.sword = 0
+            assert(live:get("prices").sword == 10, "a read rewrote the default")
+            live:refresh()
+            bag.prices.sword = 1
+            local tuned = live:get("prices")
+            assert(tuned.sword == 99, "the store bag rewrote the cache")
+            tuned.sword = 0
+            assert(live:get("prices").sword == 99, "a read rewrote the override")
+            print('{"live":true}')
+        """)
+        assert "live" in out
+
+
+class TestGuildModel(unittest.TestCase):
+    def test_donate_and_upgrade_do_not_share_the_member_map(self) -> None:
+        """Invite copied the member map. Donate and upgrade did not.
+
+        Writing a member on the returned state rewrote the guild the caller
+        still held.
+        """
+        out = _run([FORGE / "Social"], """
+            local Guild = Require("GuildModel")
+            local guild = Guild.new()
+            local state = Guild.create("North")
+            state.members[1] = 3
+            local donated, err = guild:donate(state, 1, 100)
+            assert(donated, err or "donate failed")
+            donated.members[2] = 1
+            assert(state.members[2] == nil, "donate shared the member table")
+            assert(state.funds == 0, "donate wrote the original funds")
+            state.funds = 100000
+            local upgraded, upgradeErr = guild:applyUpgrade(state)
+            assert(upgraded, upgradeErr or "upgrade failed")
+            upgraded.members[9] = 1
+            assert(state.members[9] == nil, "upgrade shared the member table")
+            print('{"guild":true}')
+        """)
+        assert "guild" in out
+
+
+class TestTradeSession(unittest.TestCase):
+    def test_a_later_edit_does_not_rewrite_the_locked_stack(self) -> None:
+        """The offer kept the caller's stack tables.
+
+        Raising the count after both sides locked changed what the confirmed
+        trade transferred, and result() handed back that same live table.
+        """
+        out = _run([FORGE / "Social"], """
+            local Trade = Require("TradeSession")
+            local session = Trade.new({
+                a = "a",
+                b = "b",
+                cooldownSeconds = 0,
+                clock = function() return 0 end,
+            })
+            local stack = { id = "sword", count = 1 }
+            local ok, err = session:offer("a", { items = { stack }, currency = 5 })
+            assert(ok, err or "offer a")
+            stack.count = 40
+            local okb, errb = session:offer("b", { items = { { id = "gem", count = 2 } }, currency = 0 })
+            assert(okb, errb or "offer b")
+            assert(session:lock("a"))
+            assert(session:lock("b"))
+            assert(session:confirm("a"))
+            assert(session:confirm("b"))
+            local result = session:result()
+            assert(result.give.items[1].count == 1, "the locked stack was rewritten")
+            result.give.items[1].count = 9
+            local again = session:result()
+            assert(again.give.items[1].count == 1, "result handed back the live offer")
+            print('{"trade":true}')
+        """)
+        assert "trade" in out
+
+
+class TestEnchanting(unittest.TestCase):
+    def test_a_later_edit_does_not_rewrite_the_definition_or_the_slot(self) -> None:
+        """define kept the caller's modifier list, and roll cloned it shallowly.
+
+        Zeroing a weight after define made the next roll say the enchant had
+        no modifiers. Editing the old slot's flat rewrote the rolled copy.
+        """
+        out = _run([FORGE / "Progression"], """
+            local Enchanting = Require("Enchanting")
+            local ench = Enchanting.new()
+            local def = {
+                id = "sharp",
+                materialItemId = "stone",
+                goldCost = 10,
+                maxUpgrades = 3,
+                modifiers = { { stat = "dmg", flatMin = 1, flatMax = 2, weight = 1 } },
+            }
+            ench:define(def)
+            def.modifiers[1].weight = 0
+            def.modifiers[1].flatMax = 100
+            local slot = { itemId = "sword", upgrades = 0, modifiers = { { stat = "dmg", flat = 1 } } }
+            local function rng()
+                return 0.5
+            end
+            local rolled, rollErr = ench:roll("sharp", slot, rng)
+            assert(rolled, rollErr or "roll failed")
+            slot.modifiers[1].flat = 99
+            assert(rolled.modifiers[1].flat == 1, "the rolled slot aliased the old modifier")
+            assert(rolled.upgrades == 1, "upgrade count")
+            print('{"enchant":true}')
+        """)
+        assert "enchant" in out
+
+
 class TestModifierPipeline(unittest.TestCase):
     def test_stages_run_in_order_and_a_cap_limits_rather_than_raises(self) -> None:
         out = _run([FORGE / "Progression"], """

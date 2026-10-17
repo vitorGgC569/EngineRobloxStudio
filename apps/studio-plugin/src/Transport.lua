@@ -21,16 +21,24 @@ local CLIENT_ID = HttpService:GenerateGUID(false)
 export type Transport = typeof(setmetatable({} :: {
 	hubUrl: string,
 	bearerToken: string,
+	installationId: string,
 	session: string?,
+	sessionKey: string?,
+	resumeSession: string?,
+	resumeKey: string?,
 	connected: boolean,
 	lastError: string?,
 }, Transport))
 
-function Transport.new(hubUrl: string, bearerToken: string): Transport
+function Transport.new(hubUrl: string, bearerToken: string, installationId: string): Transport
 	return setmetatable({
 		hubUrl = hubUrl,
 		bearerToken = bearerToken,
+		installationId = installationId,
 		session = nil,
+		sessionKey = nil,
+		resumeSession = nil,
+		resumeKey = nil,
 		connected = false,
 		lastError = nil,
 	}, Transport) :: any
@@ -81,7 +89,11 @@ function Transport:connect(context: string): (boolean, string?)
 	local ok, result = self:post("/bridge/hello", {
 		protocol = Config.PROTOCOL,
 		clientId = CLIENT_ID,
+		installationId = self.installationId,
+		resumeSession = self.resumeSession,
+		resumeKey = self.resumeKey,
 		pluginVersion = Config.PLUGIN_VERSION,
+		pluginBuildId = Config.PLUGIN_BUILD_ID,
 		studioVersion = (function()
 			local versionOk, value = pcall(function()
 				return version()
@@ -99,13 +111,16 @@ function Transport:connect(context: string): (boolean, string?)
 		return false, self.lastError
 	end
 
-	if type(result) ~= "table" or result.session == nil then
+	if type(result) ~= "table" or result.session == nil or result.sessionKey == nil then
 		self.connected = false
-		self.lastError = "hub did not return a session id"
+		self.lastError = "hub did not return a session id and proof"
 		return false, self.lastError
 	end
 
 	self.session = result.session
+	self.sessionKey = result.sessionKey
+	self.resumeSession = result.session
+	self.resumeKey = result.sessionKey
 	self.connected = true
 	self.lastError = nil
 	return true, result.session
@@ -115,6 +130,7 @@ end
 function Transport:poll(): (boolean, { any })
 	local ok, result = self:post("/bridge/poll", {
 		session = self.session,
+		sessionKey = self.sessionKey,
 		maxBatch = Config.MAX_BATCH,
 	})
 	if not ok then
@@ -133,6 +149,7 @@ function Transport:report(results: { any }): boolean
 	end
 	local ok, err = self:post("/bridge/result", {
 		session = self.session,
+		sessionKey = self.sessionKey,
 		results = results,
 	})
 	if not ok then
@@ -145,13 +162,18 @@ function Transport:emit(events: { any }): boolean
 	if #events == 0 then
 		return true
 	end
-	local ok = self:post("/bridge/event", { session = self.session, events = events })
+	local ok = self:post("/bridge/event", {
+		session = self.session,
+		sessionKey = self.sessionKey,
+		events = events,
+	})
 	return ok
 end
 
 function Transport:disconnect(): ()
 	self.connected = false
 	self.session = nil
+	self.sessionKey = nil
 end
 
 return Transport

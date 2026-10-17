@@ -336,7 +336,7 @@ function COMMANDS.gui_click(params)
 
 	-- A GuiButton's Activated signal cannot be raised from a script, so the
 	-- click is delivered as real pointer input at the button's own on-screen
-	-- rectangle. VirtualInputManager is Studio-only, which is where tests run.
+	-- rectangle through the public Studio VirtualInput API.
 	local fired = false
 	local connection = button.Activated:Connect(function()
 		fired = true
@@ -347,10 +347,7 @@ function COMMANDS.gui_click(params)
 	local inset = guiService:GetGuiInset()
 
 	local pressOk, pressErr = pcall(function()
-		local vim = game:GetService("VirtualInputManager")
-		vim:SendMouseButtonEvent(centre.X, centre.Y + inset.Y, 0, true, game, 1)
-		task.wait(0.08)
-		vim:SendMouseButtonEvent(centre.X, centre.Y + inset.Y, 0, false, game, 1)
+		COMMANDS.input({ action = "click", x = centre.X, y = centre.Y + inset.Y })
 	end)
 	task.wait(0.4)
 	connection:Disconnect()
@@ -399,6 +396,130 @@ function COMMANDS.logs(params)
 		table.remove(entries, 1)
 	end
 	return { available = true, counts = counts, returned = #entries, entries = entries }
+end
+
+--- Observe client prediction quality under the exact network conditions applied
+--- by Studio's Network Simulator. This lives on the client because
+--- RunService.Misprediction is a client-side authority/prediction signal.
+function COMMANDS.prediction(params)
+	local seconds = tonumber(params.sampleSeconds) or 1.0
+	if seconds < 0.1 or seconds > 5.0 then
+		error({
+			code = "E_BAD_PARAMS",
+			message = "sampleSeconds must be between 0.1 and 5.0",
+		})
+	end
+
+	local function safe(value, depth)
+		local level = depth or 0
+		if level > 4 then
+			return "<depth-limit>"
+		end
+		local kind = typeof(value)
+		if kind == "nil" or kind == "string" or kind == "boolean" then
+			return value
+		elseif kind == "number" then
+			if value ~= value or value == math.huge or value == -math.huge then
+				return nil
+			end
+			return value
+		elseif kind == "EnumItem" then
+			return tostring(value)
+		elseif kind == "Instance" then
+			return value:GetFullName()
+		elseif kind == "Vector3" then
+			return { value.X, value.Y, value.Z }
+		elseif kind == "table" then
+			local result = {}
+			for key, item in pairs(value) do
+				result[tostring(key)] = safe(item, level + 1)
+			end
+			return result
+		end
+		return tostring(value)
+	end
+
+	local events = 0
+	local affected = 0
+	local unique = {}
+	local uniqueCount = 0
+	local lastTime = nil
+	local lastStats = nil
+
+	local connected, connectionOrError = pcall(function()
+		return RunService.Misprediction:Connect(function(timeValue, instances, stats)
+			events += 1
+			lastTime = tonumber(timeValue)
+			lastStats = safe(stats, 0)
+			if type(instances) == "table" then
+				affected += #instances
+				for _, instance in ipairs(instances) do
+					if typeof(instance) == "Instance" then
+						local path = instance:GetFullName()
+						if unique[path] == nil then
+							unique[path] = true
+							uniqueCount += 1
+						end
+					end
+				end
+			end
+		end)
+	end)
+	if not connected then
+		return {
+			available = false,
+			reason = "RunService.Misprediction unavailable: " .. tostring(connectionOrError),
+			sampleSeconds = seconds,
+		}
+	end
+
+	task.wait(seconds)
+	--: A line starting with `(` after a call is ambiguous syntax now: Luau
+	--: reads `task.wait(seconds)(connectionOrError...)` as a call of the
+	--: call's result and refuses to compile the whole client relay. The
+	--: script died on this line in the running session and every client.*
+	--: command timed out behind it.
+	local predictionConnection = connectionOrError :: RBXScriptConnection
+	predictionConnection:Disconnect()
+
+	local predictionStatus = nil
+	local statusError = nil
+	local character = player and player.Character
+	local root = character and character:FindFirstChild("HumanoidRootPart")
+	if root then
+		local statusOk, statusOrError = pcall(function()
+			return RunService:GetPredictionStatus(root)
+		end)
+		if statusOk then
+			predictionStatus = tostring(statusOrError)
+		else
+			statusError = tostring(statusOrError)
+		end
+	end
+
+	local paths = {}
+	for path in pairs(unique) do
+		table.insert(paths, path)
+	end
+	table.sort(paths)
+	while #paths > 100 do
+		table.remove(paths)
+	end
+
+	return {
+		available = true,
+		sampleSeconds = seconds,
+		mispredictionEvents = events,
+		affectedInstances = affected,
+		uniqueAffectedInstances = uniqueCount,
+		affectedPaths = paths,
+		pathsTruncated = uniqueCount > #paths,
+		lastMispredictionTime = lastTime,
+		lastStats = lastStats,
+		predictionStatus = predictionStatus,
+		predictionStatusError = statusError,
+		source = "RunService.Misprediction/GetPredictionStatus",
+	}
 end
 
 --- Invoke a BindableFunction the game exposes for testing.
@@ -554,7 +675,7 @@ function COMMANDS.player_state()
 		userId = player and player.UserId or nil,
 		position = root and { round(root.Position.X, 2), round(root.Position.Y, 2), round(root.Position.Z, 2) } or nil,
 		health = humanoid and humanoid.Health or nil,
-		grounded = humanoid and humanoid.FloorMaterial ~= Enum.Material.Air or nil,
+		grounded = if humanoid then humanoid.FloorMaterial ~= Enum.Material.Air else nil,
 		attributes = player and player:GetAttributes() or {},
 		leaderstats = stats,
 	}
@@ -662,6 +783,64 @@ end
 --- Scriptable after a capture looks to a player like the game has frozen.
 local savedCameraType: Enum.CameraType? = nil
 
+function COMMANDS.camera_get(params)
+	local camera = workspace.CurrentCamera
+	if camera == nil then error("there is no CurrentCamera on this client", 0) end
+	local pos, look = camera.CFrame.Position, camera.CFrame.LookVector
+	return {
+		position = { round(pos.X, 3), round(pos.Y, 3), round(pos.Z, 3) },
+		lookVector = { round(look.X, 4), round(look.Y, 4), round(look.Z, 4) },
+		fieldOfView = camera.FieldOfView,
+		viewportSize = { camera.ViewportSize.X, camera.ViewportSize.Y },
+		cameraType = camera.CameraType.Name,
+		cameraSource = "client",
+		player = game:GetService("Players").LocalPlayer.Name,
+	}
+end
+
+-- Public Studio testing API. This reaches normal game input listeners and
+-- never invokes gameplay remotes or changes character transforms directly.
+function COMMANDS.input(params)
+	local input = game:GetService("UserInputService"):CreateVirtualInput()
+	if input == nil then error("VirtualInput is unavailable in this client", 0) end
+	local held = {}
+	local heldMouse = nil
+	local ok, message = pcall(function()
+		if params.action == "keys" then
+			for _, name in params.keys do
+				local code = Enum.KeyCode[name]
+				if code == nil then error("unknown key: " .. tostring(name), 0) end
+				table.insert(held, code)
+				input:SendKey(true, code, false)
+			end
+			task.wait(math.clamp(tonumber(params.duration) or 0.1, 0.01, 3))
+		elseif params.action == "click" then
+			local position = Vector2.new(params.x, params.y)
+			input:SendMousePosition(position)
+			heldMouse = position
+			input:SendMouseButton(position, Enum.UserInputType.MouseButton1, true, 0)
+			--: `duration` turns a click into a hold: a charge cast wants the
+			--: button down past the charge window and a reel minigame reads
+			--: the button state every frame it runs. The 0.08 default keeps
+			--: plain clicks behaving exactly as they always have.
+			task.wait(math.clamp(tonumber(params.duration) or 0.08, 0.01, 3))
+			input:SendMouseButton(position, Enum.UserInputType.MouseButton1, false, 0)
+			heldMouse = nil
+		elseif params.action == "text" then
+			input:SendTextInput(params.text)
+		else
+			error("unknown input action", 0)
+		end
+	end)
+	for _, code in held do pcall(function() input:SendKey(false, code, false) end) end
+	if heldMouse then
+		pcall(function() input:SendMouseButton(heldMouse, Enum.UserInputType.MouseButton1, false, 0) end)
+	end
+	if not ok then error(tostring(message), 0) end
+	return { delivered = true, action = params.action, source = "VirtualInput",
+		player = game:GetService("Players").LocalPlayer.Name }
+end
+
 function COMMANDS.camera_set(params)
 	local camera = workspace.CurrentCamera
 	if camera == nil then
@@ -691,15 +870,9 @@ function COMMANDS.camera_set(params)
 
 	-- Reported back so a caller can compare what it asked for against what the
 	-- engine settled on, rather than trusting that setting it worked.
-	local pos = camera.CFrame.Position
-	local look = camera.CFrame.LookVector
-	return {
-		applied = true,
-		position = { round(pos.X, 3), round(pos.Y, 3), round(pos.Z, 3) },
-		lookVector = { round(look.X, 4), round(look.Y, 4), round(look.Z, 4) },
-		fieldOfView = camera.FieldOfView,
-		cameraType = camera.CameraType.Name,
-	}
+	local result = COMMANDS.camera_get(params)
+	result.applied = true
+	return result
 end
 
 --- client.camera_release: hand the camera back to the player.

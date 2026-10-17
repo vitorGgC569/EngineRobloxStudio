@@ -66,10 +66,16 @@ def _exec(server: Any, source: str, timeout: float = 60.0) -> dict[str, Any]:
 
     from ..hub.client import StudioBridge
 
-    bridge = StudioBridge()
-    bridge.pin_to_any()
+    # Staging emits engine-owned Luau with JSON-escaped values. Raw source is
+    # exposed only by the separately gated programming tool.
+    bridge = StudioBridge(allow_arbitrary=True)
     try:
-        result = bridge.call("bridge.exec", {"source": source}, timeout=timeout)
+        with bridge.lease_scope(
+            agent_id="mcp-staging-tools",
+            context="edit",
+            ttl_seconds=max(30.0, min(timeout + 30.0, 300.0)),
+        ):
+            result = bridge.call("bridge.exec", {"source": source}, timeout=timeout)
     except Exception as error:
         return {
             "ok": False,

@@ -8,6 +8,7 @@ fixture.
 from __future__ import annotations
 
 import json
+import os
 import time
 import subprocess
 from dataclasses import dataclass
@@ -49,6 +50,9 @@ from .release_artifacts import (
 )
 from .run_artifacts import RunArtifacts
 from .scanner import scan_structure
+from .pixel_vision import PixelMetricsProvider
+from .visual_cli import VisualCliError, _rubric_from_spec
+from .visual_review import VisualReviewError, review_captures
 from .visual_spec import VisualQualitySpec, load_visual_spec
 
 
@@ -65,12 +69,46 @@ def _now() -> str:
     return datetime.now(timezone.utc).isoformat()
 
 
+def _visual_provider() -> Any:
+    """The reviewer for this run: the best one whose configuration exists.
+
+    A model name always comes from configuration (``RQE_VISION_MODEL``), never
+    from a default, so the OpenAI provider only runs when both a model and an
+    ``OPENAI_API_KEY`` are present. The pixel provider is the always-available
+    floor: it grades what pixels can prove and reports "not assessed" for the
+    rest, so a keyless run stays honest rather than green by accident.
+    """
+    model = os.environ.get("RQE_VISION_MODEL", "").strip()
+    if model:
+        from .openai_vision import OpenAIResponsesVisionProvider
+
+        provider = OpenAIResponsesVisionProvider(model=model)
+        if provider.configured:
+            return provider
+    return PixelMetricsProvider()
+
+
 def _build_place(
     project: Project,
     run: RunArtifacts,
     product_stamp: ProductIdentityStamp | None,
 ) -> Path:
-    project_file = project.root / project.config.get("rojoProject", "roblox/mvp/default.project.json")
+    configured_project = project.config.get("rojoProject")
+    if not isinstance(configured_project, str) or not configured_project.strip():
+        raise RuntimeError(
+            "release requires an explicit rqe.project.json rojoProject; "
+            "refusing to fall back to a different game"
+        )
+    relative_project = Path(configured_project.strip())
+    if relative_project.is_absolute():
+        raise RuntimeError("release rojoProject must be relative to the selected project root")
+    project_file = (project.root / relative_project).resolve()
+    try:
+        project_file.relative_to(project.root.resolve())
+    except ValueError as exc:
+        raise RuntimeError("release rojoProject escapes the selected project root") from exc
+    if not project_file.is_file():
+        raise RuntimeError(f"release rojoProject does not exist: {relative_project.as_posix()}")
     build_project_file = project_file
     if product_stamp is not None:
         build_project_file = run.write_json(
@@ -375,28 +413,116 @@ def _bind_observation(observation: Observation, *, run_id: str, build_hash: str)
     return observation.evidence
 
 
-def _matching_live_session(bridge: StudioBridge, expected_place: str) -> dict[str, Any] | None:
-    status = bridge.status()
-    matches = [
-        item for item in status.get("sessions", [])
-        if str((item.get("place") or {}).get("name")) == expected_place
-    ]
-    if len(matches) != 1:
+def _live_place_name(bridge: StudioBridge, session_id: str, *, timeout: float = 15.0) -> str | None:
+    """The DataModel name a session reports right now, not at handshake.
+
+    A session records the place name when the plugin says hello, and a
+    cold-launched Studio says hello before the file finishes opening: the name
+    at that instant is the placeholder ("Game"), and the session record keeps
+    it for its whole life. Measured, not theorised -- a cold-launched session
+    reported "Game" in every hub status for ten minutes while a live probe to
+    the same session answered with the exact run-named file. Matching on the
+    record alone can therefore never see an RQE-launched build, which is the
+    one case the cold-launch path exists for.
+    """
+    try:
+        response = bridge.call_response(
+            "dm.properties",
+            {"path": "game", "_session": session_id},
+            timeout=timeout,
+        )
+    except Exception:  # noqa: BLE001 - a probing miss is a "not yet", not an error
         return None
-    return matches[0]
+    if str(response.session) != session_id:
+        return None
+    if response.place:
+        return response.place
+    result = response.result if isinstance(response.result, dict) else None
+    if isinstance(result, dict):
+        properties = result.get("properties")
+        if isinstance(properties, dict) and properties.get("Name"):
+            return str(properties["Name"])
+    return None
+
+
+def _matching_live_session(bridge: StudioBridge, expected_place: str) -> dict[str, Any] | None:
+    """The one edit session demonstrably open on the release build.
+
+    The anchor is the edit session, exactly as `_play_session` documents: a
+    running (play) session reports the DataModel's name -- "Game" for an
+    unpublished build -- so name matching cannot see it, and a play session
+    can also mask the transient name a just-launched Studio carries while the
+    file is still loading. The name a session *records* is its handshake-time
+    name, so a cold-launched Studio needs a live probe (see `_live_place_name`)
+    before it can ever match. One edit session on the expected file is an
+    unambiguous match; two still fail closed.
+    """
+    matched: list[dict[str, Any]] = []
+    for item in bridge.status().get("sessions", []):
+        if str(item.get("context")) != "edit":
+            continue
+        session_id = str(item.get("session") or "")
+        if not session_id:
+            continue
+        recorded = str((item.get("place") or {}).get("name") or "")
+        name = recorded
+        if recorded != expected_place:
+            name = _live_place_name(bridge, session_id) or recorded
+        if name == expected_place:
+            matched.append(item)
+    if len(matched) != 1:
+        return None
+    return matched[0]
+
+
+def _await_matching_live_session(
+    bridge: StudioBridge,
+    expected_place: str,
+    *,
+    timeout: float = 480.0,
+) -> dict[str, Any] | None:
+    """Wait for a freshly launched Studio to finish opening the release file.
+
+    The plugin handshakes before the DataModel finishes loading, and while it
+    loads ``game.Name`` is the placeholder default ("Game"), not the file
+    name. A single look at that instant fails closed on a Studio that is
+    demonstrably opening the right file. The match itself is unchanged: only
+    the exact expected name matches -- read live while the load settles -- and
+    one check after the wait still fails closed if the file never lands.
+    """
+    deadline = time.monotonic() + timeout
+    while True:
+        session = _matching_live_session(bridge, expected_place)
+        if session is not None:
+            return session
+        if time.monotonic() >= deadline:
+            return None
+        time.sleep(2.0)
 
 
 def _needs_play_session(project: Project, visual_spec: Any) -> bool:
-    """Does any evaluation state declare that it needs a real Player?
+    """Does any release scenario declare that it needs a real Player?
 
-    Read from the scenarios themselves rather than assumed, so a spec whose
-    states are all satisfiable headlessly never pays for a Play Solo it does
-    not need.
+    Read from the scenarios themselves rather than assumed, so a project whose
+    visual and additional release scenarios are all satisfiable headlessly never
+    pays for a Play Solo it does not need.
     """
-    for state in visual_spec.data.get("evaluationStates", {}).values():
-        relative = str((state or {}).get("scenario") or "")
-        if not relative:
+    relatives = [
+        str((state or {}).get("scenario") or "")
+        for state in visual_spec.data.get("evaluationStates", {}).values()
+    ]
+    configured = project.config.get("releaseScenarios") or []
+    if isinstance(configured, list):
+        relatives.extend(
+            str(item) for item in configured
+            if isinstance(item, str) and item.strip()
+        )
+
+    seen: set[str] = set()
+    for relative in relatives:
+        if not relative or relative in seen:
             continue
+        seen.add(relative)
         path = project.root / relative
         try:
             scenario = json.loads(path.read_text(encoding="utf-8"))
@@ -425,13 +551,23 @@ def _wait_for_a_player(bridge: StudioBridge, command_errors: list[dict[str, Any]
     """
     deadline = time.monotonic() + timeout
     last: str | None = None
-    while time.monotonic() < deadline:
-        try:
-            bridge.actor_attach(None)
-            return True
-        except Exception as exc:  # noqa: BLE001
-            last = str(exc)
-            time.sleep(2.0)
+    try:
+        with bridge.lease_scope(
+            agent_id="release-wait-for-player",
+            session_id=bridge.pinned_session,
+            context="running",
+            ttl_seconds=300.0,
+        ):
+            while time.monotonic() < deadline:
+                try:
+                    bridge.renew_active_lease()
+                    bridge.actor_attach(None)
+                    return True
+                except Exception as exc:  # noqa: BLE001
+                    last = str(exc)
+                    time.sleep(2.0)
+    except Exception as exc:  # noqa: BLE001
+        last = str(exc)
 
     command_errors.append({
         "code": "E_NO_PLAYER",
@@ -442,31 +578,45 @@ def _wait_for_a_player(bridge: StudioBridge, command_errors: list[dict[str, Any]
     return False
 
 
-def _play_session(bridge: StudioBridge, expected_place: str) -> dict[str, Any] | None:
+def _play_session(
+    bridge: StudioBridge,
+    expected_place: str,
+    *,
+    verified_session: str | None = None,
+) -> dict[str, Any] | None:
     """The play-session half of a Studio that is running the release build.
 
     Play Solo adds a second connection in a `server` context alongside the
-    edit one, and the scenarios need that one. Matched on the place name as
-    well as the context, so a Studio running something else can never be
-    mistaken for this build.
+    edit one, and the scenarios need that one.
+
+    A play session does not carry the file name.
+
+    Its place is the DataModel's name — "Game" for an unpublished build —
+    so matching it the way the edit session is matched finds nothing and
+    silently leaves the scenarios in the headless context they cannot run
+    in. That was invisible: no error, just a category at zero.
+
+    So the anchor is the edit session, which does carry the file name --
+    `verified_session` is the one this release already matched and pinned a
+    moment ago; it counts if it is still live, so starting the play session
+    does not have to re-prove the world under the load of bringing it up.
+    Without it the live match runs again. Anything less certain -- no edit
+    session on the expected place, or more than one running session --
+    returns nothing and fails closed.
     """
     sessions = bridge.status().get("sessions", [])
 
-    #: A play session does not carry the file name.
-    #:
-    #: Its place is the DataModel's name — "Game" for an unpublished build —
-    #: so matching it the way the edit session is matched finds nothing and
-    #: silently leaves the scenarios in the headless context they cannot run
-    #: in. That was invisible: no error, just a category at zero.
-    #:
-    #: So the anchor is the edit session, which does carry the file name. If
-    #: this Studio is demonstrably open on the release build, the one running
-    #: session beside it is that build running. Anything less certain — no
-    #: edit session on the expected place, or more than one running session —
-    #: returns nothing and fails closed.
-    edit = [item for item in sessions
-            if str((item.get("place") or {}).get("name")) == expected_place]
-    if not edit:
+    anchor: dict[str, Any] | None = None
+    if verified_session:
+        anchor = next(
+            (item for item in sessions
+             if str(item.get("session")) == verified_session
+             and str(item.get("context")) == "edit"),
+            None,
+        )
+    if anchor is None:
+        anchor = _matching_live_session(bridge, expected_place)
+    if anchor is None:
         return None
 
     running = [item for item in sessions
@@ -482,6 +632,7 @@ def _execute_release_attempt(
     *,
     hub_url: str,
     static_only: bool,
+    allow_cold_studio_launch: bool,
 ) -> ReleaseOutcome:
     visual_spec = load_visual_spec(project)
     plan: MeasurementPlan = compile_measurement_plan(project)
@@ -560,7 +711,17 @@ def _execute_release_attempt(
             needs_play = _needs_play_session(project, visual_spec)
 
             session = _matching_live_session(bridge, place.name)
-            if session is None:
+            if session is None and not allow_cold_studio_launch:
+                command_errors.append({
+                    "code": "E_STUDIO_COLD_LAUNCH_REQUIRED",
+                    "message": (
+                        "runtime release evidence requires the exact run-named build in Studio, "
+                        "but cold Studio launch is disabled; explicitly allow it or open the build first"
+                    ),
+                    "expectedPlace": place.name,
+                })
+
+            if session is None and allow_cold_studio_launch:
                 # Open the build this run just made.
                 #
                 # The place is named after the run id, and a run id is unique by
@@ -580,15 +741,11 @@ def _execute_release_attempt(
                         project.root / ".rqe" / "studio-archive",
                         bridge=bridge,
                         wait_seconds=240.0,
-                        # Minimised by default, because Studio taking the
-                        # screen during a release run is rude. But Play Solo
-                        # cannot be started without focus — Studio ignores
-                        # synthesised key messages — and a minimised window
-                        # has no composited surface to photograph either. So a
-                        # run that needs a player needs the screen, and the
-                        # alternative is a silent zero in every visual
-                        # category.
-                        background=not needs_play,
+                        # Even an explicitly authorized cold launch stays
+                        # background-first. Play/Run is controlled through
+                        # StudioTestService and screenshots through
+                        # StudioCaptureService; neither requires foreground.
+                        background=True,
                     )
                 except Exception as exc:  # noqa: BLE001
                     command_errors.append({
@@ -597,21 +754,26 @@ def _execute_release_attempt(
                         "expectedPlace": place.name,
                     })
                 else:
-                    session = _matching_live_session(bridge, place.name)
+                    session = _await_matching_live_session(bridge, place.name)
 
             if session is None:
                 available = [
-                    (item.get("place") or {}).get("name")
+                    {
+                        "name": (item.get("place") or {}).get("name"),
+                        "context": item.get("context"),
+                    }
                     for item in bridge.status().get("sessions", [])
                 ]
-                command_errors.append({
-                    "code": "E_BUILD_MISMATCH",
-                    "message": "no unique live Studio session is running the exact release build",
-                    "expectedPlace": place.name,
-                    "availablePlaces": available,
-                })
+                if allow_cold_studio_launch:
+                    command_errors.append({
+                        "code": "E_BUILD_MISMATCH",
+                        "message": "no unique live Studio session is running the exact release build",
+                        "expectedPlace": place.name,
+                        "availablePlaces": available,
+                    })
             else:
                 bridge.pinned_session = str(session["session"])
+                matched_edit_session = str(session["session"])
                 observation: Observation | None = None
 
                 # [[
@@ -656,7 +818,11 @@ def _execute_release_attempt(
                                 "report": report,
                             })
                         else:
-                            play = _play_session(bridge, place.name)
+                            play = _play_session(
+                                bridge,
+                                place.name,
+                                verified_session=matched_edit_session,
+                            )
                             if play is not None:
                                 bridge.pinned_session = str(play["session"])
                                 played_first = True
@@ -673,9 +839,17 @@ def _execute_release_attempt(
                     artifact_assembler.record_observation(observation)
                     if played_first or observation.measurements.get("runStart") is not None:
                         try:
-                            response = bridge.call_response(
-                                "product.identity", {}, timeout=20
-                            )
+                            with bridge.lease_scope(
+                                agent_id="release-product-identity",
+                                run_id=run.run_id,
+                                build_id=build_hash,
+                                session_id=bridge.pinned_session,
+                                context="running",
+                                ttl_seconds=60.0,
+                            ):
+                                response = bridge.call_response(
+                                    "product.identity", {}, timeout=20
+                                )
                             if response.ok:
                                 identity_response = response
                             else:
@@ -714,7 +888,11 @@ def _execute_release_attempt(
                         if played_first:
                             scenario_context = str(observation.context or "server")
                             capture_place = str(
-                                (_play_session(bridge, place.name) or {})
+                                (_play_session(
+                                    bridge,
+                                    place.name,
+                                    verified_session=matched_edit_session,
+                                ) or {})
                                 .get("place", {}).get("name") or place.name)
 
                         if needs_play and not played_first and scenario_context == "run":
@@ -768,7 +946,11 @@ def _execute_release_attempt(
                                 })
 
                             if play_report is not None and play_report.get("started"):
-                                play = _play_session(bridge, place.name)
+                                play = _play_session(
+                                    bridge,
+                                    place.name,
+                                    verified_session=matched_edit_session,
+                                )
                                 if play is not None:
                                     bridge.pinned_session = str(play["session"])
                                     active_session = str(play["session"])
@@ -795,13 +977,70 @@ def _execute_release_attempt(
                                     capture_place = str(
                                         (play.get("place") or {}).get("name") or place.name)
 
-                        execute_quality_snapshot(
-                            artifact_assembler,
-                            bridge,
-                            project,
-                            visual_spec,
-                            expected_session=active_session,
-                        )
+                        # Snapshot, scenario and capture intentionally use
+                        # separate leases. A scenario reset destroys the DataModel
+                        # named by its current fence; keeping one caller-owned lease
+                        # across the whole phase makes a legitimate rejoin impossible.
+                        with bridge.lease_scope(
+                            agent_id="release-quality-snapshot",
+                            run_id=run.run_id,
+                            build_id=build_hash,
+                            session_id=active_session,
+                            context="running",
+                            ttl_seconds=300.0,
+                        ):
+                            execute_quality_snapshot(
+                                artifact_assembler,
+                                bridge,
+                                project,
+                                visual_spec,
+                                expected_session=active_session,
+                            )
+
+                        def reset_release_session() -> dict[str, Any]:
+                            try:
+                                report = start_play_solo(
+                                    bridge,
+                                    wait_seconds=180.0,
+                                    restart=True,
+                                    allow_foreground_fallback=False,
+                                )
+                            except Exception as exc:  # noqa: BLE001
+                                return {
+                                    "started": False,
+                                    "reason": f"{type(exc).__name__}: {exc}",
+                                }
+                            if not report.get("started"):
+                                return report
+                            play = _play_session(
+                                bridge,
+                                place.name,
+                                verified_session=matched_edit_session,
+                            )
+                            if play is None:
+                                return {
+                                    **report,
+                                    "started": False,
+                                    "reason": "fresh Play Solo session could not be uniquely identified",
+                                }
+                            bridge.pinned_session = str(play["session"])
+                            readiness_errors: list[dict[str, Any]] = []
+                            if not _wait_for_a_player(
+                                bridge, readiness_errors, timeout=180.0
+                            ):
+                                return {
+                                    **report,
+                                    "started": False,
+                                    "reason": "fresh Play Solo session never produced a ready player",
+                                    "readinessErrors": readiness_errors,
+                                }
+                            return {
+                                **report,
+                                "started": True,
+                                "sessionId": str(play["session"]),
+                                "context": str(play.get("context") or "server"),
+                            }
+
                         state_outcomes = execute_declared_scenarios(
                             artifact_assembler,
                             bridge,
@@ -809,45 +1048,132 @@ def _execute_release_attempt(
                             session_id=active_session,
                             context=scenario_context,
                             place_name=place.name,
+                            reset_session=reset_release_session,
+                            additional_scenarios=list(project.config.get("releaseScenarios") or []),
                         )
-                        try:
-                            execute_visual_capture(
-                                artifact_assembler,
-                                bridge,
-                                visual_spec,
-                                build_path=place,
-                                expected_place=capture_place,
-                                session_id=active_session,
-                                state_outcomes=state_outcomes,
+
+                        current_play = _play_session(
+                            bridge,
+                            place.name,
+                            verified_session=matched_edit_session,
+                        )
+                        if current_play is not None:
+                            bridge.pinned_session = str(current_play["session"])
+                            active_session = str(current_play["session"])
+                            scenario_context = str(current_play.get("context") or "server")
+                            capture_place = str(
+                                (current_play.get("place") or {}).get("name") or place.name
                             )
-                        except Exception as exc:
+                            try:
+                                with bridge.lease_scope(
+                                    agent_id="release-capture-evidence",
+                                    run_id=run.run_id,
+                                    build_id=build_hash,
+                                    session_id=active_session,
+                                    context="running",
+                                    ttl_seconds=300.0,
+                                ):
+                                    execute_visual_capture(
+                                        artifact_assembler,
+                                        bridge,
+                                        visual_spec,
+                                        build_path=place,
+                                        expected_place=capture_place,
+                                        session_id=active_session,
+                                        state_outcomes=state_outcomes,
+                                    )
+                                    execute_post_scenario_logs(
+                                        artifact_assembler,
+                                        bridge,
+                                        expected_session=active_session,
+                                    )
+                                    capture_manifest = artifact_assembler.capture_manifest
+                                    if (
+                                        isinstance(capture_manifest, dict)
+                                        and capture_manifest.get("trustworthy") is True
+                                    ):
+                                        # The capture set exists and is bound to
+                                        # this run; the review is what turns a
+                                        # trustworthy screenshot into an
+                                        # assessment the gate can score.  The
+                                        # provider is chosen by what is
+                                        # configured -- a vision model when a
+                                        # key exists, the pixel floor otherwise.
+                                        try:
+                                            reviewed = review_captures(
+                                                capture_manifest,
+                                                run.directory / "screenshots",
+                                                _rubric_from_spec(
+                                                    visual_spec.data, capture_manifest
+                                                ),
+                                                _visual_provider(),
+                                                output_directory=run.directory / "visual-review",
+                                            )
+                                            artifact_assembler.record_visual_review(
+                                                reviewed.to_dict()
+                                            )
+                                        except (VisualCliError, VisualReviewError) as exc:
+                                            artifact_assembler.record_external_producer(
+                                                RuntimeProducerOutput(
+                                                    producer_id="visual-review.execution-error",
+                                                    payload={
+                                                        "type": type(exc).__name__,
+                                                        "message": str(exc),
+                                                    },
+                                                    command_errors=[{
+                                                        "code": "E_VISUAL_REVIEW",
+                                                        "type": type(exc).__name__,
+                                                        "message": str(exc),
+                                                    }],
+                                                    status="BLOCKED",
+                                                )
+                                            )
+                            except Exception as exc:
+                                artifact_assembler.record_external_producer(
+                                    RuntimeProducerOutput(
+                                        producer_id="capture.execution-error",
+                                        payload={
+                                            "type": type(exc).__name__,
+                                            "message": str(exc),
+                                        },
+                                        command_errors=[{
+                                            "code": "E_CAPTURE_EXECUTION",
+                                            "type": type(exc).__name__,
+                                            "message": str(exc),
+                                        }],
+                                        status="BLOCKED",
+                                    )
+                                )
+                        else:
                             artifact_assembler.record_external_producer(
                                 RuntimeProducerOutput(
                                     producer_id="capture.execution-error",
                                     payload={
-                                        "type": type(exc).__name__,
-                                        "message": str(exc),
+                                        "type": "SessionUnavailable",
+                                        "message": "no unique live Play Solo session remained after scenario execution",
                                     },
                                     command_errors=[{
-                                        "code": "E_CAPTURE_EXECUTION",
-                                        "type": type(exc).__name__,
-                                        "message": str(exc),
+                                        "code": "E_CAPTURE_SESSION",
+                                        "message": "no unique live Play Solo session remained after scenario execution",
                                     }],
                                     status="BLOCKED",
                                 )
                             )
-                        execute_post_scenario_logs(
-                            artifact_assembler,
-                            bridge,
-                            expected_session=active_session,
-                        )
                 finally:
                     if (
                         observation is not None
                         and observation.measurements.get("runStart") is not None
                     ):
                         try:
-                            bridge.call("run.stop", timeout=30)
+                            with bridge.lease_scope(
+                                agent_id="release-stop-run",
+                                run_id=run.run_id,
+                                build_id=build_hash,
+                                context="running",
+                                ttl_seconds=60.0,
+                                release_required=False,
+                            ):
+                                bridge.call("run.stop", timeout=30)
                         except Exception as exc:
                             command_errors.append({
                                 "code": "E_RUN_STOP",
@@ -915,9 +1241,10 @@ def _execute_release_attempt(
 def execute_release(
     root: str | Path,
     *,
-    hub_url: str = "http://127.0.0.1:8790",
+    hub_url: str = "",
     run_id: str | None = None,
     static_only: bool = False,
+    allow_cold_studio_launch: bool = False,
 ) -> ReleaseOutcome:
     """Build and evaluate one release candidate without consulting the fixture.
 
@@ -939,6 +1266,7 @@ def execute_release(
             run,
             hub_url=hub_url,
             static_only=static_only,
+            allow_cold_studio_launch=allow_cold_studio_launch,
         )
     except Exception as exc:
         error = {

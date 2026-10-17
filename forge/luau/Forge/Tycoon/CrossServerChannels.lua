@@ -49,7 +49,9 @@ function CrossServerChannels.new(config: {
 		radioCostAmount = 0,
 		allowedAssetTypeId = config.allowedAssetTypeId or 3, -- rbxassetid audio
 		shoutMaxLength = config.shoutMaxLength or 140,
-		ads = config.ads or {},
+		-- The caller keeps the array it passed in. Replacing an entry later
+		-- would change the ad every server is showing.
+		ads = table.clone(config.ads or {}),
 		adSlotSeconds = config.adSlotSeconds or 300,
 		clock = config.clock or os.time,
 	}, CrossServerChannels)

@@ -23,10 +23,16 @@ word, the same reason `sourcing_publish` is not a flag on `sourcing_adopt`.
 
 from __future__ import annotations
 
+import os
 from pathlib import Path
 from typing import Any
 
-from .server import Tool
+from .server import Tool, ToolError
+from ..assets import local_credentials
+from ..security import SecurityBoundaryError, resolve_inside
+
+
+MAX_PLACE_BYTES = 128 * 1024 * 1024
 
 
 def _key(server: Any) -> tuple[str | None, str | None]:
@@ -36,12 +42,13 @@ def _key(server: Any) -> tuple[str | None, str | None]:
     result, not an argument a caller could paste into a transcript.
     """
 
-    path = server.root / "docs" / "goal" / "key.txt"
-    if not path.is_file():
-        return None, f"no Open Cloud key at {path}"
-    key = path.read_text(encoding="utf-8").strip()
+    local_credentials.load(root=server.root)
+    key = os.environ.get(local_credentials.ENV_VAR, "").strip()
     if not key:
-        return None, f"the key file at {path} is empty"
+        return None, (
+            "ROBLOX_OPEN_CLOUD_KEY is unset and no credential exists at "
+            f"{server.root / local_credentials.RELATIVE_KEY_PATH}"
+        )
     return key, None
 
 
@@ -77,21 +84,41 @@ def register_place_tools(server: Any) -> Any:
 
         game_id = str(arguments.get("gameId") or "").strip()
         given = arguments.get("placeFile")
-        if given:
-            path = Path(str(given))
-        elif game_id:
-            candidates = sorted((server.root / "games" / game_id).glob("*.rbx*"))
-            if not candidates:
+        try:
+            if given:
+                path = resolve_inside(
+                    server.root,
+                    str(given),
+                    label="placeFile",
+                    must_exist=True,
+                    file_only=True,
+                    suffixes=(".rbxl", ".rbxlx"),
+                )
+            elif game_id:
+                game_root = resolve_inside(
+                    server.root / "games",
+                    game_id,
+                    label="gameId",
+                    must_exist=True,
+                    directory_only=True,
+                )
+                candidates = sorted(
+                    item for item in game_root.iterdir()
+                    if item.is_file() and item.suffix.lower() in {".rbxl", ".rbxlx"}
+                )
+                if not candidates:
+                    return {"published": False,
+                            "error": f"no .rbxlx or .rbxl in games/{game_id}"}
+                path = candidates[0]
+            else:
                 return {"published": False,
-                        "error": f"no .rbxlx or .rbxl in games/{game_id}"}
-            path = candidates[0]
-        else:
-            return {"published": False,
-                    "error": "give either gameId or placeFile"}
+                        "error": "give either gameId or placeFile"}
+        except SecurityBoundaryError as exc:
+            raise ToolError(str(exc)) from exc
 
-        if not path.is_file():
-            return {"published": False, "error": f"no place file at {path}"}
-
+        size = path.stat().st_size
+        if size > MAX_PLACE_BYTES:
+            raise ToolError(f"place file exceeds the {MAX_PLACE_BYTES}-byte publication limit")
         payload = path.read_bytes()
         client, why = _client()
         if client is None:

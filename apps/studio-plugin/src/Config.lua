@@ -3,14 +3,15 @@
 
 local Config = {}
 
-Config.PROTOCOL = "rqe.bridge/1"
-Config.PLUGIN_VERSION = "1.0.0"
+Config.PROTOCOL = "rqe.bridge/2"
+Config.PLUGIN_VERSION = "2.1.0"
+Config.PLUGIN_BUILD_ID = "__RQE_BUILD_ID__"
 
 -- The hub always binds to loopback. A bridge that accepted remote commands
 -- would be a remote code execution surface on the developer's machine.
 Config.DEFAULT_HUB_URL = "http://127.0.0.1:8790"
 
--- Long-poll budget. The hub holds a poll for ~20s, so this must exceed it while
+-- Long-poll budget. The hub holds a poll for ~1.5s, so this must exceed it while
 -- staying under Roblox's own 60s HTTP ceiling.
 Config.POLL_TIMEOUT_SECONDS = 30
 

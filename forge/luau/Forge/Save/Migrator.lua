@@ -114,7 +114,12 @@ function Migrator:migrate(data: any, defaults: any?): { data: any, fromVersion: 
 		local transform: Migration? = migrator._migrations[step]
 		if transform then
 			local migrated = transform(working)
-			working = if typeof(migrated) == "table" then migrated else {}
+			-- Nil is the in-place form: the step already edited `working`.
+			-- A non-table return is not a profile either. Substituting {}
+			-- and then stamping the target version made that wipe permanent.
+			if typeof(migrated) == "table" then
+				working = migrated
+			end
 		end
 	end
 

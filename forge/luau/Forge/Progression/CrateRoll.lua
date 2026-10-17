@@ -10,6 +10,24 @@
 
 local CrateRoll = {}
 
+-- The pool used to be a shallow clone, and roll() handed that same table
+-- back. Editing a weight on the caller's drop, or on the drop just returned,
+-- rewrote later rolls while totalWeight still described the old numbers.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 export type Drop = { id: string, weight: number, rarity: number }
 
 type Self = {
@@ -30,12 +48,20 @@ function CrateRoll.new(config: { drops: { Drop }, pityThreshold: number?, minRar
 		total += drop.weight
 	end
 	assert(total > 0, "drop weights must sum positive")
+	-- A negative threshold is truthy, so `or 20` would keep it. Pity then
+	-- fires on the first roll because the counter already meets -1.
+	local pityThreshold = if config.pityThreshold ~= nil then config.pityThreshold else 20
+	assert(type(pityThreshold) == "number" and pityThreshold >= 1, "pityThreshold must be at least 1")
+	-- A negative floor is truthy, so `or 3` would keep it. Pity then
+	-- keeps every drop because rarity >= -1.
+	local minRarityForPity = if config.minRarityForPity ~= nil then config.minRarityForPity else 3
+	assert(type(minRarityForPity) == "number" and minRarityForPity >= 1, "minRarityForPity must be at least 1")
 	return setmetatable({
-		drops = table.clone(config.drops),
+		drops = deepCopy(config.drops, {}) :: { Drop },
 		totalWeight = total,
-		pityThreshold = config.pityThreshold or 20,
+		pityThreshold = pityThreshold,
 		pityCounter = 0,
-		minRarityForPity = config.minRarityForPity or 3,
+		minRarityForPity = minRarityForPity,
 	}, CrateRoll)
 end
 
@@ -69,7 +95,7 @@ function CrateRoll.roll(self: Self, rng: () -> number): Drop
 	else
 		self.pityCounter += 1
 	end
-	return chosen
+	return deepCopy(chosen, {}) :: Drop
 end
 
 return CrateRoll

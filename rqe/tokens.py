@@ -22,6 +22,7 @@ from typing import Any, Iterable
 
 from .provenance import sha256_file
 from .schema_validation import SchemaDefinitionError, validate_schema_instance
+from .security import SecurityBoundaryError, resolve_inside
 
 
 TOKENS_SCHEMA_VERSION = 1
@@ -219,20 +220,19 @@ def hue_family(srgb: Iterable[int], families: int = 8) -> int:
 def _resolve_inside(root: Path, base: Path, relative: Any, label: str) -> Path:
     if not isinstance(relative, str) or not relative:
         raise TokenError(f"{label} must be a non-empty relative path")
-    requested = Path(relative)
-    if requested.is_absolute():
-        raise TokenError(f"{label} must be relative")
     root = root.resolve()
-    path = (base / requested).resolve()
     try:
-        path.relative_to(root)
-    except ValueError as exc:
-        raise TokenError(f"{label} escapes the project root") from exc
-    if path.is_symlink():
-        raise TokenError(f"{label} must not be a symlink")
-    if not path.is_file():
-        raise TokenError(f"{label} does not exist: {path}")
-    return path
+        base_relative = base.resolve().relative_to(root)
+        return resolve_inside(
+            root,
+            base_relative / relative,
+            label=label,
+            must_exist=True,
+            file_only=True,
+            suffixes=(".json",),
+        )
+    except (SecurityBoundaryError, ValueError) as exc:
+        raise TokenError(str(exc)) from exc
 
 
 def _semantic_issues(data: dict[str, Any]) -> list[str]:

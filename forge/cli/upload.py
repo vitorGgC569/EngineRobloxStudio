@@ -43,8 +43,12 @@ import uuid
 from pathlib import Path
 from typing import Any
 
+from rqe.http_safety import HttpBoundaryError, error_body_limited, text_limited
+
 REPO = Path(__file__).resolve().parents[2]
 REGISTRY = REPO / "forge" / "catalog" / "assets-verified.json"
+MAX_API_RESPONSE_BYTES = 4 * 1024 * 1024
+MAX_UPLOAD_BYTES = 100 * 1024 * 1024
 
 #: What Open Cloud accepts, and what it calls each one.
 TYPES = {
@@ -101,9 +105,16 @@ def _send(method: str, url: str, key: str, body: bytes | None = None,
     request = urllib.request.Request(url, data=body, headers=headers, method=method)
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
-            return response.status, response.read().decode("utf-8", "replace")
+            return response.status, text_limited(
+                response,
+                MAX_API_RESPONSE_BYTES,
+                label="Roblox upload response",
+                errors="replace",
+            )
     except urllib.error.HTTPError as exc:
-        return exc.code, exc.read().decode("utf-8", "replace")
+        return exc.code, error_body_limited(exc).decode("utf-8", "replace")
+    except HttpBoundaryError as exc:
+        raise UploadError(str(exc)) from exc
     except urllib.error.URLError as exc:
         raise UploadError(f"cannot reach Roblox: {exc.reason}")
 
@@ -128,6 +139,10 @@ def upload(path: Path, user_id: str, name: str | None = None,
     """Upload one file and return the resolved asset record."""
     if not path.exists():
         raise UploadError(f"no file at {path}")
+    if not path.is_file():
+        raise UploadError(f"upload source is not a file: {path}")
+    if path.stat().st_size > MAX_UPLOAD_BYTES:
+        raise UploadError(f"upload source exceeds {MAX_UPLOAD_BYTES} bytes: {path}")
 
     kind = kind_for(path, declared_type)
     key = load_key()

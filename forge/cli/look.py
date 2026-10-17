@@ -12,20 +12,15 @@ static check, the doctor, and thirty-eight live scenarios on the way through.
 An agent that cannot look at its own work is an agent whose visual quality is
 capped by how much of a person's attention it can borrow.
 
-Why it appeared broken
-----------------------
+How it captures now
+-------------------
 
-The capture pipeline was never broken. `rqe/capture.py` refuses a frame with
-fewer than eight distinct tones, on the grounds that such a picture is of a
-minimised or uncomposited window rather than of a game — and it was right every
-time. `rqe studio restart` launches Studio **minimised** by default, precisely
-so it stays out of the way, and a minimised window has no composited surface to
-photograph.
-
-So this brings Studio forward, points the camera, waits for the frame, and
-takes the picture. The refusal that looked like a bug is kept exactly as it is:
-a capture pipeline that returns a black rectangle rather than failing is one
-that teaches an agent the game is black.
+The old implementation photographed a Windows window and therefore had to
+restore and focus Studio before every shot. The current path captures the
+rendered viewport from inside Studio through `StudioCaptureService`. Camera
+control and screenshot bytes share the same pinned bridge session, so the
+command can run while Studio stays in the background and a frame of the IDE
+cannot be mistaken for evidence about the game.
 
     forge look                        one shot of whatever is on screen
     forge look --at 0,40,0 --from 60  frame a point from a distance
@@ -66,29 +61,6 @@ def _call(method: str, params: dict | None = None, timeout: int = 120) -> Any:
     return envelope.get("result")
 
 
-def foreground() -> bool:
-    """Bring Studio forward, because a minimised window cannot be photographed.
-
-    Done here rather than left to the caller: forgetting it produces a capture
-    that fails validation for a reason that looks like a rendering bug, and
-    that misdiagnosis cost this project an afternoon.
-    """
-    script = (
-        "$p = Get-Process | Where-Object { $_.ProcessName -like '*RobloxStudio*' } "
-        "| Select-Object -First 1; "
-        "if ($p) { "
-        "  Add-Type -Name W -Namespace N -MemberDefinition '"
-        "[DllImport(\"user32.dll\")] public static extern bool ShowWindow(IntPtr h, int c);"
-        "[DllImport(\"user32.dll\")] public static extern bool SetForegroundWindow(IntPtr h);'; "
-        "  [N.W]::ShowWindow($p.MainWindowHandle, 9) | Out-Null; "
-        "  [N.W]::SetForegroundWindow($p.MainWindowHandle) | Out-Null; 'ok' "
-        "} else { 'no studio' }"
-    )
-    proc = subprocess.run(["powershell", "-NoProfile", "-Command", script],
-                          capture_output=True, text=True, timeout=60)
-    return "ok" in (proc.stdout or "")
-
-
 def aim(at: tuple[float, float, float], distance: float = 60,
         height: float = 25) -> bool:
     """Point the edit-mode camera at a place in the world.
@@ -114,25 +86,59 @@ def aim(at: tuple[float, float, float], distance: float = 60,
         return False
 
 
-def shoot(name: str = "look", settle: float = 1.2) -> Path:
-    """Take one validated picture of the Studio window."""
+
+def shoot(name: str = "look", settle: float = 0.35) -> Path:
+    """Capture the rendered Studio viewport without touching desktop focus."""
     sys.path.insert(0, str(REPO))
-    from rqe.capture import capture  # imported late: Windows-only ctypes
+    from rqe.capture import capture_native_viewpoint
+    from rqe.hub.client import StudioBridge
+    from rqe.workspace import hub_url
 
     SHOTS.mkdir(parents=True, exist_ok=True)
-    stamp = datetime.now(timezone.utc).strftime("%H%M%S")
+    stamp = datetime.now(timezone.utc).strftime("%H%M%S-%f")
     out = SHOTS / f"{name}-{stamp}.png"
 
-    foreground()
-    # Let the window actually paint. Capturing the frame after raising it is
-    # how you photograph a half-drawn viewport and conclude the game is grey.
-    time.sleep(settle)
+    bridge = StudioBridge(hub_url())
+    world_only = False
+    try:
+        session = bridge.pin_to_running(timeout=4)
+    except Exception:
+        try:
+            session = bridge.pin_to_context("edit", timeout=8)
+            world_only = True
+        except Exception as exc:
+            raise LookError(
+                "no compatible Studio bridge session is available for native capture: "
+                + str(exc)
+            ) from exc
 
-    shot = capture(out, viewpoint=name, required=True)
-    if not out.exists() or out.stat().st_size < 20000:
+    try:
+        with bridge.lease_scope(
+            agent_id="forge-look-native-capture",
+            session_id=session,
+            context="any",
+            ttl_seconds=60.0,
+        ):
+            shot = capture_native_viewpoint(
+                bridge,
+                target="",
+                output=out,
+                viewpoint=name,
+                expected_session=session,
+                world_only=world_only,
+                include_ui=True,
+                settle_seconds=max(0.0, settle),
+            )
+    except Exception as exc:
+        raise LookError(f"native Studio viewport capture failed: {exc}") from exc
+
+    if not shot.trustworthy:
         raise LookError(
-            f"the capture came back at {out.stat().st_size if out.exists() else 0} bytes. "
-            "That is an uncomposited window: Studio is minimised or behind something.")
+            "native Studio viewport capture was not trustworthy: "
+            + "; ".join(shot.integrity_issues)
+        )
+    if not out.exists() or out.stat().st_size < 1000:
+        raise LookError("native Studio viewport capture returned no usable image bytes")
     return out
 
 
@@ -202,7 +208,7 @@ def orbit(centre: tuple[float, float, float], size: float,
                 "position": [centre[0] + math.sin(radians) * reach,
                              centre[1] + height,
                              centre[2] + math.cos(radians) * reach],
-                "target": list(centre),
+                "lookAt": list(centre),
             })
         except LookError:
             # An unaimed shot of the right window still beats no shot.

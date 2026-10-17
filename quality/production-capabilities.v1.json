@@ -5,8 +5,8 @@
   "commandManifest": {
     "path": "schemas/bridge-commands.v1.json",
     "schemaVersion": 1,
-    "protocol": "rqe.bridge/1",
-    "sha256": "26cb7da5ddfc99a8e7f8269a12b96f2cce41fbeb99119903a288b0bb8f5701a9"
+    "protocol": "rqe.bridge/2",
+    "sha256": "8252a4d0f8f9e5461184fed46deb8c430f2c3bb74bd6ec1b8bc4be286323dc34"
   },
   "phases": [
     {
@@ -225,6 +225,18 @@
         {
           "method": "studio.info",
           "required": true
+        },
+        {
+          "method": "studio.environment",
+          "required": false
+        },
+        {
+          "method": "studio.list_places",
+          "required": false
+        },
+        {
+          "method": "studio.create_place",
+          "required": false
         }
       ],
       "adapters": [
@@ -342,6 +354,10 @@
         {
           "method": "test.run",
           "required": true
+        },
+        {
+          "method": "studio.selection",
+          "required": false
         }
       ],
       "adapters": [
@@ -378,6 +394,10 @@
         {
           "method": "bridge.remove_client",
           "required": true
+        },
+        {
+          "method": "studio.select",
+          "required": false
         }
       ],
       "adapters": [
@@ -614,11 +634,19 @@
     {
       "id": "client.observe",
       "phase": "client",
-      "title": "Client UI, state, image and log observation",
-      "description": "Reads the selected player's client-only UI, state, image loading and output.",
+      "title": "Client DataModel, UI, state, image and log observation",
+      "description": "Reads the selected player's client-side DataModel, UI, state, image loading and output. `client.tree` and `client.properties` mirror the server pair exactly, so the only difference at a call site is which side is being asked -- which is what makes anything built client-side (a viewmodel, a LocalTransparencyModifier, a client-only effect) readable at all.",
       "status": "AVAILABLE",
       "validationLevel": "RUNTIME_VALIDATED",
       "bridgeCommands": [
+        {
+          "method": "client.properties",
+          "required": true
+        },
+        {
+          "method": "client.tree",
+          "required": true
+        },
         {
           "method": "client.info",
           "required": true
@@ -642,6 +670,10 @@
         {
           "method": "client.probe_images",
           "required": true
+        },
+        {
+          "method": "client.prediction",
+          "required": false
         }
       ],
       "adapters": [
@@ -652,7 +684,8 @@
         }
       ],
       "risks": [
-        "Server logs cannot reveal a LocalScript failure and image assignment does not prove that moderated content rendered."
+        "Server logs cannot reveal a LocalScript failure and image assignment does not prove that moderated content rendered.",
+        "A client read answers for one player's machine. Two clients in the same session can disagree, and neither disagrees with the server in a way the server can see."
       ],
       "gaps": [],
       "limitations": []
@@ -701,12 +734,16 @@
       "id": "client.gui.click",
       "phase": "client",
       "title": "Synthetic GUI clicking",
-      "description": "Represents the known engine boundary for direct synthetic GUI clicks.",
+      "description": "Client input via the public VirtualInput API, with button activation observed separately from delivery.",
       "status": "UNSUPPORTED",
       "validationLevel": "NOT_VALIDATED",
       "bridgeCommands": [
         {
           "method": "client.gui_click",
+          "required": false
+        },
+        {
+          "method": "client.input",
           "required": false
         }
       ],
@@ -715,7 +752,7 @@
         "Pretending a click happened would produce false E2E evidence."
       ],
       "gaps": [
-        "Games must expose the same server-authoritative action seam used by the button; direct clicking is unavailable."
+        "Complete GUI and touch/gamepad journeys still require runtime and E2E evidence."
       ],
       "limitations": []
     },
@@ -746,6 +783,10 @@
         {
           "method": "client.camera_release",
           "required": true
+        },
+        {
+          "method": "client.camera_get",
+          "required": true
         }
       ],
       "adapters": [
@@ -765,10 +806,19 @@
       "id": "capture.viewport.evidence",
       "phase": "capture",
       "title": "Identity-bound viewport capture",
-      "description": "Captures deterministic viewpoints with PID, HWND, session, place, build, spec and foreground checks.",
+      "description": "Prefers StudioCaptureService for viewport bytes directly from Studio without foreground ownership; preserves session/place/build/spec provenance and keeps Win32 capture only as a labelled compatibility fallback.",
       "status": "PARTIAL",
       "validationLevel": "VISUALLY_VALIDATED",
-      "bridgeCommands": [],
+      "bridgeCommands": [
+        {
+          "method": "studio.capture_background",
+          "required": false
+        },
+        {
+          "method": "studio.capture_permission",
+          "required": false
+        }
+      ],
       "adapters": [
         {
           "symbol": "rqe.capture:capture_set",
@@ -777,15 +827,17 @@
         },
         {
           "symbol": "rqe.capture:Win32CaptureBackend",
-          "role": "exact Studio window capture",
-          "required": true
+          "role": "legacy foreground/window compatibility fallback",
+          "required": false
         }
       ],
       "risks": [
-        "Desktop-region capture records any overlapping foreground window unless identity and focus are checked around every frame."
+        "Native capture permission or buffer availability can vary by Studio version/context; fallback evidence must declare which backend produced the frame.",
+        "The Win32 fallback can capture overlapping desktop content and must never masquerade as native viewport evidence."
       ],
       "gaps": [
-        "Device emulation, deterministic resolution matrix and release-run capture integration are incomplete."
+        "Live-revalidate native StudioCaptureService screenshots on plugin 2.1 while Studio remains in a persistent minimized/background session.",
+        "Validate deterministic device-resolution capture matrices with StudioDeviceSimulatorService."
       ],
       "limitations": []
     },
@@ -951,27 +1003,82 @@
       "id": "publish.experience.deploy",
       "phase": "publish",
       "title": "Experience deployment",
-      "description": "Publishes the exact approved place build, records its Roblox version identity and supports controlled rollout or rollback.",
-      "status": "GAP",
-      "validationLevel": "NOT_VALIDATED",
-      "bridgeCommands": [],
-      "adapters": [],
+      "description": "Saves or publishes the intended Roblox place through explicit authenticated/native adapters, with destructive publication kept behind separate confirmation.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "studio.save_place",
+          "required": false
+        }
+      ],
+      "adapters": [
+        {
+          "symbol": "rqe.cloud.open_cloud:OpenCloudClient",
+          "role": "authenticated Open Cloud place version and publication adapter",
+          "required": true
+        }
+      ],
       "risks": [
-        "A local release candidate is not proof that the same bytes reached the intended Roblox universe and place."
+        "Saving or publishing targets remote Roblox state; place/universe identity and operator intent must be explicit.",
+        "Studio native save can be blocked by Team Create, permissions or an unpublished DataModel."
       ],
       "gaps": [
-        "Open Cloud place publication, universe/place targeting, rollout verification and rollback receipts are missing."
+        "Execute a credentialed end-to-end place save/publish, verify the resulting Roblox version identity, and prove rollback with immutable receipts."
       ],
-      "limitations": []
+      "limitations": [
+        "studio.save_place is edit-mode only and requires explicit overwrite confirmation; publication requires a second confirmPublish opt-in."
+      ]
     },
     {
       "id": "multiplayer.live.scenarios",
       "phase": "multiplayer",
       "title": "Live multiplayer scenarios",
-      "description": "Validates concurrent clients, replication, ownership, isolation and server transitions.",
-      "status": "GAP",
-      "validationLevel": "NOT_VALIDATED",
-      "bridgeCommands": [],
+      "description": "Native Studio test and device command surface; concurrent gameplay assertions still require validation.",
+      "status": "PARTIAL",
+      "validationLevel": "STATICALLY_VALIDATED",
+      "bridgeCommands": [
+        {
+          "method": "test.start",
+          "required": false
+        },
+        {
+          "method": "test.status",
+          "required": false
+        },
+        {
+          "method": "test.finish",
+          "required": false
+        },
+        {
+          "method": "test.leave",
+          "required": false
+        },
+        {
+          "method": "test.device",
+          "required": false
+        },
+        {
+          "method": "test.device_status",
+          "required": false
+        },
+        {
+          "method": "test.device_info",
+          "required": false
+        },
+        {
+          "method": "test.add_players",
+          "required": false
+        },
+        {
+          "method": "test.network",
+          "required": false
+        },
+        {
+          "method": "test.network_status",
+          "required": false
+        }
+      ],
       "adapters": [],
       "risks": [
         "Single-player success cannot reveal cross-player state leaks, replication races or server authority defects."
@@ -1125,6 +1232,14 @@
         {
           "method": "instance.attributes",
           "required": true
+        },
+        {
+          "method": "instance.serialize",
+          "required": false
+        },
+        {
+          "method": "instance.deserialize",
+          "required": false
         }
       ],
       "adapters": [],

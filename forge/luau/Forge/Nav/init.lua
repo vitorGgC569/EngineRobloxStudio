@@ -48,6 +48,7 @@ Nav.config = {
 	stuckSeconds = 1.2,
 	stuckDistance = 1.5,
 	waypointReached = 3.5,
+	maxConcurrentComputes = 4,
 }
 
 Nav.defaults = {
@@ -60,6 +61,7 @@ Nav.defaults = {
 
 local agents: { [Model]: any } = {}
 local connection: RBXScriptConnection? = nil
+local activeComputes = 0
 
 -- ================================= paths ====================================
 --[[
@@ -133,6 +135,21 @@ function Agent:_resolveTarget(): Vector3?
 end
 
 function Agent:_repath(goal: Vector3)
+	if self.stopped or self.computing or activeComputes >= Nav.config.maxConcurrentComputes then
+		return
+	end
+	if os.clock() - self.lastRepath < Nav.config.repathSeconds then
+		return
+	end
+	-- Reserve before ComputeAsync yields. Heartbeat must never start a second
+	-- request for this agent, or wait on one enemy before stepping the others.
+	self.computing = true
+	activeComputes += 1
+	self.lastGoal = goal
+	self.lastRepath = os.clock()
+	self.repaths += 1
+	self.arrived = false
+	local generation = self.generation
 	local from = positionOf(self.model)
 	--[[
 		Stop short, on the path rather than at the end of it.
@@ -150,20 +167,27 @@ function Agent:_repath(goal: Vector3)
 		end
 	end
 
-	local waypoints, status = Nav.computePath(from, goal, self.parameters)
-	self.status = status
-	self.waypoints = waypoints
-	self.index = 1
-	self.lastGoal = goal
-	self.lastRepath = os.clock()
-	self.repaths += 1
-
-	if status ~= "Success" then
-		self.failures += 1
-	end
+	self.approachGoal = goal
+	task.spawn(function()
+		local ok, waypoints, status = pcall(Nav.computePath, from, goal, self.parameters)
+		activeComputes -= 1
+		self.computing = false
+		if self.stopped or self.generation ~= generation then
+			return
+		end
+		self.status = if ok then status else "Error: " .. tostring(waypoints)
+		self.waypoints = if ok then waypoints else {}
+		self.index = 1
+		if self.status ~= "Success" then
+			self.failures += 1
+		end
+	end)
 end
 
 function Agent:_step()
+	if self.stopped then
+		return
+	end
 	local humanoid = humanoidOf(self.model)
 	if not humanoid or not self.model.Parent then
 		self:stop()
@@ -176,14 +200,33 @@ function Agent:_step()
 	end
 
 	local now = os.clock()
+	local here = positionOf(self.model)
+	local distance = Vector3.new(here.X - goal.X, 0, here.Z - goal.Z).Magnitude
+	local withinGoal = distance <= self.standoff + Nav.config.waypointReached
+		and math.abs(here.Y - goal.Y) <= (self.parameters and self.parameters.AgentHeight or Nav.defaults.AgentHeight)
+	if withinGoal then
+		if not self.arrived then
+			self.arrived = true
+			self.generation += 1
+			self.waypoints = {}
+			humanoid:MoveTo(here)
+			if self.onArrive then
+				task.spawn(self.onArrive, self.model)
+			end
+		end
+		self.lastProgress = now
+		return
+	end
+	if self.arrived then
+		self.arrived = false
+		self.lastGoal = nil
+	end
 	local moved = not self.lastGoal or (goal - self.lastGoal).Magnitude > Nav.config.repathDistance
 	if moved and now - self.lastRepath >= Nav.config.repathSeconds then
 		self:_repath(goal)
 	elseif #self.waypoints == 0 and now - self.lastRepath >= Nav.config.repathSeconds then
 		self:_repath(goal)
 	end
-
-	local here = positionOf(self.model)
 
 	--[[
 		Stuck detection.
@@ -207,13 +250,15 @@ function Agent:_step()
 
 	-- No route: fall back to walking at it. Worse, but not frozen.
 	if self.status ~= "Success" or #self.waypoints == 0 then
-		humanoid:MoveTo(goal)
+		if not self.computing then
+			humanoid:MoveTo(self.approachGoal or goal)
+		end
 		return
 	end
 
 	local waypoint = self.waypoints[self.index]
 	if not waypoint then
-		humanoid:MoveTo(goal)
+		self:_repath(goal)
 		return
 	end
 
@@ -222,10 +267,8 @@ function Agent:_step()
 		self.index += 1
 		waypoint = self.waypoints[self.index]
 		if not waypoint then
-			self.arrived = true
-			if self.onArrive then
-				task.spawn(self.onArrive, self.model)
-			end
+			-- The last waypoint being nearby is not proof the goal was reached.
+			self:_repath(goal)
 			return
 		end
 	end
@@ -237,6 +280,8 @@ function Agent:_step()
 end
 
 function Agent:stop()
+	self.stopped = true
+	self.generation += 1
 	agents[self.model] = nil
 	local humanoid = humanoidOf(self.model)
 	if humanoid and self.model.Parent then
@@ -253,6 +298,7 @@ function Agent:describe(): { [string]: any }
 		failures = self.failures,
 		stucks = self.stucks,
 		arrived = self.arrived,
+		computing = self.computing,
 	}
 end
 
@@ -288,6 +334,9 @@ function Nav.follow(model: Model, options: any?): any
 		failures = 0,
 		stucks = 0,
 		arrived = false,
+		computing = false,
+		stopped = false,
+		generation = 0,
 	}, Agent)
 
 	agents[model] = agent
@@ -317,7 +366,7 @@ function Nav.start()
 		local live = 0
 		for model, agent in agents do
 			if not model.Parent then
-				agents[model] = nil
+				agent:stop()
 				continue
 			end
 			live += 1
@@ -369,6 +418,7 @@ function Nav.describe(): { [string]: any }
 		agents = Nav.agentCount(),
 		statuses = statuses,
 		running = connection ~= nil,
+		activeComputes = activeComputes,
 	}
 end
 

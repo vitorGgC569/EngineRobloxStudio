@@ -284,6 +284,9 @@ def _stages(root: Path, *, scaffold: bool) -> tuple[Stage, ...]:
         brief = " ".join(part for part in (
             context.get("brief", ""), context.get("genre", ""), context.get("theme", ""),
             model.genre, model.theme, model.pitch) if part)
+        from ..art.direction import key_for_with_provenance
+
+        _, key_inferred = key_for_with_provenance(brief)
         document = direct(base, game_id=model.id, brief=brief)
 
         # Written beside the game rather than into `tokens/`: a derived set is an
@@ -316,6 +319,19 @@ def _stages(root: Path, *, scaffold: bool) -> tuple[Stage, ...]:
         before = value_profile(base)
         return {
             "key": document["tokenSetId"].rsplit("-", 1)[-1],
+            #: Whether the brief chose that key or fell through to the fallback.
+            #:
+            #: Asked here rather than read back out of the token set, because
+            #: that document's schema forbids properties it does not declare and
+            #: widening a published schema for one producer's bookkeeping is the
+            #: wrong trade.
+            #:
+            #: Reported because nineteen generated games share one palette and
+            #: the stage output could not say why. "gacha de eggs de anime" and
+            #: "sobrevivencia zumbi noturna" both come out `siege`, which is the
+            #: fallback -- and a run that cannot distinguish a decision from a
+            #: default cannot tell anyone its art direction never happened.
+            "keyInferred": key_inferred,
             "tokenSet": relative,
             "basedOn": base_relative,
             "moods": sorted(document["moods"]),
@@ -954,6 +970,7 @@ def produce(
     scaffold: bool = False,
     skip_stages: Sequence[str] = (),
     source_offers: Mapping[str, Sequence[str]] | None = None,
+    resume: bool = False,
 ) -> ProductionRun:
     """Drive every layer from one brief.
 
@@ -961,6 +978,26 @@ def produce(
     cheap corpus to omit Blender.  A skipped stage never enters ``succeeded``:
     optional consumers may still produce diagnostic artifacts, while hard
     dependents (especially release) remain blocked.
+
+    Resuming
+    --------
+
+    ``resume`` takes the stages a previous run of the same brief finished and
+    does not do them again. A run interrupted at stage nine used to mean
+    redoing eight, and the only tool for it was retyping a ``skip_stages`` list
+    out of a report.
+
+    **Only the expensive, file-producing stages are resumable**, and that is a
+    design decision rather than a limitation. The stages pass their work to
+    each other through the in-memory ``context`` -- ``design`` puts a model
+    object there, ``art`` a token set, ``world`` a spec -- and none of that
+    survives a process. Skipping one would leave every stage after it deciding
+    against a context with holes in it, which is worse than starting over.
+
+    So the cheap ones re-run, in milliseconds, and rebuild the context exactly.
+    What is skipped is what is slow and already on disk: geometry, the scaffold
+    and the build. That is where the minutes are, and their outputs are files
+    rather than objects.
     """
 
     if not brief.strip():
@@ -988,6 +1025,33 @@ def produce(
     )
     succeeded: set[str] = set()
     requested_skips = {str(item) for item in skip_stages}
+
+    from .checkpoint import RESUMABLE_STAGES, Checkpoint, identity, resumable_stages
+
+    from ..provenance import tree_sha256
+    engine_hash, _ = tree_sha256(root, (
+        "rqe", "roblox/lib", "forge/luau", "forge/templates", "schemas", "quality", "tokens",
+    ))
+    run_identity = identity(brief, game_id, genre, theme, token_set, inputs={
+        "engineSha256": engine_hash, "triangleBudget": triangle_budget,
+        "sourceOffers": context["sourceOffers"], "scaffold": bool(scaffold),
+        "skipStages": sorted(requested_skips),
+    })
+    checkpoint = Checkpoint(game_id=game_id, identity=run_identity)
+    resumed: set[str] = set()
+    if resume:
+        found, licensed, why = resumable_stages(root, game_id, run_identity)
+        if licensed:
+            #: Intersected with the resumable set: a checkpoint may record a
+            #: cheap stage as finished, and taking that on trust is what leaves
+            #: the context with holes.
+            resumed = set(licensed) & RESUMABLE_STAGES
+            checkpoint = found
+            context.update({key: value for key, value in found.context.items()
+                            if key in {"geometryPackages", "geometryResult"}})
+        context["resumeNote"] = why or (
+            f"resuming past {', '.join(sorted(resumed))}" if resumed
+            else "the checkpoint records nothing expensive to skip; running it all")
     unknown_skips = requested_skips - {stage.id for stage in graph}
     if unknown_skips:
         raise ProducerError(
@@ -995,6 +1059,18 @@ def produce(
         )
 
     for stage in graph:
+        if stage.id in resumed:
+            #: Taken on trust from a previous run of this exact brief. Counted
+            #: as succeeded so its dependents run, and reported as its own
+            #: status so nobody reads a resumed run as a full one.
+            succeeded.add(stage.id)
+            run.results.append(StageResult(
+                stage=stage.id, status=OK,
+                detail={"resumed": True,
+                        **((checkpoint.stages.get(stage.id) or {}).get("detail") or {})},
+                blocked_by="", seconds=0.0,
+            ))
+            continue
         if stage.id in requested_skips:
             run.results.append(StageResult(
                 stage=stage.id,
@@ -1044,10 +1120,16 @@ def produce(
             continue
 
         succeeded.add(stage.id)
+        elapsed = time.monotonic() - started
         run.results.append(StageResult(
-            stage=stage.id, status=OK, detail=detail,
-            seconds=time.monotonic() - started,
+            stage=stage.id, status=OK, detail=detail, seconds=elapsed,
         ))
+        #: After every stage, so a crash loses one stage at most.
+        checkpoint.record(stage.id, OK, detail, elapsed)
+        checkpoint.bind_outputs(root, [f"games/{game_id}", f".tmp/geometry/{game_id}"], {
+            key: context[key] for key in ("geometryPackages", "geometryResult") if key in context
+        })
+        checkpoint.save(root)
 
     return run
 

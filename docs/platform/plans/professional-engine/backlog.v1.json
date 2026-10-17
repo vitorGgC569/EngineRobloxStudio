@@ -1,0 +1,2866 @@
+{
+  "schemaVersion": 1,
+  "documentKind": "IMPLEMENTATION_BACKLOG_PROPOSAL",
+  "id": "professional-engine-plan-2026-09-05",
+  "status": "PROPOSED",
+  "authorizesExecution": false,
+  "authorizesRelease": false,
+  "planValidationLevel": "NOT_VALIDATED",
+  "baseline": "docs/audits/2026-09-05-auditoria-engine.md",
+  "scopeDefinitions": {
+    "CORE": "Primeira cadeia profissional completa",
+    "PROFILE": "Obrigatório se selecionado no contrato do jogo",
+    "SCALE": "Expansão posterior"
+  },
+  "priorityDefinition": "Ordem de implementação, não severidade de incidente. Dependências prevalecem.",
+  "effortDefinition": "S/M/L/XL são complexidade relativa; não são prazos ou estimativas em dias.",
+  "phases": [
+    {
+      "id": "M0",
+      "title": "Baseline reproduzível e decisões de compatibilidade",
+      "exitRequiresCoreItems": [
+        "ENV-01",
+        "ENV-02",
+        "ENV-03",
+        "ENV-04",
+        "ENV-05",
+        "DOC-01",
+        "ENV-06"
+      ],
+      "profileRule": "PROFILE selecionado pelo contrato integra a aceitação da fase; SCALE só após seu marco."
+    },
+    {
+      "id": "M1",
+      "title": "Fundamentos seguros de dados, rede e autoridade",
+      "exitRequiresCoreItems": [
+        "DAT-01",
+        "DAT-02",
+        "DAT-03",
+        "DAT-04",
+        "DAT-05",
+        "NET-01",
+        "NET-02",
+        "AST-06",
+        "REL-01",
+        "REL-03"
+      ],
+      "profileRule": "PROFILE selecionado pelo contrato integra a aceitação da fase; SCALE só após seu marco."
+    },
+    {
+      "id": "M2",
+      "title": "Controle confiável e execução durável da fábrica",
+      "exitRequiresCoreItems": [
+        "CTL-01",
+        "CTL-02",
+        "CTL-03",
+        "CTL-04",
+        "CTL-05",
+        "CTL-06",
+        "CTL-07",
+        "FAC-01",
+        "FAC-02",
+        "FAC-03",
+        "FAC-04",
+        "FAC-06",
+        "FAC-07",
+        "WRL-01",
+        "QAT-01",
+        "QAT-05",
+        "REL-02",
+        "OPS-02",
+        "CTL-09"
+      ],
+      "profileRule": "PROFILE selecionado pelo contrato integra a aceitação da fase; SCALE só após seu marco."
+    },
+    {
+      "id": "M3",
+      "title": "Autoria completa de um vertical slice",
+      "exitRequiresCoreItems": [
+        "NET-05",
+        "CTL-08",
+        "FAC-08",
+        "WRL-02",
+        "WRL-03",
+        "WRL-06",
+        "AST-01",
+        "AST-02",
+        "AST-03",
+        "AST-04",
+        "AST-05",
+        "CHR-02",
+        "CHR-03",
+        "GAM-01",
+        "GAM-02",
+        "GAM-03",
+        "GAM-05",
+        "UIX-01",
+        "UIX-03",
+        "UIX-04",
+        "AST-07"
+      ],
+      "profileRule": "PROFILE selecionado pelo contrato integra a aceitação da fase; SCALE só após seu marco."
+    },
+    {
+      "id": "M4",
+      "title": "Qualidade comprovada em consumidores e dispositivos",
+      "exitRequiresCoreItems": [
+        "DOC-02",
+        "DAT-06",
+        "NET-03",
+        "FAC-05",
+        "WRL-05",
+        "UIX-02",
+        "QAT-02",
+        "QAT-03",
+        "QAT-04",
+        "QAT-06",
+        "QAT-07",
+        "QAT-08",
+        "REL-05"
+      ],
+      "profileRule": "PROFILE selecionado pelo contrato integra a aceitação da fase; SCALE só após seu marco."
+    },
+    {
+      "id": "M5",
+      "title": "Release e operação profissional inicial",
+      "exitRequiresCoreItems": [
+        "REL-04",
+        "REL-06",
+        "OPS-01",
+        "OPS-03",
+        "OPS-05"
+      ],
+      "profileRule": "PROFILE selecionado pelo contrato integra a aceitação da fase; SCALE só após seu marco."
+    },
+    {
+      "id": "M6",
+      "title": "Escala e expansão por perfis de produto",
+      "exitRequiresCoreItems": [],
+      "profileRule": "PROFILE selecionado pelo contrato integra a aceitação da fase; SCALE só após seu marco."
+    }
+  ],
+  "domains": [
+    {
+      "id": "ENV",
+      "title": "Ambiente e compatibilidade",
+      "existingPaths": [
+        "forge/cli/preflight.py",
+        "rqe/hub/lifecycle.py",
+        ".github/workflows/ci.yml",
+        "pyproject.toml"
+      ]
+    },
+    {
+      "id": "DOC",
+      "title": "Documentação e rastreabilidade",
+      "existingPaths": [
+        "docs/platform/OVERVIEW.md",
+        "docs/platform/ENGINE-CHARTER.md",
+        "docs/engine-map.md"
+      ]
+    },
+    {
+      "id": "DAT",
+      "title": "Persistência e compras",
+      "existingPaths": [
+        "forge/luau/Forge/Save",
+        "forge/luau/Forge/Monetization",
+        "roblox/lib/GameKit"
+      ]
+    },
+    {
+      "id": "NET",
+      "title": "Rede e autoridade",
+      "existingPaths": [
+        "forge/luau/Forge/Net",
+        "forge/luau/Forge/Netcode"
+      ]
+    },
+    {
+      "id": "CTL",
+      "title": "Controle do Studio e do jogador",
+      "existingPaths": [
+        "rqe/hub",
+        "rqe/mcp/client.py",
+        "rqe/mcp/world_tools.py",
+        "apps/studio-plugin/src",
+        "rqe/capture.py"
+      ]
+    },
+    {
+      "id": "FAC",
+      "title": "Execução da fábrica por agentes",
+      "existingPaths": [
+        "rqe/orchestrator",
+        "rqe/mcp/factory_execution.py",
+        "rqe/producer",
+        "forge/cli/quality.py"
+      ]
+    },
+    {
+      "id": "WRL",
+      "title": "Mundo, navegação e física",
+      "existingPaths": [
+        "forge/luau/Forge/Nav",
+        "forge/luau/Forge/World",
+        "forge/luau/Forge/Scene",
+        "forge/luau/Forge/Streaming",
+        "roblox/lib/WorldKit"
+      ]
+    },
+    {
+      "id": "AST",
+      "title": "Assets e ferramentas de criação",
+      "existingPaths": [
+        "rqe/assets",
+        "rqe/geometry",
+        "rqe/sourcing",
+        "forge/luau/Forge/Assets",
+        "forge/luau/Forge/Catalog"
+      ]
+    },
+    {
+      "id": "CHR",
+      "title": "Personagens e apresentação",
+      "existingPaths": [
+        "forge/luau/Forge/Rig",
+        "forge/luau/Forge/Anim",
+        "forge/luau/Forge/IK",
+        "forge/luau/Forge/Camera",
+        "forge/luau/Forge/Feel",
+        "forge/luau/Forge/Audio",
+        "rqe/assets/animation_authoring.py"
+      ]
+    },
+    {
+      "id": "GAM",
+      "title": "Sistemas de gameplay e design",
+      "existingPaths": [
+        "forge/luau/Forge/Core",
+        "forge/luau/Forge/Combat",
+        "forge/luau/Forge/Progression",
+        "forge/luau/Forge/Economy",
+        "forge/luau/Forge/Inventory",
+        "forge/luau/Forge/Quest",
+        "rqe/economy"
+      ]
+    },
+    {
+      "id": "UIX",
+      "title": "Interface, dispositivos e acessibilidade",
+      "existingPaths": [
+        "forge/luau/Forge/UI",
+        "forge/luau/Forge/Input",
+        "forge/luau/Forge/Platform",
+        "forge/luau/Forge/Access"
+      ]
+    },
+    {
+      "id": "QAT",
+      "title": "Qualidade e provas de integração",
+      "existingPaths": [
+        "rqe/observe.py",
+        "rqe/scenario.py",
+        "rqe/scene/critic.py",
+        "rqe/release.py",
+        "quality/probe-registry.v1.json",
+        "tests",
+        "forge/luau/Forge/Testing"
+      ]
+    },
+    {
+      "id": "REL",
+      "title": "Release e distribuição",
+      "existingPaths": [
+        "rqe/release.py",
+        "rqe/orchestrator/metrics.py",
+        "forge/forge.py",
+        "forge/cli/publish.py",
+        "forge/cli/playtest.py",
+        "forge/cli/rollback.py"
+      ]
+    },
+    {
+      "id": "OPS",
+      "title": "Operação e escala da fábrica",
+      "existingPaths": [
+        "forge/luau/Forge/Telemetry",
+        "forge/luau/Forge/LiveOps",
+        "forge/luau/Forge/Cluster",
+        "rqe/ledger.py",
+        "rqe/orchestrator",
+        "apps/dashboard"
+      ]
+    }
+  ],
+  "items": [
+    {
+      "id": "ENV-01",
+      "domain": "ENV",
+      "title": "Catálogo e manifesto consistentes",
+      "phase": "M0",
+      "priority": "P0",
+      "scope": "CORE",
+      "currentClassification": "DEFEITO_CONFIRMADO",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "16 testes falharam, concentrados em divergência do hash de comandos.",
+      "deliverable": "Revisar capacidades alteradas, atualizar stamps e impedir drift no fluxo normal.",
+      "dependsOn": [],
+      "acceptance": "Preflight e verificações de catálogo verdes; comando novo sem proprietário ou hash atualizado é rejeitado.",
+      "effort": "S",
+      "existingPaths": [
+        "forge/cli/preflight.py",
+        "rqe/hub/lifecycle.py",
+        ".github/workflows/ci.yml",
+        "pyproject.toml"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "ENV-02",
+      "domain": "ENV",
+      "title": "CI provisionado do zero",
+      "phase": "M0",
+      "priority": "P0",
+      "scope": "CORE",
+      "currentClassification": "DEFEITO_CONFIRMADO",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Workflow não instala explicitamente dependências de desenvolvimento e Rojo antes de exigi-los.",
+      "deliverable": "Instalar dependências e ferramentas verificadas; executar a suíte completa em runner limpo.",
+      "dependsOn": [
+        "ENV-01"
+      ],
+      "acceptance": "Checkout limpo instala, compila, testa e constrói os consumidores sem dependências pessoais.",
+      "effort": "M",
+      "existingPaths": [
+        "forge/cli/preflight.py",
+        "rqe/hub/lifecycle.py",
+        ".github/workflows/ci.yml",
+        "pyproject.toml"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "ENV-03",
+      "domain": "ENV",
+      "title": "Distribuição e instalação reproduzíveis",
+      "phase": "M0",
+      "priority": "P0",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Instalação fora do workspace e pacote distribuído não foram validados.",
+      "deliverable": "Definir suporte por sistema operacional, empacotar recursos necessários e testar CLI instalada.",
+      "dependsOn": [
+        "ENV-02"
+      ],
+      "acceptance": "Ambiente novo localiza schemas, bibliotecas, templates e ferramentas e executa exemplo documentado.",
+      "effort": "M",
+      "existingPaths": [
+        "forge/cli/preflight.py",
+        "rqe/hub/lifecycle.py",
+        ".github/workflows/ci.yml",
+        "pyproject.toml"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "ENV-04",
+      "domain": "ENV",
+      "title": "Compatibilidade com APIs atuais do Studio",
+      "phase": "M0",
+      "priority": "P0",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Documentos negam APIs que agora existem; descoberta em edit confirmou serviços e membro CreateVirtualInput.",
+      "deliverable": "Probar permissão e funcionamento de testes, dispositivos e input; registrar versão e backend efetivo.",
+      "dependsOn": [],
+      "acceptance": "Matriz disponível/indisponível por versão/contexto; existência de membro não vira prova de execução.",
+      "effort": "M",
+      "existingPaths": [
+        "forge/cli/preflight.py",
+        "rqe/hub/lifecycle.py",
+        ".github/workflows/ci.yml",
+        "pyproject.toml"
+      ],
+      "evidence": [
+        ".tmp/audit-2026-09-05/planning-api-discovery.json",
+        "rqe/hub/teamtest.py",
+        "https://create.roblox.com/docs/studio/testing-modes"
+      ]
+    },
+    {
+      "id": "ENV-05",
+      "domain": "ENV",
+      "title": "Lifecycle e logs por contexto",
+      "phase": "M0",
+      "priority": "P0",
+      "scope": "CORE",
+      "currentClassification": "DEFEITO_OBSERVADO_EM_RUNTIME",
+      "observationValidationLevel": "RUNTIME_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Restart falhou por ambiente PowerShell; plugin tentou HTTP no cliente repetidamente.",
+      "deliverable": "Sanitizar subprocessos, manter assinatura, separar transportes e expor readiness/erros estruturados.",
+      "dependsOn": [
+        "ENV-04"
+      ],
+      "acceptance": "Abrir e fechar repetidamente sem intervenção; falha tem causa e contexto; cliente não entra em retry HTTP inválido.",
+      "effort": "M",
+      "existingPaths": [
+        "forge/cli/preflight.py",
+        "rqe/hub/lifecycle.py",
+        ".github/workflows/ci.yml",
+        "pyproject.toml"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "DOC-01",
+      "domain": "DOC",
+      "title": "Documentação viva e uma entrada canônica",
+      "phase": "M0",
+      "priority": "P0",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Documentos antigos contradizem comandos, protocolos, limitações e nível de conclusão atual.",
+      "deliverable": "Datar e arquivar estados históricos; gerar inventário da API e testar exemplos; apontar a fonte normativa.",
+      "dependsOn": [
+        "ENV-04"
+      ],
+      "acceptance": "Nenhuma referência atual anuncia método ausente ou classifica plano como implementação; documentação de instalação reproduzida.",
+      "effort": "M",
+      "existingPaths": [
+        "docs/platform/OVERVIEW.md",
+        "docs/platform/ENGINE-CHARTER.md",
+        "docs/engine-map.md"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "DOC-02",
+      "domain": "DOC",
+      "title": "Cobertura de revisão semântica",
+      "phase": "M4",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "A varredura completa não foi uma revisão manual de todas as linhas.",
+      "deliverable": "Criar mapa por arquivo/hash com revisão, risco e testes; completar leitura dos caminhos críticos e ampliar por dependência.",
+      "dependsOn": [
+        "DOC-01"
+      ],
+      "acceptance": "Relatório distingue compilação, leitura, revisão e execução; áreas restantes aparecem explicitamente sem selo integral.",
+      "effort": "L",
+      "existingPaths": [
+        "docs/platform/OVERVIEW.md",
+        "docs/platform/ENGINE-CHARTER.md",
+        "docs/engine-map.md"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "DAT-01",
+      "domain": "DAT",
+      "title": "Posse de perfil em toda gravação",
+      "phase": "M1",
+      "priority": "P0",
+      "scope": "CORE",
+      "currentClassification": "DEFEITO_CONFIRMADO",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Perfil temporário sem lock sobrescreveu dado legítimo na reprodução local.",
+      "deliverable": "Estados explícitos de carregamento e escrita com fencing e UpdateAsync; perfil sem posse não grava.",
+      "dependsOn": [
+        "ENV-01"
+      ],
+      "acceptance": "Disputa e retomada entre duas sessões preservam saldo; escritor antigo, timeout e fallback não apagam dados.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Save",
+        "forge/luau/Forge/Monetization",
+        "roblox/lib/GameKit"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "DAT-02",
+      "domain": "DAT",
+      "title": "Liberação real de sessão",
+      "phase": "M1",
+      "priority": "P0",
+      "scope": "CORE",
+      "currentClassification": "DEFEITO_CONFIRMADO",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "release and nil or jobId mantém o lock na saída.",
+      "deliverable": "Liberação explícita e atômica condicionada ao dono atual, com identificador único inclusive em Studio.",
+      "dependsOn": [
+        "DAT-01"
+      ],
+      "acceptance": "Saída limpa permite reentrada; sessão antiga não libera lock de outra sessão.",
+      "effort": "S",
+      "existingPaths": [
+        "forge/luau/Forge/Save",
+        "forge/luau/Forge/Monetization",
+        "roblox/lib/GameKit"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "DAT-03",
+      "domain": "DAT",
+      "title": "Migração, corrupção e versões futuras",
+      "phase": "M1",
+      "priority": "P0",
+      "scope": "CORE",
+      "currentClassification": "DEFEITO_CONFIRMADO",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Migração falha e ainda avança versão; versão futura pode ser reduzida.",
+      "deliverable": "Migrar em cópia, validar, confirmar atomicamente; preservar versões desconhecidas e dados em quarentena.",
+      "dependsOn": [
+        "DAT-01"
+      ],
+      "acceptance": "Erro intermediário mantém original; downgrade indevido recusado; recuperação preserva cópia auditável.",
+      "effort": "M",
+      "existingPaths": [
+        "forge/luau/Forge/Save",
+        "forge/luau/Forge/Monetization",
+        "roblox/lib/GameKit"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "DAT-04",
+      "domain": "DAT",
+      "title": "Autosave e encerramento com prazo",
+      "phase": "M1",
+      "priority": "P0",
+      "scope": "CORE",
+      "currentClassification": "DEFEITO_CONFIRMADO",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "BindToClose espera intervalo fixo sem acompanhar conclusão das escritas.",
+      "deliverable": "Fila de gravações com orçamento, backoff, coalescência, prazo e resultado de flush.",
+      "dependsOn": [
+        "DAT-01",
+        "DAT-02"
+      ],
+      "acceptance": "Escrita lenta e throttling não produzem sucesso falso; encerramento relata o que confirmou e o que não confirmou.",
+      "effort": "M",
+      "existingPaths": [
+        "forge/luau/Forge/Save",
+        "forge/luau/Forge/Monetization",
+        "roblox/lib/GameKit"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "DAT-05",
+      "domain": "DAT",
+      "title": "Recibo e recompensa na mesma transação",
+      "phase": "M1",
+      "priority": "P0",
+      "scope": "CORE",
+      "currentClassification": "DEFEITO_CONFIRMADO",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Callback repetido concedeu duas recompensas e o módulo registrou uma.",
+      "deliverable": "Concessão como transformação pura do perfil junto ao ledger; efeitos externos idempotentes após commit durável.",
+      "dependsOn": [
+        "DAT-01",
+        "DAT-03"
+      ],
+      "acceptance": "Repetição, dois servidores e falha antes/depois do commit terminam com uma entrega durável.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Save",
+        "forge/luau/Forge/Monetization",
+        "roblox/lib/GameKit"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "DAT-06",
+      "domain": "DAT",
+      "title": "Prova com serviços reais isolados",
+      "phase": "M4",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Cinco cenários ficaram sem DataStore no place local; simulação não prova persistência publicada.",
+      "deliverable": "Ambiente de testes com namespaces e identidades isoladas, quotas, backup e limpeza identificada por run.",
+      "dependsOn": [
+        "DAT-03",
+        "DAT-04",
+        "DAT-05",
+        "REL-03"
+      ],
+      "acceptance": "Salvar, desconectar, reentrar, migrar e repetir recibos com evidência do serviço real, sem dados de produção.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Save",
+        "forge/luau/Forge/Monetization",
+        "roblox/lib/GameKit"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "NET-01",
+      "domain": "NET",
+      "title": "Formato e autorização compostos",
+      "phase": "M1",
+      "priority": "P0",
+      "scope": "CORE",
+      "currentClassification": "DEFEITO_CONFIRMADO",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Custom check desativou shape e pacote malformado chegou ao handler.",
+      "deliverable": "Compor formato e verificador de domínio, limitar dados e rejeitar exceções de validação.",
+      "dependsOn": [
+        "ENV-01"
+      ],
+      "acceptance": "Tipo errado, campos extras, NaN, tamanho excessivo e check que lança erro não chegam ao handler.",
+      "effort": "M",
+      "existingPaths": [
+        "forge/luau/Forge/Net",
+        "forge/luau/Forge/Netcode"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "NET-02",
+      "domain": "NET",
+      "title": "Autoridade servidor em cada verbo",
+      "phase": "M1",
+      "priority": "P0",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Não houve auditoria completa das superfícies de todos os jogos e sistemas.",
+      "deliverable": "Catálogo de remotes com regras de posse, distância, cooldown, transição e valores decididos pelo servidor.",
+      "dependsOn": [
+        "NET-01",
+        "DAT-01"
+      ],
+      "acceptance": "Payloads forjados em cada verbo protegido são recusados; nenhum caminho confia em preço ou posse enviados pelo cliente.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Net",
+        "forge/luau/Forge/Netcode"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "NET-03",
+      "domain": "NET",
+      "title": "Multicliente, perda, jitter e reentrada",
+      "phase": "M4",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Testes locais de módulos não comprovaram toda a replicação entre clientes independentes.",
+      "deliverable": "Integrar simulação de rede suportada e cenários join/leave/reconnect, isolamento e estado inicial.",
+      "dependsOn": [
+        "CTL-06",
+        "NET-01"
+      ],
+      "acceptance": "Dois ou mais clientes mantêm invariantes sob condições declaradas; estado de um jogador não vaza para outro.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Net",
+        "forge/luau/Forge/Netcode"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "NET-04",
+      "domain": "NET",
+      "title": "Predição, reconciliação e acerto justo",
+      "phase": "M4",
+      "priority": "P1",
+      "scope": "PROFILE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Netcode existe; sensação e correção sob latência real não foram comprovadas.",
+      "deliverable": "Validar prediction/ack/reconcile, histórico de hit e limites de rewind por perfil de ação.",
+      "dependsOn": [
+        "NET-03"
+      ],
+      "acceptance": "Ação recusada reconcilia; acerto inválido não é aceito; medir resposta visual e divergência com latência e perda.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Net",
+        "forge/luau/Forge/Netcode"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "NET-05",
+      "domain": "NET",
+      "title": "Contratos de replicação versionados",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Ter eventos definidos não garante handlers, compatibilidade e orçamento ao compor sistemas.",
+      "deliverable": "Validar schemas, assinaturas, handlers, estado inicial, payload e versões entre cliente/servidor.",
+      "dependsOn": [
+        "NET-01",
+        "FAC-08"
+      ],
+      "acceptance": "Cliente sem estado inicial ou remoto sem handler falha claramente; pacote incompatível não causa estado silenciosamente incorreto.",
+      "effort": "M",
+      "existingPaths": [
+        "forge/luau/Forge/Net",
+        "forge/luau/Forge/Netcode"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "CTL-01",
+      "domain": "CTL",
+      "title": "Federação MCP funcional",
+      "phase": "M2",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "DEFEITO_CONFIRMADO",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "StudioMcpClient foi chamado com assinatura inválida antes de enviar input.",
+      "deliverable": "Reparar spawn e ciclo stdio, negociar tools/list, tipar respostas e selecionar studio_id explícito.",
+      "dependsOn": [
+        "ENV-04"
+      ],
+      "acceptance": "Read, edit, teclado, mouse e erros exercitados pela mesma superfície do agente, sem pressupor ferramentas pelo nome.",
+      "effort": "M",
+      "existingPaths": [
+        "rqe/hub",
+        "rqe/mcp/client.py",
+        "rqe/mcp/world_tools.py",
+        "apps/studio-plugin/src",
+        "rqe/capture.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "CTL-02",
+      "domain": "CTL",
+      "title": "Identidade exata de build, processo e cliente",
+      "phase": "M2",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Título e nome de place não bastam para distinguir todas as sessões.",
+      "deliverable": "Vincular hash dos bytes, productId, processo/janela, sessão e jogador em cada operação.",
+      "dependsOn": [
+        "ENV-05"
+      ],
+      "acceptance": "Dois places com mesmo nome e reinício durante operação nunca cruzam evidências ou mutações.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/hub",
+        "rqe/mcp/client.py",
+        "rqe/mcp/world_tools.py",
+        "apps/studio-plugin/src",
+        "rqe/capture.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "CTL-03",
+      "domain": "CTL",
+      "title": "Câmera e captura do mesmo cliente",
+      "phase": "M2",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "DEFEITO_OBSERVADO_EM_RUNTIME",
+      "observationValidationLevel": "RUNTIME_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Captura confiável usou pose do servidor e dimensão do cliente.",
+      "deliverable": "Obter pose completa, viewport e estado renderizado do cliente correto, antes e depois da captura.",
+      "dependsOn": [
+        "CTL-02"
+      ],
+      "acceptance": "Mover câmera cliente invalida continuidade incorreta; oclusão, troca de janela e sessão são detectadas.",
+      "effort": "M",
+      "existingPaths": [
+        "rqe/hub",
+        "rqe/mcp/client.py",
+        "rqe/mcp/world_tools.py",
+        "apps/studio-plugin/src",
+        "rqe/capture.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "CTL-04",
+      "domain": "CTL",
+      "title": "Observações paginadas e referência estável",
+      "phase": "M2",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Consultas truncadas e refs de outro DataModel podem parecer ausência de objetos.",
+      "deliverable": "Protocolo de paginação, limites explícitos, validade de refs e amostras ligadas ao contexto.",
+      "dependsOn": [
+        "CTL-02"
+      ],
+      "acceptance": "Mundo acima do limite de retorno é enumerado ou marcado incompleto; ref expirada nunca resolve outro objeto.",
+      "effort": "M",
+      "existingPaths": [
+        "rqe/hub",
+        "rqe/mcp/client.py",
+        "rqe/mcp/world_tools.py",
+        "apps/studio-plugin/src",
+        "rqe/capture.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "CTL-05",
+      "domain": "CTL",
+      "title": "Modo jogador sem informação interna",
+      "phase": "M2",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "A jornada medida precisou localizar caminhos internos e não foi black-box.",
+      "deliverable": "Separar interface de jogador e observação diagnóstica; registrar ações/frames sem paths ou pivôs como instruções.",
+      "dependsOn": [
+        "CTL-01",
+        "CTL-03"
+      ],
+      "acceptance": "Agente reconhece objetivo e compra usando visão e input; instrumentação interna só entra no diagnóstico posterior.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/hub",
+        "rqe/mcp/client.py",
+        "rqe/mcp/world_tools.py",
+        "apps/studio-plugin/src",
+        "rqe/capture.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "CTL-06",
+      "domain": "CTL",
+      "title": "Testes e dispositivos por APIs nativas",
+      "phase": "M2",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Automação multicliente atual usa coordenadas e menu; serviços recentes já aparecem no Studio instalado.",
+      "deliverable": "Adapters versionados para StudioTestService, dispositivos e input; fallback somente quando necessário e identificado.",
+      "dependsOn": [
+        "ENV-04",
+        "CTL-02"
+      ],
+      "acceptance": "Play, Run, multicliente, alteração de dispositivo, desconexão e stop funcionam com timeout/cancelamento e resultado correlacionado.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/hub",
+        "rqe/mcp/client.py",
+        "rqe/mcp/world_tools.py",
+        "apps/studio-plugin/src",
+        "rqe/capture.py"
+      ],
+      "evidence": [
+        ".tmp/audit-2026-09-05/planning-api-discovery.json",
+        "rqe/hub/teamtest.py",
+        "https://create.roblox.com/docs/reference/engine/classes/StudioTestService"
+      ]
+    },
+    {
+      "id": "CTL-07",
+      "domain": "CTL",
+      "title": "Objetivos e aproximações espaciais",
+      "phase": "M2",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "DEFEITO_OBSERVADO_EM_RUNTIME",
+      "observationValidationLevel": "RUNTIME_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "ProximityPrompt provocou E_BAD_PARAMS; coleta limita descoberta a 40 e avaliação a 12 objetivos.",
+      "deliverable": "Resolver suportes e pontos de aproximação; objetivos do contrato e múltiplos spawns; cobertura explícita.",
+      "dependsOn": [
+        "CTL-04"
+      ],
+      "acceptance": "Prompt em Attachment/Part/Model e mais de 12 objetivos avaliados sem amostra apresentada como total.",
+      "effort": "M",
+      "existingPaths": [
+        "rqe/hub",
+        "rqe/mcp/client.py",
+        "rqe/mcp/world_tools.py",
+        "apps/studio-plugin/src",
+        "rqe/capture.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "CTL-08",
+      "domain": "CTL",
+      "title": "Mutações reversíveis e rastreáveis",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Não foi demonstrado um ciclo uniforme de diff/aplicar/desfazer para todas as ferramentas de autoria.",
+      "deliverable": "ChangeSet com precondições, proprietário, efeitos, snapshot e compensação por operação suportada.",
+      "dependsOn": [
+        "CTL-02",
+        "FAC-04"
+      ],
+      "acceptance": "Falha no meio de edição não deixa cena atribuída como completa; alteração humana conflitante é preservada e reportada.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/hub",
+        "rqe/mcp/client.py",
+        "rqe/mcp/world_tools.py",
+        "apps/studio-plugin/src",
+        "rqe/capture.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "FAC-01",
+      "domain": "FAC",
+      "title": "Uma definição de produto completa",
+      "phase": "M2",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "DEFEITO_CONFIRMADO",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Forge quality gera descriptor sem productIntent e pode sobrescrever política editada.",
+      "deliverable": "Integrar GameProjectDefinition e product truth; preservar política; separar campos derivados de decisões autorais.",
+      "dependsOn": [
+        "DOC-01"
+      ],
+      "acceptance": "Regeneração não apaga requisitos editados; contrato, referências, spec e runtime identificam o mesmo produto.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/orchestrator",
+        "rqe/mcp/factory_execution.py",
+        "rqe/producer",
+        "forge/cli/quality.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "FAC-02",
+      "domain": "FAC",
+      "title": "Handlers executáveis para o DAG inteiro",
+      "phase": "M2",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Executor durável existe; a superfície MCP registra apenas specification e design de leitura.",
+      "deliverable": "Conectar handlers de autoria, assets, build, Studio, medição, play, captura, reparo e release candidate.",
+      "dependsOn": [
+        "FAC-01",
+        "CTL-02",
+        "REL-01"
+      ],
+      "acceptance": "Plano de consumidor executa até candidato ou bloqueio preciso; nenhum estágio obrigatório depende de texto não executável.",
+      "effort": "XL",
+      "existingPaths": [
+        "rqe/orchestrator",
+        "rqe/mcp/factory_execution.py",
+        "rqe/producer",
+        "forge/cli/quality.py"
+      ],
+      "evidence": [
+        "rqe/mcp/factory_execution.py",
+        "rqe/orchestrator/executor.py"
+      ]
+    },
+    {
+      "id": "FAC-03",
+      "domain": "FAC",
+      "title": "Retomada validada por artefatos e versões",
+      "phase": "M2",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "DEFEITO_CONFIRMADO",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Checkpoint do producer licencia pular estágios pelo brief/status sem verificar hashes dos arquivos produzidos.",
+      "deliverable": "Checkpoint por run e identidade completa: engine, ferramentas, entradas e saídas; invalidar descendentes afetados.",
+      "dependsOn": [
+        "FAC-01"
+      ],
+      "acceptance": "Apagar ou alterar um output, mudar fonte/engine ou interromper escrita impede reaproveitamento incorreto.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/orchestrator",
+        "rqe/mcp/factory_execution.py",
+        "rqe/producer",
+        "forge/cli/quality.py"
+      ],
+      "evidence": [
+        "rqe/producer/checkpoint.py",
+        "rqe/producer/pipeline.py"
+      ]
+    },
+    {
+      "id": "FAC-04",
+      "domain": "FAC",
+      "title": "Ownership e integração de código",
+      "phase": "M2",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Worktrees, leases e ownership existem; cadeia de autoria concorrente até integração real não foi provada.",
+      "deliverable": "Conectar escritor e integrador aos limites por arquivo, commits/diffs e dependências de SDK.",
+      "dependsOn": [
+        "ENV-02"
+      ],
+      "acceptance": "Duas alterações conflitantes não são sobrescritas; lease expirada impede escritor antigo; modo sequencial funciona sozinho.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/orchestrator",
+        "rqe/mcp/factory_execution.py",
+        "rqe/producer",
+        "forge/cli/quality.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "FAC-05",
+      "domain": "FAC",
+      "title": "Reparo com regressão por impacto",
+      "phase": "M4",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Há planejamento de impacto, sem demonstração completa de reparo orientado por falha até novo gate.",
+      "deliverable": "Ligar finding a origem, dependências, mudança mínima e regressão afetada, seguida de regressão total.",
+      "dependsOn": [
+        "FAC-02",
+        "QAT-01"
+      ],
+      "acceptance": "Falha semeada gera patch revisável; reexecução prova correção e nova regressão completa evita aprovar dano colateral.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/orchestrator",
+        "rqe/mcp/factory_execution.py",
+        "rqe/producer",
+        "forge/cli/quality.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "FAC-06",
+      "domain": "FAC",
+      "title": "Orçamentos, cancelamento e retomada por agente",
+      "phase": "M2",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Ledger e scheduler existem, mas a fábrica completa não foi operada com limites fim a fim.",
+      "deliverable": "Budget de tempo/custo/tentativas, filas de Studio/provider, cancelamento cooperativo e estado UNCERTAIN.",
+      "dependsOn": [
+        "FAC-03",
+        "FAC-04"
+      ],
+      "acceptance": "Interromper agente durante ferramenta não dispara duplicação cega; retomar não repete publicação já confirmada.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/orchestrator",
+        "rqe/mcp/factory_execution.py",
+        "rqe/producer",
+        "forge/cli/quality.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "FAC-07",
+      "domain": "FAC",
+      "title": "Papéis, revisão independente e permissões",
+      "phase": "M2",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Charter separa implementador e aprovação; falta provar aplicação em todos os adapters.",
+      "deliverable": "Papéis para design, autoria, revisão e release; credenciais por escopo e política persistente de autorização.",
+      "dependsOn": [
+        "FAC-04",
+        "REL-01"
+      ],
+      "acceptance": "Implementador não altera threshold congelado nem a evidência do revisor; ação autorizada não exige confirmação repetida.",
+      "effort": "M",
+      "existingPaths": [
+        "rqe/orchestrator",
+        "rqe/mcp/factory_execution.py",
+        "rqe/producer",
+        "forge/cli/quality.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "FAC-08",
+      "domain": "FAC",
+      "title": "Extensão além de templates e vocabulários fixos",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Há SDK extensível e DSLs estreitas; composição desconhecida não pode virar um teto silencioso.",
+      "deliverable": "Contrato de extensão para Luau e providers com schemas, testes, budgets, lifecycle e registro de capacidades.",
+      "dependsOn": [
+        "FAC-01"
+      ],
+      "acceptance": "Mecânica inédita é adicionada sem editar orquestrador por nome de jogo; ferramenta sem suporte reporta limite preciso.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/orchestrator",
+        "rqe/mcp/factory_execution.py",
+        "rqe/producer",
+        "forge/cli/quality.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "WRL-01",
+      "domain": "WRL",
+      "title": "Navegação sem reentrada de cálculo",
+      "phase": "M2",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "DEFEITO_OBSERVADO_EM_RUNTIME",
+      "observationValidationLevel": "RUNTIME_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Proving Ground não chegou ao alvo em 25s; simulação abriu três cálculos concorrentes por agente.",
+      "deliverable": "Fila de pathfinding, in-flight guard, geração/cancelamento, chegada/standoff e diagnóstico de rig.",
+      "dependsOn": [
+        "ENV-02"
+      ],
+      "acceptance": "Cenário original passa repetidamente, stop invalida cálculo pendente e orçamento limita demanda por população.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Nav",
+        "forge/luau/Forge/World",
+        "forge/luau/Forge/Scene",
+        "forge/luau/Forge/Streaming",
+        "roblox/lib/WorldKit"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "WRL-02",
+      "domain": "WRL",
+      "title": "Layout com intenção de gameplay",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Blockout existe; topologia e aparência não demonstram legibilidade ou circulação final.",
+      "deliverable": "Regiões, rotas, marcos, sightlines, densidade e objetivos testados antes e depois do dressing.",
+      "dependsOn": [
+        "FAC-01",
+        "CTL-07",
+        "WRL-01"
+      ],
+      "acceptance": "Spawn encontra objetivo; rotas, portas, escadas e pontos de retorno continuam utilizáveis na versão com arte.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Nav",
+        "forge/luau/Forge/World",
+        "forge/luau/Forge/Scene",
+        "forge/luau/Forge/Streaming",
+        "roblox/lib/WorldKit"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "WRL-03",
+      "domain": "WRL",
+      "title": "Kits, terreno e materiais coerentes",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Primitivas e kits existem; os consumidores capturados ainda apresentam acabamento de teste.",
+      "deliverable": "Kits modulares com conexões, pivôs, escala, variações e material/UV; aplicar com seeds e budgets.",
+      "dependsOn": [
+        "WRL-02",
+        "AST-03"
+      ],
+      "acceptance": "Um conjunto modular produz regiões coerentes e variação controlada, sem duplicação invisível ou colisão inadequada.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Nav",
+        "forge/luau/Forge/World",
+        "forge/luau/Forge/Scene",
+        "forge/luau/Forge/Streaming",
+        "roblox/lib/WorldKit"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "WRL-04",
+      "domain": "WRL",
+      "title": "Streaming preserva gameplay",
+      "phase": "M4",
+      "priority": "P1",
+      "scope": "PROFILE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Streaming existe; descarregar e remontar conteúdo com estado persistido não foi validado nesta auditoria.",
+      "deliverable": "Separar existência visual, estado autoritativo e replicação; lifecycle de chunks e assets com referências válidas.",
+      "dependsOn": [
+        "WRL-03",
+        "GAM-01",
+        "QAT-05"
+      ],
+      "acceptance": "Entrar/sair e cruzar fronteiras não reinicia loot ou inimigos indevidamente nem quebra quests e colisões.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Nav",
+        "forge/luau/Forge/World",
+        "forge/luau/Forge/Scene",
+        "forge/luau/Forge/Streaming",
+        "roblox/lib/WorldKit"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "WRL-05",
+      "domain": "WRL",
+      "title": "Física e propriedade de rede",
+      "phase": "M4",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Geometria estática e bot não comprovam todas as colisões, escalas e interações multijogador.",
+      "deliverable": "Testes de degrau, inclinação, porta, moving platform, velocidades e network ownership por perfil.",
+      "dependsOn": [
+        "CTL-06",
+        "WRL-01"
+      ],
+      "acceptance": "Trajetos físicos suportados funcionam com avatares/perfis declarados; queda, travamento e empurrões têm diagnóstico.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Nav",
+        "forge/luau/Forge/World",
+        "forge/luau/Forge/Scene",
+        "forge/luau/Forge/Streaming",
+        "roblox/lib/WorldKit"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "WRL-06",
+      "domain": "WRL",
+      "title": "Roundtrip Studio e fonte",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Scene/Editor existem; edição autoral e regeneração precisam preservar a intenção e a origem.",
+      "deliverable": "Mapear seleção/cena a fonte, serialização canônica, diffs, overrides e regeneração incremental.",
+      "dependsOn": [
+        "CTL-08",
+        "WRL-03"
+      ],
+      "acceptance": "Editar no Studio, salvar, rebuild e reabrir preserva alteração; conflito com geração não é sobrescrito silenciosamente.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Nav",
+        "forge/luau/Forge/World",
+        "forge/luau/Forge/Scene",
+        "forge/luau/Forge/Streaming",
+        "roblox/lib/WorldKit"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "AST-01",
+      "domain": "AST",
+      "title": "Busca e adoção de assets rastreáveis",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Catálogos e busca existem; toda seleção não foi provada até integração.",
+      "deliverable": "Pesquisa tipada, previews, provenance, licença, creator, versão e decisão REUSE/ADAPT/GENERATE por papel artístico.",
+      "dependsOn": [
+        "FAC-01"
+      ],
+      "acceptance": "Asset escolhido é acessível ao dono do jogo, script-free quando exigido e vinculado ao brief e à manifestação final.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/assets",
+        "rqe/geometry",
+        "rqe/sourcing",
+        "forge/luau/Forge/Assets",
+        "forge/luau/Forge/Catalog"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "AST-02",
+      "domain": "AST",
+      "title": "Workers reais de criação",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Outbox e fake provider não demonstram geração original real completa.",
+      "deliverable": "Integrar providers de mesh/imagem/áudio/animação com jobs retomáveis, ferramenta/modelo versão, custo e outputs verificáveis.",
+      "dependsOn": [
+        "FAC-02",
+        "FAC-06"
+      ],
+      "acceptance": "Cada classe necessária ao contrato produz bytes, preview e recibo reais; indisponível bloqueia sem ID fictício.",
+      "effort": "XL",
+      "existingPaths": [
+        "rqe/assets",
+        "rqe/geometry",
+        "rqe/sourcing",
+        "forge/luau/Forge/Assets",
+        "forge/luau/Forge/Catalog"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "AST-03",
+      "domain": "AST",
+      "title": "Pacote de asset pronto para produção",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Há validadores/geometry runtime, mas qualidade de um asset precisa incluir uso final.",
+      "deliverable": "Topologia, escala, pivô, UV, materiais, colisão, custo, previews e revisão da silhueta por brief.",
+      "dependsOn": [
+        "AST-01"
+      ],
+      "acceptance": "Asset falha por defeito de importação/uso mesmo se o render é bonito; versão aprovada tem hashes e limites medidos.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/assets",
+        "rqe/geometry",
+        "rqe/sourcing",
+        "forge/luau/Forge/Assets",
+        "forge/luau/Forge/Catalog"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "AST-04",
+      "domain": "AST",
+      "title": "Publicação e moderação de assets",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Upload e adapters existem; cadeia real para todas as classes não foi demonstrada nesta auditoria.",
+      "deliverable": "Estado durável de upload/moderação/permissão, polling, retry idempotente, versionamento e integração por ID confirmado.",
+      "dependsOn": [
+        "AST-02",
+        "AST-03",
+        "REL-03"
+      ],
+      "acceptance": "Reiniciar worker não duplica upload; asset negado ou sem permissão mantém build bloqueado; ID aprovado carrega no jogo.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/assets",
+        "rqe/geometry",
+        "rqe/sourcing",
+        "forge/luau/Forge/Assets",
+        "forge/luau/Forge/Catalog"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "AST-05",
+      "domain": "AST",
+      "title": "Cache e builds incrementais de conteúdo",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Existem pacotes por hash, mas reutilização e invalidação entre todos os caminhos precisam de contrato único.",
+      "deliverable": "Content hash por fonte/config/ferramenta; template/clones; invalidação transitiva e cache com limites.",
+      "dependsOn": [
+        "AST-03",
+        "FAC-03"
+      ],
+      "acceptance": "Mesmo input reutiliza bytes sem refazer upload; mudança relevante invalida dependentes, sem reaproveitar asset errado.",
+      "effort": "M",
+      "existingPaths": [
+        "rqe/assets",
+        "rqe/geometry",
+        "rqe/sourcing",
+        "forge/luau/Forge/Assets",
+        "forge/luau/Forge/Catalog"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "AST-06",
+      "domain": "AST",
+      "title": "Quarentena de conteúdo importado",
+      "phase": "M1",
+      "priority": "P0",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Dois arquivos de salvage não compilaram; importação não equivale a auditoria de código, licença ou dependências.",
+      "deliverable": "Separar kits de referência e pacotes aprovados, inspecionar scripts/links e recursos transitivos antes da adoção.",
+      "dependsOn": [
+        "ENV-02"
+      ],
+      "acceptance": "Kit não aprovado não entra no build por busca automática; importação excessiva ou código não permitido é recusado.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/assets",
+        "rqe/geometry",
+        "rqe/sourcing",
+        "forge/luau/Forge/Assets",
+        "forge/luau/Forge/Catalog"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "CHR-01",
+      "domain": "CHR",
+      "title": "Rigs próprios e importação de animação",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "PROFILE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Rig/IK/Anim existem; a linguagem de geometria não expõe armature/skinning/retargeting completos.",
+      "deliverable": "Adapter de autoria/importação de rig, skin, joints, retarget, root motion quando aplicável e clipes.",
+      "dependsOn": [
+        "AST-03",
+        "FAC-08"
+      ],
+      "acceptance": "Um rig próprio e um avatar suportado executam o mesmo contrato de ações sem juntas perdidas ou deformação inadequada.",
+      "effort": "XL",
+      "existingPaths": [
+        "forge/luau/Forge/Rig",
+        "forge/luau/Forge/Anim",
+        "forge/luau/Forge/IK",
+        "forge/luau/Forge/Camera",
+        "forge/luau/Forge/Feel",
+        "forge/luau/Forge/Audio",
+        "rqe/assets/animation_authoring.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "CHR-02",
+      "domain": "CHR",
+      "title": "Animação e ação sincronizadas",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Clipes e procedural existem; fidelidade temporal completa não foi comprovada.",
+      "deliverable": "Blend, prioridade, transições, markers, cancelamento e sincronização com hitbox, som e feedback.",
+      "dependsOn": [
+        "GAM-01"
+      ],
+      "acceptance": "Interromper ataque, morrer, trocar arma e renascer não deixa clip, joint, hitbox ou conexão residual.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Rig",
+        "forge/luau/Forge/Anim",
+        "forge/luau/Forge/IK",
+        "forge/luau/Forge/Camera",
+        "forge/luau/Forge/Feel",
+        "forge/luau/Forge/Audio",
+        "rqe/assets/animation_authoring.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "CHR-03",
+      "domain": "CHR",
+      "title": "Câmera, som, VFX e sensação de controle",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Módulos existem, mas composição audiovisual profissional não foi demonstrada nos consumidores.",
+      "deliverable": "Perfis de câmera/mix, áudio espacial, VFX legível, resposta visual, recoil/shake e redução de movimento.",
+      "dependsOn": [
+        "CHR-02",
+        "UIX-04"
+      ],
+      "acceptance": "Ação tem feedback compreensível sem poluição; pausa, respawn e mudança de câmera limpam efeitos e respeitam preferências.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Rig",
+        "forge/luau/Forge/Anim",
+        "forge/luau/Forge/IK",
+        "forge/luau/Forge/Camera",
+        "forge/luau/Forge/Feel",
+        "forge/luau/Forge/Audio",
+        "rqe/assets/animation_authoring.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "CHR-04",
+      "domain": "CHR",
+      "title": "Avatares, proporções e cosméticos",
+      "phase": "M4",
+      "priority": "P1",
+      "scope": "PROFILE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Não foram testadas combinações de rig, escala e acessórios nos sistemas e mapas.",
+      "deliverable": "Perfis de corpo/colisão/equipamento e validação de compatibilidade com ações e câmera.",
+      "dependsOn": [
+        "CHR-01",
+        "WRL-05"
+      ],
+      "acceptance": "Avatares declarados atravessam mapa, equipam itens e animam sem clipping impeditivo ou hitbox injusta.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Rig",
+        "forge/luau/Forge/Anim",
+        "forge/luau/Forge/IK",
+        "forge/luau/Forge/Camera",
+        "forge/luau/Forge/Feel",
+        "forge/luau/Forge/Audio",
+        "rqe/assets/animation_authoring.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "GAM-01",
+      "domain": "GAM",
+      "title": "Lifecycle de sistemas compartilhado",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Muitos módulos coexistem; montagem e teardown precisam obedecer à mesma semântica.",
+      "deliverable": "Dependências explícitas, boot/ready/start/stop/dispose, escopo de conexões e estado de carregamento.",
+      "dependsOn": [
+        "FAC-08",
+        "DAT-01"
+      ],
+      "acceptance": "Iniciar, parar, reentrar e renascer repetidamente não duplica handlers, sistemas, UI ou recursos.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Core",
+        "forge/luau/Forge/Combat",
+        "forge/luau/Forge/Progression",
+        "forge/luau/Forge/Economy",
+        "forge/luau/Forge/Inventory",
+        "forge/luau/Forge/Quest",
+        "rqe/economy"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "GAM-02",
+      "domain": "GAM",
+      "title": "Mecânicas compostas por contratos",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Combate, movimento, itens, quests e progressão existem, sem prova de toda a composição escolhida.",
+      "deliverable": "Interfaces de recursos, ações, inventário, interação e progressão com adapters para implementações existentes.",
+      "dependsOn": [
+        "GAM-01",
+        "NET-05"
+      ],
+      "acceptance": "Os dois consumidores integram sistemas sem cópias divergentes nem regras de gênero no núcleo.",
+      "effort": "XL",
+      "existingPaths": [
+        "forge/luau/Forge/Core",
+        "forge/luau/Forge/Combat",
+        "forge/luau/Forge/Progression",
+        "forge/luau/Forge/Economy",
+        "forge/luau/Forge/Inventory",
+        "forge/luau/Forge/Quest",
+        "rqe/economy"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "GAM-03",
+      "domain": "GAM",
+      "title": "Dados de conteúdo validados",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Tabelas e designers existem; relações entre conteúdo e sistemas podem ficar sem verificação.",
+      "deliverable": "Schemas e referências cruzadas para itens, inimigos, drops, receitas, objetivos e estados.",
+      "dependsOn": [
+        "GAM-02"
+      ],
+      "acceptance": "ID órfão, ciclo impossível, reward inválido e conteúdo sem uso são encontrados antes do build.",
+      "effort": "M",
+      "existingPaths": [
+        "forge/luau/Forge/Core",
+        "forge/luau/Forge/Combat",
+        "forge/luau/Forge/Progression",
+        "forge/luau/Forge/Economy",
+        "forge/luau/Forge/Inventory",
+        "forge/luau/Forge/Quest",
+        "rqe/economy"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "GAM-04",
+      "domain": "GAM",
+      "title": "Economia e progressão verificáveis",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "PROFILE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Simulações existentes não são prova da curva real de experiência e persistência.",
+      "deliverable": "Simular regras compartilhadas, medir fontes/sinks, preços, pacing e invariantes; calibrar com sessões reais.",
+      "dependsOn": [
+        "GAM-03",
+        "DAT-05"
+      ],
+      "acceptance": "Modelo e execução Luau concordam; inflação, progressão bloqueada e custo sem reward são detectados.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Core",
+        "forge/luau/Forge/Combat",
+        "forge/luau/Forge/Progression",
+        "forge/luau/Forge/Economy",
+        "forge/luau/Forge/Inventory",
+        "forge/luau/Forge/Quest",
+        "rqe/economy"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "GAM-05",
+      "domain": "GAM",
+      "title": "Primeira sessão e recuperação",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Comprar uma vez não demonstra onboarding, tutorial, morte, retorno e reentrada.",
+      "deliverable": "Jornada inicial com objetivos legíveis, feedback, estado vazio, derrota, recuperação e persistência do progresso.",
+      "dependsOn": [
+        "GAM-02",
+        "UIX-01"
+      ],
+      "acceptance": "Jogador novo completa o ciclo principal e volta após sair sem assistência interna nem perda de progresso.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Core",
+        "forge/luau/Forge/Combat",
+        "forge/luau/Forge/Progression",
+        "forge/luau/Forge/Economy",
+        "forge/luau/Forge/Inventory",
+        "forge/luau/Forge/Quest",
+        "rqe/economy"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "GAM-06",
+      "domain": "GAM",
+      "title": "Pacotes por necessidade de jogo",
+      "phase": "M6",
+      "priority": "P2",
+      "scope": "PROFILE",
+      "currentClassification": "CAPACIDADE_PROPOSTA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Uma engine geral precisa expandir sem carregar todas as mecânicas em todos os jogos.",
+      "deliverable": "Perfis opcionais para partida/party/social/trading, construção, survival, veículos e outros domínios pedidos.",
+      "dependsOn": [
+        "GAM-02",
+        "FAC-08"
+      ],
+      "acceptance": "Cada pacote declara dependências, orçamento e cenários; jogo que não o usa não paga seu custo de execução.",
+      "effort": "XL",
+      "existingPaths": [
+        "forge/luau/Forge/Core",
+        "forge/luau/Forge/Combat",
+        "forge/luau/Forge/Progression",
+        "forge/luau/Forge/Economy",
+        "forge/luau/Forge/Inventory",
+        "forge/luau/Forge/Quest",
+        "rqe/economy"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "UIX-01",
+      "domain": "UIX",
+      "title": "Design system aplicado aos consumidores",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "UI existe; capturas mostram texto pequeno, identificadores técnicos e acabamento inconsistente.",
+      "deliverable": "Tokens, hierarquia visual, estados, ícones, nomes de apresentação, loading e mensagens acionáveis.",
+      "dependsOn": [
+        "FAC-01"
+      ],
+      "acceptance": "Fluxos de loja/inventário/configuração são legíveis e consistentes sem expor nomes internos de implementação.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/UI",
+        "forge/luau/Forge/Input",
+        "forge/luau/Forge/Platform",
+        "forge/luau/Forge/Access"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "UIX-02",
+      "domain": "UIX",
+      "title": "Toque, teclado e gamepad reais",
+      "phase": "M4",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Não foi comprovada a jornada completa nos dispositivos de destino.",
+      "deliverable": "Matriz de resolução/orientação, safe area, foco, captura de input, gestos e troca de modalidade.",
+      "dependsOn": [
+        "CTL-06",
+        "UIX-01"
+      ],
+      "acceptance": "Cada fluxo crítico é concluído nas modalidades declaradas; UI não oculta controles nem perde foco em modal.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/UI",
+        "forge/luau/Forge/Input",
+        "forge/luau/Forge/Platform",
+        "forge/luau/Forge/Access"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "UIX-03",
+      "domain": "UIX",
+      "title": "Localização e conteúdo expansível",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Cobertura de idiomas e textos longos não foi demonstrada.",
+      "deliverable": "Chaves de tradução, formatação de número/tempo, fallback, fontes e testes de expansão de strings.",
+      "dependsOn": [
+        "UIX-01"
+      ],
+      "acceptance": "Português e idioma adicional suportado funcionam sem overflow, chaves internas ou truncamento de ação crítica.",
+      "effort": "M",
+      "existingPaths": [
+        "forge/luau/Forge/UI",
+        "forge/luau/Forge/Input",
+        "forge/luau/Forge/Platform",
+        "forge/luau/Forge/Access"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "UIX-04",
+      "domain": "UIX",
+      "title": "Acessibilidade integrada ao gameplay",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Access existe, mas aplicação de captions, contraste e reducedMotion ao jogo inteiro não foi demonstrada.",
+      "deliverable": "Conectar preferências a UI, áudio, câmera e VFX; sinais redundantes e alvos ajustáveis.",
+      "dependsOn": [
+        "UIX-01"
+      ],
+      "acceptance": "Preferência muda o resultado observado; objetivos continuam legíveis sem depender só de cor ou som.",
+      "effort": "M",
+      "existingPaths": [
+        "forge/luau/Forge/UI",
+        "forge/luau/Forge/Input",
+        "forge/luau/Forge/Platform",
+        "forge/luau/Forge/Access"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "QAT-01",
+      "domain": "QAT",
+      "title": "Produtores reais para requisitos obrigatórios",
+      "phase": "M2",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Gate contém requisitos sem produtor utilizável ou integrado.",
+      "deliverable": "Matriz requirement→producer→context→evidence; implementar produtores reutilizáveis e verificar cobertura.",
+      "dependsOn": [
+        "FAC-01",
+        "CTL-07"
+      ],
+      "acceptance": "Requisito obrigatório sem produtor bloqueia no planejamento; produtor registra cobertura e validação adequadas no run.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/observe.py",
+        "rqe/scenario.py",
+        "rqe/scene/critic.py",
+        "rqe/release.py",
+        "quality/probe-registry.v1.json",
+        "tests",
+        "forge/luau/Forge/Testing"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "QAT-02",
+      "domain": "QAT",
+      "title": "Testes negativos e de invariantes",
+      "phase": "M4",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Muitos testes passam enquanto bugs fundamentais sobreviveram; cobertura de falhas relevantes é incompleta.",
+      "deliverable": "Testar código Luau original com serviços controláveis, propriedades/invariantes e defeitos semeados.",
+      "dependsOn": [
+        "DAT-05",
+        "NET-02",
+        "GAM-02"
+      ],
+      "acceptance": "Suíte falha quando cada bug crítico é reintroduzido; fixture nunca vira medição real.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/observe.py",
+        "rqe/scenario.py",
+        "rqe/scene/critic.py",
+        "rqe/release.py",
+        "quality/probe-registry.v1.json",
+        "tests",
+        "forge/luau/Forge/Testing"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "QAT-03",
+      "domain": "QAT",
+      "title": "Jornadas e replay diagnóstico",
+      "phase": "M4",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Não há prova black-box completa nos dois consumidores auditados.",
+      "deliverable": "Registro de input/frames/tempo e estado de teste, reprodução por contrato e diagnóstico após falha.",
+      "dependsOn": [
+        "CTL-05",
+        "GAM-05"
+      ],
+      "acceptance": "Onboarding→ação→recompensa→saída→retorno passa; replay explica falha sem prometer determinismo de toda física.",
+      "effort": "XL",
+      "existingPaths": [
+        "rqe/observe.py",
+        "rqe/scenario.py",
+        "rqe/scene/critic.py",
+        "rqe/release.py",
+        "quality/probe-registry.v1.json",
+        "tests",
+        "forge/luau/Forge/Testing"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "QAT-04",
+      "domain": "QAT",
+      "title": "Qualidade visual com referências independentes",
+      "phase": "M4",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Crítico é estreito e captura teve metadados incorretos; nota visual não garante acabamento.",
+      "deliverable": "Corpus por câmera/gênero, brief visual congelado, métricas calibradas e revisão independente de imagens/movimento.",
+      "dependsOn": [
+        "CTL-03",
+        "WRL-03",
+        "CHR-03",
+        "UIX-01"
+      ],
+      "acceptance": "Exemplos ruins são rejeitados sem penalizar estilos válidos; revisão cobre composição, leitura, exposição e identidade.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/observe.py",
+        "rqe/scenario.py",
+        "rqe/scene/critic.py",
+        "rqe/release.py",
+        "quality/probe-registry.v1.json",
+        "tests",
+        "forge/luau/Forge/Testing"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "QAT-05",
+      "domain": "QAT",
+      "title": "Medições de desempenho com significado correto",
+      "phase": "M2",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "DEFEITO_OBSERVADO_EM_RUNTIME",
+      "observationValidationLevel": "RUNTIME_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Heartbeat do servidor foi usado como FPS; amostras curtas e memória Studio não provam cliente.",
+      "deliverable": "Separar frame cliente, tick servidor, memória e tráfego; janelas, warmup e percentis por dispositivo/cena.",
+      "dependsOn": [
+        "CTL-02",
+        "CTL-06"
+      ],
+      "acceptance": "Amostra aponta contexto e duração; servidor a 60 Hz não aprova cliente com frame lento.",
+      "effort": "M",
+      "existingPaths": [
+        "rqe/observe.py",
+        "rqe/scenario.py",
+        "rqe/scene/critic.py",
+        "rqe/release.py",
+        "quality/probe-registry.v1.json",
+        "tests",
+        "forge/luau/Forge/Testing"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "QAT-06",
+      "domain": "QAT",
+      "title": "Carga, duração e vazamentos",
+      "phase": "M4",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Execuções breves não comprovam estabilidade durante sessões longas e população alvo.",
+      "deliverable": "Soak tests, stress controlado, perfil de instâncias/conexões/assets e performance em hardware alvo.",
+      "dependsOn": [
+        "QAT-05",
+        "NET-03",
+        "GAM-01"
+      ],
+      "acceptance": "Budgets congelados são atendidos nos cenários definidos; crescimento persistente ou degradação causa falha reproduzível.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/observe.py",
+        "rqe/scenario.py",
+        "rqe/scene/critic.py",
+        "rqe/release.py",
+        "quality/probe-registry.v1.json",
+        "tests",
+        "forge/luau/Forge/Testing"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "QAT-07",
+      "domain": "QAT",
+      "title": "Instrumentos calibrados e estados honestos",
+      "phase": "M4",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Erro do observador e falta de serviço podem parecer falha de gameplay.",
+      "deliverable": "Controles positivos/negativos de sondas, saúde do instrumento e estados INFRA_FAILED/INCONCLUSIVE/SKIP.",
+      "dependsOn": [
+        "QAT-01",
+        "CTL-04"
+      ],
+      "acceptance": "Sonda cega ou serviço ausente não gera PASS nem acusa o jogo sem evidência suficiente.",
+      "effort": "M",
+      "existingPaths": [
+        "rqe/observe.py",
+        "rqe/scenario.py",
+        "rqe/scene/critic.py",
+        "rqe/release.py",
+        "quality/probe-registry.v1.json",
+        "tests",
+        "forge/luau/Forge/Testing"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "QAT-08",
+      "domain": "QAT",
+      "title": "Aceitação da engine em jogos diferentes",
+      "phase": "M4",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Os consumidores foram executados, mas nenhum completou toda a cadeia validada nesta auditoria.",
+      "deliverable": "Dois consumidores completos e um terceiro brief de generalidade sem adaptação por nome no núcleo.",
+      "dependsOn": [
+        "FAC-02",
+        "QAT-03",
+        "QAT-04",
+        "QAT-06",
+        "DAT-06"
+      ],
+      "acceptance": "Dois candidatos íntegros; mudança deliberada de produto é rejeitada; terceiro brief produz plano e extensão honesta.",
+      "effort": "XL",
+      "existingPaths": [
+        "rqe/observe.py",
+        "rqe/scenario.py",
+        "rqe/scene/critic.py",
+        "rqe/release.py",
+        "quality/probe-registry.v1.json",
+        "tests",
+        "forge/luau/Forge/Testing"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "REL-01",
+      "domain": "REL",
+      "title": "Uma autoridade de release vinculada aos bytes",
+      "phase": "M1",
+      "priority": "P0",
+      "scope": "CORE",
+      "currentClassification": "DEFEITO_CONFIRMADO",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "forge publish usa recibo mutável de tamanho/data, aceitando conteúdo diferente.",
+      "deliverable": "Reusar verificador de run final; congelar bytes e verificar build/produto/evidência antes do upload.",
+      "dependsOn": [
+        "ENV-01"
+      ],
+      "acceptance": "Troca de conteúdo, evidência de outro produto e manifesto adulterado impedem publicação normal e rollback indevido.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/release.py",
+        "rqe/orchestrator/metrics.py",
+        "forge/forge.py",
+        "forge/cli/publish.py",
+        "forge/cli/playtest.py",
+        "forge/cli/rollback.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "REL-02",
+      "domain": "REL",
+      "title": "Resultado pelo runId e artefatos íntegros",
+      "phase": "M2",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "DEFEITO_CONFIRMADO",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "forge quality escolhe diretório por nome; reports/latest e bundles legados não são autoridade.",
+      "deliverable": "Retornar runId explicitamente, verificar manifesto e links; manter compatibilidade apenas diagnóstica.",
+      "dependsOn": [
+        "REL-01",
+        "FAC-01"
+      ],
+      "acceptance": "Execuções simultâneas nunca apresentam relatório de outra tentativa como resultado atual.",
+      "effort": "M",
+      "existingPaths": [
+        "rqe/release.py",
+        "rqe/orchestrator/metrics.py",
+        "forge/forge.py",
+        "forge/cli/publish.py",
+        "forge/cli/playtest.py",
+        "forge/cli/rollback.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "REL-03",
+      "domain": "REL",
+      "title": "Ambientes e credenciais separados",
+      "phase": "M1",
+      "priority": "P0",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Não foi comprovada a configuração integral de dev/test/staging/prod nesta auditoria.",
+      "deliverable": "Policy de autorização persistente, segredos por escopo, namespaces de dados e destinos explícitos.",
+      "dependsOn": [
+        "ENV-03"
+      ],
+      "acceptance": "Teste não escreve em produção; credencial ausente gera pacote pronto e bloqueio preciso sem exposição de segredo.",
+      "effort": "M",
+      "existingPaths": [
+        "rqe/release.py",
+        "rqe/orchestrator/metrics.py",
+        "forge/forge.py",
+        "forge/cli/publish.py",
+        "forge/cli/playtest.py",
+        "forge/cli/rollback.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "REL-04",
+      "domain": "REL",
+      "title": "Publicação gradual e rollback compatível",
+      "phase": "M5",
+      "priority": "P2",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Uploader e rollback existem, mas a operação real completa não foi testada aqui.",
+      "deliverable": "Release candidate verificável, rollout compatível com recursos da plataforma, rollback de bytes e política de migração.",
+      "dependsOn": [
+        "REL-01",
+        "DAT-06",
+        "QAT-08"
+      ],
+      "acceptance": "Publicar em ambiente autorizado, observar, detectar regressão e restaurar versão compatível com dados.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/release.py",
+        "rqe/orchestrator/metrics.py",
+        "forge/forge.py",
+        "forge/cli/publish.py",
+        "forge/cli/playtest.py",
+        "forge/cli/rollback.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "REL-05",
+      "domain": "REL",
+      "title": "Separação de instrumentação e produto entregue",
+      "phase": "M4",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Bridge cliente e diagnóstico não tiveram auditoria completa no pacote distribuído.",
+      "deliverable": "Manifesto de build distingue debug, testes e runtime; restringir/remove hooks de mutação e dados sensíveis.",
+      "dependsOn": [
+        "FAC-02",
+        "NET-02",
+        "REL-01"
+      ],
+      "acceptance": "Build de release não aceita comandos de teste privilegiados nem expõe credenciais ou fixtures como estado real.",
+      "effort": "M",
+      "existingPaths": [
+        "rqe/release.py",
+        "rqe/orchestrator/metrics.py",
+        "forge/forge.py",
+        "forge/cli/publish.py",
+        "forge/cli/playtest.py",
+        "forge/cli/rollback.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "REL-06",
+      "domain": "REL",
+      "title": "Comissionamento da operação",
+      "phase": "M5",
+      "priority": "P2",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Aprovar qualidade não demonstra permissões externas, entrega e resposta operacional.",
+      "deliverable": "Ensaio documentado de deploy, health, contingência e handoff com responsáveis e destinos claros.",
+      "dependsOn": [
+        "REL-04",
+        "OPS-01",
+        "OPS-03"
+      ],
+      "acceptance": "Uma versão autorizada vai ao ambiente alvo e deixa evidência de saúde, rollback e pendências externas explícitas.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/release.py",
+        "rqe/orchestrator/metrics.py",
+        "forge/forge.py",
+        "forge/cli/publish.py",
+        "forge/cli/playtest.py",
+        "forge/cli/rollback.py"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "OPS-01",
+      "domain": "OPS",
+      "title": "Telemetria de experiência e operação",
+      "phase": "M5",
+      "priority": "P2",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Telemetry e analytics existem; funil, economia, erro e performance não foram comprovados como uma visão única.",
+      "deliverable": "Eventos versionados e minimizados por sessão/build, taxas de amostragem e ingestão/consulta verificadas.",
+      "dependsOn": [
+        "GAM-05",
+        "QAT-05"
+      ],
+      "acceptance": "Dados reais de teste explicam abandono, erro e pacing; ausência de eventos aparece como ausência, não como zero.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Telemetry",
+        "forge/luau/Forge/LiveOps",
+        "forge/luau/Forge/Cluster",
+        "rqe/ledger.py",
+        "rqe/orchestrator",
+        "apps/dashboard"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "OPS-02",
+      "domain": "OPS",
+      "title": "Console do diretor de produto",
+      "phase": "M2",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Dashboard e métricas existem; falta demonstrar a jornada completa de decisão e acompanhamento.",
+      "deliverable": "Mostrar projeto, mudanças, preview, custo, dependências, evidências, impedimento e próxima ação.",
+      "dependsOn": [
+        "REL-02",
+        "FAC-06"
+      ],
+      "acceptance": "Usuário inspeciona por que um build falhou e o que foi alterado sem ler logs extensos; links verificam o run correto.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Telemetry",
+        "forge/luau/Forge/LiveOps",
+        "forge/luau/Forge/Cluster",
+        "rqe/ledger.py",
+        "rqe/orchestrator",
+        "apps/dashboard"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "OPS-03",
+      "domain": "OPS",
+      "title": "Configuração, alertas e contenção",
+      "phase": "M5",
+      "priority": "P2",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "LiveOps existe; operação segura de mudanças e incidentes não foi validada ponta a ponta.",
+      "deliverable": "Config versionada, feature flags, desativação rápida de função, thresholds operacionais e runbooks.",
+      "dependsOn": [
+        "REL-03",
+        "OPS-01"
+      ],
+      "acceptance": "Config inválida é recusada; incidente de teste gera diagnóstico e contenção sem corromper progresso.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Telemetry",
+        "forge/luau/Forge/LiveOps",
+        "forge/luau/Forge/Cluster",
+        "rqe/ledger.py",
+        "rqe/orchestrator",
+        "apps/dashboard"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "OPS-04",
+      "domain": "OPS",
+      "title": "Experimentos e aprendizado de produto",
+      "phase": "M6",
+      "priority": "P2",
+      "scope": "SCALE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Simulação e percepção do agente não demonstram diversão ou retenção humana.",
+      "deliverable": "Testes com jogadores, funnels e experimentos por coorte com guardrails de qualidade e interpretação de amostra.",
+      "dependsOn": [
+        "OPS-01",
+        "OPS-03"
+      ],
+      "acceptance": "Decisões apontam dados e incerteza; ausência de significância ou amostra não vira melhora afirmada.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Telemetry",
+        "forge/luau/Forge/LiveOps",
+        "forge/luau/Forge/Cluster",
+        "rqe/ledger.py",
+        "rqe/orchestrator",
+        "apps/dashboard"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "OPS-05",
+      "domain": "OPS",
+      "title": "Suporte e administração auditáveis",
+      "phase": "M5",
+      "priority": "P2",
+      "scope": "CORE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Fluxos de restauração e manutenção de dados não foram operados nesta auditoria.",
+      "deliverable": "Ferramentas de inspeção, restauração, exportação/remoção conforme política, revisão de permissão e trilha de ações.",
+      "dependsOn": [
+        "DAT-06",
+        "REL-03",
+        "OPS-01"
+      ],
+      "acceptance": "Operação em usuário de teste exige escopo correto, preserva histórico e permite verificar resultado e reversibilidade.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Telemetry",
+        "forge/luau/Forge/LiveOps",
+        "forge/luau/Forge/Cluster",
+        "rqe/ledger.py",
+        "rqe/orchestrator",
+        "apps/dashboard"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "OPS-06",
+      "domain": "OPS",
+      "title": "Workers e projetos em escala",
+      "phase": "M6",
+      "priority": "P2",
+      "scope": "SCALE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Orquestrador e leases existem; frota distribuída e concorrência autorizada não foram comprovadas.",
+      "deliverable": "Workers por capacidade, filas por recurso, isolamento por produto e paralelismo sob política explícita.",
+      "dependsOn": [
+        "QAT-08",
+        "FAC-06",
+        "REL-06"
+      ],
+      "acceptance": "Dois projetos concorrentes, worker morto e quota de provider não cruzam artefatos nem duplicam efeitos.",
+      "effort": "XL",
+      "existingPaths": [
+        "forge/luau/Forge/Telemetry",
+        "forge/luau/Forge/LiveOps",
+        "forge/luau/Forge/Cluster",
+        "rqe/ledger.py",
+        "rqe/orchestrator",
+        "apps/dashboard"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "OPS-07",
+      "domain": "OPS",
+      "title": "Evolução do SDK e ecossistema",
+      "phase": "M6",
+      "priority": "P2",
+      "scope": "SCALE",
+      "currentClassification": "CAPACIDADE_PROPOSTA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Mais módulos sem compatibilidade verificável aumenta custo para cada consumidor.",
+      "deliverable": "Pacotes versionados, matriz de compatibilidade, migrations, contratos de extensão e catálogo de exemplos executáveis.",
+      "dependsOn": [
+        "FAC-08",
+        "ENV-03",
+        "QAT-08"
+      ],
+      "acceptance": "Atualizar SDK mostra impacto e guia de migração; extensão pode ser removida sem dependência oculta no núcleo.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Telemetry",
+        "forge/luau/Forge/LiveOps",
+        "forge/luau/Forge/Cluster",
+        "rqe/ledger.py",
+        "rqe/orchestrator",
+        "apps/dashboard"
+      ],
+      "evidence": [
+        "docs/audits/2026-09-05-auditoria-engine.md"
+      ]
+    },
+    {
+      "id": "CTL-09",
+      "domain": "CTL",
+      "title": "Stack trace ligado à fonte e ao build",
+      "phase": "M2",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Catálogo registra ausência de source map entre traceback do DataModel e arquivo do repositório.",
+      "deliverable": "Mapear scripts, linhas e hashes do bundle para fonte, e anexar frame/ação/contexto ao erro.",
+      "dependsOn": [
+        "CTL-02",
+        "FAC-04"
+      ],
+      "acceptance": "Erro Luau em runtime aponta para o arquivo/linha da revisão construída, mesmo com módulo renomeado ou código gerado.",
+      "effort": "M",
+      "existingPaths": [
+        "rqe/hub",
+        "rqe/mcp/client.py",
+        "rqe/mcp/world_tools.py",
+        "apps/studio-plugin/src",
+        "rqe/capture.py"
+      ],
+      "evidence": [
+        "quality/production-capabilities.v1.json"
+      ]
+    },
+    {
+      "id": "WRL-07",
+      "domain": "WRL",
+      "title": "Montagem por restrições e layouts em lote",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "PROFILE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Catálogo registra falta de alinhamento por face de modelo rotacionado e composição de múltiplas peças.",
+      "deliverable": "Sockets, faces nomeadas, snap, distribuição e restrições espaciais com preview e operações em lote.",
+      "dependsOn": [
+        "CTL-08",
+        "WRL-03"
+      ],
+      "acceptance": "Kit rotacionado se conecta corretamente; conflito de restrições não desloca partes silenciosamente; undo restaura o lote.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Nav",
+        "forge/luau/Forge/World",
+        "forge/luau/Forge/Scene",
+        "forge/luau/Forge/Streaming",
+        "roblox/lib/WorldKit"
+      ],
+      "evidence": [
+        "quality/production-capabilities.v1.json"
+      ]
+    },
+    {
+      "id": "AST-07",
+      "domain": "AST",
+      "title": "Asset aprovado integrado automaticamente à fonte",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Um ID que resolve não comprova que mesh, material, áudio ou animação foi ligado ao jogo.",
+      "deliverable": "Bindings declarativos e patch da fonte/catálogo por papel, rebuild incremental e verificação runtime no uso correto.",
+      "dependsOn": [
+        "AST-04",
+        "FAC-03"
+      ],
+      "acceptance": "Trocar asset por versão aprovada atualiza o consumidor e sua evidência; resolução de ID sem uso não passa.",
+      "effort": "L",
+      "existingPaths": [
+        "rqe/assets",
+        "rqe/geometry",
+        "rqe/sourcing",
+        "forge/luau/Forge/Assets",
+        "forge/luau/Forge/Catalog"
+      ],
+      "evidence": [
+        "quality/production-capabilities.v1.json",
+        "rqe/assets/integration.py"
+      ]
+    },
+    {
+      "id": "DAT-07",
+      "domain": "DAT",
+      "title": "Configuração de produtos e direitos de compra",
+      "phase": "M3",
+      "priority": "P1",
+      "scope": "PROFILE",
+      "currentClassification": "PROVA_AUSENTE_NESTA_AUDITORIA",
+      "observationValidationLevel": "NOT_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "O catálogo registra lacunas em provisioning, compra de teste, replay e reconciliação; módulos sozinhos não configuram o produto externo.",
+      "deliverable": "Vincular produto/passe ao universo/dono e ambiente; preparar configuração e testar compra pelos mecanismos suportados.",
+      "dependsOn": [
+        "DAT-05",
+        "REL-03"
+      ],
+      "acceptance": "Oferta inexistente, produto de outro destino ou direito indisponível impede a integração; configuração correta reconcilia entrega durável.",
+      "effort": "L",
+      "existingPaths": [
+        "forge/luau/Forge/Save",
+        "forge/luau/Forge/Monetization",
+        "roblox/lib/GameKit"
+      ],
+      "evidence": [
+        "quality/production-capabilities.v1.json"
+      ]
+    },
+    {
+      "id": "ENV-06",
+      "domain": "ENV",
+      "title": "Limites externos e permissões como dados verificáveis",
+      "phase": "M0",
+      "priority": "P0",
+      "scope": "CORE",
+      "currentClassification": "INTEGRACAO_PARCIAL",
+      "observationValidationLevel": "STATICALLY_VALIDATED",
+      "implementationStatus": "PLANNED",
+      "targetValidationLevel": "NOT_VALIDATED",
+      "gap": "Catálogo contém afirmações datadas sobre beta, quotas, importação e acesso a assets que podem divergir do ambiente atual.",
+      "deliverable": "Matriz de backend/contexto/dono/permissão/versão; revalidar limites e oferecer pacote importável quando o provider não consegue executar.",
+      "dependsOn": [
+        "ENV-04"
+      ],
+      "acceptance": "Método presente sem permissão permanece indisponível; mudança de conta, versão ou moderação invalida o estado antigo.",
+      "effort": "M",
+      "existingPaths": [
+        "forge/cli/preflight.py",
+        "rqe/hub/lifecycle.py",
+        ".github/workflows/ci.yml",
+        "pyproject.toml"
+      ],
+      "evidence": [
+        "quality/production-capabilities.v1.json",
+        "https://create.roblox.com/docs/studio/mcp"
+      ]
+    }
+  ]
+}

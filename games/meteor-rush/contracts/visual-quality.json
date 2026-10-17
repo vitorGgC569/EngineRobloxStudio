@@ -1,0 +1,250 @@
+{
+  "$schema": "../../../schemas/visual-quality-spec.v1.schema.json",
+  "schemaVersion": 1,
+  "specId": "meteor-rush.visual-quality",
+  "revision": 2,
+  "units": {
+    "distance": "stud",
+    "density": "visualRootsPer1000SquareStuds",
+    "colorDifference": "CIEDE2000"
+  },
+  "classification": {
+    "candidateTag": "RQEVisualCandidate",
+    "rootTag": "RQEVisualRoot",
+    "typeAttribute": "VisualType",
+    "variantAttribute": "VisualVariant",
+    "assetKeyAttribute": "AssetKey",
+    "regionTag": "RQEVisualRegion",
+    "regionProfileAttribute": "VisualRegionProfile",
+    "landmarkTag": "RQELandmark",
+    "landmarkAnchorTag": "RQELandmarkAnchor",
+    "excludeTag": "RQEVisualExclude",
+    "minimumClassifiedFraction": 1
+  },
+  "palette": {
+    "swatches": [
+      {
+        "id": "meadow",
+        "rgb": [
+          109,
+          112,
+          68
+        ],
+        "roles": [
+          "dominant"
+        ]
+      },
+      {
+        "id": "dry-earth",
+        "rgb": [
+          156,
+          126,
+          84
+        ],
+        "roles": [
+          "dominant"
+        ]
+      },
+      {
+        "id": "timber",
+        "rgb": [
+          126,
+          83,
+          52
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "rust",
+        "rgb": [
+          150,
+          74,
+          43
+        ],
+        "roles": [
+          "accent"
+        ]
+      },
+      {
+        "id": "meteor-gold",
+        "rgb": [
+          242,
+          183,
+          68
+        ],
+        "roles": [
+          "accent"
+        ]
+      },
+      {
+        "id": "cream",
+        "rgb": [
+          239,
+          224,
+          190
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "charcoal",
+        "rgb": [
+          48,
+          42,
+          34
+        ],
+        "roles": [
+          "supporting"
+        ]
+      }
+    ],
+    "maximumDeltaE": 28,
+    "maximumOffPaletteFraction": 0.42
+  },
+  "objectTypes": {
+    "lab": {
+      "selector": {
+        "tag": "RQEVisualRoot",
+        "attributeEquals": {
+          "VisualType": "lab"
+        }
+      },
+      "minimumInstances": 6,
+      "maximumInstances": 6,
+      "scale": {
+        "boundsMethod": "oriented-box",
+        "minimumSize": [
+          58,
+          12,
+          42
+        ],
+        "maximumSize": [
+          98,
+          34,
+          78
+        ],
+        "maximumRelativeMad": 0.25,
+        "groupByAttribute": "VisualVariant"
+      }
+    }
+  },
+  "regionProfiles": {
+    "arena": {
+      "density": {
+        "minimumRootsPer1000SquareStuds": 0,
+        "maximumRootsPer1000SquareStuds": 20,
+        "minimumFootprintCoverage": 0
+      },
+      "heightVariation": {
+        "minimumP90MinusP10": 0,
+        "maximumP90MinusP10": 100
+      },
+      "materialVariety": {
+        "minimumDistinctMaterials": 1,
+        "maximumDominantFraction": 1
+      },
+      "repetition": {
+        "maximumIdenticalVariantRun": 100,
+        "minimumVariantEntropy": 0
+      }
+    }
+  },
+  "regionSets": {
+    "arena-regions": {
+      "selector": {
+        "tag": "RQEVisualRegion",
+        "attributeEquals": {
+          "VisualRegionProfile": "arena"
+        }
+      },
+      "profile": "arena",
+      "minimumRegions": 1,
+      "maximumRegions": 1,
+      "minimumProfileCoverage": 1
+    }
+  },
+  "landmarks": {
+    "meteor-beacon": {
+      "selector": {
+        "tag": "RQELandmark",
+        "attributeEquals": {
+          "LandmarkId": "meteor-beacon"
+        }
+      },
+      "anchorSelector": {
+        "tag": "RQELandmarkAnchor",
+        "attributeEquals": {
+          "LandmarkId": "meteor-beacon"
+        }
+      },
+      "maximumDistance": 520,
+      "sampleSpacing": 20,
+      "eyeHeight": 5,
+      "raysPerAnchor": 8,
+      "minimumVisibleAnchorFraction": 0.75,
+      "maximumBlindSpotDegrees": 120,
+      "minimumRegionsVisibleFrom": 1
+    }
+  },
+  "viewpoints": {
+    "beacon-desktop": {
+      "device": "desktop",
+      "resolution": [
+        1920,
+        1080
+      ],
+      "landmark": "meteor-beacon",
+      "state": "initial",
+      "camera": {
+        "mode": "look-at-landmark",
+        "distance": 158,
+        "height": 54,
+        "fieldOfView": 68,
+        "yawDegrees": 30
+      },
+      "rubric": {
+        "composition": 0.2,
+        "hierarchy": 0.2,
+        "legibility": 0.25,
+        "materiality": 0.15,
+        "polish": 0.2
+      }
+    },
+    "beacon-phone": {
+      "device": "phone",
+      "resolution": [
+        1170,
+        2532
+      ],
+      "landmark": "meteor-beacon",
+      "state": "initial",
+      "camera": {
+        "mode": "look-at-landmark",
+        "distance": 142,
+        "height": 48,
+        "fieldOfView": 72,
+        "yawDegrees": -28
+      },
+      "rubric": {
+        "composition": 0.2,
+        "hierarchy": 0.2,
+        "legibility": 0.3,
+        "materiality": 0.1,
+        "polish": 0.2
+      }
+    }
+  },
+  "evaluationStates": {
+    "initial": {
+      "scenario": "scenarios/initial-runtime.json",
+      "requiredViewpoints": [
+        "beacon-desktop",
+        "beacon-phone"
+      ],
+      "minimumRuleCoverage": 0.8
+    }
+  }
+}

@@ -16,6 +16,7 @@
 -- is wired to shutdown rather than left to whoever remembers.
 
 local DataStoreService = game:GetService("DataStoreService")
+local HttpService = game:GetService("HttpService")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 
@@ -26,7 +27,7 @@ local Save = {}
 --- server does not lock a player out for a coffee break.
 local LOCK_TIMEOUT_SECONDS = 90
 local HEARTBEAT_SECONDS = 30
-local AUTOSAVE_SECONDS = 120
+local AUTOSAVE_SECONDS = HEARTBEAT_SECONDS
 local LOAD_ATTEMPTS = 6
 local LOAD_RETRY_SECONDS = 5
 
@@ -78,23 +79,13 @@ local function reconcile(data: { [string]: any }, template: { [string]: any })
 	end
 end
 
-local function sessionTag(): { jobId: string, placeId: number, at: number }
-	return {
-		-- In Studio every run shares an empty JobId, so a stable synthetic id is
-		-- used instead; without it two Studio sessions look like one server and
-		-- the lock never protects anything during development.
-		jobId = if game.JobId ~= "" then game.JobId else "studio-" .. tostring(RunService:IsRunning()),
-		placeId = game.PlaceId,
-		at = os.time(),
-	}
+local function sessionTag(token: string, fence: number): any
+	return { jobId = token, placeId = game.PlaceId, at = os.time(), fence = fence }
 end
 
-local function lockIsMine(record: any): boolean
-	local mine = sessionTag()
-	return type(record) == "table"
-		and type(record.lock) == "table"
-		and record.lock.jobId == mine.jobId
-		and record.lock.placeId == mine.placeId
+local function lockIsMine(record: any, token: string, fence: number?): boolean
+	return type(record) == "table" and type(record.lock) == "table"
+		and record.lock.jobId == token and (fence == nil or record.lock.fence == fence)
 end
 
 local function lockIsStale(record: any, now: number): boolean
@@ -113,6 +104,9 @@ function Save.store(name: string, template: { [string]: any }, options: { [strin
 		fail("store template must be a table")
 	end
 	local opts = options or {}
+	local keyPrefix = opts.keyPrefix or "profile_"
+	assert(type(keyPrefix) == "string" and #keyPrefix > 0, "invalid key prefix")
+	local closing = false
 
 	-- DataStore is unavailable in an unpublished place, and `GetDataStore` throws
 	-- rather than returning nil. Left unguarded it takes the whole module down on
@@ -126,6 +120,9 @@ function Save.store(name: string, template: { [string]: any }, options: { [strin
 		return DataStoreService:GetDataStore(name)
 	end)
 	local persistent = ok and dataStore ~= nil
+	if not persistent and not RunService:IsStudio() then
+		fail("DataStore unavailable outside Studio")
+	end
 	if not persistent then
 		dataStore = nil
 		warn(string.format(
@@ -134,6 +131,8 @@ function Save.store(name: string, template: { [string]: any }, options: { [strin
 			.. "local session is not evidence that saving works.", name))
 	end
 	local profiles: { [number]: Profile } = {}
+	local leases: { [number]: any } = {}
+	local loading: { [number]: boolean } = {}
 	local statistics = {
 		loads = 0,
         loadFailures = 0,
@@ -146,7 +145,7 @@ function Save.store(name: string, template: { [string]: any }, options: { [strin
 	local store = {} :: any
 
 	local function key(userId: number): string
-		return "profile_" .. tostring(userId)
+		return keyPrefix .. tostring(userId)
 	end
 
 	--[[
@@ -167,7 +166,6 @@ function Save.store(name: string, template: { [string]: any }, options: { [strin
 
 	--- Take the lock and read the data in one atomic transaction.
 	local function acquire(userId: number): ({ [string]: any }?, string?)
-		local claimed: { [string]: any }? = nil
 		local refusal: string? = nil
 
 		--: No lock and no transaction, because there is no second server to
@@ -179,39 +177,45 @@ function Save.store(name: string, template: { [string]: any }, options: { [strin
 			return data, nil
 		end
 
-		local ok, failure = pcall(function()
-			dataStore:UpdateAsync(key(userId), function(record)
+		local lease = leases[userId]
+		local ok, committed = pcall(function()
+			return dataStore:UpdateAsync(key(userId), function(record)
 				local now = os.time()
-				if record ~= nil and not lockIsMine(record) and not lockIsStale(record, now) then
-					-- Someone live owns it. Returning nil aborts the write, which
-					-- is what keeps this honest: we neither read nor damage a
-					-- profile another server is using.
+				-- Explicit compatibility adapter for stores that previously saved
+				-- flat data at the same key. Conversion and acquisition are atomic.
+				if opts.legacyFlat == true and type(record) == "table" and record.data == nil
+					and record.lock == nil and record.fence == nil then
+					record = { data = clone(record) }
+				end
+				if record ~= nil and (type(record) ~= "table" or type(record.data) ~= "table") then
+					refusal = "corrupt profile; explicit recovery required"
+					return nil
+				end
+				if record ~= nil and not lockIsMine(record, lease.token) and not lockIsStale(record, now) then
 					refusal = "profile is locked by another server"
 					return nil
 				end
-				if record ~= nil and not lockIsMine(record) and lockIsStale(record, now) then
-					statistics.stolenLocks += 1
-				end
-
-				local data = if type(record) == "table" and type(record.data) == "table"
-					then record.data
-					else clone(template)
+				local data = if record then clone(record.data) else clone(template)
 				reconcile(data, template)
-				claimed = data
-				return { data = data, lock = sessionTag() }
+				local fence = if lockIsMine(record, lease.token) then record.lock.fence
+					else ((record and record.fence) or 0) + 1
+				return { data = data, lock = sessionTag(lease.token, fence), fence = fence }
 			end)
 		end)
-
-		if not ok then
-			return nil, tostring(failure)
-		end
-		return claimed, refusal
+		if not ok then return nil, tostring(committed) end
+		if not lockIsMine(committed, lease.token) then return nil, refusal or "lock not acquired" end
+		lease.fence = committed.fence
+		return committed.data, nil
 	end
 
 	function store:load(player: Player): Profile?
+		if closing then return nil end
 		if profiles[player.UserId] ~= nil then
-			return profiles[player.UserId]
+			return if profiles[player.UserId].active then profiles[player.UserId] else nil
 		end
+		if loading[player.UserId] then return nil end
+		loading[player.UserId] = true
+		leases[player.UserId] = { token = HttpService:GenerateGUID(false), busy = false }
 
 		for attempt = 1, LOAD_ATTEMPTS do
 			local data, refusal = acquire(player.UserId)
@@ -225,6 +229,8 @@ function Save.store(name: string, template: { [string]: any }, options: { [strin
 				}
 				profiles[player.UserId] = profile
 				statistics.loads += 1
+				loading[player.UserId] = nil
+				if not player.Parent or closing then store:release(player); return nil end
 				return profile
 			end
 			if refusal == nil then
@@ -236,16 +242,19 @@ function Save.store(name: string, template: { [string]: any }, options: { [strin
 			-- A player who left while we retried no longer needs the profile,
 			-- and continuing would take a lock nobody will release.
 			if player.Parent == nil then
+				loading[player.UserId] = nil
 				return nil
 			end
 		end
 
+		loading[player.UserId] = nil
 		statistics.refusedLoads += 1
 		return nil
 	end
 
 	function store:get(player: Player): Profile?
-		return profiles[player.UserId]
+		local profile = profiles[player.UserId]
+		return if profile and profile.active then profile else nil
 	end
 
 	function store:save(player: Player): boolean
@@ -264,64 +273,79 @@ function Save.store(name: string, template: { [string]: any }, options: { [strin
 			return true
 		end
 
-		local ok, failure = pcall(function()
-			dataStore:UpdateAsync(key(profile.userId), function(record)
-				if record ~= nil and not lockIsMine(record) then
-					-- The lock moved on. Writing now would overwrite whatever the
-					-- new owner has done, which is precisely the data loss this
-					-- store exists to prevent.
-					return nil
-				end
-				return { data = profile.data, lock = sessionTag() }
+		local lease = leases[player.UserId]
+		if not lease or lease.busy then return false end
+		lease.busy = true
+		local payload = clone(profile.data)
+		local ok, committed = pcall(function()
+			return dataStore:UpdateAsync(key(profile.userId), function(record)
+				if not lockIsMine(record, lease.token, lease.fence) then return nil end
+				return { data = payload, lock = sessionTag(lease.token, lease.fence), fence = lease.fence }
 			end)
 		end)
-		if ok then
+		lease.busy = false
+		if ok and lockIsMine(committed, lease.token, lease.fence) then
 			profile.saves += 1
 			statistics.saves += 1
 			return true
 		end
+		profile.active = false
 		statistics.saveFailures += 1
-		if RunService:IsStudio() then
-			warn("[GameKit.Save] save failed for " .. tostring(profile.userId) .. ": " .. tostring(failure))
-		end
 		return false
 	end
 
 	function store:release(player: Player): boolean
 		local profile = profiles[player.UserId]
-		if profile == nil then
-			return false
+		if not profile or not profile.active then return false end
+		local lease = leases[player.UserId]
+		local deadline = os.clock() + 20
+		while lease and lease.busy and os.clock() < deadline do task.wait(0.05) end
+		if lease and lease.busy then return false end
+		if not persistent then
+			memory[player.UserId] = clone(profile.data)
+			profile.active = false
+			profiles[player.UserId] = nil
+			return true
 		end
-		local ok = pcall(function()
-			if not persistent then return end
-			dataStore:UpdateAsync(key(profile.userId), function(record)
-				if record ~= nil and not lockIsMine(record) then
-					return nil
-				end
-				return { data = profile.data, lock = nil }
+		lease.busy = true
+		local releaseId = HttpService:GenerateGUID(false)
+		local payload = clone(profile.data)
+		local ok, committed = pcall(function()
+			return dataStore:UpdateAsync(key(profile.userId), function(record)
+				if not lockIsMine(record, lease.token, lease.fence) then return nil end
+				return { data = payload, fence = lease.fence, releaseId = releaseId }
 			end)
 		end)
+		lease.busy = false
+		local released = ok and type(committed) == "table" and committed.releaseId == releaseId
 		profile.active = false
-		profiles[player.UserId] = nil
-		if ok then
+		if released then
+			profiles[player.UserId] = nil
+			leases[player.UserId] = nil
 			statistics.saves += 1
 		else
 			statistics.saveFailures += 1
 		end
-		return ok
+		return released
 	end
 
 	function store:releaseAll(): number
-		local count = 0
+		closing = true
+		local count, pending = 0, 0
 		for userId in pairs(profiles) do
-			local player = Players:GetPlayerByUserId(userId)
-			if player ~= nil then
-				store:release(player)
-			else
-				profiles[userId] = nil
-			end
-			count += 1
+			pending += 1
+			task.spawn(function()
+				-- Release by identity even if PlayerRemoving already detached it.
+				local ok, released = pcall(function()
+					return store:release({ UserId = userId } :: any)
+				end)
+				if ok and released then count += 1 end
+				pending -= 1
+			end)
 		end
+		local deadline = os.clock() + 25
+		while (pending > 0 or next(loading) ~= nil) and os.clock() < deadline do task.wait(0.05) end
+		statistics.shutdownPending = pending
 		return count
 	end
 
@@ -332,6 +356,8 @@ function Save.store(name: string, template: { [string]: any }, options: { [strin
 		end
 		local report = table.clone(statistics)
 		report.heldProfiles = held
+		report.persistent = persistent
+		report.closing = closing
 		return report
 	end
 
@@ -343,17 +369,12 @@ function Save.store(name: string, template: { [string]: any }, options: { [strin
 		-- Heartbeat: refresh the lock so a long-lived session is never mistaken
 		-- for a crashed one, and autosave so a crash costs minutes, not hours.
 		task.spawn(function()
-			local sinceSave = 0
-			while true do
+			while not closing do
 				task.wait(HEARTBEAT_SECONDS)
-				sinceSave += HEARTBEAT_SECONDS
-				local shouldSave = sinceSave >= AUTOSAVE_SECONDS
-				if shouldSave then
-					sinceSave = 0
-				end
+				if closing then break end
 				for userId in pairs(profiles) do
 					local player = Players:GetPlayerByUserId(userId)
-					if player ~= nil and shouldSave then
+					if player ~= nil then
 						store:save(player)
 					end
 				end

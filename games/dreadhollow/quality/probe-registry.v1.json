@@ -1,0 +1,122 @@
+{
+  "$schema": "../../../schemas/probe-registry.v1.schema.json",
+  "schemaVersion": 1,
+  "registryId": "dreadhollow.release-producers",
+  "producers": [
+    {
+      "producerId": "static.project-topology",
+      "probePattern": "structural_integrity",
+      "status": "AVAILABLE",
+      "stage": "static",
+      "implementation": "rqe.scanner:scan_structure",
+      "source": "filesystem",
+      "maximumValidationLevel": "STATICALLY_VALIDATED",
+      "releaseIntegrated": true,
+      "contexts": [
+        "filesystem"
+      ]
+    },
+    {
+      "producerId": "static.contract-schema",
+      "probePattern": "contract_schema",
+      "status": "AVAILABLE",
+      "stage": "static",
+      "implementation": "rqe.release:_static_evidence",
+      "source": "contract-validator",
+      "maximumValidationLevel": "STATICALLY_VALIDATED",
+      "releaseIntegrated": true,
+      "contexts": [
+        "filesystem"
+      ]
+    },
+    {
+      "producerId": "runtime.spawn-clearance",
+      "probePattern": "spawn_clearance",
+      "status": "DISABLED",
+      "stage": "runtime",
+      "implementation": "studio-bridge:measure (unwired — never run for dreadhollow)",
+      "source": "studio-bridge",
+      "maximumValidationLevel": "RUNTIME_VALIDATED",
+      "releaseIntegrated": false,
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "notes": "contract requires RUNTIME_VALIDATED for player_can_spawn and death_keeps_pages; zero Studio runs for dreadhollow"
+    },
+    {
+      "producerId": "runtime.objective-navigation",
+      "probePattern": "objective_reachable",
+      "status": "DISABLED",
+      "stage": "runtime",
+      "implementation": "studio-bridge:measure (unwired — never run for dreadhollow)",
+      "source": "studio-bridge",
+      "maximumValidationLevel": "RUNTIME_VALIDATED",
+      "releaseIntegrated": false,
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "notes": "contract requires RUNTIME_VALIDATED for pages_are_reachable; zero Studio runs for dreadhollow"
+    },
+    {
+      "producerId": "runtime.interactions",
+      "probePattern": "button_interaction",
+      "status": "DISABLED",
+      "stage": "runtime",
+      "implementation": "studio-bridge:measure (unwired — never run for dreadhollow)",
+      "source": "studio-bridge",
+      "maximumValidationLevel": "RUNTIME_VALIDATED",
+      "releaseIntegrated": false,
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "notes": "covers gate_requires_six_pages, flashlight_chapel_loop, hollow_hunts_by_sight; zero Studio runs for dreadhollow"
+    },
+    {
+      "producerId": "runtime.output-errors",
+      "probePattern": "runtime_error",
+      "status": "DISABLED",
+      "stage": "runtime",
+      "implementation": "studio-bridge:measure (unwired — never run for dreadhollow)",
+      "source": "studio-bridge",
+      "maximumValidationLevel": "RUNTIME_VALIDATED",
+      "releaseIntegrated": false,
+      "contexts": [
+        "run",
+        "server",
+        "client"
+      ],
+      "notes": "contract requires RUNTIME_VALIDATED for runtime_has_no_errors; zero Studio runs for dreadhollow"
+    },
+    {
+      "producerId": "quality.studio-capture",
+      "probePattern": "visual.viewpoint.*",
+      "status": "DISABLED",
+      "stage": "capture",
+      "implementation": "rqe.capture:capture_set (unwired — no call-site for dreadhollow)",
+      "source": "studio-capture",
+      "maximumValidationLevel": "VISUALLY_VALIDATED",
+      "releaseIntegrated": false,
+      "contexts": [
+        "desktop"
+      ],
+      "notes": "spec viewpoint tower-desktop exists; zero captures taken"
+    },
+    {
+      "producerId": "quality.visual-review",
+      "probePattern": "visual.*",
+      "status": "DISABLED",
+      "stage": "review",
+      "implementation": "rqe.visual_review:review_captures (unwired — no captures, no live provider)",
+      "source": "visual-review",
+      "maximumValidationLevel": "VISUALLY_VALIDATED",
+      "releaseIntegrated": false,
+      "contexts": [
+        "filesystem"
+      ],
+      "notes": "zero captures for dreadhollow; nothing to review"
+    }
+  ]
+}

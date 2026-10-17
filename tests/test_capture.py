@@ -1,5 +1,7 @@
 from __future__ import annotations
 
+import base64
+import io
 import tempfile
 import unittest
 import hashlib
@@ -103,10 +105,42 @@ class FakeBridge:
                 session=self.camera_session,
             )
         if method == "camera.get":
+            return Response(id="server-camera",ok=True,result=self._camera(),
+                            context="run",place=PLACE,session=self.camera_session)
+        if method == "studio.capture_background":
+            image = Image.new("RGB", (32, 18))
+            for x in range(32):
+                for y in range(18):
+                    image.putpixel((x, y), (x * 7 % 256, y * 13 % 256, (x + y) * 5 % 256))
+            stream = io.BytesIO()
+            image.save(stream, "PNG")
+            encoded = base64.b64encode(stream.getvalue()).decode("ascii")
+            return Response(
+                id="native-capture",
+                ok=True,
+                result={
+                    "supported": True,
+                    "canCapture": True,
+                    "permissionRequired": False,
+                    "resolution": [32, 18],
+                    "bytes": len(stream.getvalue()),
+                    "dataBase64": encoded,
+                    "errors": [],
+                },
+                context="run",
+                place=PLACE,
+                session=self.camera_session,
+            )
+        if method == "client.camera_set":
+            return Response(id="client-set",ok=True,
+                            result={**self._camera(),"cameraSource":"client","player":"Fixture","applied":True},
+                            context="run",place=PLACE,session=self.camera_session)
+        if method == "client.camera_get":
             self.camera_gets += 1
             if self.fail_camera_get == self.camera_gets:
                 raise BridgeError("E_EXEC", "camera unavailable")
             camera = self._camera()
+            camera.update({"cameraSource":"client","player":"Fixture"})
             if self.drift and self.camera_gets >= 2:
                 camera["position"] = [1, 2, 4]
             return Response(
@@ -234,6 +268,32 @@ class CaptureIntegrityTests(unittest.TestCase):
         self.assertEqual(len(manifest["shots"][0]["sha256"]), 64)
         self.assertGreater(manifest["shots"][0]["bytes"], 0)
         self.assertEqual(manifest["coverage"], 1.0)
+
+    def test_native_studio_capture_is_the_default_without_an_os_backend(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            root = Path(directory)
+            build_path = root / PLACE
+            spec_path = root / "visual-spec.json"
+            build_path.write_bytes(BUILD_BYTES)
+            spec_path.write_bytes(SPEC_BYTES)
+            manifest = capture_set(
+                FakeBridge(),
+                viewpoints(),
+                root,
+                "run-native-capture",
+                build_hash=BUILD_HASH,
+                place_hash=BUILD_HASH,
+                spec_hash=SPEC_HASH,
+                build_path=build_path,
+                spec_path=spec_path,
+            )
+        self.assertTrue(manifest["trustworthy"], manifest["failures"])
+        self.assertEqual(manifest["captureType"], "studio-native")
+        self.assertIsNone(manifest["window"])
+        self.assertEqual(
+            manifest["shots"][0]["metadata"]["captureBackend"],
+            "StudioCaptureService",
+        )
 
     def test_camera_response_from_another_session_is_rejected(self) -> None:
         bridge = FakeBridge()

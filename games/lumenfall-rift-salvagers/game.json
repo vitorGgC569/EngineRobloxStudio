@@ -1,0 +1,48 @@
+{
+  "schemaVersion": 1,
+  "id": "lumenfall-rift-salvagers",
+  "genre": "roguelite",
+  "theme": "luminous ruined industrial fantasy in a violet-blue dimensional storm",
+  "pitch": "# DOGFOOD GAME BRIEF — Lumenfall: Rift Salvagers\n\n## Product intent\nBuild an original Roblox vertical slice that is fun before it is large. The player is a Rift Salvager diving from a floating hub into fractured sky-islands to recover volatile Lumen cores, survive corrupted constructs, power an extraction beacon, and escape before a dimensional storm collapses the route home.\n\nThis project exists both as a game and as an adversarial dogfood of the RobloxGamesMCP/RQE/Forge stack. Prefer engine primitives and typed production surfaces over one-off implementation. Any engine limitation encountered must be recorded rather than silently worked around.\n\n## Core fantasy\nFast expedition + extraction + permanent forge-station progression.\n\nA run should create the loop:\n1. choose a loadout in the hub;\n2. enter a generated island route;\n3. traverse with sprint, dash and grapple points;\n4. fight corrupted constructs;\n5. harvest Lumen from dangerous nodes;\n6. decide whether to push deeper for better rewards;\n7. activate an extractor and survive a defense phase;\n8. escape;\n9. spend recovered Lumen on permanent upgrades;\n10. repeat with new route pressure and build choices.\n\n## Vertical-slice target\nOne polished 8–12 minute expedition containing:\n- a hub/forge station;\n- three connected island biomes;\n- one traversal challenge;\n- three enemy archetypes;\n- one elite;\n- one extraction defense;\n- one boss encounter;\n- permanent progression;\n- death/failed-extraction recovery;\n- first-run onboarding;\n- settings/accessibility;\n- desktop + mobile controls.\n\n## Combat\nReadable third-person action combat.\n- light melee combo;\n- charged attack;\n- dash with invulnerability window;\n- ranged utility tool with cooldown;\n- hit stun / knockback where appropriate;\n- enemy telegraphs;\n- health/shield;\n- deterministic server-authoritative damage;\n- no client-authoritative rewards.\n\nEnemy archetypes:\n- Skitter: fast melee flanker;\n- Sentinel: ranged line attack with visible telegraph;\n- Bulwark: slow armored unit, vulnerable after slam;\n- Rift Warden elite: combines area denial and summons.\n\nBoss: The Hollow Engine.\nThree readable phases, no instant kills, arena hazards, exposed weak point after telegraphed attacks.\n\n## Traversal\n- grounded movement;\n- sprint;\n- dash;\n- authored grapple anchors;\n- jump route across floating islands;\n- kill planes / recovery volumes;\n- navigation must remain valid for AI;\n- traversal cannot rely on pixel-perfect jumps.\n\n## World\nArt direction: luminous ruined industrial fantasy suspended in a violet-blue storm.\nStrong silhouettes, dark stone/metal, warm Lumen emissive accents, fog depth, moving environmental machinery.\n\nBiomes:\n1. Lantern Reach — readable onboarding ruins;\n2. Shattered Foundry — machinery, verticality and combat;\n3. Storm Crown — exposed final approach and boss arena.\n\nWorld must be readable from gameplay camera and not only from staged screenshots.\n\n## Economy/progression\nRun resource: unstable Lumen Essence, lost partially on failure.\nPermanent modeled currency: refined Lumen Essence, banked only after extraction.\n\nUpgrade categories:\n- health capacity;\n- dash recharge;\n- melee power;\n- utility cooldown;\n- extractor efficiency.\n\nA run also offers temporary choice nodes with mutually exclusive upgrades so repeated runs can feel different.\n\nNo paid products are required for this dogfood build.\n\n## Persistence\nPersist:\n- permanent currency;\n- unlocked upgrades;\n- settings;\n- best expedition depth;\n- onboarding completion.\n\nMust tolerate reconnect and duplicate save attempts. No reward may be granted twice from one extraction receipt.\n\n## UI/UX\nMinimal, game-first HUD:\n- health/shield;\n- Lumen carried;\n- current objective;\n- utility cooldown;\n- extraction timer when active.\n\nHub UI:\n- upgrade forge station;\n- loadout;\n- expedition start;\n- settings.\n\nMobile:\n- touch controls must remain usable without covering combat information;\n- buttons need safe spacing and sensible thumb reach.\n\nAccessibility:\n- reduced camera shake option;\n- damage flash intensity option;\n- readable contrast;\n- no essential information by color alone.\n\n## Audio/VFX\n- responsive hit feedback;\n- distinct enemy warning sounds;\n- Lumen pickup feedback;\n- extraction escalation;\n- boss phase cues;\n- ambient storm + machinery layers.\n\nNever invent Roblox asset IDs. If verified assets are unavailable, prefer procedural/engine-generated placeholders that are visually coherent and record the sourcing gap.\n\n## Quality targets\n- 60 FPS desktop target in vertical slice;\n- stable frame pacing;\n- no runtime errors;\n- no unanchored world debris unless intentional;\n- no inaccessible objectives;\n- no overlapping exclusive gameplay regions;\n- gameplay scenario must be executable by an agent;\n- screenshots from required viewpoints must be trustworthy;\n- release remains fail-closed if evidence is missing.\n\n## Required scenarios\n1. Fresh player completes onboarding and starts expedition.\n2. Player defeats each enemy archetype.\n3. Player harvests Lumen and sees currency increase once.\n4. Player activates extraction, survives defense and returns to hub.\n5. Permanent upgrade purchase reduces currency and persists.\n6. Repeating the same purchase/extraction receipt cannot duplicate reward.\n7. Failure before extraction loses the intended run currency and does not corrupt permanent state.\n8. Boss can be reached and defeated.\n9. Navigation/pathing does not strand the player or AI.\n10. Mobile HUD/layout remains usable at phone aspect ratio.\n\n## Dogfood rules\n- Use producer/full profile first.\n- Scaffold a real project.\n- Prefer Forge/RQE capabilities over bespoke code.\n- Run doctor, Luau compile, tests, build, Studio runtime, gameplay scenarios, captures and full quality/release evaluation.\n- Every refusal, missing producer, manual intervention, broken abstraction, duplicated implementation or misleading green verdict becomes a gap report.\n- Do not lower quality gates merely to make the run green.\n- Do not replace real runtime evidence with fixtures.",
+  "coreLoop": [
+    "explore",
+    "fight",
+    "collect",
+    "unlock"
+  ],
+  "world": {
+    "topology": "linear_levels",
+    "zones": []
+  },
+  "progression": {
+    "kind": "checkpoint",
+    "tiers": 8,
+    "firstTierSeconds": 45.0,
+    "sessionMinutes": 12.0
+  },
+  "economy": {
+    "currencies": [
+      {
+        "id": "essence",
+        "displayName": "Essence",
+        "earnedBy": [
+          "collect"
+        ],
+        "spentOn": [
+          "unlock"
+        ],
+        "premium": false
+      }
+    ]
+  },
+  "systems": [
+    "progression",
+    "save",
+    "inventory",
+    "analytics"
+  ],
+  "monetization": [],
+  "tokenSet": "games/lumenfall-rift-salvagers/tokens/lumenfall-rift-salvagers-grove.json",
+  "concurrentPlayers": 1,
+  "privateSpace": false
+}

@@ -1,0 +1,395 @@
+{
+  "schemaVersion": 1,
+  "contractId": "forge.shonenyard.contract",
+  "game": {
+    "name": "shonenyard",
+    "genre": "unspecified",
+    "max_players": 12,
+    "target_devices": [
+      "desktop"
+    ]
+  },
+  "performance_budget": {
+    "client": {
+      "target_fps": 55,
+      "max_frame_ms": 33.4
+    },
+    "instances": {
+      "max_workspace": 40000
+    },
+    "mobile": {
+      "mandatory": true
+    }
+  },
+  "visualQuality": {
+    "specId": "forge.shonenyard.visual",
+    "spec": "contracts/visual/visual-quality.json",
+    "schemaMajor": 1,
+    "required": true,
+    "release": {
+      "minimumScore": 80,
+      "minimumRuleCoverage": 0.6,
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "missingEvidence": "FAIL"
+    }
+  },
+  "release_gate": {
+    "required_categories": [
+      "navigation",
+      "performance",
+      "runtime",
+      "security",
+      "structural",
+      "visual"
+    ],
+    "forbidden_sources": [
+      "headless-runtime",
+      "fixture"
+    ],
+    "minimum_requirement_coverage": 1,
+    "minimum_category_coverage": {
+      "navigation": 1,
+      "performance": 1,
+      "runtime": 1,
+      "security": 1,
+      "structural": 1,
+      "visual": 1
+    },
+    "minimum_validation_by_type": {
+      "structural": "STATICALLY_VALIDATED",
+      "security": "STATICALLY_VALIDATED",
+      "geometry": "RUNTIME_VALIDATED",
+      "navigation": "RUNTIME_VALIDATED",
+      "runtime": "RUNTIME_VALIDATED",
+      "observability": "RUNTIME_VALIDATED",
+      "performance": "RUNTIME_VALIDATED",
+      "visual": "VISUALLY_VALIDATED",
+      "ui": "E2E_VALIDATED",
+      "gameplay": "E2E_VALIDATED",
+      "persistence": "E2E_VALIDATED",
+      "multiplayer": "E2E_VALIDATED"
+    },
+    "maximum_evidence_age_seconds_by_level": {
+      "STATICALLY_VALIDATED": 3600,
+      "RUNTIME_VALIDATED": 1800,
+      "VISUALLY_VALIDATED": 1800,
+      "E2E_VALIDATED": 1800
+    },
+    "minimum_visual_score": 80,
+    "require_trustworthy_captures": true
+  },
+  "requirements": [
+    {
+      "id": "project_topology",
+      "probe": "structural_integrity",
+      "type": "structural",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "contract_is_valid",
+      "probe": "contract_schema",
+      "type": "structural",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "visual_spec_is_valid",
+      "probe": "visual_spec_schema",
+      "type": "structural",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "no_fixture_evidence",
+      "probe": "fixture_excluded",
+      "type": "structural",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "the_build_is_what_it_claims",
+      "probe": "product_truth_alignment",
+      "type": "structural",
+      "severity": "major",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "assets_are_traceable",
+      "probe": "asset_security",
+      "type": "security",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "no_console_errors",
+      "probe": "runtime_error",
+      "type": "runtime",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "within_frame_budget",
+      "probe": "performance_budget",
+      "type": "performance",
+      "severity": "major",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "objectives_are_reachable",
+      "probe": "objective_reachable",
+      "type": "navigation",
+      "severity": "major",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "assets_look_authored",
+      "probe": "visual_asset_quality",
+      "type": "visual",
+      "severity": "minor",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "the_landmark_reads",
+      "probe": "visual.landmark.arena-ring.visibility",
+      "type": "visual",
+      "severity": "major",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    },
+    {
+      "id": "the_place_photographs",
+      "probe": "visual.viewpoint.play-desktop.capture",
+      "type": "visual",
+      "severity": "major",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "allowed_sources": [
+          "filesystem",
+          "static-luau-scan",
+          "contract-validator",
+          "visual-spec-validator",
+          "visual-asset-validator",
+          "visual-snapshot-validator",
+          "asset-manifest-validator",
+          "release-orchestrator",
+          "release-static-validator",
+          "studio-detector",
+          "studio-bridge",
+          "studio-quality-validator",
+          "product-truth-validator",
+          "capture.studio",
+          "scenario.runner"
+        ]
+      }
+    }
+  ]
+}

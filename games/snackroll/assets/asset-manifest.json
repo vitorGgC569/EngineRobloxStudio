@@ -1,0 +1,95 @@
+{
+  "schemaVersion": 1,
+  "manifestId": "snackroll.authored-assets.v1",
+  "assets": [
+    {
+      "id": "snackroll-procedural-props",
+      "kind": "mesh",
+      "displayName": "Comidas e pets procedurais",
+      "description": "Modelos compostos em Luau, renderizados diretamente no jogo; não são meshes publicados.",
+      "state": "validated",
+      "provider": "project-authored",
+      "requirement": "development",
+      "previews": [
+        {
+          "uri": "../artifacts/play-1789354964405714700/food-shop.png",
+          "mediaType": "image/png",
+          "label": "Catálogo observado no Studio"
+        }
+      ],
+      "localPath": "src/shared/Art.lua",
+      "metadata": {
+        "representation": "procedural-luau-parts",
+        "validationLevel": "VISUALLY_VALIDATED",
+        "publicationRequired": false
+      },
+      "provenance": {
+        "provider": "project-authored",
+        "sourceUri": "src/shared/Art.lua",
+        "retrievedAt": "2026-09-14",
+        "contentSha256": "75406fd59532c4b7026aed15451d4bad6b0996ff1acad9d357aa73b7aa751c56"
+      }
+    },
+    {
+      "id": "ui.click",
+      "kind": "audio",
+      "displayName": "ui.click",
+      "description": "Som da biblioteca Forge.Audio.Bank; acesso fora do Studio ainda não certificado para esta experiência.",
+      "state": "draft",
+      "provider": "roblox-audio-bank",
+      "requirement": "development",
+      "previews": [],
+      "remoteAssetId": "12221976",
+      "metadata": {
+        "configuredBy": "Forge.Audio.Bank.specs()",
+        "validationLevel": "STATICALLY_VALIDATED"
+      }
+    },
+    {
+      "id": "ui.error",
+      "kind": "audio",
+      "displayName": "ui.error",
+      "description": "Som da biblioteca Forge.Audio.Bank; acesso fora do Studio ainda não certificado para esta experiência.",
+      "state": "draft",
+      "provider": "roblox-audio-bank",
+      "requirement": "development",
+      "previews": [],
+      "remoteAssetId": "12221967",
+      "metadata": {
+        "configuredBy": "Forge.Audio.Bank.specs()",
+        "validationLevel": "STATICALLY_VALIDATED"
+      }
+    },
+    {
+      "id": "ui.success",
+      "kind": "audio",
+      "displayName": "ui.success",
+      "description": "Som da biblioteca Forge.Audio.Bank; acesso fora do Studio ainda não certificado para esta experiência.",
+      "state": "draft",
+      "provider": "roblox-audio-bank",
+      "requirement": "development",
+      "previews": [],
+      "remoteAssetId": "12221990",
+      "metadata": {
+        "configuredBy": "Forge.Audio.Bank.specs()",
+        "validationLevel": "STATICALLY_VALIDATED"
+      }
+    },
+    {
+      "id": "combat.hit",
+      "kind": "audio",
+      "displayName": "combat.hit",
+      "description": "Som da biblioteca Forge.Audio.Bank; acesso fora do Studio ainda não certificado para esta experiência.",
+      "state": "draft",
+      "provider": "roblox-audio-bank",
+      "requirement": "development",
+      "previews": [],
+      "remoteAssetId": "12222046",
+      "metadata": {
+        "configuredBy": "Forge.Audio.Bank.specs()",
+        "validationLevel": "STATICALLY_VALIDATED"
+      }
+    }
+  ],
+  "integrations": []
+}

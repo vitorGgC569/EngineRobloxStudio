@@ -17,7 +17,9 @@ to destroy the data behind it.
 from __future__ import annotations
 
 import json
+import hashlib
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -25,31 +27,207 @@ import time
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from ..workspace import hub_url
 
 STUDIO_PROCESS = "RobloxStudioBeta.exe"
 RECOVERY_GLOB = "*_AutoRecovery_*.rbx*"
+PROCESS_RECEIPT_DIRECTORY = "studio-processes"
+
+
+def _sha256_file(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        while chunk := handle.read(1024 * 1024):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def _windows_powershell_environment(overrides: dict[str, str]) -> dict[str, str]:
+    """Environment for ``powershell.exe`` that cannot inherit PowerShell 7 modules.
+
+    Windows PowerShell 5.1 treats an inherited ``PSModulePath`` as complete. A
+    parent ``pwsh`` session stores that variable as ``PSMODULEPATH`` and points
+    it at PowerShell 7 modules, so ``Get-AuthenticodeSignature`` never runs and
+    Studio restart reports that no signed executable exists. ``os.environ.copy()``
+    is a plain dict: assigning ``PSModulePath`` leaves the original
+    ``PSMODULEPATH`` key beside it, and CreateProcess may hand the child either
+    value. Drop every case variant, then set only the Windows PowerShell system
+    module directory. Signature checking stays on.
+    """
+
+    environment = dict(os.environ)
+    for key in [key for key in environment if key.lower() == "psmodulepath"]:
+        del environment[key]
+    system_root = next(
+        (value for key, value in environment.items() if key.lower() == "systemroot" and value),
+        r"C:\Windows",
+    )
+    environment["PSModulePath"] = (
+        system_root.rstrip("\\/") + r"\System32\WindowsPowerShell\v1.0\Modules"
+    )
+    environment.update(overrides)
+    return environment
+
+
+_VERIFIER_OUTPUT_LIMIT = 240
+
+
+def _verifier_snippet(text: str) -> str:
+    """One short line of verifier output, safe to put in a restart reason."""
+
+    collapsed = " ".join(str(text or "").split())
+    if len(collapsed) <= _VERIFIER_OUTPUT_LIMIT:
+        return collapsed
+    return collapsed[:_VERIFIER_OUTPUT_LIMIT]
+
+
+def _verifier_failure(
+    target: Path,
+    context: str,
+    output: str,
+    exit_code: int | None = None,
+) -> RuntimeError:
+    """Verification failed. Keep the context and the output that explains why.
+
+    The old error named only the executable path. PowerShell had already
+    printed the module-path or signature failure on stderr, and that text was
+    discarded, so the restart looked like a missing Studio.
+    """
+
+    snippet = _verifier_snippet(output)
+    parts = [f"context={context}"]
+    if exit_code is not None:
+        parts.append(f"exit={exit_code}")
+    if snippet:
+        parts.append(f"output={snippet}")
+    error = RuntimeError(
+        f"could not verify Studio executable {target} ({', '.join(parts)})"
+    )
+    setattr(error, "verifier", {
+        "context": context,
+        "exitCode": exit_code,
+        "output": snippet,
+    })
+    return error
+
+
+def _blocked_executable_verification(exc: BaseException) -> dict[str, Any]:
+    """Same blocked restart shape as an unsafe stop, plus the verifier detail."""
+
+    verifier = getattr(exc, "verifier", None)
+    if not isinstance(verifier, dict):
+        verifier = {
+            "context": "studio-executable",
+            "exitCode": None,
+            "output": _verifier_snippet(str(exc)),
+        }
+    return {
+        "blocked": True,
+        "reason": str(exc),
+        "verifier": verifier,
+        "handshake": {"waited": False, "sessions": []},
+    }
+
+
+def _studio_binary_metadata(path: Path) -> dict[str, Any]:
+    """Verify Authenticode identity and return stable version/hash metadata."""
+
+    target = path.resolve(strict=True)
+    if target.name.lower() != STUDIO_PROCESS.lower():
+        raise RuntimeError(f"unexpected Studio executable name: {target.name}")
+    if os.name != "nt":
+        raise RuntimeError("Roblox Studio executable verification requires Windows")
+    environment = _windows_powershell_environment({
+        "RQE_VERIFY_EXECUTABLE": str(target),
+    })
+    script = (
+        "$p=$env:RQE_VERIFY_EXECUTABLE;"
+        "$f=Get-Item -LiteralPath $p -ErrorAction Stop;"
+        "$s=Get-AuthenticodeSignature -LiteralPath $p;"
+        "[pscustomobject]@{status=$s.Status.ToString();"
+        "signer=if($s.SignerCertificate){$s.SignerCertificate.Subject}else{''};"
+        "version=$f.VersionInfo.FileVersion}|ConvertTo-Json -Compress"
+    )
+    completed = subprocess.run(
+        ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script],
+        capture_output=True,
+        text=True,
+        timeout=20,
+        check=False,
+        env=environment,
+    )
+    if completed.returncode != 0:
+        output = (completed.stderr or "").strip() or (completed.stdout or "").strip()
+        raise _verifier_failure(target, "powershell-exit", output, completed.returncode)
+    try:
+        metadata = json.loads(completed.stdout)
+    except json.JSONDecodeError as exc:
+        output = (completed.stdout or "").strip() or (completed.stderr or "").strip()
+        raise _verifier_failure(target, "invalid-json", output, completed.returncode) from exc
+    if not isinstance(metadata, dict):
+        raise _verifier_failure(target, "invalid-json", completed.stdout or "", completed.returncode)
+    if metadata.get("status") != "Valid" or "Roblox Corporation" not in str(metadata.get("signer") or ""):
+        output = (completed.stdout or "").strip() or (
+            f"status={metadata.get('status')!s} signer={metadata.get('signer')!s}"
+        )
+        raise _verifier_failure(target, "bad-signature", output, completed.returncode)
+    version_numbers = tuple(int(item) for item in re.findall(r"\d+", str(metadata.get("version") or "")))
+    if not version_numbers:
+        raise _verifier_failure(
+            target,
+            "unparsed-version",
+            completed.stdout or "",
+            completed.returncode,
+        )
+    return {
+        "path": str(target),
+        "version": ".".join(str(item) for item in version_numbers),
+        "versionTuple": version_numbers,
+        "signatureStatus": metadata["status"],
+        "signer": metadata["signer"],
+        "sha256": _sha256_file(target),
+    }
 
 
 def studio_executable() -> Path:
-    """Locate RobloxStudioBeta.exe, preferring the newest installed version."""
+    """Locate the highest signed Roblox Studio file version on this machine."""
     local_app_data = os.environ.get("LOCALAPPDATA")
     candidates: list[Path] = []
     if local_app_data:
         versions = Path(local_app_data) / "Roblox" / "Versions"
         if versions.exists():
-            found = sorted(
-                versions.glob(f"version-*/{STUDIO_PROCESS}"),
-                key=lambda path: path.stat().st_mtime,
-                reverse=True,
-            )
-            candidates.extend(found)
+            candidates.extend(versions.glob(f"version-*/{STUDIO_PROCESS}"))
     resolved = shutil.which(STUDIO_PROCESS)
     if resolved:
         candidates.append(Path(resolved))
+    verified: list[dict[str, Any]] = []
+    rejected: list[str] = []
+    verifier: dict[str, Any] | None = None
+    seen: set[Path] = set()
     for candidate in candidates:
-        if candidate.exists():
-            return candidate
-    raise FileNotFoundError("Roblox Studio was not found on this machine")
+        try:
+            resolved = candidate.resolve(strict=True)
+            if resolved in seen:
+                continue
+            seen.add(resolved)
+            verified.append(_studio_binary_metadata(resolved))
+        except (OSError, RuntimeError) as exc:
+            rejected.append(str(exc))
+            if verifier is None and isinstance(getattr(exc, "verifier", None), dict):
+                verifier = exc.verifier
+    if verified:
+        chosen = max(verified, key=lambda item: item["versionTuple"])
+        return Path(chosen["path"])
+    detail = f" ({'; '.join(rejected[:3])})" if rejected else ""
+    error = FileNotFoundError("no valid Roblox-signed Studio executable was found" + detail)
+    if verifier is None:
+        verifier = {
+            "context": "not-found",
+            "exitCode": None,
+            "output": _verifier_snippet(detail or "no Studio executable candidate"),
+        }
+    setattr(error, "verifier", verifier)
+    raise error
 
 
 def autosave_dir() -> Path:
@@ -70,24 +248,170 @@ def studio_running() -> bool:
     return STUDIO_PROCESS in result.stdout
 
 
-def stop_studio(wait_seconds: float = 15.0) -> dict[str, Any]:
-    """Terminate Studio and wait for the process to actually disappear."""
-    if not studio_running():
-        return {"stopped": False, "wasRunning": False}
-    subprocess.run(
-        ["taskkill", "/F", "/IM", STUDIO_PROCESS],
-        capture_output=True, text=True, timeout=20, check=False,
+def _process_receipt_directory() -> Path:
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if not local_app_data:
+        raise RuntimeError("LOCALAPPDATA is not set; cannot track RQE-owned Studio processes")
+    return Path(local_app_data).resolve() / "RQE" / PROCESS_RECEIPT_DIRECTORY
+
+
+def _process_identity(pid: int) -> dict[str, Any] | None:
+    """Read identity fields that prevent a recycled PID from being killed."""
+
+    if os.name != "nt" or pid < 1:
+        return None
+    environment = _windows_powershell_environment({
+        "RQE_PROCESS_ID": str(pid),
+    })
+    script = (
+        "$p=Get-Process -Id ([int]$env:RQE_PROCESS_ID) -ErrorAction SilentlyContinue;"
+        "if($null -ne $p){"
+        "$path='';try{$path=$p.Path}catch{};"
+        "[pscustomobject]@{pid=$p.Id;path=$path;"
+        "startedAt=$p.StartTime.ToUniversalTime().ToString('o')}|ConvertTo-Json -Compress}"
     )
+    try:
+        completed = subprocess.run(
+            ["powershell.exe", "-NoProfile", "-NonInteractive", "-Command", script],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+            env=environment,
+        )
+        if completed.returncode != 0 or not completed.stdout.strip():
+            return None
+        payload = json.loads(completed.stdout)
+    except (OSError, subprocess.SubprocessError, json.JSONDecodeError, ValueError):
+        return None
+    if not isinstance(payload, dict) or int(payload.get("pid") or 0) != pid:
+        return None
+    return {
+        "pid": pid,
+        "path": str(payload.get("path") or ""),
+        "startedAt": str(payload.get("startedAt") or ""),
+    }
+
+
+def _record_studio_process(pid: int, executable: Path, place: Path) -> Path:
+    identity = _process_identity(pid)
+    if identity is None or not identity["startedAt"]:
+        raise RuntimeError(f"could not verify launched Studio process {pid}")
+    directory = _process_receipt_directory()
+    directory.mkdir(parents=True, exist_ok=True)
+    receipt = directory / f"{pid}.json"
+    temporary = directory / f".{pid}.{os.getpid()}.tmp"
+    payload = {
+        "schemaVersion": 1,
+        "pid": pid,
+        "path": str(executable.resolve()),
+        "startedAt": identity["startedAt"],
+        "place": str(place.resolve()),
+        "recordedAt": datetime.now(timezone.utc).isoformat(),
+    }
+    temporary.write_text(json.dumps(payload, indent=2) + "\n", encoding="utf-8")
+    os.replace(temporary, receipt)
+    return receipt
+
+
+def _owned_studio_processes() -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    directory = _process_receipt_directory()
+    if not directory.exists():
+        return [], []
+    owned: list[dict[str, Any]] = []
+    ignored: list[dict[str, Any]] = []
+    for receipt in directory.glob("*.json"):
+        try:
+            record = json.loads(receipt.read_text(encoding="utf-8"))
+            pid = int(record["pid"])
+            identity = _process_identity(pid)
+            same_path = (
+                identity is not None
+                and identity["path"]
+                and Path(identity["path"]).resolve() == Path(record["path"]).resolve()
+            )
+            same_start = identity is not None and identity["startedAt"] == record.get("startedAt")
+            if same_path and same_start and Path(record["path"]).name.lower() == STUDIO_PROCESS.lower():
+                owned.append({**record, "receipt": str(receipt)})
+            else:
+                ignored.append({"pid": pid, "reason": "process identity no longer matches its RQE receipt"})
+                receipt.unlink(missing_ok=True)
+        except (OSError, ValueError, KeyError, json.JSONDecodeError):
+            ignored.append({"receipt": str(receipt), "reason": "invalid process receipt"})
+    return owned, ignored
+
+
+def _pid_alive(pid: int) -> bool:
+    return _process_identity(pid) is not None
+
+
+def stop_studio(wait_seconds: float = 15.0) -> dict[str, Any]:
+    """Stop only Studio PIDs previously launched and receipted by RQE."""
+
+    was_running = studio_running()
+    owned, ignored = _owned_studio_processes()
+    if not owned:
+        result: dict[str, Any] = {
+            "stopped": False,
+            "wasRunning": was_running,
+            "ownedPids": [],
+            "ignoredReceipts": ignored,
+        }
+        if was_running:
+            result["reason"] = "Studio is running but no matching RQE-owned process receipt exists"
+        return result
+    pids = [int(item["pid"]) for item in owned]
+    for pid in pids:
+        subprocess.run(
+            ["taskkill", "/PID", str(pid), "/T"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
     deadline = time.monotonic() + wait_seconds
     while time.monotonic() < deadline:
-        if not studio_running():
-            return {"stopped": True, "wasRunning": True}
+        remaining = [pid for pid in pids if _pid_alive(pid)]
+        if not remaining:
+            for item in owned:
+                Path(item["receipt"]).unlink(missing_ok=True)
+            return {
+                "stopped": True,
+                "wasRunning": was_running,
+                "ownedPids": pids,
+                "forcedPids": [],
+                "ignoredReceipts": ignored,
+            }
         time.sleep(0.5)
-    return {"stopped": False, "wasRunning": True, "reason": "process did not exit in time"}
+    remaining = [pid for pid in pids if _pid_alive(pid)]
+    for pid in remaining:
+        subprocess.run(
+            ["taskkill", "/PID", str(pid), "/T", "/F"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+    force_deadline = time.monotonic() + min(5.0, wait_seconds)
+    while time.monotonic() < force_deadline and any(_pid_alive(pid) for pid in remaining):
+        time.sleep(0.25)
+    still_alive = [pid for pid in remaining if _pid_alive(pid)]
+    for item in owned:
+        if int(item["pid"]) not in still_alive:
+            Path(item["receipt"]).unlink(missing_ok=True)
+    return {
+        "stopped": not still_alive,
+        "wasRunning": was_running,
+        "ownedPids": pids,
+        "forcedPids": remaining,
+        "ignoredReceipts": ignored,
+        "remainingPids": still_alive,
+        "reason": "owned Studio process did not exit in time" if still_alive else "",
+    }
 
 
 #: Where the hub listens. Matches `rqe.py studio serve`'s default.
-HUB_URL = "http://127.0.0.1:8790"
+HUB_URL = hub_url()
 
 
 def hub_alive(url: str = HUB_URL, timeout: float = 3.0) -> bool:
@@ -165,7 +489,7 @@ def ensure_hub(root: Path | str | None = None, url: str = HUB_URL,
 def archive_recovery_files(archive_root: Path) -> dict[str, Any]:
     """Move auto-recovery files aside so Studio starts without the modal.
 
-    Studio shows "Um arquivo de recuperação automática foi detectado" whenever
+    Studio shows "Um arquivo de recuperaÃ§Ã£o automÃ¡tica foi detectado" whenever
     these exist after an unclean exit. The dialog blocks the viewport until a
     human answers it, so any automated restart has to clear them first -- by
     moving, not deleting, because they may be the only copy of unsaved work.
@@ -279,6 +603,7 @@ def launch_studio(place: Path, background: bool = True) -> dict[str, Any]:
     if not place.exists():
         raise FileNotFoundError(f"place not found: {place}")
     executable = studio_executable()
+    binary = _studio_binary_metadata(executable)
 
     startupinfo = None
     if background and os.name == "nt":
@@ -286,14 +611,37 @@ def launch_studio(place: Path, background: bool = True) -> dict[str, Any]:
         startupinfo.dwFlags |= subprocess.STARTF_USESHOWWINDOW
         startupinfo.wShowWindow = SW_SHOWMINNOACTIVE
 
-    subprocess.Popen(
+    process = subprocess.Popen(
         [str(executable), str(place)],
         stdout=subprocess.DEVNULL,
         stderr=subprocess.DEVNULL,
         creationflags=getattr(subprocess, "DETACHED_PROCESS", 0),
         startupinfo=startupinfo,
     )
-    return {"launched": True, "executable": str(executable), "place": str(place), "background": background}
+    try:
+        receipt = _record_studio_process(process.pid, executable, place)
+    except Exception:
+        # Never leave an untracked process behind after promising PID-scoped
+        # lifecycle control. Terminate only the PID created above.
+        subprocess.run(
+            ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+            capture_output=True,
+            text=True,
+            timeout=10,
+            check=False,
+        )
+        raise
+    return {
+        "launched": True,
+        "pid": process.pid,
+        "processReceipt": str(receipt),
+        "executable": str(executable),
+        "executableVersion": binary["version"],
+        "executableSha256": binary["sha256"],
+        "signatureStatus": binary["signatureStatus"],
+        "place": str(place),
+        "background": background,
+    }
 
 
 def _focus_studio() -> tuple[Any, int, str]:
@@ -405,8 +753,8 @@ def _focus_studio() -> tuple[Any, int, str]:
         #
         #     Retried rather than tried once. Whether this succeeds depends on
         #     what else the desktop is doing at that instant, and the whole
-        #     release pipeline — Play Solo, and therefore every runtime and
-        #     visual measurement — hangs off it. One refusal is not evidence
+        #     release pipeline â€” Play Solo, and therefore every runtime and
+        #     visual measurement â€” hangs off it. One refusal is not evidence
         #     that it cannot be done.
         # ]]
         VK_MENU = 0x12
@@ -430,7 +778,7 @@ def _focus_studio() -> tuple[Any, int, str]:
     return user32, hwnd, title
 
 
-def stop_play_solo(bridge: Any | None = None, wait_seconds: float = 30.0) -> dict[str, Any]:
+def _stop_play_solo_foreground_legacy(bridge: Any | None = None, wait_seconds: float = 30.0) -> dict[str, Any]:
     """End a Play Solo session.
 
     F5 starts a session but does nothing to one already running -- stopping is
@@ -445,7 +793,7 @@ def stop_play_solo(bridge: Any | None = None, wait_seconds: float = 30.0) -> dic
     #
     #    Shift+F5 ends a *Play* session. It does nothing at all to one started
     #    by `RunService:Run()` through the bridge, which is what `run.start`
-    #    does and what every measurement pass leaves behind — so this returned
+    #    does and what every measurement pass leaves behind â€” so this returned
     #    `stopped: false`, `bridge.install_client` was then refused for
     #    "context run", the F5 that followed was swallowed by the still-running
     #    simulation, and Play Solo never began. Four symptoms, one cause, none
@@ -467,7 +815,13 @@ def stop_play_solo(bridge: Any | None = None, wait_seconds: float = 30.0) -> dic
     stopped_over_bridge: Any | None = None
     if running_headless:
         try:
-            stopped_over_bridge = bridge.run_stop()
+            with bridge.lease_scope(
+                agent_id="studio-lifecycle-stop-run",
+                context="running",
+                ttl_seconds=60.0,
+                release_required=False,
+            ):
+                stopped_over_bridge = bridge.run_stop()
         except Exception as error:
             stopped_over_bridge = {"error": str(error)}
         else:
@@ -480,7 +834,7 @@ def stop_play_solo(bridge: Any | None = None, wait_seconds: float = 30.0) -> dic
             #     seconds later wrote it into a document that was about to be
             #     thrown away: the channel reported installed, the play session
             #     started without it, and `client.viewport` timed out saying
-            #     the client half is not running — which was true, and said
+            #     the client half is not running â€” which was true, and said
             #     nothing about why.
             #
             #     So this waits for an edit-context session to actually be
@@ -508,7 +862,7 @@ def stop_play_solo(bridge: Any | None = None, wait_seconds: float = 30.0) -> dic
             #     DataModels, and it is worth having. But Studio tears the
             #     plugin down with the simulation and reconnects it under a
             #     *new* id, so every pinned call afterwards answered
-            #     "E_NOT_FOUND: no connected plugin session" — including the
+            #     "E_NOT_FOUND: no connected plugin session" â€” including the
             #     one that installs the client half. That was reported as an
             #     instrumentation nicety and swallowed, and surfaced much later
             #     as `client.viewport` timing out, a one-pixel viewport, an
@@ -598,7 +952,132 @@ def stop_play_solo(bridge: Any | None = None, wait_seconds: float = 30.0) -> dic
     return result
 
 
-def start_play_solo(bridge: Any | None = None, wait_seconds: float = 90.0, restart: bool = False) -> dict[str, Any]:
+
+def stop_play_solo(
+    bridge: Any | None = None,
+    wait_seconds: float = 30.0,
+    allow_foreground_fallback: bool = False,
+) -> dict[str, Any]:
+    """Stop Play/Run natively; foreground Shift+F5 is explicit fallback only."""
+    native_error = ""
+    stopped_over_bridge: Any | None = None
+
+    if bridge is not None:
+        try:
+            sessions = bridge.status().get("sessions", [])
+        except Exception as exc:
+            sessions = []
+            native_error = str(exc)
+
+        run_sessions = [item for item in sessions if item.get("context") == "run"]
+        if run_sessions:
+            try:
+                bridge.pinned_session = str(run_sessions[0]["session"])
+                with bridge.lease_scope(
+                    agent_id="studio-lifecycle-stop-run",
+                    session_id=bridge.pinned_session,
+                    context="running",
+                    ttl_seconds=60.0,
+                    release_required=False,
+                ):
+                    stopped_over_bridge = bridge.run_stop()
+                deadline = time.monotonic() + min(wait_seconds, 30.0)
+                while time.monotonic() < deadline:
+                    live = [
+                        item for item in bridge.status().get("sessions", [])
+                        if item.get("context") in {"run", "server", "client"}
+                    ]
+                    if not live:
+                        return {
+                            "stopped": True,
+                            "native": True,
+                            "controller": "RunService",
+                            "foregroundFallbackUsed": False,
+                            "runStop": stopped_over_bridge,
+                        }
+                    time.sleep(0.5)
+                native_error = "run.stop returned but runtime sessions remained active"
+            except Exception as exc:
+                native_error = f"{type(exc).__name__}: {exc}"
+
+        runtime = [
+            item for item in sessions
+            if item.get("context") in {"server", "client"}
+        ]
+        for candidate in runtime:
+            try:
+                bridge.pinned_session = str(candidate["session"])
+                capabilities = bridge.call("bridge.capabilities", {}, timeout=12)
+                methods = set(capabilities.get("methods") or [])
+                if not {"test.status", "test.finish"}.issubset(methods):
+                    continue
+                status = bridge.call("test.status", {}, timeout=12)
+                args = status.get("args") if isinstance(status, dict) else None
+                test_id = args.get("rqeTestId") if isinstance(args, dict) else None
+                if not test_id:
+                    continue
+                with bridge.lease_scope(
+                    agent_id="studio-lifecycle-native-stop",
+                    session_id=bridge.pinned_session,
+                    ttl_seconds=45.0,
+                    release_required=False,
+                ):
+                    bridge.call(
+                        "test.finish",
+                        {
+                            "testId": str(test_id),
+                            "result": {
+                                "source": "rqe.hub.lifecycle",
+                                "stopped": True,
+                            },
+                        },
+                        timeout=20,
+                    )
+                deadline = time.monotonic() + wait_seconds
+                while time.monotonic() < deadline:
+                    live = [
+                        item for item in bridge.status().get("sessions", [])
+                        if item.get("context") in {"run", "server", "client"}
+                    ]
+                    if not live:
+                        return {
+                            "stopped": True,
+                            "native": True,
+                            "controller": "StudioTestService",
+                            "foregroundFallbackUsed": False,
+                            "testId": str(test_id),
+                        }
+                    time.sleep(0.5)
+                native_error = "test.finish returned but runtime sessions remained active"
+                break
+            except Exception as exc:
+                native_error = f"{type(exc).__name__}: {exc}"
+
+    if not allow_foreground_fallback:
+        result = {
+            "stopped": False,
+            "native": False,
+            "foregroundFallbackUsed": False,
+            "reason": (
+                "native StudioTestService stop was unavailable or inconclusive; "
+                "foreground Shift+F5 fallback is disabled"
+            ),
+        }
+        if native_error:
+            result["nativeError"] = native_error
+        if stopped_over_bridge is not None:
+            result["runStop"] = stopped_over_bridge
+        return result
+
+    legacy = _stop_play_solo_foreground_legacy(bridge, wait_seconds=wait_seconds)
+    legacy["native"] = False
+    legacy["foregroundFallbackUsed"] = True
+    if native_error:
+        legacy["nativeError"] = native_error
+    return legacy
+
+
+def _start_play_solo_foreground_legacy(bridge: Any | None = None, wait_seconds: float = 90.0, restart: bool = False) -> dict[str, Any]:
     """Start a Play Solo session, the only way to get a real Player.
 
     This is the one action that cannot be scripted. `RunService:Run()` gives
@@ -646,7 +1125,7 @@ def start_play_solo(bridge: Any | None = None, wait_seconds: float = 90.0, resta
         wrote to, and that is not the same claim as "the play session about to
         start will run it". Studio restoring the editor after a run, or a
         second connected session, can leave the report true and the place
-        without it — which surfaces much later as `client.viewport` timing out
+        without it â€” which surfaces much later as `client.viewport` timing out
         with "the client half is not installed or not running", three commands
         away from anything that mentions installing.
         """
@@ -669,14 +1148,19 @@ def start_play_solo(bridge: Any | None = None, wait_seconds: float = 90.0, resta
     installed: dict[str, Any] | None = None
     if bridge is not None:
         try:
-            detail = bridge.call("bridge.install_client", timeout=40)
-            present = _client_script_present()
-            if not present:
-                # One retry, because the common cause is a race with Studio
-                # finishing its restore rather than anything being wrong.
-                time.sleep(3)
+            with bridge.lease_scope(
+                agent_id="studio-lifecycle-install-client",
+                context="edit",
+                ttl_seconds=120.0,
+            ):
                 detail = bridge.call("bridge.install_client", timeout=40)
                 present = _client_script_present()
+                if not present:
+                    # One retry, because the common cause is a race with Studio
+                    # finishing its restore rather than anything being wrong.
+                    time.sleep(3)
+                    detail = bridge.call("bridge.install_client", timeout=40)
+                    present = _client_script_present()
             installed = {"ok": present, "verified": present, "detail": detail}
             if not present:
                 installed["error"] = (
@@ -720,18 +1204,48 @@ def start_play_solo(bridge: Any | None = None, wait_seconds: float = 90.0, resta
             sessions = bridge.status().get("sessions", [])
         except Exception:
             sessions = []
-        play_sessions = [
+        live = [
             item for item in sessions
-            if item["session"] not in known and item.get("context") in {"run", "server", "client"}
+            if item.get("context") in {"run", "server", "client"}
         ]
+        play_sessions = [item for item in live if item["session"] not in known]
         if play_sessions:
             break
         time.sleep(1.0)
+    else:
+        #[[
+        #   A session that was already up is still a session.
+        #
+        #   This only ever counted sessions *new since F5*, so a play session
+        #   that survived the previous call -- which is the normal state after
+        #   any repeated `play_solo`, and after a restart that did not fully
+        #   tear down -- was filtered out and `started` came back False with
+        #   the game visibly running.
+        #
+        #   `forge playtest` reads that field and refuses the run with "the
+        #   game would not start". So the gate that exists to catch a broken
+        #   game was refusing a working one, which is the instrument blaming
+        #   the product: the exact failure `rqe/evidence.py` was written about.
+        #
+        #   `restart=True` is how a caller asks for a *fresh* session, and it
+        #   already stops the old one above. Freshness is that flag's job, not
+        #   this field's.
+        #]]
+        live = [
+            item for item in (bridge.status().get("sessions", []) or [])
+            if item.get("context") in {"run", "server", "client"}
+        ]
 
     result["waited"] = True
     result["seconds"] = round(time.monotonic() - started, 1)
     result["playSessions"] = play_sessions
-    result["started"] = bool(play_sessions)
+    #: Kept separate so a caller that genuinely needs a new session can still
+    #: tell, without every caller having to know the difference.
+    result["newSessions"] = [item["session"] for item in play_sessions]
+    result["existingSessions"] = [
+        item["session"] for item in live if item["session"] in known
+    ]
+    result["started"] = bool(play_sessions) or bool(live)
 
     #[[
     #   When it did not start, say what was in the way.
@@ -768,6 +1282,407 @@ def start_play_solo(bridge: Any | None = None, wait_seconds: float = 90.0, resta
     return result
 
 
+
+def start_play_solo(
+    bridge: Any | None = None,
+    wait_seconds: float = 90.0,
+    restart: bool = False,
+    allow_foreground_fallback: bool = False,
+) -> dict[str, Any]:
+    """Start a real-player session through StudioTestService by default."""
+    stopped: dict[str, Any] | None = None
+    if restart and bridge is not None:
+        try:
+            running = [
+                item for item in bridge.status().get("sessions", [])
+                if item.get("context") in {"run", "server", "client"}
+            ]
+        except Exception:
+            running = []
+        if running:
+            stopped = stop_play_solo(
+                bridge,
+                allow_foreground_fallback=allow_foreground_fallback,
+            )
+            if not stopped.get("stopped") and not allow_foreground_fallback:
+                return {
+                    "started": False,
+                    "native": False,
+                    "controller": "StudioTestService",
+                    "foregroundFallbackUsed": False,
+                    "reason": "a previous runtime session could not be stopped natively",
+                    "stoppedPrevious": stopped,
+                }
+            time.sleep(1.0)
+
+    installed: dict[str, Any] | None = None
+    if bridge is not None:
+        def client_script_present() -> bool:
+            try:
+                children = bridge.call(
+                    "instance.children",
+                    {"path": "StarterPlayer.StarterPlayerScripts"},
+                    timeout=20,
+                )
+            except Exception:
+                return False
+            return isinstance(children, dict) and any(
+                str(item.get("name")) == "RQEClientBridge"
+                for item in (children.get("children") or [])
+                if isinstance(item, dict)
+            )
+
+        try:
+            edit_sessions = [
+                item for item in bridge.status().get("sessions", [])
+                if item.get("context") == "edit"
+            ]
+            if edit_sessions:
+                bridge.pinned_session = str(edit_sessions[0]["session"])
+            with bridge.lease_scope(
+                agent_id="studio-lifecycle-install-client",
+                context="edit",
+                session_id=getattr(bridge, "pinned_session", None),
+                ttl_seconds=120.0,
+            ):
+                detail = bridge.call("bridge.install_client", timeout=40)
+                present = client_script_present()
+                if not present:
+                    time.sleep(1.0)
+                    detail = bridge.call("bridge.install_client", timeout=40)
+                    present = client_script_present()
+            installed = {"ok": present, "verified": present, "detail": detail}
+            if not present:
+                installed["error"] = (
+                    "bridge.install_client reported success but "
+                    "StarterPlayerScripts.RQEClientBridge is not in the place"
+                )
+        except Exception as exc:
+            installed = {"ok": False, "error": str(exc)}
+
+    native_attempt: dict[str, Any] | None = None
+    if bridge is not None:
+        try:
+            sessions = bridge.status().get("sessions", [])
+            edit_sessions = [
+                item for item in sessions
+                if item.get("context") == "edit" and int(item.get("polls") or 0) > 0
+            ]
+            if edit_sessions:
+                edit_id = str(edit_sessions[0]["session"])
+                bridge.pinned_session = edit_id
+                capabilities = bridge.call("bridge.capabilities", {}, timeout=15)
+                methods = set(capabilities.get("methods") or [])
+                if "test.start" in methods:
+                    known = {str(item.get("session")) for item in sessions}
+                    with bridge.lease_scope(
+                        agent_id="studio-lifecycle-native-play",
+                        session_id=edit_id,
+                        ttl_seconds=60.0,
+                        release_required=False,
+                    ):
+                        native_attempt = bridge.call(
+                            "test.start",
+                            {
+                                "mode": "play",
+                                "players": 1,
+                                "args": {"source": "rqe.hub.lifecycle"},
+                            },
+                            timeout=20,
+                        )
+
+                    started_at = time.monotonic()
+                    deadline = started_at + wait_seconds
+                    while time.monotonic() < deadline:
+                        current = bridge.status().get("sessions", [])
+                        live = [
+                            item for item in current
+                            if item.get("context") in {"server", "client", "run"}
+                            and str(item.get("session")) not in known
+                        ]
+                        if live:
+                            bridge.pinned_session = str(live[0]["session"])
+                            result = {
+                                "started": True,
+                                "native": True,
+                                "controller": "StudioTestService",
+                                "foregroundFallbackUsed": False,
+                                "test": native_attempt,
+                                "seconds": round(time.monotonic() - started_at, 2),
+                                "playSessions": live,
+                                "newSessions": [item["session"] for item in live],
+                                "existingSessions": [],
+                            }
+                            if installed is not None:
+                                result["clientBridge"] = installed
+                            if stopped is not None:
+                                result["stoppedPrevious"] = stopped
+                            return result
+                        time.sleep(0.5)
+                    native_attempt = {
+                        "fallback": True,
+                        "error": "StudioTestService did not produce a running session before timeout",
+                        "test": native_attempt,
+                    }
+                else:
+                    native_attempt = {
+                        "fallback": True,
+                        "error": "connected plugin does not expose test.start",
+                    }
+            else:
+                native_attempt = {
+                    "fallback": True,
+                    "error": "no healthy edit bridge session is available",
+                }
+        except Exception as exc:
+            native_attempt = {
+                "fallback": True,
+                "error": f"{type(exc).__name__}: {exc}",
+            }
+
+    if not allow_foreground_fallback:
+        result = {
+            "started": False,
+            "native": False,
+            "controller": "StudioTestService",
+            "foregroundFallbackUsed": False,
+            "reason": (
+                "native StudioTestService start was unavailable or did not "
+                "produce a running session; foreground F5 fallback is disabled"
+            ),
+            "nativeAttempt": native_attempt,
+        }
+        if installed is not None:
+            result["clientBridge"] = installed
+        if stopped is not None:
+            result["stoppedPrevious"] = stopped
+        return result
+
+    legacy = _start_play_solo_foreground_legacy(
+        bridge,
+        wait_seconds=wait_seconds,
+        restart=False,
+    )
+    legacy["native"] = False
+    legacy["foregroundFallbackUsed"] = True
+    legacy["nativeAttempt"] = native_attempt
+    if installed is not None:
+        legacy["clientBridge"] = installed
+    if stopped is not None:
+        legacy["stoppedPrevious"] = stopped
+    return legacy
+
+
+
+def ensure_studio_session(
+    place: Path | str,
+    archive_root: Path | str,
+    bridge: Any,
+    wait_seconds: float = 45.0,
+    *,
+    background: bool = True,
+    allow_cold_launch: bool = False,
+    required_methods: tuple[str, ...] = (
+        "test.start",
+        "test.status",
+        "test.finish",
+        "studio.capture_background",
+    ),
+) -> dict[str, Any]:
+    """Reuse one exact, healthy Studio build without surprising foreground UI.
+
+    Cold launch is opt-in because Roblox Studio can raise its own window after
+    Windows creates the process, even when the process starts minimized. Normal
+    playtest/capture loops should keep one RQE-owned edit session warm and use
+    StudioTestService/StudioCaptureService inside that process.
+    """
+    from .install import plugin_build_identity
+
+    place = Path(place).resolve()
+    expected = plugin_build_identity(Path(__file__).resolve().parents[2])
+    owned, ignored = _owned_studio_processes()
+    matching = [
+        item for item in owned
+        if Path(str(item.get("place") or "")).resolve() == place
+    ]
+
+    try:
+        sessions = bridge.status().get("sessions", [])
+    except Exception as exc:
+        sessions = []
+        status_error = str(exc)
+    else:
+        status_error = None
+
+    def place_name(item: dict[str, Any]) -> str:
+        place_info = item.get("place")
+        if not isinstance(place_info, dict):
+            return ""
+        return str(place_info.get("name") or "").strip().casefold()
+
+    def session_matches_place(item: dict[str, Any]) -> bool:
+        name = place_name(item)
+        expected_names = {
+            place.stem.casefold(),
+            place.name.casefold(),
+        }
+        return bool(name and name in expected_names)
+
+    def is_local_file_placeholder(item: dict[str, Any]) -> bool:
+        # A place opened from a file is always named "Game", with place id 0.
+        # That label cannot tell two local places apart, so it is only accepted
+        # when this file has the one owned process and the one such session.
+        place_info = item.get("place")
+        if not isinstance(place_info, dict) or place_name(item) != "game":
+            return False
+        try:
+            place_id = int(place_info.get("id") or 0)
+        except (TypeError, ValueError):
+            return False
+        return place_id == 0
+
+    def polling_edit(item: dict[str, Any]) -> bool:
+        return item.get("context") == "edit" and int(item.get("polls") or 0) > 0
+
+    named_edits = [
+        item for item in sessions
+        if polling_edit(item) and session_matches_place(item)
+    ]
+    placeholder_edits = [
+        item for item in sessions
+        if polling_edit(item) and is_local_file_placeholder(item)
+    ]
+    if named_edits:
+        edit_sessions = named_edits
+    elif len(matching) == 1 and len(placeholder_edits) == 1:
+        edit_sessions = placeholder_edits
+    else:
+        edit_sessions = []
+    compatible = [
+        item for item in edit_sessions
+        if item.get("pluginVersion") == expected["pluginVersion"]
+        and item.get("pluginBuildId") == expected["pluginBuildId"]
+    ]
+
+    if matching and compatible:
+        selected = compatible[0]
+        bridge.pinned_session = str(selected["session"])
+        capabilities = bridge.call("bridge.capabilities", {}, timeout=15)
+        methods = set(capabilities.get("methods") or [])
+        missing = sorted(set(required_methods) - methods)
+        if not missing:
+            if background:
+                minimize_studio()
+            return {
+                "ready": True,
+                "reused": True,
+                "coldLaunched": False,
+                "session": selected["session"],
+                "process": matching[0],
+                "plugin": expected,
+                "capabilitiesVerified": sorted(required_methods),
+                "ignoredReceipts": ignored,
+            }
+        stale_reason = (
+            "connected plugin is missing native methods: " + ", ".join(missing)
+        )
+    elif edit_sessions:
+        stale_reason = (
+            "connected edit session does not match the installed plugin build "
+            f"{expected['pluginVersion']} / {expected['pluginBuildId']}"
+        )
+    elif matching:
+        stale_reason = (
+            "matching Studio process exists but no healthy edit bridge session "
+            "is polling"
+        )
+    else:
+        stale_reason = "no matching RQE-owned Studio process is available"
+
+    if not allow_cold_launch:
+        return {
+            "ready": False,
+            "reused": False,
+            "coldLaunched": False,
+            "needsColdLaunch": True,
+            "reason": stale_reason,
+            "plugin": expected,
+            "statusError": status_error,
+            "editSessions": edit_sessions,
+            "matchingProcesses": matching,
+            "ignoredReceipts": ignored,
+        }
+
+    restarted = restart_for_bridge(
+        place,
+        archive_root,
+        bridge=bridge,
+        wait_seconds=wait_seconds,
+        background=background,
+    )
+    # A blocked restart never launched. Leave that result alone: marking it
+    # ready from an empty handshake used to hide a verifier failure.
+    if restarted.get("blocked"):
+        return restarted
+
+    handshake = restarted.get("handshake")
+    if not isinstance(handshake, dict):
+        handshake = {}
+    fresh = [
+        item for item in (handshake.get("sessions") or [])
+        if isinstance(item, dict) and item.get("session")
+    ]
+    restarted["reused"] = False
+    restarted["coldLaunched"] = True
+    # Any polling session is not a capable plugin. The reuse path above
+    # refuses a build that is missing test.start or studio.capture_background;
+    # a cold launch has to apply the same gate or a handshake looks ready.
+    if not fresh:
+        restarted["ready"] = False
+        return restarted
+
+    selected = fresh[0]
+    bridge.pinned_session = str(selected["session"])
+    capabilities = bridge.call("bridge.capabilities", {}, timeout=15)
+    methods = set(capabilities.get("methods") or [])
+    missing = sorted(set(required_methods) - methods)
+    if missing:
+        restarted["ready"] = False
+        restarted["reason"] = (
+            "connected plugin is missing native methods: " + ", ".join(missing)
+        )
+        return restarted
+    restarted["ready"] = True
+    return restarted
+
+
+def ensure_for_bridge(
+    place: Path | str,
+    archive_root: Path | str,
+    bridge: Any,
+    wait_seconds: float = 120.0,
+    background: bool = True,
+    required_methods: tuple[str, ...] = (
+        "test.start",
+        "test.status",
+        "test.finish",
+        "studio.capture_background",
+    ),
+    *,
+    allow_cold_launch: bool = False,
+) -> dict[str, Any]:
+    """Compatibility alias for the single persistent-session policy."""
+    return ensure_studio_session(
+        place,
+        archive_root,
+        bridge,
+        wait_seconds=wait_seconds,
+        background=background,
+        allow_cold_launch=allow_cold_launch,
+        required_methods=required_methods,
+    )
+
+
 def restart_for_bridge(
     place: Path | str,
     archive_root: Path | str,
@@ -786,6 +1701,12 @@ def restart_for_bridge(
     Refusing the obvious spelling of an argument at the entry point to a
     workflow is a defect in the workflow, not in the caller.
     """
+    #: Tens of seconds each. Counted separately from bridge calls so a
+    #: reader can tell a slow run from a chatty one.
+    from ..ledger import record_studio_restart
+
+    record_studio_restart()
+
     place = Path(place)
     archive_root = Path(archive_root)
     steps: dict[str, Any] = {}
@@ -805,7 +1726,22 @@ def restart_for_bridge(
         except Exception:  # a hub that is not up yet is not an error here
             known = set()
 
+    # The signature check used to live inside launch_studio, which runs only
+    # after stop_studio. A PowerShell or Authenticode failure then left Studio
+    # dead and reported nothing but the executable path. Resolve it first, and
+    # if it cannot be verified, leave the running Studio alone.
+    try:
+        studio_executable()
+    except (OSError, RuntimeError) as exc:
+        steps.update(_blocked_executable_verification(exc))
+        return steps
+
     steps["stop"] = stop_studio()
+    if steps["stop"].get("wasRunning") and not steps["stop"].get("stopped"):
+        steps["blocked"] = True
+        steps["reason"] = steps["stop"].get("reason") or "Studio could not be stopped safely"
+        steps["handshake"] = {"waited": False, "sessions": []}
+        return steps
 
     # We killed those processes, so their sessions are definitively dead. Say so
     # explicitly: a killed plugin's poll handler stays blocked until it tries to
@@ -819,6 +1755,10 @@ def restart_for_bridge(
     steps["recovery"] = archive_recovery_files(archive_root)
     steps["lockCleared"] = clear_place_lock(place)
     steps["launch"] = launch_studio(place, background=background)
+
+    background_guard_minimizations = 0
+    if background:
+        background_guard_minimizations += minimize_studio()
 
     if bridge is None:
         steps["handshake"] = {"waited": False, "reason": "no bridge supplied"}
@@ -845,10 +1785,12 @@ def restart_for_bridge(
     }
 
     if background:
-        # Studio raises its own windows once they exist, regardless of how the
-        # process was asked to start. Push them back down now that it is ready,
-        # so an automated run never takes the screen from whoever is using it.
+        # Cold launch is still best-effort on Windows: Studio may create/raise
+        # windows after process startup. Minimize immediately after launch and
+        # once again after the plugin handshake. Normal automation should reuse
+        # a persistent session instead of cold launching.
         steps["minimized"] = minimize_studio()
+        steps["backgroundGuardMinimizations"] = background_guard_minimizations
 
     return steps
 
@@ -858,54 +1800,13 @@ def start_multi_client_session(
     client_count: int = 2,
     wait_seconds: float = 120.0,
 ) -> dict[str, Any]:
-    """Start and coordinate a multi-client simulation session (Server + N Clients).
+    """Compatibility entry point for native StudioTestService multiplayer."""
+    from . import teamtest
 
-    Validates multi-session connectivity across server and client roles.
-    Returns session descriptors for all connected instances.
-    """
-    result: dict[str, Any] = {
-        "requestedClients": client_count,
-        "started": False,
-        "serverSession": None,
-        "clientSessions": [],
-    }
-
-    if bridge is None:
-        result["error"] = "no bridge supplied"
-        return result
-
-    started = time.monotonic()
-    deadline = started + wait_seconds
-
-    # If simulation is not running yet, start the server simulation
-    try:
-        bridge.call("run.start", {"settleSeconds": 2})
-    except Exception as exc:
-        result["runStartWarning"] = str(exc)
-
-    while time.monotonic() < deadline:
-        try:
-            status = bridge.status()
-            sessions = status.get("sessions", [])
-        except Exception:
-            sessions = []
-
-        server_sess = next((s for s in sessions if s.get("context") in ("run", "server")), None)
-        client_sess = [s for s in sessions if s.get("context") in ("client", "play") or s.get("role", "").startswith("client")]
-
-        if server_sess:
-            result["serverSession"] = server_sess.get("session")
-        result["clientSessions"] = [s.get("session") for s in client_sess]
-
-        if server_sess and len(client_sess) >= client_count:
-            result["started"] = True
-            break
-        elif server_sess and len(sessions) >= max(1, client_count):
-            # In single-process play solo or local simulation, session multiplexing fulfills multi-client contract
-            result["started"] = True
-            break
-        time.sleep(1.0)
-
-    result["elapsedSeconds"] = round(time.monotonic() - started, 1)
-    return result
+    return teamtest.start(
+        bridge,
+        clients=client_count,
+        timeout=wait_seconds,
+        allow_foreground_fallback=False,
+    )
 

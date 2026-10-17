@@ -28,10 +28,27 @@ type Self = {
 
 TutorialFlow.__index = TutorialFlow
 
+-- The caller can rewrite a step after registration. Sharing that table
+-- makes currentStep follow the rewrite.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 function TutorialFlow.new(steps: { Step }, clock: (() -> number)?): Self
 	assert(#steps > 0, "tutorial needs steps")
 	return setmetatable({
-		steps = steps,
+		steps = deepCopy(steps, {}),
 		sessions = {},
 		clock = clock or os.clock,
 	}, TutorialFlow)

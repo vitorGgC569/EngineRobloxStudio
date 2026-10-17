@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "id": "gauntlet",
+  "result": "asset",
+  "units": "studs",
+  "steps": [
+    {
+      "op": "box",
+      "name": "housing",
+      "size": [
+        1.25,
+        2.3,
+        0.8
+      ],
+      "location": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "housing",
+      "width": 0.23,
+      "segments": 2
+    },
+    {
+      "op": "box",
+      "name": "handguard",
+      "size": [
+        1.8,
+        0.4,
+        1.1
+      ],
+      "location": [
+        0,
+        0.65,
+        0.5
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "handguard",
+      "width": 0.18,
+      "segments": 2
+    },
+    {
+      "op": "join",
+      "name": "asset",
+      "targets": [
+        "housing",
+        "handguard"
+      ]
+    },
+    {
+      "op": "uv_unwrap",
+      "target": "asset",
+      "method": "smart"
+    },
+    {
+      "op": "triangulate",
+      "target": "asset"
+    }
+  ],
+  "metadata": {
+    "author": "Aetherworks",
+    "license": "project-original",
+    "purpose": "finished modular industrial art"
+  }
+}

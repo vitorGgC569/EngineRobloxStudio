@@ -70,6 +70,7 @@ def register_gameplay_tools(server: Any) -> Any:
 
     from ..gameplay import compile_rules, from_dicts, problems, vocabulary
     from ..gameplay.rules import RuleError
+    from ..security import SecurityBoundaryError, validate_path_component
 
     def _known(arguments: dict[str, Any]) -> tuple[list[str], list[str]]:
         """What this game declares, so a rule can be checked against reality."""
@@ -78,7 +79,11 @@ def register_gameplay_tools(server: Any) -> Any:
         cues = [str(item) for item in arguments.get("cues") or ()]
         game_id = str(arguments.get("gameId") or "")
         if game_id and not cues:
-            record = server.root / "games" / game_id / "audio-provenance.json"
+            try:
+                safe_game_id = validate_path_component(game_id, label="gameId")
+            except SecurityBoundaryError as exc:
+                raise RuleError(str(exc)) from exc
+            record = server.root / "games" / safe_game_id / "audio-provenance.json"
             if record.is_file():
                 data = json.loads(record.read_text(encoding="utf-8"))
                 cues = sorted(data.get("cues") or {})
@@ -140,10 +145,14 @@ def register_gameplay_tools(server: Any) -> Any:
         from ..hub.client import StudioBridge
 
         source = _INSTALL_SOURCE.replace("__RULES__", _lua(plan["rules"]))
-        bridge = StudioBridge()
-        bridge.pin_to_any()
+        bridge = StudioBridge(allow_arbitrary=True)
         try:
-            result = bridge.call("bridge.exec", {"source": source}, timeout=60.0)
+            with bridge.lease_scope(
+                agent_id="mcp-gameplay-install",
+                context="edit",
+                ttl_seconds=90.0,
+            ):
+                result = bridge.call("bridge.exec", {"source": source}, timeout=60.0)
         except Exception as error:
             # Edit context only, and that is the right constraint: authoring
             # writes into the place, and a play session has no place to write to.

@@ -3,6 +3,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from tests.support import copy_project
 from rqe.continuous import run_cycle
 
 
@@ -13,7 +14,7 @@ class ContinuousImprovementTests(unittest.TestCase):
     def test_single_cycle_writes_persistent_status(self):
         with tempfile.TemporaryDirectory() as directory:
             temp_root = Path(directory) / "project"
-            shutil.copytree(ROOT, temp_root)
+            copy_project(ROOT, temp_root)
             status = run_cycle(temp_root)
             self.assertEqual(status["status"], "BLOCKED")
             self.assertFalse(status["releaseAllowed"])

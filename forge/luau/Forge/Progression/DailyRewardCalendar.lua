@@ -52,6 +52,23 @@ export type Calendar = typeof(setmetatable({} :: Internal, DailyRewardCalendar))
 local SECONDS_PER_DAY = 86400
 local DEFAULT_CYCLE_LENGTH = 7
 
+-- The calendar used to keep the caller's reward, and claim handed that
+-- table back. Editing either one changed the next grant.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 local function dayNumber(timestamp: number): number
 	return math.floor(timestamp / SECONDS_PER_DAY)
 end
@@ -64,7 +81,7 @@ function DailyRewardCalendar.new(config: CalendarConfig): Calendar
 	self.milestones = {}
 	for cycleDay, reward in pairs(config.milestones) do
 		assert(cycleDay >= 1 and cycleDay <= self.cycleLength, string.format("[DailyRewardCalendar] milestone day %d outside cycle 1..%d", cycleDay, self.cycleLength))
-		self.milestones[cycleDay] = reward
+		self.milestones[cycleDay] = deepCopy(reward, {})
 	end
 	return self :: any
 end
@@ -95,7 +112,7 @@ function DailyRewardCalendar.claim(self: Calendar, state: CalendarState, timesta
 		streak = streak,
 	}
 
-	return newState, self.milestones[cycleDay], {
+	return newState, deepCopy(self.milestones[cycleDay], {}), {
 		streak = streak,
 		cycleDay = cycleDay,
 		granted = true,

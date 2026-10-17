@@ -65,6 +65,18 @@ class TestLuauCompiles(unittest.TestCase):
         sources = discover(REPO)
         self.assertFalse([path for path in sources if path.name.endswith(".disabled")])
 
+    def test_third_party_salvage_is_excluded(self):
+        sources = discover(REPO)
+        self.assertFalse(
+            [path for path in sources if "salvage" in path.parts],
+            "third-party salvage must not become a first-party syntax blocker",
+        )
+
+    def test_games_are_covered(self):
+        sources = discover(REPO)
+        echo_client = REPO / "games" / "echo-riot" / "src" / "client" / "init.client.lua"
+        self.assertIn(echo_client, sources)
+
     def test_the_checker_detects_a_real_syntax_error(self):
         """A gate nobody has seen fail is a gate nobody should trust."""
 
@@ -89,7 +101,9 @@ class TestLuauCompiles(unittest.TestCase):
     def test_source_roots_that_exist_are_scanned(self):
         present = [relative for relative in DEFAULT_SOURCE_ROOTS if (REPO / relative).exists()]
         self.assertIn("roblox/lib", present)
-        self.assertIn("apps/studio-plugin/src", present)
+        self.assertIn("games", present)
+        self.assertIn("apps", present)
+        self.assertIn("tools", present)
 
 
 if __name__ == "__main__":

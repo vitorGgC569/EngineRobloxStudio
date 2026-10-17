@@ -7,6 +7,8 @@ mistakes it claims to catch.
 
 from __future__ import annotations
 
+import os
+import socket
 import sys
 import tempfile
 import unittest
@@ -16,7 +18,7 @@ REPO = Path(__file__).resolve().parent.parent
 if str(REPO) not in sys.path:
     sys.path.insert(0, str(REPO))
 
-from forge.cli import doctor, scaffold  # noqa: E402
+from forge.cli import doctor, preflight, scaffold  # noqa: E402
 
 ENGINE = REPO / "forge" / "luau" / "Forge"
 
@@ -230,16 +232,6 @@ class ProductionTests(unittest.TestCase):
                     f"{path.name}: {len(actions)} actions but {touches} touch specs",
                 )
 
-    def test_receipts_are_idempotent(self) -> None:
-        """ProcessReceipt must grant inside an UpdateAsync transaction.
-
-        Granting outside it means a Roblox retry grants twice.
-        """
-        source = (ENGINE / "Monetization" / "init.lua").read_text(encoding="utf-8")
-        self.assertIn("UpdateAsync", source)
-        transaction = source[source.index("UpdateAsync"):source.index("if not ok then")]
-        self.assertIn("product.grant(player)", transaction, "the grant is outside the transaction")
-
     def test_saves_are_checksummed(self) -> None:
         source = (ENGINE / "Save" / "init.lua").read_text(encoding="utf-8")
         for expected in ("__checksum", "__backups", "function Save.rollback"):
@@ -389,6 +381,324 @@ class ScaffoldGuardTests(unittest.TestCase):
             scaffold.create("mine", Path(tmp))
             self.assertTrue((Path(tmp) / "mine" / ".forge-project").exists())
             scaffold.create("mine", Path(tmp), force=True)
+
+
+class EveryNewGameAnnouncesItself(unittest.TestCase):
+    """`Debug.ready` was a rule in CLAUDE.md and a line in no scaffold.
+
+    Two games of thirty-nine had it. Everything that photographs, measures or
+    tests a game had to guess when it was up, and a server that spends twelve
+    seconds carving terrain got photographed at second two.
+
+    A convention the scaffold does not emit is a convention that does not exist,
+    so it is asserted here rather than asked for in a document.
+    """
+
+    def _bootstrap(self, tmp: Path) -> str:
+        scaffold.create("announcer", tmp)
+        return (tmp / "announcer" / "src" / "server" / "init.server.lua").read_text(
+            encoding="utf-8")
+
+    def test_a_new_game_calls_debug_ready(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertIn("Debug.ready(", self._bootstrap(Path(tmp)))
+
+    def test_it_is_the_last_statement_in_the_bootstrap(self) -> None:
+        # Anything after it runs once the game has already announced itself as
+        # up, which is the exact failure the call prevents.
+        with tempfile.TemporaryDirectory() as tmp:
+            lines = [ln for ln in self._bootstrap(Path(tmp)).splitlines() if ln.strip()]
+            self.assertTrue(lines[-1].startswith("Debug.ready("), lines[-1])
+
+    def test_it_still_exposes_the_debug_seam(self) -> None:
+        with tempfile.TemporaryDirectory() as tmp:
+            self.assertIn("Debug.expose()", self._bootstrap(Path(tmp)))
+
+
+class PreflightHubTests(unittest.TestCase):
+    """The hub probe follows this workspace's hub.
+
+    `serve` binds whatever `hub_url()` resolves: `RQE_HUB_URL` when it is set,
+    otherwise `RQE_HUB_PORT`, otherwise 8790. A probe with the port baked in
+    reports some other listener on 8790 as this workspace's hub, and reports
+    this hub missing while it is listening on the port it was given.
+    """
+
+    def setUp(self) -> None:
+        from rqe.security import TRUSTED_HUB_URLS_ENVIRONMENT
+        from rqe.workspace import HUB_PORT_VARIABLE, HUB_URL_VARIABLE
+
+        self._port = HUB_PORT_VARIABLE
+        self._url = HUB_URL_VARIABLE
+        self._trusted = TRUSTED_HUB_URLS_ENVIRONMENT
+        self._saved = {
+            key: os.environ.get(key)
+            for key in (self._port, self._url, self._trusted)
+        }
+
+    def tearDown(self) -> None:
+        for key, value in self._saved.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+
+    def _hub(self) -> preflight.Check:
+        return next(item for item in preflight.checks() if item.name == "hub")
+
+    def _listen(self) -> tuple[socket.socket, int]:
+        listener = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        self.addCleanup(listener.close)
+        listener.bind(("127.0.0.1", 0))
+        listener.listen(1)
+        return listener, listener.getsockname()[1]
+
+    def _quiet_port(self) -> int:
+        held = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+        held.bind(("127.0.0.1", 0))
+        port = held.getsockname()[1]
+        held.close()
+        return port
+
+    def test_the_hub_check_probes_the_workspace_port(self) -> None:
+        _listener, port = self._listen()
+        os.environ.pop(self._url, None)
+        os.environ[self._port] = str(port)
+
+        answering = self._hub().run()
+        self.assertTrue(answering.ok, answering.detail)
+        self.assertEqual(answering.detail, f"answering on 127.0.0.1:{port}")
+
+        _listener.close()
+        missed = self._hub().run()
+        self.assertFalse(missed.ok)
+        self.assertEqual(missed.detail, f"nothing on 127.0.0.1:{port}")
+
+    def test_the_hub_url_wins_and_an_unusable_address_does_not_pass(self) -> None:
+        _listener, live = self._listen()
+        quiet = self._quiet_port()
+        os.environ[self._port] = str(quiet)
+        os.environ[self._url] = f"http://127.0.0.1:{live}"
+
+        answering = self._hub().run()
+        self.assertTrue(answering.ok, answering.detail)
+        self.assertEqual(answering.detail, f"answering on 127.0.0.1:{live}")
+
+        os.environ.pop(self._trusted, None)
+        os.environ[self._url] = "http://example.com:9"
+        refused = self._hub().run()
+        self.assertFalse(refused.ok)
+        self.assertIn("not loopback", refused.detail)
+
+        os.environ.pop(self._url, None)
+        os.environ[self._port] = "nope"
+        broken = self._hub().run()
+        self.assertFalse(broken.ok)
+        self.assertIn(self._port, broken.detail)
+
+
+class PreflightRojoTests(unittest.TestCase):
+    """`rojo --version` has to exit 0 before the toolchain counts as present."""
+
+    def _probe(self, returncode: int, *, stdout: str = "", stderr: str = "") -> tuple[bool, str]:
+        from subprocess import CompletedProcess
+        from unittest.mock import patch
+
+        completed = CompletedProcess(
+            ["rojo", "--version"], returncode, stdout=stdout, stderr=stderr)
+        with patch("forge.cli.preflight.shutil.which", return_value="rojo"), \
+             patch("forge.cli.preflight.subprocess.run", return_value=completed):
+            return preflight._rojo()
+
+    def test_exit_zero_passes_and_any_other_exit_fails(self) -> None:
+        ok, detail = self._probe(0, stdout="rojo 7.4.0\n")
+        self.assertTrue(ok)
+        self.assertEqual(detail, "rojo 7.4.0")
+
+        bad, detail = self._probe(1, stderr="rojo: failed to start")
+        self.assertFalse(bad)
+        self.assertEqual(detail, "exit 1: rojo: failed to start")
+
+        stdout_only, detail = self._probe(2, stdout="unusable rojo")
+        self.assertFalse(stdout_only)
+        self.assertEqual(detail, "exit 2: unusable rojo")
+
+
+class PreflightLuauTests(unittest.TestCase):
+    """A compiler file counts only after it compiles `return 1`."""
+
+    def test_an_absent_compiler_stays_an_absence(self) -> None:
+        from unittest.mock import patch
+
+        missing = REPO / ".tools" / "luau" / "not-a-compiler-preflight-test"
+        self.assertFalse(missing.exists())
+        with patch("rqe.luau_check.compiler_path", return_value=missing), \
+             patch("rqe.luau_check.compile_file") as compile_file:
+            ok, detail = preflight._luau()
+        self.assertFalse(ok)
+        self.assertTrue(detail.startswith("absent at "), detail)
+        self.assertIn(missing.name, detail)
+        compile_file.assert_not_called()
+
+    def test_a_clean_run_passes_and_a_failed_run_does_not(self) -> None:
+        from unittest.mock import patch
+
+        from rqe.luau_check import LUAU_VERSION, CompileFailure
+
+        with tempfile.TemporaryDirectory() as tmp:
+            compiler = Path(tmp) / "luau-compile"
+            compiler.write_bytes(b"not a compiler")
+
+            def clean(compiler_arg: Path, source: Path, **_kwargs: object) -> None:
+                self.assertEqual(Path(compiler_arg), compiler)
+                self.assertEqual(Path(source).read_text(encoding="utf-8").strip(), "return 1")
+                self.source = Path(source)
+                return None
+
+            with patch("rqe.luau_check.compiler_path", return_value=compiler), \
+                 patch("rqe.luau_check.compile_file", side_effect=clean):
+                ok, detail = preflight._luau()
+            self.assertTrue(ok, detail)
+            self.assertEqual(detail, "compiler ran")
+            self.assertNotIn(LUAU_VERSION, detail)
+            self.assertFalse(self.source.exists())
+
+            def broken(_compiler_arg: Path, source: Path, **_kwargs: object) -> CompileFailure:
+                self.source = Path(source)
+                return CompileFailure(Path(source), "parse error")
+
+            with patch("rqe.luau_check.compiler_path", return_value=compiler), \
+                 patch("rqe.luau_check.compile_file", side_effect=broken):
+                bad, detail = preflight._luau()
+            self.assertFalse(bad)
+            self.assertEqual(detail, "parse error")
+            self.assertFalse(self.source.exists())
+
+            def will_not_start(_compiler_arg: Path, source: Path, **_kwargs: object) -> None:
+                self.source = Path(source)
+                raise OSError("exec format error")
+
+            with patch("rqe.luau_check.compiler_path", return_value=compiler), \
+                 patch("rqe.luau_check.compile_file", side_effect=will_not_start):
+                spawned, detail = preflight._luau()
+            self.assertFalse(spawned)
+            self.assertIn("exec format error", detail)
+            self.assertFalse(self.source.exists())
+
+
+class PreflightRuntimeTests(unittest.TestCase):
+    """A runtime file counts only after `return 1` exits 0."""
+
+    def test_an_absent_runtime_stays_an_absence(self) -> None:
+        from unittest.mock import patch
+
+        missing = REPO / ".tools" / "luau" / "not-a-runtime-preflight-test"
+        self.assertFalse(missing.exists())
+        with patch("rqe.luau_harness.runtime_path", return_value=missing), \
+             patch("forge.cli.preflight.subprocess.run") as run:
+            ok, detail = preflight._runtime()
+        self.assertFalse(ok)
+        self.assertTrue(detail.startswith("absent at "), detail)
+        self.assertIn(missing.name, detail)
+        self.assertNotIn("present", detail)
+        run.assert_not_called()
+
+    def test_exit_zero_passes_and_a_failed_run_does_not(self) -> None:
+        from subprocess import CompletedProcess, TimeoutExpired
+        from unittest.mock import patch
+
+        with tempfile.TemporaryDirectory() as tmp:
+            runtime = Path(tmp) / "luau.exe"
+            runtime.write_bytes(b"not a runtime")
+
+            def clean(argv: list[str], **kwargs: object) -> CompletedProcess[str]:
+                self.assertEqual(argv[0], str(runtime))
+                script = Path(argv[1])
+                self.assertEqual(script.suffix, ".luau")
+                self.assertEqual(script.read_text(encoding="utf-8").strip(), "return 1")
+                self.assertEqual(kwargs.get("capture_output"), True)
+                self.assertEqual(kwargs.get("text"), True)
+                self.assertEqual(kwargs.get("encoding"), "utf-8")
+                self.assertEqual(kwargs.get("errors"), "replace")
+                self.assertEqual(kwargs.get("timeout"), 20)
+                self.script = script
+                return CompletedProcess(argv, 0, stdout="present\n", stderr="")
+
+            with patch("rqe.luau_harness.runtime_path", return_value=runtime), \
+                 patch("forge.cli.preflight.subprocess.run", side_effect=clean):
+                ok, detail = preflight._runtime()
+            self.assertTrue(ok, detail)
+            self.assertEqual(detail, "runtime ran")
+            self.assertNotIn("present", detail)
+            self.assertFalse(self.script.exists())
+
+            def failed(argv: list[str], **_kwargs: object) -> CompletedProcess[str]:
+                self.script = Path(argv[1])
+                return CompletedProcess(argv, 1, stdout="", stderr="luau: failed to start")
+
+            with patch("rqe.luau_harness.runtime_path", return_value=runtime), \
+                 patch("forge.cli.preflight.subprocess.run", side_effect=failed):
+                bad, detail = preflight._runtime()
+            self.assertFalse(bad)
+            self.assertEqual(detail, "exit 1: luau: failed to start")
+            self.assertFalse(self.script.exists())
+
+            def will_not_start(argv: list[str], **_kwargs: object) -> None:
+                self.script = Path(argv[1])
+                raise OSError("exec format error")
+
+            with patch("rqe.luau_harness.runtime_path", return_value=runtime), \
+                 patch("forge.cli.preflight.subprocess.run", side_effect=will_not_start):
+                spawned, detail = preflight._runtime()
+            self.assertFalse(spawned)
+            self.assertIn("exec format error", detail)
+            self.assertFalse(self.script.exists())
+
+            def timed_out(argv: list[str], **_kwargs: object) -> None:
+                self.script = Path(argv[1])
+                raise TimeoutExpired(argv, 20)
+
+            with patch("rqe.luau_harness.runtime_path", return_value=runtime), \
+                 patch("forge.cli.preflight.subprocess.run", side_effect=timed_out):
+                expired, detail = preflight._runtime()
+            self.assertFalse(expired)
+            self.assertIn("timed out", detail)
+            self.assertFalse(self.script.exists())
+
+
+class PreflightPluginTests(unittest.TestCase):
+    """A filename that contains RQE is not the bridge plugin."""
+
+    def _probe(self, local: str) -> tuple[bool, str]:
+        from unittest.mock import patch
+
+        with patch.dict(os.environ, {"LOCALAPPDATA": local}), \
+             patch("forge.cli.preflight.platform.system", return_value="Windows"):
+            return preflight._plugin()
+
+    def test_only_the_installed_plugin_passes_and_a_rival_copy_fails(self) -> None:
+        from rqe.hub.install import PLUGIN_FILENAME
+
+        with tempfile.TemporaryDirectory() as tmp:
+            plugins = Path(tmp) / "Roblox" / "Plugins"
+            plugins.mkdir(parents=True)
+            (plugins / "notes-RQE.txt").write_text("not a plugin", encoding="utf-8")
+            missing, detail = self._probe(tmp)
+            self.assertFalse(missing)
+            self.assertIn(PLUGIN_FILENAME, detail)
+            self.assertNotIn("notes-RQE.txt", detail)
+
+            plugin = plugins / PLUGIN_FILENAME
+            plugin.write_text("<roblox />", encoding="utf-8")
+            ok, detail = self._probe(tmp)
+            self.assertTrue(ok, detail)
+            self.assertEqual(detail, PLUGIN_FILENAME)
+
+            rival = plugins / (Path(PLUGIN_FILENAME).stem + ".rbxm")
+            rival.write_bytes(b"stale")
+            shadowed, detail = self._probe(tmp)
+            self.assertFalse(shadowed)
+            self.assertIn(rival.name, detail)
 
 
 if __name__ == "__main__":

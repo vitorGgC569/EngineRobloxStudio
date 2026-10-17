@@ -108,8 +108,31 @@ export type State = {
 
 local DEFAULT_GRACE = 20
 
+-- Claim returns the stored reward. A later edit of that table would
+-- rewrite what the next claim hands out. A number stays a number.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 local function rungId(rung: Rung, index: number): string
-	return rung.id or ("rung" .. index)
+	-- "" is truthy, so `or` would keep it. claim("") then takes the rung,
+	-- and two empty ids share one claimed flag.
+	if rung.id == nil then
+		return "rung" .. index
+	end
+	assert(type(rung.id) == "string" and #rung.id > 0, "rung id must be a non-empty string")
+	return rung.id
 end
 
 --[[
@@ -117,23 +140,56 @@ end
 	any order and a generated ladder needs no discipline about it.
 ]]
 function PlaytimeLadder.define(id: string, config: Config?): any
-	local settings = config or {}
+	-- "" is a real key. get("") returns that ladder, and a second define("") overwrites it.
+	assert(type(id) == "string" and #id > 0, "ladder id must be a non-empty string")
+	-- A second define replaces the first, so get pays the new reward.
+	assert(ladders[id] == nil, "ladder id is already registered")
+	-- A config of 1 is truthy, so `or {}` would keep it. Reading rungs then
+	-- throws without saying the config was wrong. Nil still means no rungs.
+	local settings = {}
+	if config ~= nil then
+		assert(type(config) == "table", "config must be a table")
+		settings = config
+	end
 	local rungs: { Rung } = {}
 	for index, rung in settings.rungs or {} do
+		-- 0 >= -1, so a negative rung is claimable before any time is spent.
+		assert(
+			type(rung.at) == "number" and rung.at >= 0 and rung.at < math.huge,
+			"rung.at must be a finite number >= 0"
+		)
 		table.insert(rungs, {
 			at = rung.at,
-			reward = rung.reward,
+			reward = deepCopy(rung.reward, {}),
 			id = rungId(rung, index),
 		})
+	end
+	-- claim returns the first match, so a repeated id can never be taken.
+	local seenId: { [string]: boolean } = {}
+	for _, copied in rungs do
+		local id = copied.id :: string
+		assert(seenId[id] ~= true, "duplicate rung id")
+		seenId[id] = true
 	end
 	table.sort(rungs, function(a, b)
 		return a.at < b.at
 	end)
 
+	-- -1 is truthy, so `or 20` would keep it. The first idle second then
+	-- already passes grace and the clock stops. 0 stays and means no grace.
+	local grace = DEFAULT_GRACE
+	if settings.graceSeconds ~= nil then
+		grace = settings.graceSeconds
+	end
+	assert(type(grace) == "number" and grace >= 0, "graceSeconds must be a number >= 0")
+	-- "nope" is truthy, so `or "session"` would keep it. begin only restores
+	-- elapsed for "lifetime", so any other word silently drops saved time.
+	local scope = if settings.scope == nil then "session" else settings.scope
+	assert(scope == "session" or scope == "lifetime", "scope must be session or lifetime")
 	local ladder = {
 		id = id,
-		scope = settings.scope or "session",
-		grace = settings.graceSeconds or DEFAULT_GRACE,
+		scope = scope,
+		grace = grace,
 		loop = settings.loop == true,
 		rungs = rungs,
 	}
@@ -155,16 +211,44 @@ end
 function PlaytimeLadder.begin(ladder: any, saved: any?): State
 	local restored = saved or {}
 	local claimed = {}
-	for key, value in restored.claimed or {} do
+	-- A saved 1 is truthy, so `or {}` would keep it and the loop throws.
+	local savedClaimed = if type(restored.claimed) == "table" then restored.claimed else {}
+	for key, value in savedClaimed do
 		if value then
 			claimed[key] = true
 		end
 	end
+	-- NaN is truthy, so `or 0` would keep it. Later comparisons are false
+	-- and the ladder never reaches a rung.
+	local elapsed = 0
+	if ladder.scope == "lifetime" then
+		local savedElapsed = restored.elapsed
+		if
+			type(savedElapsed) == "number"
+			and savedElapsed == savedElapsed
+			and savedElapsed >= 0
+			and savedElapsed < math.huge
+		then
+			elapsed = savedElapsed
+		end
+	end
+	-- NaN is truthy, so `or 0` would keep a saved loop count that can never
+	-- be compared with a real completion.
+	local loops = 0
+	local savedLoops = restored.loops
+	if
+		type(savedLoops) == "number"
+		and savedLoops == savedLoops
+		and savedLoops >= 0
+		and savedLoops < math.huge
+	then
+		loops = savedLoops
+	end
 	return {
-		elapsed = if ladder.scope == "lifetime" then (restored.elapsed or 0) else 0,
+		elapsed = elapsed,
 		claimed = claimed,
 		idleFor = 0,
-		loops = restored.loops or 0,
+		loops = loops,
 	}
 end
 
@@ -189,6 +273,11 @@ end
 	want to show "paused" in a HUD read it rather than re-deriving the idle rule.
 ]]
 function PlaytimeLadder.tick(ladder: any, state: State, dt: number, active: boolean?): number
+	-- A negative step rewinds a rung already earned. NaN and infinity are
+	-- the same kind of step, so only a finite dt of at least 0 is credited.
+	if type(dt) ~= "number" or dt ~= dt or dt < 0 or not (dt < math.huge) then
+		dt = 0
+	end
 	if active == false then
 		state.idleFor += dt
 		--: Grace: brief stillness still counts. Only sustained idleness stops
@@ -221,7 +310,13 @@ function PlaytimeLadder.claimable(ladder: any, state: State): { Rung }
 	local out: { Rung } = {}
 	for _, rung in ladder.rungs do
 		if state.elapsed >= rung.at and not state.claimed[rung.id :: string] then
-			table.insert(out, rung)
+			-- claimAll reads `id` off this list. The reward is the ladder's
+			-- own table, so a listing must not be able to rewrite the claim.
+			table.insert(out, {
+				at = rung.at,
+				id = rung.id,
+				reward = deepCopy(rung.reward, {}),
+			})
 		end
 	end
 	return out
@@ -253,7 +348,7 @@ function PlaytimeLadder.claim(ladder: any, state: State, id: string): any?
 					state.loops += 1
 				end
 			end
-			return rung.reward
+			return deepCopy(rung.reward, {})
 		end
 	end
 	return nil
@@ -283,7 +378,13 @@ end
 function PlaytimeLadder.next(ladder: any, state: State): (Rung?, number?)
 	for _, rung in ladder.rungs do
 		if not state.claimed[rung.id :: string] then
-			return rung, math.max(0, rung.at - state.elapsed)
+			-- progress reads `at` off this return. The reward is the ladder's
+			-- own table, so a peek must not be able to rewrite the claim.
+			return {
+				at = rung.at,
+				id = rung.id,
+				reward = deepCopy(rung.reward, {}),
+			}, math.max(0, rung.at - state.elapsed)
 		end
 	end
 	return nil, nil

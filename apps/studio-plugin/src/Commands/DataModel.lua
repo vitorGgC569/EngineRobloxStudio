@@ -2,6 +2,8 @@
 -- DataModel introspection: the commands that stop Roblox from being a black box.
 
 local CollectionService = game:GetService("CollectionService")
+local HttpService = game:GetService("HttpService")
+local findSnapshots: { [string]: any } = {}
 
 local Config = require(script.Parent.Parent.Config)
 local Errors = require(script.Parent.Parent.Errors)
@@ -179,10 +181,24 @@ function DataModelCommands.find(params: { [string]: any }): any
 	local tag = params.tag
 	local name = params.name
 	local namePattern = params.namePattern
-	local limit = math.min(tonumber(params.limit) or 200, Config.MAX_FIND_RESULTS)
+	local limit = math.clamp(tonumber(params.limit) or 200, 1, Config.MAX_FIND_RESULTS)
 
 	if className == nil and tag == nil and name == nil and namePattern == nil then
 		Errors.raise(Errors.BAD_PARAMS, "dm.find needs at least one of className, tag, name or namePattern")
+	end
+
+	-- string.match throws on a malformed pattern such as "(". Check once, before
+	-- any instance is resolved, so the command returns E_BAD_PARAMS instead of
+	-- crashing mid-walk. Nil still means no name filter.
+	local nameNeedle: string? = nil
+	if namePattern ~= nil then
+		local valid = pcall(function()
+			string.match("", namePattern)
+		end)
+		if not valid then
+			Errors.raise(Errors.BAD_PARAMS, "namePattern is not a valid Luau pattern")
+		end
+		nameNeedle = namePattern
 	end
 
 	local candidates: { Instance }
@@ -197,7 +213,6 @@ function DataModelCommands.find(params: { [string]: any }): any
 	local root: Instance? = if rootPath ~= nil then Resolve.instance(rootPath) else nil
 	local matched: { { instance: Instance, entry: { [string]: any } } } = {}
 	local scanned = 0
-	local truncated = false
 
 	for _, instance in ipairs(candidates) do
 		scanned += 1
@@ -208,16 +223,15 @@ function DataModelCommands.find(params: { [string]: any }): any
 		if ok and name ~= nil and instance.Name ~= name then
 			ok = false
 		end
-		if ok and namePattern ~= nil and not string.match(instance.Name, namePattern) then
+		if ok and nameNeedle ~= nil and not string.match(instance.Name, nameNeedle) then
 			ok = false
 		end
 		if ok and root ~= nil and tag ~= nil and not instance:IsDescendantOf(root) then
 			ok = false
 		end
 		if ok then
-			if #matched >= limit then
-				truncated = true
-				break
+			if #matched >= 20000 then
+				Errors.raise(Errors.BAD_PARAMS, "query exceeds 20000 matches; narrow its root or filters")
 			end
 			local entry: { [string]: any } = {
 				path = instance:GetFullName(),
@@ -258,19 +272,55 @@ function DataModelCommands.find(params: { [string]: any }): any
 		matched = kept
 	end
 
-	local matches = {}
+	table.sort(matched, function(a, b) return a.entry.ref < b.entry.ref end)
+	local signature, all = {}, {}
 	for _, candidate in ipairs(matched) do
-		table.insert(matches, candidate.entry)
+		table.insert(signature, candidate.entry.ref .. "\0" .. candidate.entry.path)
+		table.insert(all, candidate.entry)
 	end
-
+	local query = { className = className, tag = tag, name = name, namePattern = namePattern,
+		root = rootPath, topLevelOnly = params.topLevelOnly == true }
+	local queryKey = HttpService:JSONEncode({className or false,tag or false,name or false,
+		namePattern or false,rootPath or false,params.topLevelOnly == true})
+	local fingerprint = table.concat(signature, "\n")
+	local now = os.clock()
+	for id, snapshot in pairs(findSnapshots) do
+		if now - snapshot.created > 120 then findSnapshots[id] = nil end
+	end
+	local id, offset, snapshot
+	if params.cursor then
+		local rawOffset
+		id, rawOffset = string.match(params.cursor, "^([%w%-]+):(%d+)$")
+		offset = tonumber(rawOffset)
+		snapshot = id and findSnapshots[id]
+		if not snapshot or not offset or offset < 1 or offset > #snapshot.results
+			or snapshot.query ~= queryKey or snapshot.fingerprint ~= fingerprint then
+			Errors.raise(Errors.BAD_PARAMS, "query cursor is expired, changed or belongs to another session; restart enumeration")
+		end
+	else
+		local count, oldestId, oldest = 0, nil, math.huge
+		for key, value in pairs(findSnapshots) do
+			count += 1
+			if value.created < oldest then oldestId, oldest = key, value.created end
+		end
+		if count >= 8 and oldestId then findSnapshots[oldestId] = nil end
+		id, offset = HttpService:GenerateGUID(false), 1
+		snapshot = {created=now,query=queryKey,fingerprint=fingerprint,results=all}
+		findSnapshots[id] = snapshot
+	end
+	local matches = {}
+	for index = offset, math.min(offset + limit - 1, #snapshot.results) do
+		table.insert(matches, snapshot.results[index])
+	end
+	local nextOffset = offset + #matches
+	local hasMore = nextOffset <= #snapshot.results
 	return {
-		query = { className = className, tag = tag, name = name, namePattern = namePattern, root = rootPath, topLevelOnly = params.topLevelOnly == true },
-		scanned = scanned,
-		matched = #matches,
-		nestedDropped = nested,
-		truncated = truncated,
-		results = matches,
+		query = query, scanned = scanned, matched = #matches, totalMatched = #snapshot.results,
+		nestedDropped = nested, truncated = hasMore, results = matches,
+		snapshotId = id, snapshotAgeSeconds = now - snapshot.created,
+		nextCursor = if hasMore then id .. ":" .. tostring(nextOffset) else nil,
 	}
+
 end
 
 return DataModelCommands

@@ -53,8 +53,6 @@ def register_director_tools(server: EngineMcpServer) -> EngineMcpServer:
                 from ..tokens import TokenError, load_token_set
 
                 relative = arguments.get("tokens") or model.token_set or "tokens/brickfarm.json"
-                if not (root / relative).is_file():
-                    raise ToolError(f"no token set at {relative}")
                 try:
                     tokens = load_token_set(root, relative).data
                     world_spec = build_world(

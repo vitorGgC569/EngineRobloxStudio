@@ -12,6 +12,7 @@ local RunService = game:GetService("RunService")
 
 local Errors = require(script.Parent.Parent.Errors)
 local Resolve = require(script.Parent.Parent.Resolve)
+local Serialize = require(script.Parent.Parent.Serialize)
 
 local ClientCommands = {}
 
@@ -47,7 +48,11 @@ local function targetPlayer(params: { [string]: any }): Player
 		end
 		return found :: Player
 	end
-	local first = Players:GetPlayers()[1]
+	local players = Players:GetPlayers()
+	if #players > 1 then
+		Errors.raise(Errors.BAD_PARAMS, "multiple players are present; select an explicit player")
+	end
+	local first = players[1]
 	if first == nil then
 		Errors.raise(
 			Errors.UNSUPPORTED_CONTEXT,
@@ -134,6 +139,10 @@ function ClientCommands.invoke(method: string, params: { [string]: any }): any
 		if type(result) == "table" then
 			result.player = player.Name
 			result.elapsedMsClient = response.elapsedMs
+			-- The installed client script cannot require Serialize. InvokeClient
+			-- still returns Vector3 attributes and other Roblox values, and
+			-- JSONEncode throws on those when the command result is reported.
+			result = Serialize.value(result)
 		end
 		return result
 	end
@@ -215,10 +224,10 @@ function ClientCommands.guiClick(params: { [string]: any }): any
 	end
 
 	local pressOk, pressErr = pcall(function()
-		local vim = game:GetService("VirtualInputManager")
-		vim:SendMouseButtonEvent(located.x, located.y, 0, true, game, 1)
-		task.wait(0.08)
-		vim:SendMouseButtonEvent(located.x, located.y, 0, false, game, 1)
+		local delivered = ClientCommands.invoke("input", {
+			action = "click", x = located.x, y = located.y, player = params.player,
+		})
+		if not delivered or delivered.delivered ~= true then error("input was not delivered") end
 	end)
 	task.wait(0.45)
 
@@ -256,6 +265,10 @@ function ClientCommands.logs(params: { [string]: any }): any
 	return ClientCommands.invoke("logs", params)
 end
 
+function ClientCommands.prediction(params: { [string]: any }): any
+	return ClientCommands.invoke("prediction", params)
+end
+
 --- The UI family. Every one of these has to run client-side: a GUI's effective
 --- state does not exist on the server, so reading it there returns whatever the
 --- server believes rather than what a player can see.
@@ -282,6 +295,14 @@ end
 --- back byte-identical and only the capture's own pose check noticed.
 function ClientCommands.cameraSet(params: { [string]: any }): any
 	return ClientCommands.invoke("camera_set", params)
+end
+
+function ClientCommands.cameraGet(params: { [string]: any }): any
+	return ClientCommands.invoke("camera_get", params)
+end
+
+function ClientCommands.input(params: { [string]: any }): any
+	return ClientCommands.invoke("input", params)
 end
 
 --- Hand the camera back. A camera left Scriptable after a capture looks to a

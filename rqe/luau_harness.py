@@ -132,7 +132,11 @@ def collect_library(directory: Path) -> dict[str, str]:
     if not directory.is_dir():
         raise HarnessError(f"library directory does not exist: {directory}")
     modules: dict[str, str] = {}
-    for path in sorted(directory.glob("*.lua")):
+    #: Both extensions: the older game trees here use `.lua`, the Forge
+    #: convention is `.luau`, and a collector that only knew one of them
+    #: failed a game for its file extension rather than its code.
+    paths = sorted(list(directory.glob("*.lua")) + list(directory.glob("*.luau")))
+    for path in paths:
         name = path.stem
         if name == "init":
             name = directory.name
@@ -246,6 +250,7 @@ __shim.useTokens(__token)
 def build_script(
     *,
     shim_source: str,
+    json_source: str = "",
     modules: dict[str, str],
     body: str,
     data: dict[str, Any] | None = None,
@@ -253,6 +258,16 @@ def build_script(
     """Assemble one self-contained Luau script."""
 
     parts = [_PRELUDE.format(shim=shim_source)]
+
+    #: `JSON`, appended rather than inlined into `_PRELUDE`.
+    #:
+    #: The prelude is a `str.format` template, so every brace in a Lua block
+    #: pasted into it has to be doubled -- and a JSON encoder is nothing but
+    #: braces. Keeping the encoder as real Luau in `tools/luau-harness/json.luau`
+    #: means it is readable, compilable and testable as Luau, instead of as an
+    #: escaped string inside a Python file.
+    if json_source:
+        parts.append("\nJSON = (function()\n" + json_source + "\nend)()\n")
 
     for name in sorted(modules):
         source = modules[name]
@@ -288,6 +303,9 @@ def run(
     shim_path = root / "tools" / "luau-harness" / "shim.luau"
     if not shim_path.is_file():
         raise HarnessError(f"harness shim missing at {shim_path}")
+    json_path = root / "tools" / "luau-harness" / "json.luau"
+    if not json_path.is_file():
+        raise HarnessError(f"harness JSON encoder missing at {json_path}")
 
     modules: dict[str, str] = {}
     for library in libraries:
@@ -301,6 +319,7 @@ def run(
 
     script = build_script(
         shim_source=shim_path.read_text(encoding="utf-8"),
+        json_source=json_path.read_text(encoding="utf-8"),
         modules=modules,
         body=body,
         data=data,

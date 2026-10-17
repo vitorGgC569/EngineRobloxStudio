@@ -13,6 +13,11 @@ import urllib.request
 from dataclasses import dataclass, field
 from typing import Mapping, Protocol
 
+from ..http_safety import HttpBoundaryError, error_body_limited, read_limited
+
+
+MAX_HTTP_RESPONSE_BYTES = 4 * 1024 * 1024
+
 
 @dataclass(frozen=True)
 class HttpRequest:
@@ -54,14 +59,16 @@ class UrllibTransport:
                 return HttpResponse(
                     status=int(response.status),
                     headers=dict(response.headers.items()),
-                    body=response.read(),
+                    body=read_limited(response, MAX_HTTP_RESPONSE_BYTES, label="asset provider response"),
                 )
         except urllib.error.HTTPError as exc:
             return HttpResponse(
                 status=int(exc.code),
                 headers=dict(exc.headers.items()) if exc.headers else {},
-                body=exc.read(),
+                body=error_body_limited(exc, MAX_HTTP_RESPONSE_BYTES),
             )
+        except HttpBoundaryError:
+            raise
 
 
 def json_body(value: object) -> bytes:

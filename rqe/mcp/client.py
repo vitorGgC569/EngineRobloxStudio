@@ -21,6 +21,11 @@ that scores.
 
 from __future__ import annotations
 
+import math
+import os
+from pathlib import Path
+import sys
+import queue
 import random
 import subprocess
 import threading
@@ -41,6 +46,8 @@ FEDERATED_SOURCE = "roblox-studio-mcp"
 #: discovered so an unexpected tool appearing upstream does not silently become
 #: part of our measurement surface.
 ADOPTED_TOOLS = {
+    "list_roblox_studios": "explicit Studio identity discovery",
+    "screen_capture": "capture the selected Studio viewport",
     "user_keyboard_input": "synthesised keyboard input, which VirtualInputManager refuses us",
     "user_mouse_input": "synthesised mouse input, so GUI requirements stop being unmeasurable",
     "character_navigation": "player-driven traversal without our synthetic actor",
@@ -53,9 +60,75 @@ ADOPTED_TOOLS = {
     "execute_luau": "arbitrary Luau against the open place",
 }
 
+MAX_PEER_MESSAGE_BYTES = 8 * 1024 * 1024
+MAX_PEER_TIMEOUT_SECONDS = 300.0
+
 
 class McpClientError(RuntimeError):
     """The peer could not be reached or spoke incorrectly."""
+
+
+def studio_mcp_command() -> list[str]:
+    """Locate Roblox's installed MCP entry point without launching Studio."""
+    if os.name == "nt":
+        path = Path(os.environ.get("LOCALAPPDATA", "")) / "Roblox" / "mcp.bat"
+        if not path.is_file():
+            raise McpClientError("Roblox MCP entry point is unavailable; enable MCP in Studio settings")
+        return [os.environ.get("COMSPEC", "cmd.exe"), "/d", "/c", str(path.resolve())]
+    if sys.platform == "darwin":
+        path = Path("/Applications/RobloxStudio.app/Contents/MacOS/StudioMCP")
+        if path.is_file():
+            return [str(path)]
+    raise McpClientError("Roblox Studio MCP is not installed on this platform")
+
+
+def _spawn_process(command: Sequence[str]) -> subprocess.Popen[bytes]:
+    options: dict[str, Any] = {
+        "stdin": subprocess.PIPE,
+        "stdout": subprocess.PIPE,
+        "stderr": subprocess.DEVNULL,
+    }
+    if os.name == "nt":
+        options["creationflags"] = subprocess.CREATE_NEW_PROCESS_GROUP | subprocess.CREATE_NO_WINDOW
+    else:
+        options["start_new_session"] = True
+    return subprocess.Popen(list(command), **options)
+
+
+def _terminate_process(process: subprocess.Popen[bytes], grace_seconds: float = 3.0) -> None:
+    """Stop exactly the process RQE created, escalating only after a wait."""
+
+    if process.poll() is None:
+        process.terminate()
+        try:
+            process.wait(timeout=grace_seconds)
+        except subprocess.TimeoutExpired:
+            if os.name == "nt":
+                # /PID scopes the tree cleanup to the process created above;
+                # never use the global `/IM RobloxStudioBeta.exe` pattern.
+                subprocess.run(
+                    ["taskkill", "/PID", str(process.pid), "/T", "/F"],
+                    stdout=subprocess.DEVNULL,
+                    stderr=subprocess.DEVNULL,
+                    check=False,
+                    timeout=grace_seconds,
+                )
+            else:
+                try:
+                    os.killpg(process.pid, 9)
+                except (ProcessLookupError, PermissionError):
+                    process.kill()
+            try:
+                process.wait(timeout=grace_seconds)
+            except subprocess.TimeoutExpired:
+                process.kill()
+                process.wait(timeout=grace_seconds)
+    for stream in (process.stdin, process.stdout, process.stderr):
+        if stream is not None:
+            try:
+                stream.close()
+            except OSError:
+                pass
 
 
 @dataclass(frozen=True)
@@ -89,6 +162,7 @@ class FederatedResult:
     observed_at: str = ""
     run_id: str = ""
     build_hash: str = ""
+    transport_error: bool = False
 
     @property
     def conclusive(self) -> bool:
@@ -122,41 +196,131 @@ class StdioPeer:
         self._stdin = stdin
         self._stdout = stdout
         self._on_close = on_close
-        self._lock = threading.Lock()
+        self._write_lock = threading.Lock()
+        self._state_lock = threading.RLock()
         self._next_id = 0
+        self._pending: dict[Any, queue.Queue[Response | McpClientError]] = {}
+        self._reader_thread: threading.Thread | None = None
+        self._closed = False
 
     def close(self) -> None:
+        with self._state_lock:
+            if self._closed:
+                return
+            self._closed = True
+            pending = list(self._pending.values())
+            self._pending.clear()
+        failure = McpClientError("peer was closed")
+        for response_queue in pending:
+            response_queue.put_nowait(failure)
         if self._on_close is not None:
             self._on_close()
 
+    def _fail_pending(self, failure: McpClientError) -> None:
+        with self._state_lock:
+            pending = list(self._pending.values())
+            self._pending.clear()
+            self._reader_thread = None
+        for response_queue in pending:
+            response_queue.put_nowait(failure)
+
+    def _read_loop(self) -> None:
+        while True:
+            try:
+                line = self._stdout.readline(MAX_PEER_MESSAGE_BYTES + 1)
+            except TypeError:
+                # Small in-memory test streams often expose readline() without
+                # the optional size argument. The post-read check still applies.
+                line = self._stdout.readline()
+            except Exception as exc:  # noqa: BLE001
+                self._fail_pending(McpClientError(f"peer read failed: {type(exc).__name__}"))
+                return
+            if not line:
+                self._fail_pending(McpClientError("peer closed the response stream"))
+                return
+            if len(line) > MAX_PEER_MESSAGE_BYTES:
+                self._fail_pending(McpClientError("peer response exceeds the byte limit"))
+                return
+            try:
+                document = protocol.decode(line)
+            except (ProtocolError, UnicodeDecodeError, RecursionError):
+                # Do not echo peer output: it may contain source, PII or a token.
+                self._fail_pending(McpClientError("peer wrote non-JSON-RPC output"))
+                return
+            if "method" in document and "id" not in document:
+                continue
+            identifier = document.get("id")
+            try:
+                response = protocol.parse_response(document)
+            except ProtocolError as exc:
+                self._fail_pending(McpClientError(f"peer response is invalid: {exc}"))
+                return
+            with self._state_lock:
+                response_queue = self._pending.pop(identifier, None)
+                if response_queue is not None:
+                    response_queue.put_nowait(response)
+                if not self._pending:
+                    self._reader_thread = None
+                    return
+
+    def _ensure_reader(self) -> None:
+        with self._state_lock:
+            if self._reader_thread is not None and self._reader_thread.is_alive():
+                return
+            reader = threading.Thread(target=self._read_loop, name="rqe-mcp-reader", daemon=True)
+            self._reader_thread = reader
+            reader.start()
+
     def call(self, method: str, params: dict[str, Any] | None = None, *, timeout: float = 60.0) -> Response:
-        with self._lock:
+        if (
+            not isinstance(timeout, (int, float))
+            or isinstance(timeout, bool)
+            or not math.isfinite(float(timeout))
+            or timeout <= 0
+            or timeout > MAX_PEER_TIMEOUT_SECONDS
+        ):
+            raise McpClientError(
+                f"timeout must be between 0 and {MAX_PEER_TIMEOUT_SECONDS:g} seconds"
+            )
+        with self._state_lock:
+            if self._closed:
+                raise McpClientError("peer is closed")
             self._next_id += 1
             request = Request(method=method, params=params or {}, id=self._next_id)
-            self._stdin.write(protocol.encode(request.to_dict()))
-            self._stdin.flush()
-
-            while True:
-                line = self._stdout.readline()
-                if not line:
-                    raise McpClientError(f"peer closed the stream while awaiting {method!r}")
-                try:
-                    document = protocol.decode(line)
-                except ProtocolError:
-                    # Anything unframed on this pipe means the peer is no longer
-                    # speaking JSON-RPC. Skipping would hang; failing names it.
-                    raise McpClientError(
-                        f"peer wrote a non-JSON-RPC line while awaiting {method!r}: {line[:200]!r}"
-                    )
-                if "method" in document and "id" not in document:
-                    continue  # a notification from the peer; not our answer
-                if document.get("id") != request.id:
-                    continue
-                return protocol.parse_response(document)
+            response_queue: queue.Queue[Response | McpClientError] = queue.Queue(maxsize=1)
+            self._pending[request.id] = response_queue
+        encoded = protocol.encode(request.to_dict())
+        if len(encoded) > MAX_PEER_MESSAGE_BYTES:
+            with self._state_lock:
+                self._pending.pop(request.id, None)
+            raise McpClientError("peer request exceeds the byte limit")
+        try:
+            with self._write_lock:
+                self._stdin.write(encoded)
+                self._stdin.flush()
+        except Exception as exc:  # noqa: BLE001
+            with self._state_lock:
+                self._pending.pop(request.id, None)
+            raise McpClientError(f"peer write failed: {type(exc).__name__}") from exc
+        self._ensure_reader()
+        try:
+            answer = response_queue.get(timeout=float(timeout))
+        except queue.Empty as exc:
+            with self._state_lock:
+                self._pending.pop(request.id, None)
+            raise McpClientError(f"peer timed out after {float(timeout):.3f}s awaiting {method!r}") from exc
+        if isinstance(answer, McpClientError):
+            raise answer
+        return answer
 
     def notify(self, method: str, params: dict[str, Any] | None = None) -> None:
-        with self._lock:
-            self._stdin.write(protocol.encode(Request(method=method, params=params or {}).to_dict()))
+        encoded = protocol.encode(Request(method=method, params=params or {}).to_dict())
+        if len(encoded) > MAX_PEER_MESSAGE_BYTES:
+            raise McpClientError("peer notification exceeds the byte limit")
+        with self._write_lock:
+            if self._closed:
+                raise McpClientError("peer is closed")
+            self._stdin.write(encoded)
             self._stdin.flush()
 
 
@@ -173,13 +337,12 @@ class StudioMcpClient:
 
     @classmethod
     def spawn(cls, command: Sequence[str], **kwargs: Any) -> "StudioMcpClient":
-        process = subprocess.Popen(
-            list(command),
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
+        process = _spawn_process(command)
+        peer = StdioPeer(
+            process.stdin,
+            process.stdout,
+            on_close=lambda: _terminate_process(process),
         )
-        peer = StdioPeer(process.stdin, process.stdout, on_close=process.terminate)
         return cls(peer, **kwargs)
 
     def initialize(self, *, timeout: float = 30.0) -> dict[str, Any]:
@@ -262,6 +425,7 @@ class StudioMcpClient:
             return FederatedResult(
                 tool=name, ok=False, error=str(exc),
                 observed_at=observed_at, run_id=run_id, build_hash=build_hash,
+                transport_error=True,
             )
 
         if not response.ok:
@@ -321,36 +485,60 @@ class CircuitBreaker:
         self._clock = clock
         self._consecutive_failures = 0
         self._opened_at: float | None = None
+        self._half_open_probe = False
+        self._lock = threading.RLock()
 
     def allow(self) -> tuple[bool, float]:
         """(allowed, seconds_until_retry)."""
-        if self._opened_at is None:
-            return True, 0.0
-        elapsed = self._clock() - self._opened_at
-        if elapsed >= self._cooldown:
-            # half-open: one probe is allowed through.
-            return True, 0.0
-        return False, round(self._cooldown - elapsed, 3)
+        with self._lock:
+            if self._opened_at is None:
+                return True, 0.0
+            elapsed = self._clock() - self._opened_at
+            if elapsed >= self._cooldown:
+                # Exactly one caller becomes the half-open probe. Others stay
+                # refused until that probe records success or failure.
+                if self._half_open_probe:
+                    return False, 0.0
+                self._half_open_probe = True
+                return True, 0.0
+            return False, round(self._cooldown - elapsed, 3)
 
     def record_success(self) -> None:
-        self._consecutive_failures = 0
-        self._opened_at = None
+        with self._lock:
+            self._consecutive_failures = 0
+            self._opened_at = None
+            self._half_open_probe = False
 
     def record_failure(self) -> bool:
         """Returns True when this failure OPENED the breaker."""
-        self._consecutive_failures += 1
-        if self._consecutive_failures >= self._threshold and self._opened_at is None:
-            self._opened_at = self._clock()
-            return True
-        return False
+        with self._lock:
+            self._consecutive_failures += 1
+            if self._opened_at is not None:
+                # A failed half-open probe starts a fresh cooldown window.
+                self._opened_at = self._clock()
+                self._half_open_probe = False
+                return False
+            if self._consecutive_failures >= self._threshold:
+                self._opened_at = self._clock()
+                self._half_open_probe = False
+                return True
+            return False
 
     def state(self) -> dict[str, Any]:
-        allowed, retry_in = self.allow()
-        return {
-            "state": "closed" if self._opened_at is None else ("half-open" if allowed else "open"),
-            "consecutiveFailures": self._consecutive_failures,
-            "retryIn": retry_in,
-        }
+        with self._lock:
+            if self._opened_at is None:
+                state = "closed"
+                retry_in = 0.0
+            else:
+                elapsed = self._clock() - self._opened_at
+                state = "half-open" if elapsed >= self._cooldown else "open"
+                retry_in = 0.0 if state == "half-open" else round(self._cooldown - elapsed, 3)
+            return {
+                "state": state,
+                "probeInFlight": self._half_open_probe,
+                "consecutiveFailures": self._consecutive_failures,
+                "retryIn": retry_in,
+            }
 
 
 class ResilientSession:
@@ -384,13 +572,12 @@ class ResilientSession:
         self._client: StudioMcpClient | None = None
 
     def _connect(self) -> StudioMcpClient:
-        process = subprocess.Popen(
-            self._command,
-            stdin=subprocess.PIPE,
-            stdout=subprocess.PIPE,
-            stderr=subprocess.DEVNULL,
+        process = _spawn_process(self._command)
+        peer = StdioPeer(
+            process.stdin,
+            process.stdout,
+            on_close=lambda: _terminate_process(process),
         )
-        peer = StdioPeer(process.stdin, process.stdout, on_close=process.terminate)
         client = StudioMcpClient(peer, client_name=self._client_name)
         client.initialize(timeout=30.0)
         return client
@@ -438,6 +625,8 @@ class ResilientSession:
                     build_hash=build_hash,
                     timeout=self._call_timeout,
                 )
+                if result.transport_error:
+                    raise McpClientError(result.error or "federated MCP transport failed")
                 self._breaker.record_success()
                 return result
             except McpClientError as exc:

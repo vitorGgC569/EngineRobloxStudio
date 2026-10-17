@@ -102,7 +102,8 @@ def place_for(root: Path, game_id: str) -> Path | None:
 
 def look_at(root: Path, game_id: str, *, genre: str = "",
             viewpoint: str = "corpus", run: bool = True,
-            viewport: tuple[float, float, float, float] | None = STUDIO_VIEWPORT) -> Look:
+            viewport: tuple[float, float, float, float] | None = None,
+            allow_cold_launch: bool = False) -> Look:
     """Open one built game, photograph it, and score the picture.
 
     Every failure is caught and returned. A corpus sweep that stops on the first
@@ -120,9 +121,9 @@ def look_at(root: Path, game_id: str, *, genre: str = "",
         return look
 
     try:
-        from .capture import capture_viewpoint
+        from .capture import capture_native_viewpoint
         from .hub.client import StudioBridge
-        from .hub.lifecycle import restart_for_bridge
+        from .hub.lifecycle import ensure_studio_session
     except Exception as error:  # noqa: BLE001
         look.error = f"cannot reach the Studio layer: {error}"
         look.seconds = time.monotonic() - started
@@ -130,9 +131,21 @@ def look_at(root: Path, game_id: str, *, genre: str = "",
 
     try:
         bridge = StudioBridge()
-        # With a bridge, the restart returns only once the plugin has
-        # handshaken -- so "opened" means genuinely ready rather than launched.
-        restart_for_bridge(place, root / ".tmp" / "corpus-recovery", bridge)
+        ensured = ensure_studio_session(
+            place,
+            root / ".tmp" / "corpus-recovery",
+            bridge,
+            wait_seconds=45,
+            background=True,
+            allow_cold_launch=allow_cold_launch,
+        )
+        if not ensured.get("ready"):
+            look.error = (
+                "no compatible persistent Studio session for this place; "
+                "cold launch is disabled"
+            )
+            look.seconds = time.monotonic() - started
+            return look
         session = bridge.pin_to_any()
         look.opened = True
     except Exception as error:  # noqa: BLE001
@@ -144,7 +157,15 @@ def look_at(root: Path, game_id: str, *, genre: str = "",
         try:
             from .hub.lifecycle import start_play_solo
 
-            start_play_solo(bridge)
+            started_play = start_play_solo(
+                bridge,
+                allow_foreground_fallback=False,
+            )
+            if not started_play.get("started"):
+                raise RuntimeError(
+                    started_play.get("reason")
+                    or "StudioTestService did not start Play Mode"
+                )
             # Re-pin. The session pinned before Play Solo is the *editor*, and
             # a play session is a different one -- so every bridge call kept
             # landing in the editor while the game ran beside it, and the
@@ -164,10 +185,16 @@ def look_at(root: Path, game_id: str, *, genre: str = "",
     frame = output / f"{game_id}.png"
 
     try:
-        capture_viewpoint(
-            bridge, world_only=not run, target="",
-            output=frame, viewpoint=viewpoint,
-            expected_place="", expected_session=session)
+        with bridge.lease_scope(
+            agent_id="corpus-visual-capture",
+            session_id=session,
+            ttl_seconds=120.0,
+        ):
+            capture_native_viewpoint(
+                bridge, world_only=not run, target="",
+                output=frame, viewpoint=viewpoint,
+                expected_place="", expected_session=session,
+                include_ui=True)
         look.frame = str(frame)
     except Exception as error:  # noqa: BLE001
         look.error = f"opened but could not be photographed: {error}"
@@ -195,7 +222,8 @@ def look_at(root: Path, game_id: str, *, genre: str = "",
 
 def sweep(root: Path, games: list[tuple[str, str]], *,
           sample: int = 4, seed: int = 1, run: bool = True,
-          viewport: tuple[float, float, float, float] | None = STUDIO_VIEWPORT,
+          viewport: tuple[float, float, float, float] | None = None,
+          allow_cold_launch: bool = False,
           ) -> dict[str, Any]:
     """Open a deterministic sample of built games and report what they look like.
 
@@ -212,7 +240,14 @@ def sweep(root: Path, games: list[tuple[str, str]], *,
     chosen.sort()
 
     looks = [
-        look_at(root, game_id, genre=genre, run=run, viewport=viewport)
+        look_at(
+            root,
+            game_id,
+            genre=genre,
+            run=run,
+            viewport=viewport,
+            allow_cold_launch=allow_cold_launch,
+        )
         for game_id, genre in chosen
     ]
     opened = [look for look in looks if look.opened]

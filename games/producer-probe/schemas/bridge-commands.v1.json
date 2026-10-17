@@ -1,0 +1,6469 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "schemaVersion": 1,
+  "protocol": "rqe.bridge/2",
+  "description": "Versioned command contracts and control-plane policy for every public Studio Bridge command.",
+  "$defs": {
+    "vector3": {
+      "type": "array",
+      "items": {
+        "type": "number"
+      },
+      "minItems": 3,
+      "maxItems": 3
+    },
+    "stringArray": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    },
+    "objectResult": {
+      "type": "object"
+    },
+    "qualitySelector": {
+      "type": "object",
+      "anyOf": [
+        {
+          "required": [
+            "tag"
+          ]
+        },
+        {
+          "required": [
+            "attributeEquals"
+          ]
+        },
+        {
+          "required": [
+            "namePattern"
+          ]
+        }
+      ],
+      "properties": {
+        "tag": {
+          "type": "string",
+          "minLength": 1
+        },
+        "attributeEquals": {
+          "type": "object",
+          "minProperties": 1,
+          "additionalProperties": {
+            "type": [
+              "string",
+              "number",
+              "boolean"
+            ]
+          }
+        },
+        "namePattern": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "qualityClassification": {
+      "type": "object",
+      "required": [
+        "candidateTag",
+        "rootTag",
+        "typeAttribute",
+        "variantAttribute",
+        "assetKeyAttribute",
+        "regionTag",
+        "regionProfileAttribute",
+        "landmarkTag",
+        "landmarkAnchorTag",
+        "excludeTag"
+      ],
+      "properties": {
+        "candidateTag": {
+          "type": "string",
+          "minLength": 1
+        },
+        "rootTag": {
+          "type": "string",
+          "minLength": 1
+        },
+        "typeAttribute": {
+          "type": "string",
+          "minLength": 1
+        },
+        "variantAttribute": {
+          "type": "string",
+          "minLength": 1
+        },
+        "assetKeyAttribute": {
+          "type": "string",
+          "minLength": 1
+        },
+        "regionTag": {
+          "type": "string",
+          "minLength": 1
+        },
+        "regionProfileAttribute": {
+          "type": "string",
+          "minLength": 1
+        },
+        "landmarkTag": {
+          "type": "string",
+          "minLength": 1
+        },
+        "landmarkAnchorTag": {
+          "type": "string",
+          "minLength": 1
+        },
+        "excludeTag": {
+          "type": "string",
+          "minLength": 1
+        }
+      },
+      "additionalProperties": false
+    },
+    "qualityLandmarkRequest": {
+      "type": "object",
+      "required": [
+        "id",
+        "selector",
+        "anchorSelector",
+        "maximumDistance",
+        "sampleSpacing",
+        "eyeHeight",
+        "raysPerAnchor"
+      ],
+      "properties": {
+        "id": {
+          "type": "string",
+          "minLength": 1
+        },
+        "selector": {
+          "$ref": "#/$defs/qualitySelector"
+        },
+        "anchorSelector": {
+          "$ref": "#/$defs/qualitySelector"
+        },
+        "maximumDistance": {
+          "type": "number",
+          "minimum": 0.000001
+        },
+        "sampleSpacing": {
+          "type": "number",
+          "minimum": 0.000001
+        },
+        "eyeHeight": {
+          "type": "number",
+          "minimum": 0.000001
+        },
+        "raysPerAnchor": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 64
+        }
+      },
+      "additionalProperties": false
+    },
+    "qualityLimits": {
+      "type": "object",
+      "required": [
+        "maxCandidates",
+        "maxRoots",
+        "maxRegions",
+        "maxVisibilitySamples"
+      ],
+      "properties": {
+        "maxCandidates": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 25000
+        },
+        "maxRoots": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 5000
+        },
+        "maxRegions": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 500
+        },
+        "maxVisibilitySamples": {
+          "type": "integer",
+          "minimum": 1,
+          "maximum": 20000
+        }
+      },
+      "additionalProperties": false
+    },
+    "qualityObb": {
+      "type": "object",
+      "required": [
+        "center",
+        "size",
+        "right",
+        "up",
+        "back"
+      ],
+      "properties": {
+        "center": {
+          "$ref": "#/$defs/vector3"
+        },
+        "size": {
+          "$ref": "#/$defs/vector3"
+        },
+        "right": {
+          "$ref": "#/$defs/vector3"
+        },
+        "up": {
+          "$ref": "#/$defs/vector3"
+        },
+        "back": {
+          "$ref": "#/$defs/vector3"
+        }
+      },
+      "additionalProperties": false
+    },
+    "qualitySnapshot": {
+      "type": "object",
+      "required": [
+        "schemaVersion",
+        "capturedAt",
+        "truncated",
+        "classification",
+        "roots",
+        "regions",
+        "visibility"
+      ],
+      "properties": {
+        "schemaVersion": {
+          "enum": [
+            1
+          ]
+        },
+        "capturedAt": {
+          "type": "string",
+          "minLength": 1
+        },
+        "truncated": {
+          "type": "boolean"
+        },
+        "classification": {
+          "type": "object",
+          "required": [
+            "eligible",
+            "classified",
+            "excluded"
+          ],
+          "properties": {
+            "eligible": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "classified": {
+              "type": "integer",
+              "minimum": 0
+            },
+            "excluded": {
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          "additionalProperties": false
+        },
+        "roots": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "ref",
+              "path",
+              "type",
+              "variant",
+              "obb",
+              "materials",
+              "colors"
+            ],
+            "properties": {
+              "ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "type": {
+                "type": "string",
+                "minLength": 1
+              },
+              "variant": {
+                "type": "string",
+                "minLength": 1
+              },
+              "assetKey": {
+                "type": "string",
+                "minLength": 1
+              },
+              "obb": {
+                "$ref": "#/$defs/qualityObb"
+              },
+              "materials": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "name",
+                    "surfaceArea"
+                  ],
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "surfaceArea": {
+                      "type": "number",
+                      "minimum": 0.000001
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              },
+              "colors": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": [
+                    "rgb",
+                    "surfaceArea"
+                  ],
+                  "properties": {
+                    "rgb": {
+                      "type": "array",
+                      "minItems": 3,
+                      "maxItems": 3,
+                      "items": {
+                        "type": "integer",
+                        "minimum": 0,
+                        "maximum": 255
+                      }
+                    },
+                    "surfaceArea": {
+                      "type": "number",
+                      "minimum": 0.000001
+                    }
+                  },
+                  "additionalProperties": false
+                }
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "regions": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "ref",
+              "path",
+              "profile",
+              "obb"
+            ],
+            "properties": {
+              "ref": {
+                "type": "string",
+                "minLength": 1
+              },
+              "path": {
+                "type": "string",
+                "minLength": 1
+              },
+              "profile": {
+                "type": "string",
+                "minLength": 1
+              },
+              "obb": {
+                "$ref": "#/$defs/qualityObb"
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "visibility": {
+          "type": "array",
+          "items": {
+            "type": "object",
+            "required": [
+              "landmarkId",
+              "regionRef",
+              "sampled",
+              "visible",
+              "visibleFraction",
+              "maximumBlindSpotDegrees",
+              "conclusive"
+            ],
+            "properties": {
+              "landmarkId": {
+                "type": "string",
+                "minLength": 1
+              },
+              "regionRef": {
+                "type": "string",
+                "minLength": 1
+              },
+              "sampled": {
+                "type": "integer",
+                "minimum": 1
+              },
+              "visible": {
+                "type": "integer",
+                "minimum": 0
+              },
+              "visibleFraction": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 1
+              },
+              "maximumBlindSpotDegrees": {
+                "type": "number",
+                "minimum": 0,
+                "maximum": 360
+              },
+              "conclusive": {
+                "type": "boolean"
+              }
+            },
+            "additionalProperties": false
+          }
+        }
+      },
+      "additionalProperties": false
+    },
+    "instanceRecord": {
+      "type": "object",
+      "required": [
+        "ref",
+        "name",
+        "className",
+        "path"
+      ],
+      "properties": {
+        "ref": {
+          "type": "string"
+        },
+        "name": {
+          "type": "string"
+        },
+        "className": {
+          "type": "string"
+        },
+        "path": {
+          "type": "string"
+        }
+      },
+      "additionalProperties": false
+    }
+  },
+  "commands": {
+    "actor.activate": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "run"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "character": {
+            "type": "string"
+          },
+          "player": {
+            "type": "string"
+          },
+          "tool": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive",
+          "activated"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "character": {
+            "type": "string"
+          },
+          "tool": {
+            "type": "string"
+          },
+          "activated": {
+            "type": "boolean"
+          },
+          "note": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "actor.attach": {
+      "methodVersion": 1,
+      "effect": "transient",
+      "contexts": [
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "player": {
+            "type": "string"
+          },
+          "timeout": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "actor.despawn": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "all": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "actor.equip": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "run"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "character": {
+            "type": "string"
+          },
+          "player": {
+            "type": "string"
+          },
+          "tool": {
+            "type": "string"
+          },
+          "unequip": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive",
+          "action"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "action": {
+            "type": "string"
+          },
+          "character": {
+            "type": "string"
+          },
+          "tool": {
+            "type": "object"
+          },
+          "held": {
+            "type": "boolean"
+          },
+          "unequipped": {
+            "$ref": "#/$defs/stringArray"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "actor.interact": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "prompt"
+        ],
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "prompt": {
+            "type": "string",
+            "minLength": 1
+          },
+          "holdSeconds": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "actor.inventory": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "run"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "character": {
+            "type": "string"
+          },
+          "player": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive",
+          "equipped",
+          "backpack"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "character": {
+            "type": "string"
+          },
+          "isPlayer": {
+            "type": "boolean"
+          },
+          "equipped": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "backpack": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "equippedCount": {
+            "type": "integer"
+          },
+          "backpackCount": {
+            "type": "integer"
+          },
+          "unavailable": {
+            "$ref": "#/$defs/stringArray"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "actor.jump": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "actor.list": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "actor.navigate_to": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "anyOf": [
+          {
+            "required": [
+              "position"
+            ]
+          },
+          {
+            "required": [
+              "target"
+            ]
+          }
+        ],
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "position": {
+            "$ref": "#/$defs/vector3"
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "approachClearance": {
+            "type": "number",
+            "minimum": 0
+          },
+          "tolerance": {
+            "type": "number",
+            "minimum": 0
+          },
+          "timeout": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 120
+          },
+          "agentRadius": {
+            "type": "number",
+            "minimum": 0
+          },
+          "agentHeight": {
+            "type": "number",
+            "minimum": 0
+          },
+          "agentCanJump": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "actor.prompts": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "radius": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "actor.spawn": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "rig": {
+            "type": "string",
+            "enum": [
+              "R6",
+              "R15"
+            ]
+          },
+          "name": {
+            "type": "string"
+          },
+          "position": {
+            "$ref": "#/$defs/vector3"
+          },
+          "near": {
+            "type": "string"
+          },
+          "settleSeconds": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 10
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "actor.state": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "actor": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "actor.teleport": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "run"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "character": {
+            "type": "string"
+          },
+          "player": {
+            "type": "string"
+          },
+          "position": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "path": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive",
+          "character",
+          "to"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "character": {
+            "type": "string"
+          },
+          "from": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "to": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "requested": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "drift": {
+            "type": "number"
+          },
+          "humanoidState": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "actor.touch": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "target"
+        ],
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "timeout": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 45
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "actor.walk_to": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "anyOf": [
+          {
+            "required": [
+              "position"
+            ]
+          },
+          {
+            "required": [
+              "target"
+            ]
+          }
+        ],
+        "properties": {
+          "actor": {
+            "type": "string"
+          },
+          "position": {
+            "$ref": "#/$defs/vector3"
+          },
+          "target": {
+            "type": "string",
+            "minLength": 1
+          },
+          "tolerance": {
+            "type": "number",
+            "minimum": 0
+          },
+          "timeout": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 60
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "assets.capabilities": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "available",
+          "blockers",
+          "createAsset",
+          "editableImage"
+        ],
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "createAsset": {
+            "type": "boolean"
+          },
+          "createAssetVersion": {
+            "type": "boolean"
+          },
+          "editableImage": {
+            "type": "boolean"
+          },
+          "editableMesh": {
+            "type": "boolean"
+          },
+          "meshPart": {
+            "type": "boolean"
+          },
+          "rateLimitPerMinute": {
+            "type": "integer"
+          },
+          "supportedTypes": {
+            "$ref": "#/$defs/stringArray"
+          },
+          "blockers": {
+            "$ref": "#/$defs/stringArray"
+          },
+          "createAssetGateUnverified": {
+            "type": "boolean"
+          },
+          "betaHint": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "assets.create_image": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "name",
+          "width",
+          "height",
+          "pixels"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1024
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1024
+          },
+          "pixels": {
+            "type": "array",
+            "items": {
+              "type": "integer",
+              "minimum": 0,
+              "maximum": 255
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "enum": [
+              "PUBLISHED",
+              "BLOCKED",
+              "FAILED",
+              "RATE_LIMITED"
+            ]
+          },
+          "assetId": {
+            "type": [
+              "integer",
+              "string",
+              "null"
+            ]
+          },
+          "contentId": {
+            "type": "string"
+          },
+          "moderation": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer"
+          },
+          "height": {
+            "type": "integer"
+          },
+          "name": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "blockers": {
+            "$ref": "#/$defs/stringArray"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "assets.create_mesh": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "name",
+          "vertices",
+          "triangles"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 50
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "vertices": {
+            "type": "array",
+            "minItems": 9,
+            "items": {
+              "type": "number"
+            }
+          },
+          "triangles": {
+            "type": "array",
+            "minItems": 3,
+            "items": {
+              "type": "integer",
+              "minimum": 1
+            }
+          },
+          "normals": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          },
+          "uvs": {
+            "type": "array",
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "status"
+        ],
+        "properties": {
+          "status": {
+            "type": "string"
+          },
+          "assetId": {},
+          "contentId": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "vertices": {
+            "type": "integer"
+          },
+          "triangles": {
+            "type": "integer"
+          },
+          "moderation": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "blockers": {
+            "type": "array"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "assets.insert": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "assetId"
+        ],
+        "properties": {
+          "assetId": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "timeout": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 120
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "assetId",
+          "roots",
+          "parts",
+          "scripts",
+          "path"
+        ],
+        "properties": {
+          "assetId": {
+            "type": "integer"
+          },
+          "roots": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "parts": {
+            "type": "integer"
+          },
+          "scripts": {
+            "type": "integer"
+          },
+          "classes": {
+            "type": "object"
+          },
+          "path": {
+            "type": "string"
+          },
+          "context": {
+            "type": "string"
+          },
+          "session": {
+            "type": "string"
+          },
+          "elapsedMs": {
+            "type": "number"
+          },
+          "place": {
+            "type": "object"
+          },
+          "build": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "assets.verify": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "refs"
+        ],
+        "properties": {
+          "refs": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          },
+          "timeout": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 180
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "assets",
+          "count",
+          "passing"
+        ],
+        "properties": {
+          "assets": {
+            "type": "object"
+          },
+          "count": {
+            "type": "integer"
+          },
+          "passing": {
+            "type": "integer"
+          },
+          "complete": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": true
+      }
+    },
+    "bridge.capabilities": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "bridge.exec": {
+      "methodVersion": 1,
+      "effect": "arbitrary",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "source"
+        ],
+        "properties": {
+          "source": {
+            "type": "string",
+            "minLength": 1
+          },
+          "chunkName": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "bridge.install_client": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "bridge.ping": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "echo": {}
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "bridge.remove_client": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "camera.focus": {
+      "methodVersion": 1,
+      "effect": "transient",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "pitchDegrees": {
+            "type": "number"
+          },
+          "yawDegrees": {
+            "type": "number"
+          },
+          "margin": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "camera.follow": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit",
+        "run"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "release": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive",
+          "action"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "action": {
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "cameraType": {
+            "type": "string"
+          },
+          "camera": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "camera.get": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "camera.orbit": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit",
+        "run"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "target": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "distance": {
+            "type": "number",
+            "exclusiveMinimum": 0
+          },
+          "yawDegrees": {
+            "type": "number"
+          },
+          "pitchDegrees": {
+            "type": "number",
+            "minimum": -89,
+            "maximum": 89
+          },
+          "fieldOfView": {
+            "type": "number",
+            "exclusiveMinimum": 1,
+            "maximum": 120
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive",
+          "subject",
+          "camera"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "subject": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "distance": {
+            "type": "number"
+          },
+          "yawDegrees": {
+            "type": "number"
+          },
+          "pitchDegrees": {
+            "type": "number"
+          },
+          "camera": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "camera.set": {
+      "methodVersion": 1,
+      "effect": "transient",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "position"
+        ],
+        "properties": {
+          "position": {
+            "$ref": "#/$defs/vector3"
+          },
+          "lookAt": {
+            "$ref": "#/$defs/vector3"
+          },
+          "fieldOfView": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 120
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "camera.viewpoint": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit",
+        "run"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "name",
+          "framing"
+        ],
+        "properties": {
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "framing": {
+            "type": "object",
+            "required": [
+              "position",
+              "target"
+            ],
+            "properties": {
+              "position": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "target": {
+                "type": "array",
+                "minItems": 3,
+                "maxItems": 3,
+                "items": {
+                  "type": "number"
+                }
+              },
+              "fieldOfView": {
+                "type": "number",
+                "exclusiveMinimum": 1,
+                "maximum": 120
+              }
+            },
+            "additionalProperties": false
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive",
+          "viewpoint",
+          "camera"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "viewpoint": {
+            "type": "string"
+          },
+          "requestedPosition": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "requestedTarget": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "camera": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "client.camera_release": {
+      "methodVersion": 1,
+      "effect": "transient",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "player": {
+            "type": "string"
+          }
+        }
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "released"
+        ],
+        "properties": {
+          "released": {
+            "type": "boolean"
+          },
+          "cameraType": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "client.camera_set": {
+      "methodVersion": 1,
+      "effect": "transient",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "position"
+        ],
+        "additionalProperties": false,
+        "properties": {
+          "position": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "lookAt": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "fieldOfView": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 120
+          },
+          "player": {
+            "type": "string"
+          }
+        }
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "applied",
+          "position"
+        ],
+        "properties": {
+          "applied": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "lookVector": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "fieldOfView": {
+            "type": "number"
+          },
+          "cameraType": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "client.ensure_channel": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "client.fire_remote": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "args": {},
+          "player": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "client.gui_click": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "unsupported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "player": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "client.gui_locate": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "player": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "client.gui_scroll": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "to": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "by": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "edge": {
+            "enum": [
+              "top",
+              "bottom"
+            ]
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "path",
+          "from",
+          "to"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "from": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "to": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "requested": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "clamped": {
+            "type": "boolean"
+          },
+          "canvasSize": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "windowSize": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "atBottom": {
+            "type": "boolean"
+          },
+          "player": {
+            "type": "string"
+          },
+          "elapsedMsClient": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "client.gui_snapshot": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "viewport",
+          "elements",
+          "total",
+          "truncated"
+        ],
+        "properties": {
+          "viewport": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "elements": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "returned": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "offscreen": {
+            "type": "integer"
+          },
+          "player": {
+            "type": "string"
+          },
+          "elapsedMsClient": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "client.gui_text": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "text": {
+            "type": "string"
+          },
+          "commit": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "path",
+          "text"
+        ],
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "className": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "previous": {
+            "type": "string"
+          },
+          "wrote": {
+            "type": "boolean"
+          },
+          "visible": {
+            "type": "boolean"
+          },
+          "textBounds": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "textFits": {
+            "type": "boolean"
+          },
+          "truncated": {
+            "type": "boolean"
+          },
+          "note": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "player": {
+            "type": "string"
+          },
+          "elapsedMsClient": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "client.gui_tree": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "includeHidden": {
+            "type": "boolean"
+          },
+          "player": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "client.info": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "player": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "client.invoke_bindable": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "argument": {},
+          "player": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "client.logs": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "severity": {
+            "type": "string"
+          },
+          "pattern": {
+            "type": "string"
+          },
+          "player": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "client.prediction": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "sampleSeconds": {
+            "type": "number",
+            "minimum": 0.1,
+            "maximum": 5
+          },
+          "player": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "client.player_state": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "player": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "client.probe_images": {
+      "methodVersion": 1,
+      "effect": "transient",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "ids"
+        ],
+        "properties": {
+          "ids": {
+            "type": "array",
+            "items": {
+              "type": [
+                "integer",
+                "string"
+              ]
+            },
+            "minItems": 1
+          },
+          "waitSeconds": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 25
+          },
+          "player": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "client.prompt_trigger": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "holdSeconds": {
+            "type": "number",
+            "minimum": 0
+          },
+          "player": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "client.properties": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "description": "Named properties of one instance in the client's DataModel. The same shape as `dm.properties`, asked of the side that actually has the instance.",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "properties": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "player": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "path",
+          "properties"
+        ],
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "client.tree": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "description": "The client's own DataModel as a tree. `dm.tree` answers from the server, where a viewmodel parented to the camera, a part hidden by LocalTransparencyModifier and anything else built client-side does not exist. This is the only way to see those.",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "depth": {
+            "type": "integer",
+            "minimum": 0,
+            "maximum": 12
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 4000
+          },
+          "player": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "client.viewport": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "viewport",
+          "deviceClass"
+        ],
+        "properties": {
+          "viewport": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "aspectRatio": {
+            "type": "number"
+          },
+          "deviceClass": {
+            "type": "string"
+          },
+          "guiInset": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "touchEnabled": {
+            "type": "boolean"
+          },
+          "keyboardEnabled": {
+            "type": "boolean"
+          },
+          "gamepadEnabled": {
+            "type": "boolean"
+          },
+          "mouseEnabled": {
+            "type": "boolean"
+          },
+          "player": {
+            "type": "string"
+          },
+          "elapsedMsClient": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "code.at_start": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "source"
+        ],
+        "properties": {
+          "source": {}
+        }
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "code.compile": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "source"
+        ],
+        "properties": {
+          "source": {}
+        }
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "code.list": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "code.read": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {}
+        }
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "code.reload": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {}
+        }
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "code.write": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "path",
+          "source"
+        ],
+        "properties": {
+          "path": {},
+          "source": {}
+        }
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "dm.find": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "root": {
+            "type": "string"
+          },
+          "className": {
+            "type": "string"
+          },
+          "tag": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "namePattern": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "topLevelOnly": {
+            "type": "boolean"
+          },
+          "cursor": {
+            "type": "string",
+            "maxLength": 128,
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "dm.inspect": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {}
+        }
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "dm.properties": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "properties": {
+            "$ref": "#/$defs/stringArray"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "dm.tree": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "depth": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "maxNodes": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "includeAttributes": {
+            "type": "boolean"
+          },
+          "classFilter": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "instance.attributes": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "instance",
+          "attributes"
+        ],
+        "properties": {
+          "instance": {
+            "$ref": "#/$defs/instanceRecord"
+          },
+          "attributes": {
+            "type": "object"
+          },
+          "names": {
+            "$ref": "#/$defs/stringArray"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "instance.serialize": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "paths"
+        ],
+        "properties": {
+          "paths": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 64,
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "instance.deserialize": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "parent",
+          "dataBase64"
+        ],
+        "properties": {
+          "parent": {
+            "type": "string",
+            "minLength": 1
+          },
+          "dataBase64": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 2796224
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "instance.children": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "classFilter": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "parent",
+          "children",
+          "count"
+        ],
+        "properties": {
+          "parent": {
+            "$ref": "#/$defs/instanceRecord"
+          },
+          "children": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/instanceRecord"
+            }
+          },
+          "count": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "instance.clone": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit",
+        "run"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parent": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256
+          },
+          "properties": {
+            "type": "object"
+          },
+          "attributes": {
+            "type": "object"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "source",
+          "created",
+          "count"
+        ],
+        "properties": {
+          "source": {
+            "$ref": "#/$defs/instanceRecord"
+          },
+          "created": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/instanceRecord"
+            }
+          },
+          "count": {
+            "type": "integer"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "instance.create": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit",
+        "run"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "className"
+        ],
+        "properties": {
+          "className": {
+            "type": "string",
+            "minLength": 1
+          },
+          "parent": {
+            "type": "string",
+            "minLength": 1
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1
+          },
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 256
+          },
+          "properties": {
+            "type": "object"
+          },
+          "attributes": {
+            "type": "object"
+          },
+          "tags": {
+            "$ref": "#/$defs/stringArray"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "created",
+          "count"
+        ],
+        "properties": {
+          "created": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/instanceRecord"
+            }
+          },
+          "count": {
+            "type": "integer"
+          },
+          "parent": {
+            "$ref": "#/$defs/instanceRecord"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "instance.delete": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit",
+        "run"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "destroyed",
+          "descendants"
+        ],
+        "properties": {
+          "destroyed": {
+            "$ref": "#/$defs/instanceRecord"
+          },
+          "descendants": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "instance.descendants": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "classFilter": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "root",
+          "descendants",
+          "returned",
+          "total",
+          "truncated"
+        ],
+        "properties": {
+          "root": {
+            "$ref": "#/$defs/instanceRecord"
+          },
+          "descendants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/instanceRecord"
+            }
+          },
+          "returned": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "instance.tags": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "tag": {
+            "type": "string",
+            "minLength": 1
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "properties": {
+          "instance": {
+            "$ref": "#/$defs/instanceRecord"
+          },
+          "tags": {
+            "$ref": "#/$defs/stringArray"
+          },
+          "tag": {
+            "type": "string"
+          },
+          "instances": {
+            "type": "array",
+            "items": {
+              "$ref": "#/$defs/instanceRecord"
+            }
+          },
+          "returned": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "instance.update": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit",
+        "run"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "properties": {
+            "type": "object"
+          },
+          "attributes": {
+            "type": "object"
+          },
+          "tags": {
+            "$ref": "#/$defs/stringArray"
+          },
+          "removeTags": {
+            "$ref": "#/$defs/stringArray"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "instance"
+        ],
+        "properties": {
+          "instance": {
+            "$ref": "#/$defs/instanceRecord"
+          },
+          "properties": {
+            "$ref": "#/$defs/stringArray"
+          },
+          "attributes": {
+            "$ref": "#/$defs/stringArray"
+          },
+          "tags": {
+            "$ref": "#/$defs/stringArray"
+          },
+          "removedTags": {
+            "$ref": "#/$defs/stringArray"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "log.tail": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "severity": {
+            "type": "string"
+          },
+          "pattern": {
+            "type": "string"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "product.identity": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "available",
+          "conclusive",
+          "context",
+          "placeName"
+        ],
+        "properties": {
+          "available": {
+            "type": "boolean"
+          },
+          "conclusive": {
+            "const": true
+          },
+          "reason": {
+            "type": "string"
+          },
+          "schemaVersion": {
+            "const": 1
+          },
+          "measuredIdentity": {
+            "type": "object"
+          },
+          "artifactHashes": {
+            "type": "object"
+          },
+          "stampSha256": {
+            "type": "string",
+            "pattern": "^[0-9a-f]{64}$"
+          },
+          "context": {
+            "type": "string"
+          },
+          "placeName": {
+            "type": "string"
+          },
+          "placeId": {
+            "type": "integer"
+          },
+          "gameId": {
+            "type": "integer"
+          },
+          "className": {
+            "type": "string"
+          },
+          "missing": {
+            "$ref": "#/$defs/stringArray"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "quality.snapshot": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "classification",
+          "landmarks",
+          "limits"
+        ],
+        "properties": {
+          "classification": {
+            "$ref": "#/$defs/qualityClassification"
+          },
+          "landmarks": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 64,
+            "items": {
+              "$ref": "#/$defs/qualityLandmarkRequest"
+            }
+          },
+          "limits": {
+            "$ref": "#/$defs/qualityLimits"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/qualitySnapshot"
+      }
+    },
+    "run.client": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive",
+          "running",
+          "context"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "running": {
+            "type": "boolean"
+          },
+          "isServer": {
+            "type": "boolean"
+          },
+          "isClient": {
+            "type": "boolean"
+          },
+          "isStudio": {
+            "type": "boolean"
+          },
+          "playerCount": {
+            "type": "integer"
+          },
+          "context": {
+            "type": "string"
+          },
+          "serverOnly": {
+            "type": "boolean"
+          },
+          "clientReady": {
+            "type": "boolean"
+          },
+          "players": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "problems": {
+            "$ref": "#/$defs/stringArray"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "run.players": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "run.server": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive",
+          "running",
+          "context"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "running": {
+            "type": "boolean"
+          },
+          "isServer": {
+            "type": "boolean"
+          },
+          "isClient": {
+            "type": "boolean"
+          },
+          "isStudio": {
+            "type": "boolean"
+          },
+          "playerCount": {
+            "type": "integer"
+          },
+          "context": {
+            "type": "string"
+          },
+          "serverOnly": {
+            "type": "boolean"
+          },
+          "clientReady": {
+            "type": "boolean"
+          },
+          "players": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "problems": {
+            "$ref": "#/$defs/stringArray"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "run.start": {
+      "methodVersion": 1,
+      "effect": "context-transition",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "settleSeconds": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 30
+          },
+          "requireBaselineBelow": {
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "run.state": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "sampleSeconds": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 5
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "run.stop": {
+      "methodVersion": 1,
+      "effect": "context-transition",
+      "contexts": [
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "required",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult",
+        "properties": {
+          "note": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "runtime.errors": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive",
+          "severity",
+          "entries",
+          "total",
+          "truncated"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "returned": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "runtime.events": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "path": {
+            "type": "string"
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive",
+          "events",
+          "total",
+          "truncated"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "events": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "counts": {
+            "type": "object"
+          },
+          "returned": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "runtime.memory": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "totalMb": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "categories": {
+            "type": "object"
+          },
+          "instanceCount": {
+            "type": "integer"
+          },
+          "unavailable": {
+            "$ref": "#/$defs/stringArray"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "runtime.metrics": {
+      "methodVersion": 1,
+      "effect": "transient",
+      "contexts": [
+        "run"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "seconds": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 10
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive",
+          "running"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "running": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "sampleSeconds": {
+            "type": "number"
+          },
+          "frameTimeMs": {
+            "type": "object"
+          },
+          "fps": {
+            "type": "object"
+          },
+          "heartbeatMs": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "unavailable": {
+            "$ref": "#/$defs/stringArray"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "runtime.network": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "running": {
+            "type": "boolean"
+          },
+          "dataReceiveKbps": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "dataSendKbps": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "physicsReceiveKbps": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "physicsSendKbps": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "remoteObjects": {
+            "type": "integer"
+          },
+          "bindableObjects": {
+            "type": "integer"
+          },
+          "playerCount": {
+            "type": "integer"
+          },
+          "unavailable": {
+            "$ref": "#/$defs/stringArray"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "runtime.physics": {
+      "methodVersion": 1,
+      "effect": "transient",
+      "contexts": [
+        "run"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "seconds": {
+            "type": "number",
+            "exclusiveMinimum": 0,
+            "maximum": 10
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive",
+          "running"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "running": {
+            "type": "boolean"
+          },
+          "reason": {
+            "type": "string"
+          },
+          "sampleSeconds": {
+            "type": "number"
+          },
+          "stepTimeMs": {
+            "type": "object"
+          },
+          "physicsStepMs": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "parts": {
+            "type": "object"
+          },
+          "gravity": {
+            "type": "number"
+          },
+          "unavailable": {
+            "$ref": "#/$defs/stringArray"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "runtime.warnings": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "limit": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive",
+          "severity",
+          "entries",
+          "total",
+          "truncated"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "severity": {
+            "type": "string"
+          },
+          "entries": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "returned": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "studio.capture_permission": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "studio.capture_background": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "includeUi": {
+            "type": "boolean"
+          }
+        }
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "studio.save_place": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "confirmOverwrite": {
+            "type": "boolean"
+          },
+          "saveWithoutPublish": {
+            "type": "boolean"
+          },
+          "confirmPublish": {
+            "type": "boolean"
+          },
+          "placeId": {
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "required": [
+          "confirmOverwrite"
+        ]
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "studio.list_places": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "maxPages": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 20
+          },
+          "maxPlaces": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 1000
+          }
+        }
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "studio.create_place": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "confirmCreate": {
+            "type": "boolean"
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 100
+          },
+          "templatePlaceId": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "description": {
+            "type": "string",
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "confirmCreate",
+          "name",
+          "templatePlaceId"
+        ]
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "test.start": {
+      "methodVersion": 1,
+      "effect": "context-transition",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "enum": [
+              "play",
+              "run",
+              "multiplayer"
+            ]
+          },
+          "players": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8
+          },
+          "args": {
+            "type": "object"
+          }
+        },
+        "required": []
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "test.status": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "server",
+        "run"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {},
+        "required": []
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "test.finish": {
+      "methodVersion": 1,
+      "effect": "context-transition",
+      "contexts": [
+        "server",
+        "run"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "testId": {
+            "type": "string"
+          },
+          "result": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "testId"
+        ]
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "test.device": {
+      "methodVersion": 1,
+      "effect": "transient",
+      "contexts": [
+        "edit",
+        "server",
+        "run"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reset": {
+            "type": "boolean"
+          },
+          "deviceId": {
+            "type": "string"
+          },
+          "width": {
+            "type": "integer",
+            "minimum": 240,
+            "maximum": 8192
+          },
+          "height": {
+            "type": "integer",
+            "minimum": 240,
+            "maximum": 8192
+          },
+          "pixelDensity": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 1000
+          },
+          "orientation": {
+            "enum": [
+              "LandscapeLeft",
+              "LandscapeRight",
+              "Portrait",
+              "Sensor"
+            ]
+          },
+          "scalingMode": {
+            "enum": [
+              "ScaleToPhysicalSize",
+              "ActualResolution",
+              "FitToWindow"
+            ]
+          },
+          "memoryMb": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 262144
+          }
+        },
+        "required": []
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "test.device_status": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "server",
+        "run"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {},
+        "required": []
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "test.device_info": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "server",
+        "run"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "deviceId"
+        ],
+        "properties": {
+          "deviceId": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "test.network": {
+      "methodVersion": 1,
+      "effect": "transient",
+      "contexts": [
+        "edit",
+        "server",
+        "run"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "reset": {
+            "type": "boolean"
+          },
+          "preset": {
+            "enum": [
+              "zero",
+              "ideal_fiber",
+              "wired_broadband",
+              "home_wifi",
+              "mobile_4g",
+              "bad_3g"
+            ]
+          },
+          "inboundLatencyMs": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "inboundJitterMs": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "inboundLossPercent": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 0.5
+          },
+          "outboundLatencyMs": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "outboundJitterMs": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1000
+          },
+          "outboundLossPercent": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 0.5
+          },
+          "randomizeJoinInstanceOrder": {
+            "type": "boolean"
+          }
+        },
+        "required": []
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "test.network_status": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "server",
+        "run"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {},
+        "required": []
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "studio.info": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "test.run": {
+      "methodVersion": 1,
+      "effect": "arbitrary",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "source"
+        ],
+        "properties": {
+          "source": {}
+        }
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "transform.align": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "path",
+          "to"
+        ],
+        "properties": {
+          "path": {},
+          "to": {}
+        }
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "transform.bounds": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {}
+        }
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "transform.move": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {}
+        }
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "transform.nearest": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "point"
+        ],
+        "properties": {
+          "point": {}
+        }
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "transform.orient": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {}
+        }
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "transform.overlaps": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "a",
+          "b"
+        ],
+        "properties": {
+          "a": {},
+          "b": {}
+        }
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "transform.settle": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {}
+        }
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "transform.snap": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {}
+        }
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "watch.read": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "path",
+          "attribute"
+        ],
+        "properties": {
+          "path": {},
+          "attribute": {}
+        }
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "watch.start": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "path",
+          "attribute"
+        ],
+        "properties": {
+          "path": {},
+          "attribute": {}
+        }
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "watch.stop": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": true,
+        "required": [
+          "path",
+          "attribute"
+        ],
+        "properties": {
+          "path": {},
+          "attribute": {}
+        }
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "world.bounds": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "world.ground_support": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "path"
+        ],
+        "properties": {
+          "path": {
+            "type": "string",
+            "minLength": 1
+          },
+          "samples": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "maxGap": {
+            "type": "number",
+            "minimum": 0
+          },
+          "maxDistance": {
+            "type": "number",
+            "minimum": 0
+          },
+          "ignore": {
+            "$ref": "#/$defs/stringArray"
+          },
+          "ignoreWater": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "world.navigation": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "origin": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "agentRadius": {
+            "type": "number"
+          },
+          "agentHeight": {
+            "type": "number"
+          },
+          "agentCanJump": {
+            "type": "boolean"
+          },
+          "waypointSpacing": {
+            "type": "number"
+          },
+          "probeDistance": {
+            "type": "number"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive",
+          "navmeshResponsive"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "navmeshResponsive": {
+            "type": "boolean"
+          },
+          "controlProbe": {
+            "type": "object"
+          },
+          "agent": {
+            "type": "object"
+          },
+          "error": {
+            "type": [
+              "string",
+              "null"
+            ]
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "world.overlaps": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "paths"
+        ],
+        "properties": {
+          "paths": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            },
+            "minItems": 2
+          },
+          "tolerance": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "world.path": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "allOf": [
+          {
+            "anyOf": [
+              {
+                "required": [
+                  "from"
+                ]
+              },
+              {
+                "required": [
+                  "fromPath"
+                ]
+              }
+            ]
+          },
+          {
+            "anyOf": [
+              {
+                "required": [
+                  "to"
+                ]
+              },
+              {
+                "required": [
+                  "toPath"
+                ]
+              }
+            ]
+          }
+        ],
+        "properties": {
+          "from": {
+            "$ref": "#/$defs/vector3"
+          },
+          "fromPath": {
+            "type": "string",
+            "minLength": 1
+          },
+          "to": {
+            "$ref": "#/$defs/vector3"
+          },
+          "toPath": {
+            "type": "string",
+            "minLength": 1
+          },
+          "approachClearance": {
+            "type": "number",
+            "minimum": 0
+          },
+          "agentRadius": {
+            "type": "number",
+            "minimum": 0
+          },
+          "agentHeight": {
+            "type": "number",
+            "minimum": 0
+          },
+          "agentCanJump": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "world.raycast": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "origin",
+          "direction"
+        ],
+        "properties": {
+          "origin": {
+            "$ref": "#/$defs/vector3"
+          },
+          "direction": {
+            "$ref": "#/$defs/vector3"
+          },
+          "ignore": {
+            "$ref": "#/$defs/stringArray"
+          },
+          "ignoreWater": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "world.region": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "required": [
+          "centre",
+          "size"
+        ],
+        "properties": {
+          "centre": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "size": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "limit": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "ignore": {
+            "$ref": "#/$defs/stringArray"
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive",
+          "parts",
+          "total",
+          "truncated"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "centre": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "size": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "parts": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "returned": {
+            "type": "integer"
+          },
+          "total": {
+            "type": "integer"
+          },
+          "truncated": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "world.spawn_points": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive",
+          "spawns",
+          "count"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "spawns": {
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          },
+          "count": {
+            "type": "integer"
+          },
+          "enabled": {
+            "type": "integer"
+          },
+          "neutral": {
+            "type": "integer"
+          },
+          "respawnLocation": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "ambiguousArrival": {
+            "type": "boolean"
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "world.summary": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit",
+        "run",
+        "server",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "optional",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false
+      },
+      "result": {
+        "$ref": "#/$defs/objectResult"
+      }
+    },
+    "world.terrain": {
+      "methodVersion": 1,
+      "effect": "mutation",
+      "contexts": [
+        "edit",
+        "run"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "properties": {
+          "mode": {
+            "enum": [
+              "read",
+              "write",
+              "clear"
+            ]
+          },
+          "centre": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "size": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "material": {
+            "type": "string"
+          },
+          "occupancy": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 1
+          }
+        },
+        "additionalProperties": false
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "conclusive",
+          "mode"
+        ],
+        "properties": {
+          "conclusive": {
+            "type": "boolean"
+          },
+          "mode": {
+            "type": "string"
+          },
+          "voxelSize": {
+            "type": "integer"
+          },
+          "maxExtents": {
+            "type": "object"
+          },
+          "waterColor": {},
+          "waterTransparency": {
+            "type": "number"
+          },
+          "region": {
+            "type": "object"
+          },
+          "voxels": {
+            "type": "integer"
+          },
+          "filled": {
+            "type": "integer"
+          },
+          "occupancy": {
+            "type": "number"
+          },
+          "materials": {
+            "type": "object"
+          },
+          "material": {
+            "type": "string"
+          },
+          "voxelsWritten": {
+            "type": "integer"
+          },
+          "requestedSize": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "snappedSize": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          }
+        },
+        "additionalProperties": false
+      }
+    },
+    "client.camera_get": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "player": {
+            "type": "string"
+          }
+        }
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "position",
+          "lookVector",
+          "fieldOfView",
+          "viewportSize",
+          "cameraType",
+          "cameraSource",
+          "player"
+        ],
+        "properties": {
+          "applied": {
+            "type": "boolean"
+          },
+          "position": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "lookVector": {
+            "type": "array",
+            "minItems": 3,
+            "maxItems": 3,
+            "items": {
+              "type": "number"
+            }
+          },
+          "fieldOfView": {
+            "type": "number"
+          },
+          "cameraType": {
+            "type": "string"
+          },
+          "viewportSize": {
+            "type": "array",
+            "minItems": 2,
+            "maxItems": 2,
+            "items": {
+              "type": "number"
+            }
+          },
+          "cameraSource": {
+            "const": "client"
+          },
+          "player": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "client.input": {
+      "methodVersion": 1,
+      "effect": "transient",
+      "contexts": [
+        "run",
+        "server"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "optional"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "action"
+        ],
+        "properties": {
+          "action": {
+            "enum": [
+              "keys",
+              "click",
+              "text"
+            ]
+          },
+          "keys": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 8,
+            "items": {
+              "type": "string",
+              "maxLength": 40
+            }
+          },
+          "duration": {
+            "type": "number",
+            "minimum": 0.01,
+            "maximum": 3
+          },
+          "x": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 16384
+          },
+          "y": {
+            "type": "number",
+            "minimum": 0,
+            "maximum": 16384
+          },
+          "text": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "player": {
+            "type": "string"
+          }
+        }
+      },
+      "result": {
+        "type": "object",
+        "required": [
+          "delivered",
+          "source",
+          "player"
+        ],
+        "properties": {
+          "delivered": {
+            "type": "boolean"
+          },
+          "source": {
+            "const": "VirtualInput"
+          },
+          "player": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "test.leave": {
+      "methodVersion": 1,
+      "effect": "context-transition",
+      "contexts": [
+        "server",
+        "run",
+        "client"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "test.add_players": {
+      "methodVersion": 1,
+      "effect": "context-transition",
+      "contexts": [
+        "server",
+        "run"
+      ],
+      "idempotency": "at-most-once",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "count": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 8
+          }
+        },
+        "required": [
+          "count"
+        ]
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "studio.environment": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "studio.selection": {
+      "methodVersion": 1,
+      "effect": "read",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "safe-retry",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {}
+      },
+      "result": {
+        "type": "object"
+      }
+    },
+    "studio.select": {
+      "methodVersion": 1,
+      "effect": "transient",
+      "contexts": [
+        "edit"
+      ],
+      "idempotency": "naturally-idempotent",
+      "availability": "supported",
+      "selector": {
+        "session": "required",
+        "build": "optional",
+        "player": "none"
+      },
+      "params": {
+        "type": "object",
+        "additionalProperties": false,
+        "properties": {
+          "mode": {
+            "enum": [
+              "set",
+              "add",
+              "remove"
+            ]
+          },
+          "paths": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "minLength": 1
+            }
+          }
+        }
+      },
+      "result": {
+        "type": "object"
+      }
+    }
+  }
+}

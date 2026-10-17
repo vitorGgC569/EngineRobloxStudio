@@ -11,6 +11,7 @@ local RunService = game:GetService("RunService")
 local Stats = game:GetService("Stats")
 
 local Config = require(script.Parent.Parent.Config)
+local Errors = require(script.Parent.Parent.Errors)
 local Serialize = require(script.Parent.Parent.Serialize)
 
 local RuntimeCommands = {}
@@ -146,6 +147,20 @@ function RuntimeCommands.logTail(params: { [string]: any }): any
 	local severityFilter = params.severity
 	local pattern = params.pattern
 
+	-- string.find throws on a malformed pattern such as "(". Check once, before
+	-- the walk, so the command returns E_BAD_PARAMS instead of crashing mid-log.
+	-- Nil still means no filter.
+	local needle: string? = nil
+	if pattern ~= nil then
+		local valid = pcall(function()
+			string.find("", pattern)
+		end)
+		if not valid then
+			Errors.raise(Errors.BAD_PARAMS, "pattern is not a valid Luau pattern")
+		end
+		needle = pattern
+	end
+
 	local ok, history = pcall(function()
 		return LogService:GetLogHistory()
 	end)
@@ -159,8 +174,8 @@ function RuntimeCommands.logTail(params: { [string]: any }): any
 		local entry = history[index]
 		local severity = SEVERITY_BY_MESSAGE_TYPE[entry.messageType] or "info"
 		local include = severityFilter == nil or severity == severityFilter
-		if include and pattern ~= nil then
-			include = string.find(entry.message, pattern) ~= nil
+		if include and needle ~= nil then
+			include = string.find(entry.message, needle) ~= nil
 		end
 		if include then
 			table.insert(entries, 1, {
@@ -208,6 +223,12 @@ function RuntimeCommands.players(_params: { [string]: any }): any
 				end
 			end
 		end
+		-- Vector3 and Color3 attributes are not JSON. Encode each value the
+		-- same way instance.attributes does, or reporting this result throws.
+		local attributes: { [string]: any } = {}
+		for key, value in pairs(player:GetAttributes()) do
+			attributes[key] = Serialize.value(value)
+		end
 		table.insert(result, {
 			userId = player.UserId,
 			name = player.Name,
@@ -215,7 +236,7 @@ function RuntimeCommands.players(_params: { [string]: any }): any
 			health = if humanoid then humanoid.Health else nil,
 			state = if humanoid then tostring(humanoid:GetState()) else nil,
 			leaderstats = stats,
-			attributes = player:GetAttributes(),
+			attributes = attributes,
 		})
 	end
 	return { players = result, count = #result, context = RuntimeCommands.context() }

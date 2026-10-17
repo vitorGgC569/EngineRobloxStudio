@@ -1,0 +1,41 @@
+{
+  "id": "lumenfall-rift-salvagers-initial-runtime",
+  "description": "Start a fresh exact-build Play Solo session, attach to a real player, and prove the initial HUD is visible before release captures.",
+  "requires": {
+    "playSession": true,
+    "clientBridge": true
+  },
+  "steps": [
+    {
+      "reset": {},
+      "comment": "initial-state evidence requires a fresh exact-build session"
+    },
+    {
+      "attach": {},
+      "fatal": true,
+      "comment": "capture only after the bridge proves it controls a real player"
+    },
+    {
+      "wait": {
+        "seconds": 0.5
+      },
+      "comment": "allow the LocalScript HUD to mount"
+    },
+    {
+      "gui": {
+        "visibleText": "Cross the rift bridges"
+      },
+      "fatal": true,
+      "comment": "prove the initial objective is visible to the real player"
+    }
+  ],
+  "releaseEvidence": [
+    {
+      "id": "ui_initial_surface",
+      "probe": "ui_initial_surface",
+      "category": "ui",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED"
+    }
+  ]
+}

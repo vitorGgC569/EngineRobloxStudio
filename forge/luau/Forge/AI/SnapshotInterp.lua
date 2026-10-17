@@ -39,6 +39,23 @@ type Self = {
 
 SnapshotInterp.__index = SnapshotInterp
 
+-- The caller reuses one pose table for the next snapshot. Storing that
+-- table makes the previous sample move with it, so the blend has no start.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 local function lerp(a: number, b: number, alpha: number): number
 	return a + (b - a) * alpha
 end
@@ -70,7 +87,7 @@ function SnapshotInterp.feed(self: Self, entityId: string, pose: Pose, recvTime:
 		self.buffers[entityId] = buffer
 	end
 	buffer.prev = if buffer.next then buffer.next else { pose = table.clone(buffer.rendered), t = recvTime - self.targetSpan }
-	buffer.next = { pose = pose, t = recvTime }
+	buffer.next = { pose = deepCopy(pose, {}), t = recvTime }
 
 	local jump = math.sqrt(
 		(pose.x - buffer.rendered.x) ^ 2 + (pose.y - buffer.rendered.y) ^ 2 + (pose.z - buffer.rendered.z) ^ 2
@@ -85,7 +102,7 @@ function SnapshotInterp.present(self: Self, entityId: string, now: number): Pose
 	end
 	local prev, nextSample = buffer.prev, buffer.next
 	if not nextSample then
-		return buffer.rendered
+		return deepCopy(buffer.rendered, {})
 	end
 
 	local span = buffer.span or self.targetSpan
@@ -106,7 +123,7 @@ function SnapshotInterp.present(self: Self, entityId: string, now: number): Pose
 		buffer.prev = nextSample
 		buffer.next = nil
 	end
-	return buffer.rendered
+	return deepCopy(buffer.rendered, {})
 end
 
 function SnapshotInterp.remove(self: Self, entityId: string): ()

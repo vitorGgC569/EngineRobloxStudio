@@ -1,0 +1,108 @@
+{
+  "$schema": "../schemas/product-intent.v1.schema.json",
+  "schemaVersion": 1,
+  "intentId": "lumenfall-rift-salvagers.intent",
+  "revision": 1,
+  "productId": "lumenfall-rift-salvagers",
+  "title": "Lumenfall Rift Salvagers",
+  "productClass": {
+    "genre": "roguelite",
+    "templateFamily": "roguelite"
+  },
+  "pillars": [
+    {
+      "id": "verb-explore",
+      "description": "The product loop explicitly includes explore."
+    },
+    {
+      "id": "verb-fight",
+      "description": "The product loop explicitly includes fight."
+    },
+    {
+      "id": "verb-collect",
+      "description": "The product loop explicitly includes collect."
+    },
+    {
+      "id": "verb-unlock",
+      "description": "The product loop explicitly includes unlock."
+    }
+  ],
+  "audience": {
+    "description": "Provisional platform baseline for desktop and phone, pending human audience approval; up to 1 concurrent player(s).",
+    "targetDevices": [
+      "desktop",
+      "phone"
+    ]
+  },
+  "coreLoop": [
+    "explore",
+    "fight",
+    "collect",
+    "unlock"
+  ],
+  "semantics": {
+    "worldRoles": [
+      {
+        "id": "primary-landmark",
+        "description": "The primary navigational landmark selected by the linear_levels world."
+      }
+    ],
+    "uiSurfaces": [
+      {
+        "id": "initial-interface",
+        "description": "The player-facing interface visible in the initial session."
+      }
+    ],
+    "gameplayVerbs": [
+      {
+        "id": "explore",
+        "description": "Player-observable behavior for the explore loop verb."
+      },
+      {
+        "id": "fight",
+        "description": "Player-observable behavior for the fight loop verb."
+      },
+      {
+        "id": "collect",
+        "description": "Player-observable behavior for the collect loop verb."
+      },
+      {
+        "id": "unlock",
+        "description": "Player-observable behavior for the unlock loop verb."
+      }
+    ]
+  },
+  "authorship": {
+    "authorityKind": "pending-human-approval",
+    "authorityId": null,
+    "approvedAt": null,
+    "candidateDerived": false
+  },
+  "calibrationPolicy": {
+    "requireIndependentReferences": true,
+    "forbidCandidateDerivedThresholds": true,
+    "requireCompleteThresholdCoverage": true
+  },
+  "bindings": {
+    "contract": {
+      "path": "contracts/game-contract.json",
+      "artifactId": "lumenfall-rift-salvagers.release",
+      "sha256": "34e201f7ef04d1165721b509be08b8dfbc1a81c7f116e5be7ff60bf9884b499c"
+    },
+    "visualQualitySpec": {
+      "path": "contracts/visual/visual-quality.json",
+      "artifactId": "lumenfall-rift-salvagers.visual",
+      "sha256": "5535e2f4f4ada039f52858e1b597a39f8151580b2226a541ea35d85a58f9c701"
+    },
+    "referenceBenchmark": {
+      "path": "definition/reference-benchmark.json",
+      "artifactId": "lumenfall-rift-salvagers.reference-benchmark",
+      "sha256": "4d91edc217b7c7113230b5921f3f2d53be853514f1bfae62951c9f55d3af39ce"
+    },
+    "visualCalibration": {
+      "path": "definition/visual-calibration.json",
+      "artifactId": "lumenfall-rift-salvagers.visual-calibration",
+      "sha256": "fa518c87fe325b4039cd578920d0acfd7ece395f90c9c1485190afc842473e5b"
+    }
+  }
+}

@@ -10,6 +10,19 @@ name: forge
 # would produce a green badge that means nothing.
 #
 # So this gate answers one question well: does the source still hold together.
+#
+# It has to be able to answer "yes".
+# -----------------------------------
+# For most of this repository's life it could not. The API-index step compared
+# a regenerated file against the committed one, and that file carried
+# `datetime.now()` to the second, so the comparison could only pass inside a
+# one-second window. That step failed on every run. Beside it, six genuinely
+# failing tests and a capability catalogue that had drifted twenty-five commits
+# earlier sat unnoticed, because a wall of red that is always red is a wall
+# nobody reads.
+#
+# Every step below is now capable of passing when the repository is sound. That
+# property is worth more than any individual check here.
 
 on:
   push:
@@ -27,35 +40,88 @@ jobs:
         with:
           python-version: "3.12"
 
+      - name: Install runtime and test dependencies
+        run: python -m pip install -e '.[dev]'
+
+      - name: Install pinned Rojo
+        run: cargo install rojo --version 7.7.0 --locked
+
       - name: Fetch the pinned Luau tools
         # Pinned by version rather than "latest" on purpose: a compiler that
         # changes under the project turns an unrelated push into a red build.
-        env:
-          LUAU_VERSION: "0.640"
+        #
+        # Read out of `rqe/luau_check.py` rather than typed here. The number
+        # was written in both places, both carrying a comment about upgrades
+        # being reviewed changes, and the two drifted ninety-three releases
+        # apart: CI compiled with 0.640 while every local run used 0.733. A
+        # constant duplicated for safety is a constant that disagrees.
         run: |
           set -euo pipefail
-          mkdir -p .tools/luau
-          curl -sSL -o /tmp/luau.zip \
-            "https://github.com/luau-lang/luau/releases/download/${LUAU_VERSION}/luau-ubuntu.zip"
-          unzip -o -q /tmp/luau.zip -d .tools/luau
-          chmod +x .tools/luau/luau-compile .tools/luau/luau-analyze
-          .tools/luau/luau-compile --version || true
+          python -m rqe.luau_check --bootstrap
 
       - name: Every Luau file compiles
+        # Every root that holds first-party Luau, and both extensions.
+        #
+        # This was `find forge/luau games -name '*.lua'`, which compiled 909
+        # files and silently skipped 182 that matter:
+        #
+        #   72 files  every `.luau` under games/ — the whole `infected`
+        #             project, which uses that extension exclusively
+        #   81 files  roblox/lib — GameKit and WorldKit, the library the
+        #             generated games are actually written against
+        #   29 files  apps/ — the Studio plugin, which is the one piece of
+        #             Luau here that running a game cannot check, because a
+        #             plugin that fails to compile never loads at all
+        #
+        # `forge/kits/*/salvage/` stays out: it is third-party source nobody
+        # in this repository wrote and nobody is going to fix, and 1389 of its
+        # findings once drowned the only real one in the same report.
         run: |
           set -euo pipefail
           failed=0
+          count=0
           while IFS= read -r file; do
+            count=$((count + 1))
             if ! .tools/luau/luau-compile --binary "$file" > /dev/null 2>&1; then
               echo "::error file=$file::does not compile"
               .tools/luau/luau-compile --binary "$file" 2>&1 | head -5
               failed=1
             fi
-          done < <(find forge/luau games -name '*.lua')
+          done < <(find forge/luau games roblox/lib roblox/mvp apps tools -name '*.lua' -o -name '*.luau' 2>/dev/null | grep -v '/salvage/' | sort)
+          echo "compiled $count files"
           exit $failed
 
+      - name: The installation is complete
+        # `forge preflight` names every required piece and how to get it. On a
+        # runner the live-Studio pieces are legitimately absent and reported as
+        # optional; anything *required* being missing exits ENVIRONMENT, which
+        # is the code that says "fix the machine, do not blame the game".
+        run: python forge/forge.py preflight
+
       - name: Python suite
+        # Everything, including the tests marked `slow` -- CI is the gate and a
+        # gate that skips is not one.
+        #
+        # The working loop is `pytest -m "not slow"`: 1,534 tests in about
+        # three minutes against twelve for the whole thing, with the deselected
+        # count printed so the difference is never invisible. That gap used to
+        # be the whole suite, and a suite nobody runs is how six failing tests
+        # sat beside a drifted catalogue for twenty-five commits.
         run: python -m pytest tests/ -q
+
+      - name: Derived hashes match their sources
+        # The fifth place a bridge command has to be updated, and the one that
+        # was written down nowhere.
+        #
+        # `quality/production-capabilities.v1.json` records the sha256 of the
+        # command manifest, so a command cannot appear without the capability
+        # that governs it being reviewed. That rule worked: somebody added
+        # `client.tree`, the hash stopped matching, and the gate refused — for
+        # twenty-five commits, on main, while nothing reported it. The hash was
+        # a number a human typed, with no command to cut it.
+        run: |
+          set -euo pipefail
+          python rqe.py stamp
 
       - name: Authoring checks
         # The doctor is a gate for structure, not for assets: `check_asset_ids`
@@ -84,6 +150,7 @@ jobs:
           doctor.check_unknown_globals(root, findings)
           doctor.check_use_before_declare(root, findings)
           doctor.check_requires(root, findings)
+          doctor.check_family_exports(Path("."), findings)
           for f in findings:
               print(f"::error file={f.file},line={f.line}::{f.message}")
           sys.exit(1 if findings else 0)
@@ -92,11 +159,14 @@ jobs:
       - name: API index is current
         # Regenerated and compared rather than trusted. An index that drifts
         # from the source is worse than none, because it is believed.
+        #
+        # This is only a meaningful comparison because the index no longer
+        # carries a generation timestamp; see `forge/cli/apiindex.py`.
         run: |
           set -euo pipefail
           python forge/forge.py api > /dev/null
           if ! git diff --quiet -- forge/catalog/api.json; then
             echo "::error::forge/catalog/api.json is stale; run 'forge api' and commit"
-            git diff --stat -- forge/catalog/api.json
+            git diff -- forge/catalog/api.json | head -40
             exit 1
           fi

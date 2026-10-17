@@ -12,6 +12,7 @@ from __future__ import annotations
 import json
 import platform
 import subprocess
+import time
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -40,6 +41,16 @@ DEFAULT_OBSERVE_CONFIG: dict[str, Any] = {
     "regionRoot": "game.Workspace",
     "groundSupportSamples": 9,
     "groundSupportMaxGap": 1.5,
+    #: Frames sampled while the world is still loading -- or while this pass's
+    #: own burst of queries is still draining -- describe the load, not the
+    #: game. Wait for the place's readiness marker (bounded), then hold a quiet
+    #: period, then sample. `Debug.ready` writes ReplicatedStorage.ForgeReady
+    #: at the end of a Forge bootstrap; a place that never writes one still
+    #: gets the quiet period.
+    "runtimeReadyPath": "ReplicatedStorage.ForgeReady",
+    "runtimeReadyTimeoutSeconds": 60.0,
+    "runtimeSettleSeconds": 5.0,
+    "runtimeSampleSeconds": 3.0,
     "budgets": {
         "minFps": 30.0,
         "maxFrameMs": 33.34,
@@ -195,6 +206,47 @@ class _Collector:
         return response.result
 
 
+    def find_all(self, params: dict[str, Any]) -> dict[str, Any] | None:
+        """Finish a stable snapshot or explicitly retain incomplete coverage."""
+        result = self.call("dm.find", params)
+        if result is None:
+            return None
+        # An omitted list is not zero matches. Callers tell a missing key from
+        # an explicit empty list, and a cursor walk needs a list to extend.
+        if not isinstance(result, dict) or "results" not in result or not isinstance(result["results"], list):
+            return result
+        combined = dict(result)
+        combined["results"] = list(result["results"])
+        seen: set[str] = set()
+        while result.get("truncated"):
+            cursor = result.get("nextCursor")
+            if not cursor or cursor in seen:
+                combined["truncated"] = True
+                combined["enumerationError"] = "no advancing cursor for truncated discovery"
+                break
+            seen.add(cursor)
+            page = self.call("dm.find", {**params, "cursor": cursor})
+            if page is None or page.get("snapshotId") != combined.get("snapshotId"):
+                combined["truncated"] = True
+                combined["enumerationError"] = "discovery snapshot changed or expired"
+                break
+            if "results" not in page or not isinstance(page.get("results"), list):
+                combined["truncated"] = True
+                combined["enumerationError"] = "discovery page omitted results"
+                break
+            combined["results"].extend(page["results"])
+            # The previous page was truncated, so this page has to say whether
+            # more remains. bool(None) is false and used to close the search.
+            if "truncated" not in page:
+                combined["truncated"] = True
+                combined["enumerationError"] = "discovery page did not say whether discovery finished"
+                break
+            combined["truncated"] = bool(page["truncated"])
+            result = page
+        combined["matched"] = len(combined["results"])
+        return combined
+
+
 #: A freshly opened place holds Terrain and Camera. Anything much above that
 #: before a run means a previous run already generated a world here.
 CLEAN_BASELINE_DESCENDANTS = 8
@@ -221,6 +273,10 @@ def _measurement_budgets(project: Project, config: dict[str, Any]) -> dict[str, 
         budgets["maxFrameMs"] = float(client["max_frame_ms"])
     if "max_workspace" in instances:
         budgets["maxWorkspaceInstances"] = int(instances["max_workspace"])
+    # A contract may pin the sampling window; the plugin clamps it to 5 s.
+    for key in ("sample_seconds", "sampleSeconds"):
+        if key in client:
+            budgets["sampleSeconds"] = max(0.0, min(5.0, float(client[key])))
     return budgets
 
 
@@ -324,17 +380,17 @@ def measure_place(
             conclusive=False,
         ))
         if start_run and stop_after:
-            collector.call("run.stop", timeout=30)
+            _stop_run(collector)
         return observation
 
     _measure_world(collector, observation, config, budgets)
-    _measure_runtime(collector, observation, budgets)
+    _measure_runtime(collector, observation, budgets, config)
     _measure_regions(collector, observation, config)
     _measure_navigation(collector, observation)
     _measure_logs(collector, observation)
 
     if start_run and stop_after:
-        collector.call("run.stop", timeout=30)
+        _stop_run(collector)
 
     # Settle the final level against everything the pass actually observed.
     observation.context = observation.strongest_context()
@@ -346,11 +402,25 @@ def measure_place(
 
 def _start_run(collector: _Collector, observation: Observation) -> bool:
     """Bring the world to life, refusing to measure an already-generated place."""
-    started = collector.call(
-        "run.start",
-        {"settleSeconds": 6, "requireBaselineBelow": CLEAN_BASELINE_DESCENDANTS},
-        timeout=45,
-    )
+    try:
+        with collector.bridge.lease_scope(
+            agent_id=f"observe-start-{observation.run_id}",
+            context="edit",
+            ttl_seconds=75.0,
+            release_required=False,
+        ):
+            started = collector.call(
+                "run.start",
+                {"settleSeconds": 6, "requireBaselineBelow": CLEAN_BASELINE_DESCENDANTS},
+                timeout=45,
+            )
+    except BridgeError as exc:
+        observation.errors.append({
+            "method": "hub.lease.acquire",
+            "params": {"context": "edit"},
+            "error": exc.to_dict(),
+        })
+        started = None
     if started is None:
         # The guard fires as a command error; surface it as evidence rather than
         # measuring a doubled world and reporting confident wrong numbers.
@@ -421,136 +491,315 @@ def _start_run(collector: _Collector, observation: Observation) -> bool:
     return True
 
 
+def _stop_run(collector: _Collector) -> Any:
+    """Stop a run under its running-session fence; transition drops the lease."""
+
+    try:
+        with collector.bridge.lease_scope(
+            agent_id=f"observe-stop-{collector.observation.run_id}",
+            context="running",
+            ttl_seconds=60.0,
+            release_required=False,
+        ):
+            return collector.call("run.stop", timeout=30)
+    except BridgeError as exc:
+        collector.observation.errors.append({
+            "method": "hub.lease.acquire",
+            "params": {"context": "running"},
+            "error": exc.to_dict(),
+        })
+        return None
+
+
 def _measure_world(collector: _Collector, observation: Observation, config: dict[str, Any], budgets: dict[str, Any]) -> None:
     summary = collector.call("world.summary", timeout=30)
     if summary is None:
         return
     observation.measurements["world"] = summary
 
-    workspace_instances = int(summary.get("workspaceDescendants", 0))
-    max_instances = int(budgets["maxWorkspaceInstances"])
-    observation.evidence.append(Evidence(
-        id="world.instance_budget",
-        probe="instance_budget",
-        category="performance",
-        status="PASS" if workspace_instances <= max_instances else "FAIL",
-        severity="major",
-        message=f"Workspace holds {workspace_instances} instances (budget {max_instances})",
-        details={"measured": workspace_instances, "budget": max_instances, "classCounts": summary.get("classCounts", {})},
-        source="studio-bridge",
-        validation_level=observation.validation_level,
-    ))
-    if workspace_instances > max_instances:
-        observation.findings.append(_finding(
-            "high", "performance", "game.Workspace",
-            f"Workspace instance count {workspace_instances} exceeds the {max_instances} budget",
-            "reduce part count, merge static geometry or move unused assets out of Workspace",
-            {"measured": workspace_instances, "budget": max_instances},
-        ))
-
-    below = summary.get("partsBelowY", {})
-    below_count = int(below.get("count", 0))
-    observation.evidence.append(Evidence(
-        id="world.parts_below_floor",
-        probe="parts_below_floor",
-        category="geometry",
-        status="PASS" if below_count == 0 else "FAIL",
-        severity="major",
-        message=f"{below_count} part(s) below y={below.get('threshold')}",
-        details=below,
-        source="studio-bridge",
-        validation_level=observation.validation_level,
-    ))
-    if below_count:
-        observation.findings.append(_finding(
-            "high", "world_geometry", "game.Workspace",
-            f"{below_count} part(s) sit below y={below.get('threshold')} and are unreachable",
-            "raise or delete the parts that fell out of the playable volume",
-            below,
-        ))
-
-    unanchored = int(summary.get("unanchoredParts", 0))
-    max_unanchored = int(budgets["maxUnanchoredParts"])
-    observation.evidence.append(Evidence(
-        id="world.unanchored_parts",
-        probe="unanchored_parts",
-        category="geometry",
-        status="PASS" if unanchored <= max_unanchored else "WARN",
-        severity="minor",
-        message=f"{unanchored} unanchored part(s) (budget {max_unanchored})",
-        details={"measured": unanchored, "budget": max_unanchored},
-        source="studio-bridge",
-        validation_level=observation.validation_level,
-    ))
-
-    spawns = collector.call("dm.find", {"className": "SpawnLocation", "root": "game.Workspace", "limit": 50})
-    if spawns is not None:
-        results = spawns.get("results", [])
-        observation.measurements["spawns"] = results
+    def _field_absent(evidence_id: str, probe: str, category: str, severity: str, field_name: str) -> None:
+        # A summary that omits the count is not a measurement of zero. Zero is
+        # a value the bridge reported; absence means the instrument did not look.
         observation.evidence.append(Evidence(
-            id="world.spawn_exists",
-            probe="spawn_exists",
-            category="gameplay",
-            status="PASS" if results else "FAIL",
-            severity="critical",
-            message=f"{len(results)} SpawnLocation(s) found in Workspace",
-            details={"spawns": results},
+            id=evidence_id,
+            probe=probe,
+            category=category,
+            status="WARN",
+            severity=severity,
+            message=f"{field_name} was not in the world summary",
+            details={"missingField": field_name},
             source="studio-bridge",
             validation_level=observation.validation_level,
-            coverage=0.0,
             conclusive=False,
         ))
-        if not results:
+
+    max_instances = int(budgets["maxWorkspaceInstances"])
+    if "workspaceDescendants" not in summary:
+        _field_absent("world.instance_budget", "instance_budget", "performance", "major", "workspaceDescendants")
+    else:
+        workspace_instances = int(summary["workspaceDescendants"])
+        observation.evidence.append(Evidence(
+            id="world.instance_budget",
+            probe="instance_budget",
+            category="performance",
+            status="PASS" if workspace_instances <= max_instances else "FAIL",
+            severity="major",
+            message=f"Workspace holds {workspace_instances} instances (budget {max_instances})",
+            details={"measured": workspace_instances, "budget": max_instances, "classCounts": summary.get("classCounts", {})},
+            source="studio-bridge",
+            validation_level=observation.validation_level,
+        ))
+        if workspace_instances > max_instances:
             observation.findings.append(_finding(
-                "critical", "world_geometry", "game.Workspace",
-                "the place has no SpawnLocation; players cannot enter",
-                "add a SpawnLocation on solid ground in the starting area",
+                "high", "performance", "game.Workspace",
+                f"Workspace instance count {workspace_instances} exceeds the {max_instances} budget",
+                "reduce part count, merge static geometry or move unused assets out of Workspace",
+                {"measured": workspace_instances, "budget": max_instances},
             ))
 
-        # Every spawn must actually stand on something, measured by raycast.
-        for spawn in results[:8]:
-            support = collector.call("world.ground_support", {
-                "path": spawn["path"],
-                "samples": int(config["groundSupportSamples"]),
-                "maxGap": float(config["groundSupportMaxGap"]),
-            }, timeout=25)
-            if support is None:
-                continue
-            observation.measurements.setdefault("groundSupport", []).append(support)
-            supported = bool(support.get("supported"))
+    below = summary.get("partsBelowY")
+    if not isinstance(below, dict) or "count" not in below:
+        missing = "partsBelowY" if "partsBelowY" not in summary else "partsBelowY.count"
+        _field_absent("world.parts_below_floor", "parts_below_floor", "geometry", "major", missing)
+    else:
+        below_count = int(below["count"])
+        observation.evidence.append(Evidence(
+            id="world.parts_below_floor",
+            probe="parts_below_floor",
+            category="geometry",
+            status="PASS" if below_count == 0 else "FAIL",
+            severity="major",
+            message=f"{below_count} part(s) below y={below.get('threshold')}",
+            details=below,
+            source="studio-bridge",
+            validation_level=observation.validation_level,
+        ))
+        if below_count:
+            observation.findings.append(_finding(
+                "high", "world_geometry", "game.Workspace",
+                f"{below_count} part(s) sit below y={below.get('threshold')} and are unreachable",
+                "raise or delete the parts that fell out of the playable volume",
+                below,
+            ))
+
+    max_unanchored = int(budgets["maxUnanchoredParts"])
+    if "unanchoredParts" not in summary:
+        _field_absent("world.unanchored_parts", "unanchored_parts", "geometry", "minor", "unanchoredParts")
+    else:
+        unanchored = int(summary["unanchoredParts"])
+        observation.evidence.append(Evidence(
+            id="world.unanchored_parts",
+            probe="unanchored_parts",
+            category="geometry",
+            status="PASS" if unanchored <= max_unanchored else "WARN",
+            severity="minor",
+            message=f"{unanchored} unanchored part(s) (budget {max_unanchored})",
+            details={"measured": unanchored, "budget": max_unanchored},
+            source="studio-bridge",
+            validation_level=observation.validation_level,
+        ))
+
+    spawns = collector.find_all({"className": "SpawnLocation", "root": "game.Workspace", "limit": 500})
+    if spawns is not None:
+        # A missing truncated flag is not a claim that the page was complete.
+        # Leaving the key unset would be read as complete by the navigation pass.
+        if "truncated" in spawns:
+            observation.measurements["spawnDiscoveryComplete"] = not bool(spawns["truncated"])
+        else:
+            observation.measurements["spawnDiscoveryComplete"] = False
+
+        if "results" not in spawns:
             observation.evidence.append(Evidence(
-                id=f"world.ground_support::{spawn['path']}",
-                probe="ground_support",
-                category="geometry",
-                status="PASS" if supported else "FAIL",
+                id="world.spawn_exists",
+                probe="spawn_exists",
+                category="gameplay",
+                status="WARN",
                 severity="critical",
-                message=(
-                    f"{spawn['path']} rests on a surface "
-                    f"({support.get('sampledPoints')} raycasts, coverage {support.get('supportCoverage')})"
-                    if supported else
-                    f"{spawn['path']} is unsupported at {len(support.get('unsupportedPoints', []))} sampled point(s)"
-                ),
-                details=support,
+                message="SpawnLocation results were not in the search reply",
+                details={"missingField": "results"},
                 source="studio-bridge",
                 validation_level=observation.validation_level,
+                coverage=0.0,
+                conclusive=False,
             ))
-            if not supported:
+        else:
+            results = spawns["results"]
+            observation.measurements["spawns"] = results
+            observation.evidence.append(Evidence(
+                id="world.spawn_exists",
+                probe="spawn_exists",
+                category="gameplay",
+                status="PASS" if results else "FAIL",
+                severity="critical",
+                message=f"{len(results)} SpawnLocation(s) found in Workspace",
+                details={"spawns": results},
+                source="studio-bridge",
+                validation_level=observation.validation_level,
+                coverage=0.0,
+                conclusive=False,
+            ))
+            if not results:
                 observation.findings.append(_finding(
-                    "critical", "world_geometry", spawn["path"],
-                    f"spawn is not supported by ground within {config['groundSupportMaxGap']} studs",
-                    "lower the spawn onto the floor or add a support surface beneath it",
-                    {"unsupportedPoints": support.get("unsupportedPoints", [])},
+                    "critical", "world_geometry", "game.Workspace",
+                    "the place has no SpawnLocation; players cannot enter",
+                    "add a SpawnLocation on solid ground in the starting area",
                 ))
 
+            # Every spawn must actually stand on something, measured by raycast.
+            for spawn in results:
+                support = collector.call("world.ground_support", {
+                    "path": f"ref:{spawn['ref']}" if spawn.get("ref") else spawn["path"],
+                    "samples": int(config["groundSupportSamples"]),
+                    "maxGap": float(config["groundSupportMaxGap"]),
+                }, timeout=25)
+                if support is None:
+                    continue
+                observation.measurements.setdefault("groundSupport", []).append(support)
+                # Missing, or a non-bool, is not a raycast result. bool(None) is
+                # false and used to fail the spawn as if the ground were absent.
+                supported = support.get("supported") if isinstance(support, dict) else None
+                measured = isinstance(support, dict) and isinstance(supported, bool) and "supported" in support
+                if not measured:
+                    observation.evidence.append(Evidence(
+                        id=f"world.ground_support::{spawn['path']}",
+                        probe="ground_support",
+                        category="geometry",
+                        status="WARN",
+                        severity="critical",
+                        message=f"{spawn['path']} ground support did not report a boolean supported field",
+                        details=support if isinstance(support, dict) else {"support": support},
+                        source="studio-bridge",
+                        validation_level=observation.validation_level,
+                        conclusive=False,
+                    ))
+                    continue
+                observation.evidence.append(Evidence(
+                    id=f"world.ground_support::{spawn['path']}",
+                    probe="ground_support",
+                    category="geometry",
+                    status="PASS" if supported else "FAIL",
+                    severity="critical",
+                    message=(
+                        f"{spawn['path']} rests on a surface "
+                        f"({support.get('sampledPoints')} raycasts, coverage {support.get('supportCoverage')})"
+                        if supported else
+                        f"{spawn['path']} is unsupported at {len(support.get('unsupportedPoints', []))} sampled point(s)"
+                    ),
+                    details=support,
+                    source="studio-bridge",
+                    validation_level=observation.validation_level,
+                ))
+                if supported is False:
+                    observation.findings.append(_finding(
+                        "critical", "world_geometry", spawn["path"],
+                        f"spawn is not supported by ground within {config['groundSupportMaxGap']} studs",
+                        "lower the spawn onto the floor or add a support surface beneath it",
+                        {"unsupportedPoints": support.get("unsupportedPoints", [])},
+                    ))
 
-def _measure_runtime(collector: _Collector, observation: Observation, budgets: dict[str, Any]) -> None:
-    state = collector.call("run.state", {"sampleSeconds": 0.6}, timeout=25)
+
+def _read_property(collector: _Collector, path: str, name: str) -> Any:
+    """Read one property without letting a missing instance count as an error.
+
+    The readiness marker is probed in a loop while the place is still booting,
+    so "no instance at ..." is an expected answer for the first several polls,
+    not a failed command. Going through ``_Collector.call`` recorded one error
+    per poll and turned waiting into a pile of bridge failures.
+    """
+
+    try:
+        response = collector.bridge.call_response(
+            "dm.properties", {"path": path, "properties": [name]}, timeout=10
+        )
+    except BridgeError:
+        return None
+    if response.ok and isinstance(response.result, dict):
+        return (response.result.get("properties") or {}).get(name)
+    return None
+
+
+def _settle_runtime(collector: _Collector, observation: Observation, config: dict[str, Any]) -> dict[str, Any]:
+    """Let the load finish before grading frames.
+
+    A frame sample taken during Play's first seconds is a true measurement of
+    the wrong moment: the world build, terrain streaming and this pass's own
+    command burst all land on the scheduler about to be graded. Measured once:
+    a 0.6 s window taken straight after the world queries caught a 290 ms
+    server frame on a build whose steady state sits far under budget, and the
+    release gate read it as the game.
+
+    ``Debug.ready`` is the engine's own answer to "is it up yet", so the
+    settle waits for the marker path to carry a non-empty value -- bounded,
+    because a place that never writes one must not cost the pass a hang --
+    and then holds a quiet period for the marker to replicate and the last
+    command frames to drain.
+    """
+
+    # Edit mode has no boot to wait out: the marker is only written by a
+    # running game, and waiting the full ready timeout on every edit-mode
+    # measurement would be a minute spent to learn nothing.
+    if observation.context == "edit":
+        return {"skipped": "edit context"}
+
+    started = time.monotonic()
+    path = str(config.get("runtimeReadyPath") or "")
+    ready_value: str | None = None
+    ready_waited: float | None = None
+    polls = 0
+    if path:
+        deadline = started + float(config.get("runtimeReadyTimeoutSeconds", 60.0))
+        while time.monotonic() < deadline:
+            polls += 1
+            value = _read_property(collector, path, "Value")
+            if isinstance(value, str) and value:
+                ready_value = value
+                ready_waited = time.monotonic() - started
+                break
+            # Never sleep past the deadline: a short timeout is a short wait.
+            time.sleep(min(2.0, max(0.0, deadline - time.monotonic())))
+
+    quiet = float(config.get("runtimeSettleSeconds", 5.0))
+    if quiet > 0:
+        time.sleep(quiet)
+
+    return {
+        "readyPath": path or None,
+        "readyValue": ready_value,
+        "readyPolls": polls,
+        "readyWaitedSeconds": round(ready_waited, 2) if ready_waited is not None else None,
+        "quietSeconds": quiet,
+        "settledSeconds": round(time.monotonic() - started, 2),
+    }
+
+
+def _measure_runtime(
+    collector: _Collector,
+    observation: Observation,
+    budgets: dict[str, Any],
+    config: dict[str, Any],
+) -> None:
+    observation.measurements["runtimeSettle"] = _settle_runtime(collector, observation, config)
+    # A longer window than the old 0.6 s: one hitch should be one hitch among
+    # three seconds of frames, not a third of the sample. The plugin clamps
+    # this to 5 s, and a contract may pin it with `sample_seconds`.
+    sample_seconds = float(
+        budgets.get("sampleSeconds")
+        or config.get("runtimeSampleSeconds")
+        or 3.0
+    )
+    state = collector.call(
+        "run.state", {"sampleSeconds": sample_seconds}, timeout=sample_seconds + 25
+    )
     if state is None:
         return
     observation.measurements["runtime"] = state
     runtime = state.get("runtime", {})
     fps = runtime.get("fps")
-    is_running = bool(state.get("isRunning"))
+    # bool(None) is false, and a place that is not running still passes a
+    # sample inside budget. A missing or non-boolean flag is not that sample.
+    running = state.get("isRunning") if isinstance(state, dict) else None
+    running_known = isinstance(state, dict) and "isRunning" in state and isinstance(running, bool)
+    is_running = running is True
 
     if fps is None:
         observation.evidence.append(Evidence(
@@ -567,21 +816,50 @@ def _measure_runtime(collector: _Collector, observation: Observation, budgets: d
     else:
         minimum = float(budgets["minFps"])
         maximum_frame_ms = float(budgets["maxFrameMs"])
+        # A missing worst frame is not a frame that missed the budget. Folding
+        # the absence into frame_time_ok failed a running place that had only
+        # reported its frame rate.
         worst_frame_ms = runtime.get("worstFrameMs")
-        frame_time_ok = worst_frame_ms is not None and float(worst_frame_ms) <= maximum_frame_ms
+        frame_time_reported = worst_frame_ms is not None
         frame_rate_ok = float(fps) >= minimum
+        if not running_known:
+            status = "WARN"
+            conclusive = False
+            message = (
+                f"sampled {fps} FPS over {runtime.get('sampleSeconds')}s "
+                f"in {state.get('context')} context; isRunning was not a boolean"
+            )
+        elif frame_time_reported:
+            frame_time_ok = float(worst_frame_ms) <= maximum_frame_ms
+            status = "PASS" if frame_rate_ok and frame_time_ok else ("WARN" if not is_running else "FAIL")
+            conclusive = is_running
+            message = (
+                f"sampled {fps} FPS / {worst_frame_ms} ms worst frame over {runtime.get('sampleSeconds')}s "
+                f"in {state.get('context')} context (budgets {minimum} FPS / {maximum_frame_ms} ms)"
+            )
+        elif is_running and not frame_rate_ok:
+            status = "FAIL"
+            conclusive = True
+            message = (
+                f"sampled {fps} FPS over {runtime.get('sampleSeconds')}s "
+                f"in {state.get('context')} context (budget {minimum} FPS); worst frame was not reported"
+            )
+        else:
+            status = "WARN"
+            conclusive = False
+            message = (
+                f"sampled {fps} FPS over {runtime.get('sampleSeconds')}s "
+                f"in {state.get('context')} context (budget {minimum} FPS); worst frame was not reported"
+            )
         observation.evidence.append(Evidence(
             id="runtime.frame_rate",
             probe="frame_rate",
             category="performance",
             # Edit mode idles at a low frame rate by design, so an edit-context
             # sample is informational rather than a budget failure.
-            status="PASS" if frame_rate_ok and frame_time_ok else ("WARN" if not is_running else "FAIL"),
+            status=status,
             severity="major",
-            message=(
-                f"sampled {fps} FPS / {worst_frame_ms} ms worst frame over {runtime.get('sampleSeconds')}s "
-                f"in {state.get('context')} context (budgets {minimum} FPS / {maximum_frame_ms} ms)"
-            ),
+            message=message,
             details={
                 "fps": fps,
                 "worstFrameMs": worst_frame_ms,
@@ -592,14 +870,21 @@ def _measure_runtime(collector: _Collector, observation: Observation, budgets: d
             },
             source="studio-bridge",
             validation_level=observation.validation_level,
-            conclusive=worst_frame_ms is not None and is_running,
+            conclusive=conclusive,
         ))
-        if (not frame_rate_ok or not frame_time_ok) and is_running:
+        if running_known and frame_time_reported and (not frame_rate_ok or not frame_time_ok) and is_running:
             observation.findings.append(_finding(
                 "high", "performance", "runtime",
                 f"runtime missed its {minimum} FPS / {maximum_frame_ms} ms frame budget",
                 "profile scripts and physics; check for per-frame loops and unanchored part counts",
                 {"fps": fps, "worstFrameMs": worst_frame_ms},
+            ))
+        elif running_known and not frame_time_reported and is_running and not frame_rate_ok:
+            observation.findings.append(_finding(
+                "high", "performance", "runtime",
+                f"runtime missed its {minimum} FPS budget ({fps} FPS)",
+                "profile scripts and physics; check for per-frame loops and unanchored part counts",
+                {"fps": fps},
             ))
 
     memory = runtime.get("memoryMb")
@@ -667,9 +952,42 @@ def _measure_regions(collector: _Collector, observation: Observation, config: di
     Generic by design: plots, zones, arenas and rooms are all "regions that must
     not overlap". The engine finds them by tag first, then by name pattern.
     """
+    def returned_list(reply: Any) -> list[Any] | None:
+        if isinstance(reply, dict) and isinstance(reply.get("results"), list):
+            return reply["results"]
+        return None
+
+    def missing_list(discovery: str) -> None:
+        # A missing list is not a search that found zero regions. None and an
+        # omitted results key used to become [] and a conclusive count of zero.
+        observation.evidence.append(Evidence(
+            id="world.region_overlap",
+            probe="spatial_overlap",
+            category="geometry",
+            status="WARN",
+            severity="minor",
+            message=(
+                "the tag search did not return a list"
+                if discovery == "tag" else
+                "the name-pattern search did not return a list"
+            ),
+            details={
+                "discovery": discovery,
+                "missingField": "results",
+                "regionTag": config["regionTag"],
+                "regionNamePattern": config.get("regionNamePattern"),
+            },
+            source="studio-bridge",
+            validation_level=observation.validation_level,
+            conclusive=False,
+        ))
+
     tagged = collector.call("dm.find", {"tag": config["regionTag"], "limit": 128, "topLevelOnly": True})
-    results = (tagged or {}).get("results", [])
+    results = returned_list(tagged)
     discovery = "tag"
+    if results is None:
+        missing_list(discovery)
+        return
 
     if not results and config.get("regionNamePattern"):
         by_name = collector.call("dm.find", {
@@ -680,11 +998,16 @@ def _measure_regions(collector: _Collector, observation: Observation, config: di
             # outermost matches are the exclusive regions being tested.
             "topLevelOnly": True,
         })
-        results = (by_name or {}).get("results", [])
+        named = returned_list(by_name)
         discovery = "namePattern"
+        if named is None:
+            missing_list(discovery)
+            return
+        results = named
 
     observation.measurements["regions"] = {"discovery": discovery, "count": len(results), "results": results}
 
+    # The list was returned. An explicit empty list is that measurement.
     if len(results) < 2:
         observation.evidence.append(Evidence(
             id="world.region_overlap",
@@ -706,24 +1029,41 @@ def _measure_regions(collector: _Collector, observation: Observation, config: di
         return
 
     observation.measurements["regionOverlaps"] = overlaps
-    clean = bool(overlaps.get("clean"))
-    observation.evidence.append(Evidence(
-        id="world.region_overlap",
-        probe="spatial_overlap",
-        category="geometry",
-        status="PASS" if clean else "FAIL",
-        severity="critical",
-        message=(
-            f"{overlaps.get('regions')} exclusive regions, none intersecting"
-            if clean else
-            f"{overlaps.get('overlapping')} intersecting region pair(s) out of {overlaps.get('regions')}"
-        ),
-        details=overlaps,
-        source="studio-bridge",
-        validation_level=observation.validation_level,
-    ))
+    # Missing, or a non-bool, is not a measurement that the regions intersect.
+    # bool(None) is false and used to fail the check as if they overlapped.
+    clean = overlaps.get("clean") if isinstance(overlaps, dict) else None
+    measured = isinstance(overlaps, dict) and isinstance(clean, bool) and "clean" in overlaps
+    if not measured:
+        observation.evidence.append(Evidence(
+            id="world.region_overlap",
+            probe="spatial_overlap",
+            category="geometry",
+            status="WARN",
+            severity="critical",
+            message="region overlap did not report a boolean clean field",
+            details=overlaps if isinstance(overlaps, dict) else {"overlaps": overlaps},
+            source="studio-bridge",
+            validation_level=observation.validation_level,
+            conclusive=False,
+        ))
+    else:
+        observation.evidence.append(Evidence(
+            id="world.region_overlap",
+            probe="spatial_overlap",
+            category="geometry",
+            status="PASS" if clean else "FAIL",
+            severity="critical",
+            message=(
+                f"{overlaps.get('regions')} exclusive regions, none intersecting"
+                if clean else
+                f"{overlaps.get('overlapping')} intersecting region pair(s) out of {overlaps.get('regions')}"
+            ),
+            details=overlaps,
+            source="studio-bridge",
+            validation_level=observation.validation_level,
+        ))
 
-    for collision in overlaps.get("collisions", []):
+    for collision in overlaps.get("collisions", []) if isinstance(overlaps, dict) else []:
         observation.findings.append(_finding(
             "high", "spatial_overlap", collision["a"],
             f"{collision['a']} intersects {collision['b']}",
@@ -759,7 +1099,7 @@ def _measure_navigation(collector: _Collector, observation: Observation) -> None
         ))
         return
 
-    prompts = collector.call("dm.find", {"className": "ProximityPrompt", "root": "game.Workspace", "limit": 40})
+    prompts = collector.find_all({"className": "ProximityPrompt", "root": "game.Workspace", "limit": 500})
     if prompts is None:
         observation.evidence.append(Evidence(
             id="navigation.objective_reachable",
@@ -775,7 +1115,24 @@ def _measure_navigation(collector: _Collector, observation: Observation) -> None
             conclusive=False,
         ))
         return
-    objectives = (prompts or {}).get("results", [])
+    # A reply that omits results is not a search that found nothing. An explicit
+    # empty list still is.
+    if not isinstance(prompts, dict) or "results" not in prompts:
+        observation.evidence.append(Evidence(
+            id="navigation.objective_reachable",
+            probe="objective_reachable",
+            category="navigation",
+            status="WARN",
+            severity="critical",
+            message="ProximityPrompt results were not in the search reply",
+            source="studio-bridge",
+            validation_level=observation.validation_level,
+            details={"missingField": "results"},
+            coverage=0.0,
+            conclusive=False,
+        ))
+        return
+    objectives = prompts["results"]
     observation.measurements["objectives"] = objectives
     if not objectives:
         observation.evidence.append(Evidence(
@@ -794,33 +1151,37 @@ def _measure_navigation(collector: _Collector, observation: Observation) -> None
         ))
         return
 
-    origin = spawns[0]
     checks: list[dict[str, Any]] = []
     unreachable: list[dict[str, Any]] = []
     inconclusive = 0
 
-    for objective in objectives[:12]:
-        result = collector.call("world.path", {
-            "fromPath": f"ref:{origin['ref']}" if origin.get("ref") else origin["path"],
-            "toPath": f"ref:{objective['ref']}" if objective.get("ref") else objective["path"],
-        }, timeout=35)
-        if result is None:
-            continue
-        entry = {
-            "from": origin["path"],
-            "to": objective["path"],
-            "reachable": result.get("reachable"),
-            "status": result.get("status"),
-            "conclusive": result.get("conclusive"),
-            "controlStatus": result.get("controlStatus"),
-            "straightLineDistance": result.get("straightLineDistance"),
-            "waypointCount": result.get("waypointCount"),
-        }
-        checks.append(entry)
-        if not result.get("conclusive"):
-            inconclusive += 1
-        elif not result.get("reachable"):
-            unreachable.append(entry)
+    for origin in spawns:
+        for objective in objectives:
+            result = collector.call("world.path", {
+                "fromPath": f"ref:{origin['ref']}" if origin.get("ref") else origin["path"],
+                "toPath": f"ref:{objective['ref']}" if objective.get("ref") else objective["path"],
+            }, timeout=35)
+            if result is None:
+                continue
+            entry = {
+                "from": origin["path"],
+                "to": objective["path"],
+                "reachable": result.get("reachable"),
+                "status": result.get("status"),
+                "conclusive": result.get("conclusive"),
+                "controlStatus": result.get("controlStatus"),
+                "straightLineDistance": result.get("straightLineDistance"),
+                "waypointCount": result.get("waypointCount"),
+            }
+            checks.append(entry)
+            # A missing reachable is not an unreachable path. None is falsy
+            # and used to fail the pair as if no route existed.
+            if not result.get("conclusive"):
+                inconclusive += 1
+            elif result.get("reachable") is False:
+                unreachable.append(entry)
+            elif result.get("reachable") is not True:
+                inconclusive += 1
 
     if not checks:
         observation.evidence.append(Evidence(
@@ -839,7 +1200,17 @@ def _measure_navigation(collector: _Collector, observation: Observation) -> None
         ))
         return
 
-    observation.measurements["navigation"] = {"checks": checks, "unreachable": len(unreachable), "inconclusive": inconclusive}
+    total_pairs = len(spawns) * len(objectives)
+    # Missing is not complete. Only an explicit false truncated flag, and an
+    # explicit true spawnDiscoveryComplete, say both searches were finished.
+    search_complete = prompts.get("truncated") is False
+    spawn_discovery_complete = observation.measurements.get("spawnDiscoveryComplete") is True
+    discovery_complete = search_complete and spawn_discovery_complete
+    coverage = (len(checks) - inconclusive) / total_pairs
+    complete = discovery_complete and len(checks) == total_pairs and inconclusive == 0
+    observation.measurements["navigation"] = {"checks": checks, "unreachable": len(unreachable),
+        "inconclusive": inconclusive, "expectedPairs": total_pairs, "coverage": coverage,
+        "discoveryComplete": discovery_complete}
 
     if inconclusive == len(checks):
         # The navmesh was unusable, so a NoPath verdict proves nothing. Say that
@@ -862,19 +1233,19 @@ def _measure_navigation(collector: _Collector, observation: Observation) -> None
         id="navigation.objective_reachable",
         probe="objective_reachable",
         category="navigation",
-        status="PASS" if not unreachable else "FAIL",
+        status="FAIL" if unreachable else ("PASS" if complete else "WARN"),
         severity="critical",
         message=(
-            f"all {len(checks) - inconclusive} objective(s) reachable on foot from {origin['path']}"
+            f"{len(checks) - inconclusive} of {total_pairs} spawn/objective pairs measured reachable"
             if not unreachable else
-            f"{len(unreachable)} of {len(checks)} objective(s) unreachable from {origin['path']}"
+            f"{len(unreachable)} of {total_pairs} spawn/objective pairs unreachable"
         ),
-        details={"checks": checks, "spawn": origin["path"]},
+        details={"checks": checks, "spawns": len(spawns), "expectedPairs": total_pairs},
         source="studio-bridge",
         validation_level=observation.validation_level,
-        coverage=(len(checks) - inconclusive) / len(objectives) if objectives else 0.0,
-        conclusive=inconclusive == 0,
-        truncated=bool((prompts or {}).get("truncated")) or len(objectives) > len(checks),
+        coverage=coverage if discovery_complete else 0.0,
+        conclusive=complete,
+        truncated=not discovery_complete or len(checks) < total_pairs,
     ))
 
     for entry in unreachable:
@@ -884,6 +1255,24 @@ def _measure_navigation(collector: _Collector, observation: Observation) -> None
             "remove or fix the collision geometry blocking the route, then re-run the navigation check",
             entry,
         ))
+
+
+def _reported_error_count(payload: Any) -> int | None:
+    """The error count the reply actually carried.
+
+    None means `counts` or `counts.error` was absent, or the value was not a
+    number. A missing count is not a measurement of zero.
+    """
+
+    if not isinstance(payload, dict) or "counts" not in payload:
+        return None
+    counts = payload["counts"]
+    if not isinstance(counts, dict) or "error" not in counts:
+        return None
+    value = counts["error"]
+    if isinstance(value, bool) or not isinstance(value, (int, float)):
+        return None
+    return int(value)
 
 
 def _measure_logs(collector: _Collector, observation: Observation) -> None:
@@ -904,35 +1293,49 @@ def _measure_logs(collector: _Collector, observation: Observation) -> None:
         ))
     else:
         observation.measurements["logs"] = logs
-        counts = logs.get("counts", {})
-        errors = int(counts.get("error", 0))
+        errors = _reported_error_count(logs)
         server_error_entries = [
-            entry for entry in logs.get("entries", [])
-            if entry.get("severity") == "error"
+            entry for entry in (logs.get("entries", []) if isinstance(logs, dict) else [])
+            if isinstance(entry, dict) and entry.get("severity") == "error"
         ]
+        counts = logs.get("counts") if isinstance(logs, dict) else None
 
-        observation.evidence.append(Evidence(
-            id="runtime.console_errors",
-            probe="runtime_error",
-            category="runtime",
-            status="PASS" if errors == 0 else "FAIL",
-            severity="critical",
-            message=f"{errors} error line(s) in the Studio/server output",
-            details={"counts": counts, "entries": server_error_entries[:25]},
-            source="studio-bridge",
-            validation_level=observation.validation_level,
-            coverage=1.0,
-            truncated=errors > len(server_error_entries),
-        ))
-
-        if errors:
-            for entry in server_error_entries[:10]:
-                observation.findings.append(_finding(
-                    "critical", "runtime_error", "output",
-                    entry.get("message", "")[:300],
-                    "fix the script raising this error, then re-run the measurement",
-                    {"timestamp": entry.get("timestamp")},
-                ))
+        if errors is None:
+            observation.evidence.append(Evidence(
+                id="runtime.console_errors",
+                probe="runtime_error",
+                category="runtime",
+                status="WARN",
+                severity="critical",
+                message="error count was not in the Studio/server log reply",
+                details={"counts": counts, "missingField": "counts.error"},
+                source="studio-bridge",
+                validation_level=observation.validation_level,
+                coverage=0.0,
+                conclusive=False,
+            ))
+        else:
+            observation.evidence.append(Evidence(
+                id="runtime.console_errors",
+                probe="runtime_error",
+                category="runtime",
+                status="PASS" if errors == 0 else "FAIL",
+                severity="critical",
+                message=f"{errors} error line(s) in the Studio/server output",
+                details={"counts": counts, "entries": server_error_entries[:25]},
+                source="studio-bridge",
+                validation_level=observation.validation_level,
+                coverage=1.0,
+                truncated=errors > len(server_error_entries),
+            ))
+            if errors > 0:
+                for entry in server_error_entries[:10]:
+                    observation.findings.append(_finding(
+                        "critical", "runtime_error", "output",
+                        entry.get("message", "")[:300],
+                        "fix the script raising this error, then re-run the measurement",
+                        {"timestamp": entry.get("timestamp")},
+                    ))
 
     client_logs = collector.call("client.logs", {"limit": 200}, timeout=25)
     if client_logs is None:
@@ -952,45 +1355,69 @@ def _measure_logs(collector: _Collector, observation: Observation) -> None:
         return
 
     observation.measurements["clientLogs"] = client_logs
-    available = bool(client_logs.get("available"))
-    client_counts = client_logs.get("counts") or {}
-    client_errors = int(client_counts.get("error", 0)) if available else 0
+    available = bool(client_logs.get("available")) if isinstance(client_logs, dict) else False
     client_entries = [
-        entry for entry in client_logs.get("entries", [])
-        if entry.get("severity") == "error"
+        entry for entry in (client_logs.get("entries", []) if isinstance(client_logs, dict) else [])
+        if isinstance(entry, dict) and entry.get("severity") == "error"
     ]
+    client_counts = client_logs.get("counts") if isinstance(client_logs, dict) else None
+    client_errors = _reported_error_count(client_logs) if available else None
+    if available and client_errors is None:
+        observation.evidence.append(Evidence(
+            id="runtime.client_errors",
+            probe="runtime_error",
+            category="runtime",
+            status="WARN",
+            severity="critical",
+            message="error count was not in the active player's log reply",
+            details={
+                "available": available,
+                "player": client_logs.get("player") if isinstance(client_logs, dict) else None,
+                "counts": client_counts,
+                "missingField": "counts.error",
+                "reason": client_logs.get("reason") if isinstance(client_logs, dict) else None,
+            },
+            source="studio-bridge",
+            validation_level=observation.validation_level,
+            coverage=0.0,
+            conclusive=False,
+        ))
+        return
+
+    reported = 0 if client_errors is None else client_errors
     observation.evidence.append(Evidence(
         id="runtime.client_errors",
         probe="runtime_error",
         category="runtime",
-        status="PASS" if available and client_errors == 0 else ("FAIL" if available else "WARN"),
+        status="PASS" if available and reported == 0 else ("FAIL" if available else "WARN"),
         severity="critical",
         message=(
-            f"{client_errors} error line(s) in the active player's output"
+            f"{reported} error line(s) in the active player's output"
             if available else
             "the active player's LogService history is unavailable"
         ),
         details={
             "available": available,
-            "player": client_logs.get("player"),
-            "counts": client_counts,
+            "player": client_logs.get("player") if isinstance(client_logs, dict) else None,
+            "counts": client_counts if isinstance(client_counts, dict) else {},
             "entries": client_entries[:25],
-            "reason": client_logs.get("reason"),
+            "reason": client_logs.get("reason") if isinstance(client_logs, dict) else None,
         },
         source="studio-bridge",
         validation_level=observation.validation_level,
         coverage=1.0 if available else 0.0,
         conclusive=available,
-        truncated=bool(available and client_errors > len(client_entries)),
+        truncated=bool(available and reported > len(client_entries)),
     ))
 
-    for entry in client_entries[:10]:
-        observation.findings.append(_finding(
-            "critical", "runtime_error", "client-output",
-            entry.get("message", "")[:300],
-            "fix the LocalScript error and repeat the player scenario",
-            {"timestamp": entry.get("timestamp"), "player": client_logs.get("player")},
-        ))
+    if reported > 0:
+        for entry in client_entries[:10]:
+            observation.findings.append(_finding(
+                "critical", "runtime_error", "client-output",
+                entry.get("message", "")[:300],
+                "fix the LocalScript error and repeat the player scenario",
+                {"timestamp": entry.get("timestamp"), "player": client_logs.get("player") if isinstance(client_logs, dict) else None},
+            ))
 
 
 def write_observation(observation: Observation, reports_dir: Path) -> dict[str, str]:

@@ -52,12 +52,16 @@ than a thing somebody remembers.
 from __future__ import annotations
 
 import json
+import os
 import re
 import subprocess
 import shutil
+import tempfile
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+
+from rqe.http_safety import json_object_limited, read_limited
 
 REPO = Path(__file__).resolve().parents[2]
 KITS = REPO / "forge" / "kits"
@@ -742,13 +746,19 @@ ASSET_DELIVERY = "https://assetdelivery.roblox.com/v1/asset/"
 
 #: Sent because the endpoints answer 403 to a bare urllib agent string.
 _AGENT = {"User-Agent": "Mozilla/5.0"}
+MAX_API_RESPONSE_BYTES = 4 * 1024 * 1024
+MAX_TOOLBOX_ASSET_BYTES = 128 * 1024 * 1024
 
 
 def _get_json(url: str, timeout: float = 25.0) -> dict[str, Any]:
     import urllib.request
     request = urllib.request.Request(url, headers=_AGENT)
     with urllib.request.urlopen(request, timeout=timeout) as response:
-        return json.loads(response.read().decode("utf-8", "replace"))
+        return json_object_limited(
+            response,
+            MAX_API_RESPONSE_BYTES,
+            label="Roblox Toolbox response",
+        )
 
 
 def toolbox_search(query: str, limit: int = 12) -> list[dict[str, Any]]:
@@ -789,40 +799,44 @@ def fetch_asset(asset_id: int, destination: Path, *, name: str | None = None,
 
     request = urllib.request.Request(f"{ASSET_DELIVERY}?id={int(asset_id)}", headers=_AGENT)
     with urllib.request.urlopen(request, timeout=60) as response:
-        payload = response.read()
+        payload = read_limited(
+            response,
+            MAX_TOOLBOX_ASSET_BYTES,
+            label="Roblox toolbox asset",
+        )
 
-    staged = destination / f".{safe}.rbxm"
-    staged.write_bytes(payload)
     target = destination / f"{safe}.rbxmx"
-    try:
+    with tempfile.TemporaryDirectory(prefix=f".{safe}.", dir=destination) as staging_name:
+        staging = Path(staging_name)
+        staged = staging / f"{safe}.rbxm"
+        work_target = staging / f"{safe}.rbxmx"
+        staged.write_bytes(payload)
         if payload[:8].lstrip().startswith(b"<roblox"):
             # Already XML: some older uploads are stored that way.
-            target.write_bytes(payload)
+            work_target.write_bytes(payload)
         else:
-            convert(staged, target)
-    finally:
-        staged.unlink(missing_ok=True)
+            convert(staged, work_target)
 
-    singleton = carries_singleton(target)
-    if singleton:
-        target.unlink(missing_ok=True)
-        raise KitError(f"asset {asset_id} carries a {singleton} and cannot be mounted")
+        singleton = carries_singleton(work_target)
+        if singleton:
+            raise KitError(f"asset {asset_id} carries a {singleton} and cannot be mounted")
 
-    tree = ET.parse(str(target))
-    root = tree.getroot()
-    stripped = {"PackageLink": 0, "SoundId": 0}
-    for parent in root.iter():
-        for child in list(parent):
-            if child.tag == "Item" and child.get("class") == "PackageLink":
-                parent.remove(child)
-                stripped["PackageLink"] += 1
-    for content in root.iter("Content"):
-        if content.get("name") == "SoundId" and len(content):
-            content.clear()
-            content.set("name", "SoundId")
-            ET.SubElement(content, "null")
-            stripped["SoundId"] += 1
-    tree.write(str(target), encoding="utf-8", xml_declaration=True)
+        tree = ET.parse(str(work_target))
+        root = tree.getroot()
+        stripped = {"PackageLink": 0, "SoundId": 0}
+        for parent in root.iter():
+            for child in list(parent):
+                if child.tag == "Item" and child.get("class") == "PackageLink":
+                    parent.remove(child)
+                    stripped["PackageLink"] += 1
+        for content in root.iter("Content"):
+            if content.get("name") == "SoundId" and len(content):
+                content.clear()
+                content.set("name", "SoundId")
+                ET.SubElement(content, "null")
+                stripped["SoundId"] += 1
+        tree.write(str(work_target), encoding="utf-8", xml_declaration=True)
+        os.replace(work_target, target)
 
     return {
         "id": int(asset_id),

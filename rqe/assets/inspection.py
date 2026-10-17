@@ -35,10 +35,10 @@ a scanner people learn to click past.
 from __future__ import annotations
 
 import json
-import urllib.request
+import hashlib
+import secrets
 from typing import Any
-
-RPC = "http://127.0.0.1:8790/rpc"
+from ..workspace import hub_url
 
 #: Where `assets.insert` parks what it pulls in. Named by the plugin, not here;
 #: the two have to agree and only one of them gets to decide.
@@ -186,21 +186,25 @@ return report
 
 
 def _call(source: str, timeout: int = 90) -> dict[str, Any]:
-    payload = {
-        "jsonrpc": "2.0", "id": 1, "method": "bridge.exec",
-        "params": {"source": source, "_context": "edit", "_timeout": timeout},
-    }
-    request = urllib.request.Request(
-        RPC, data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(request, timeout=timeout + 30) as response:
-        body = json.load(response)
-    if body.get("error"):
-        raise RuntimeError(body["error"].get("message"))
-    result = body.get("result") or {}
-    if not result.get("ok"):
-        raise RuntimeError((result.get("error") or {}).get("message", "exec failed"))
-    return result["result"]["returned"]
+    from ..hub.client import StudioBridge
+
+    bridge = StudioBridge(hub_url(), allow_arbitrary=True)
+    run_id = f"asset-inspection-{secrets.token_hex(8)}"
+    with bridge.lease_scope(
+        run_id=run_id,
+        agent_id="rqe.assets.inspection",
+        build_id=hashlib.sha256(source.encode("utf-8")).hexdigest(),
+        context="edit",
+        ttl_seconds=min(max(float(timeout) + 15.0, 30.0), 300.0),
+        pin_timeout=min(float(timeout), 300.0),
+        release_required=False,
+    ):
+        result = bridge.call(
+            "bridge.exec",
+            {"source": source, "chunkName": "rqe.asset-inspection"},
+            timeout=float(timeout),
+        )
+    return result["returned"]
 
 
 INSERT_LUA = """

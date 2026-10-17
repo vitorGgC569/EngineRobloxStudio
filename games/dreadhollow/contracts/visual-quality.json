@@ -1,0 +1,203 @@
+{
+  "$schema": "../../../schemas/visual-quality-spec.v1.schema.json",
+  "schemaVersion": 1,
+  "specId": "dreadhollow.visual-quality",
+  "revision": 2,
+  "units": {
+    "distance": "stud",
+    "density": "visualRootsPer1000SquareStuds",
+    "colorDifference": "CIEDE2000"
+  },
+  "classification": {
+    "candidateTag": "RQEVisualCandidate",
+    "rootTag": "RQEVisualRoot",
+    "typeAttribute": "VisualType",
+    "variantAttribute": "VisualVariant",
+    "assetKeyAttribute": "AssetKey",
+    "regionTag": "RQEVisualRegion",
+    "regionProfileAttribute": "VisualRegionProfile",
+    "landmarkTag": "RQELandmark",
+    "landmarkAnchorTag": "RQELandmarkAnchor",
+    "excludeTag": "RQEVisualExclude",
+    "minimumClassifiedFraction": 1
+  },
+  "palette": {
+    "swatches": [
+      {
+        "id": "stone",
+        "rgb": [52, 54, 63],
+        "roles": ["dominant"]
+      },
+      {
+        "id": "ground",
+        "rgb": [26, 28, 34],
+        "roles": ["dominant"]
+      },
+      {
+        "id": "wood",
+        "rgb": [50, 42, 34],
+        "roles": ["supporting"]
+      },
+      {
+        "id": "lantern-glow",
+        "rgb": [255, 190, 120],
+        "roles": ["accent"]
+      },
+      {
+        "id": "accent-danger",
+        "rgb": [150, 18, 22],
+        "roles": ["accent"]
+      },
+      {
+        "id": "slate",
+        "rgb": [30, 32, 40],
+        "roles": ["supporting"]
+      },
+      {
+        "id": "bone",
+        "rgb": [168, 160, 140],
+        "roles": ["supporting"]
+      },
+      {
+        "id": "paper",
+        "rgb": [205, 195, 170],
+        "roles": ["accent"]
+      },
+      {
+        "id": "ink",
+        "rgb": [12, 12, 16],
+        "roles": ["supporting"]
+      },
+      {
+        "id": "neutral-light",
+        "rgb": [190, 195, 205],
+        "roles": ["supporting"]
+      }
+    ],
+    "maximumDeltaE": 12.0,
+    "maximumOffPaletteFraction": 0
+  },
+  "objectTypes": {
+    "building": {
+      "selector": {
+        "tag": "RQEVisualRoot",
+        "attributeEquals": {
+          "VisualType": "building"
+        }
+      },
+      "minimumInstances": 1,
+      "maximumInstances": 25000,
+      "scale": {
+        "boundsMethod": "oriented-box",
+        "minimumSize": [24.0, 12.0, 24.0],
+        "maximumSize": [150.0, 40.0, 150.0],
+        "maximumRelativeMad": 1,
+        "groupByAttribute": "VisualVariant"
+      }
+    },
+    "landmark": {
+      "selector": {
+        "tag": "RQEVisualRoot",
+        "attributeEquals": {
+          "VisualType": "landmark"
+        }
+      },
+      "minimumInstances": 1,
+      "maximumInstances": 25000,
+      "scale": {
+        "boundsMethod": "oriented-box",
+        "minimumSize": [8.0, 30.0, 8.0],
+        "maximumSize": [24.0, 60.0, 24.0],
+        "maximumRelativeMad": 1,
+        "groupByAttribute": "VisualVariant"
+      }
+    }
+  },
+  "regionProfiles": {
+    "courtyard": {
+      "density": {
+        "minimumRootsPer1000SquareStuds": 0,
+        "maximumRootsPer1000SquareStuds": 100,
+        "minimumFootprintCoverage": 0
+      },
+      "heightVariation": {
+        "minimumP90MinusP10": 0,
+        "maximumP90MinusP10": 1000
+      },
+      "materialVariety": {
+        "minimumDistinctMaterials": 1,
+        "maximumDominantFraction": 1
+      },
+      "repetition": {
+        "maximumIdenticalVariantRun": 25000,
+        "minimumVariantEntropy": 0
+      }
+    }
+  },
+  "regionSets": {
+    "courtyard-regions": {
+      "selector": {
+        "tag": "RQEVisualRegion",
+        "attributeEquals": {
+          "VisualRegionProfile": "courtyard"
+        }
+      },
+      "profile": "courtyard",
+      "minimumRegions": 1,
+      "maximumRegions": 2,
+      "minimumProfileCoverage": 1
+    }
+  },
+  "landmarks": {
+    "bell-tower": {
+      "selector": {
+        "tag": "RQELandmark",
+        "attributeEquals": {
+          "LandmarkId": "bell-tower"
+        }
+      },
+      "anchorSelector": {
+        "tag": "RQELandmarkAnchor",
+        "attributeEquals": {
+          "LandmarkId": "bell-tower"
+        }
+      },
+      "maximumDistance": 900.0,
+      "sampleSpacing": 10,
+      "eyeHeight": 5,
+      "raysPerAnchor": 9,
+      "minimumVisibleAnchorFraction": 1,
+      "maximumBlindSpotDegrees": 0,
+      "minimumRegionsVisibleFrom": 1
+    }
+  },
+  "viewpoints": {
+    "tower-desktop": {
+      "device": "desktop",
+      "resolution": [1920, 1080],
+      "landmark": "bell-tower",
+      "state": "initial",
+      "camera": {
+        "mode": "look-at-landmark",
+        "distance": 42,
+        "height": 13,
+        "fieldOfView": 70,
+        "yawDegrees": 28
+      },
+      "rubric": {
+        "composition": 0.2,
+        "hierarchy": 0.2,
+        "legibility": 0.25,
+        "materiality": 0.15,
+        "polish": 0.2
+      }
+    }
+  },
+  "evaluationStates": {
+    "initial": {
+      "scenario": "scenarios/initial-runtime.json",
+      "requiredViewpoints": ["tower-desktop"],
+      "minimumRuleCoverage": 1
+    }
+  }
+}

@@ -38,6 +38,7 @@ from pathlib import Path
 from typing import Any
 
 from . import local_credentials, toolbox
+from ..http_safety import HttpBoundaryError, json_object_limited
 
 BANK_PATH = Path("forge/kits/sound-bank.json")
 LUA_PATH = Path("forge/luau/Forge/Audio/Bank.lua")
@@ -72,6 +73,7 @@ ROLES: dict[str, tuple[str, ...]] = {
 #: Roblox's AssetTypeId for Audio. Anything else in an audio search is a
 #: mistake somebody uploaded under the wrong category.
 AUDIO_TYPE = 3
+MAX_API_RESPONSE_BYTES = 4 * 1024 * 1024
 
 
 def _confirm(asset_id: int, key: str, timeout: float = 12.0) -> dict[str, Any] | None:
@@ -81,8 +83,12 @@ def _confirm(asset_id: int, key: str, timeout: float = 12.0) -> dict[str, Any] |
         headers={"x-api-key": key})
     try:
         with urllib.request.urlopen(request, timeout=timeout) as response:
-            payload = json.load(response)
-    except (urllib.error.HTTPError, urllib.error.URLError, OSError, json.JSONDecodeError):
+            payload = json_object_limited(
+                response,
+                MAX_API_RESPONSE_BYTES,
+                label="Roblox asset response",
+            )
+    except (urllib.error.HTTPError, urllib.error.URLError, OSError, HttpBoundaryError):
         return None
 
     if payload.get("assetType") != "Audio":

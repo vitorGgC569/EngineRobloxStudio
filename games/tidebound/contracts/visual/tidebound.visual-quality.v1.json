@@ -1,0 +1,219 @@
+{
+  "$schema": "../../schemas/visual-quality-spec.v1.schema.json",
+  "schemaVersion": 1,
+  "specId": "tidebound.visual-quality",
+  "productId": "tidebound",
+  "revision": 1,
+  "units": {
+    "distance": "stud",
+    "density": "visualRootsPer1000SquareStuds",
+    "colorDifference": "CIEDE2000"
+  },
+  "classification": {
+    "candidateTag": "RQEVisualCandidate",
+    "rootTag": "RQEVisualRoot",
+    "typeAttribute": "VisualType",
+    "variantAttribute": "VisualVariant",
+    "assetKeyAttribute": "AssetKey",
+    "regionTag": "RQEVisualRegion",
+    "regionProfileAttribute": "VisualRegionProfile",
+    "landmarkTag": "RQELandmark",
+    "landmarkAnchorTag": "RQELandmarkAnchor",
+    "excludeTag": "RQEVisualExclude",
+    "minimumClassifiedFraction": 0.9
+  },
+  "palette": {
+    "swatches": [
+      {"id": "grass", "rgb": [94, 122, 76], "roles": ["ground", "nature"]},
+      {"id": "leafy-grass", "rgb": [82, 112, 70], "roles": ["ground", "nature"]},
+      {"id": "sand", "rgb": [198, 180, 138], "roles": ["ground", "shore"]},
+      {"id": "terrain-rock", "rgb": [122, 118, 111], "roles": ["ground", "structure"]},
+      {"id": "terrain-slate", "rgb": [72, 76, 84], "roles": ["ground", "shadow"]},
+      {"id": "foliage-a", "rgb": [74, 118, 64], "roles": ["nature", "vegetation"]},
+      {"id": "foliage-b", "rgb": [88, 132, 70], "roles": ["nature", "vegetation"]},
+      {"id": "foliage-c", "rgb": [64, 104, 60], "roles": ["nature", "vegetation"]},
+      {"id": "foliage-d", "rgb": [102, 140, 78], "roles": ["nature", "vegetation"]},
+      {"id": "wood", "rgb": [122, 84, 54], "roles": ["structure", "wood"]},
+      {"id": "wood-dark", "rgb": [84, 56, 36], "roles": ["structure", "shadow"]},
+      {"id": "wood-light", "rgb": [162, 118, 78], "roles": ["structure", "wood"]},
+      {"id": "rope-canvas", "rgb": [196, 176, 132], "roles": ["prop", "fabric"]},
+      {"id": "canvas", "rgb": [226, 214, 190], "roles": ["prop", "fabric"]},
+      {"id": "brass", "rgb": [206, 168, 96], "roles": ["accent", "metal"]},
+      {"id": "metal", "rgb": [110, 116, 124], "roles": ["structure", "metal"]},
+      {"id": "stone", "rgb": [126, 122, 116], "roles": ["structure", "stone"]},
+      {"id": "stone-dark", "rgb": [92, 90, 88], "roles": ["structure", "shadow"]},
+      {"id": "water-trim", "rgb": [64, 138, 156], "roles": ["accent", "water"]},
+      {"id": "whitewash", "rgb": [214, 208, 196], "roles": ["structure", "surface"]},
+      {"id": "beacon-red", "rgb": [176, 72, 58], "roles": ["accent", "landmark"]},
+      {"id": "lantern", "rgb": [255, 206, 138], "roles": ["light", "warm"]},
+      {"id": "glass", "rgb": [198, 224, 226], "roles": ["structure", "glass"]},
+      {"id": "cave-dark", "rgb": [24, 22, 26], "roles": ["shadow", "deep"]},
+      {"id": "hull", "rgb": [96, 78, 58], "roles": ["structure", "wood"]},
+      {"id": "kelp", "rgb": [96, 148, 72], "roles": ["nature", "reef"]},
+      {"id": "kelp-deep", "rgb": [62, 108, 60], "roles": ["nature", "reef"]},
+      {"id": "glow", "rgb": [120, 232, 216], "roles": ["light", "reef"]},
+      {"id": "ash", "rgb": [88, 84, 78], "roles": ["ground", "burnt"]},
+      {"id": "flame", "rgb": [255, 156, 66], "roles": ["light", "warm"]},
+      {"id": "white", "rgb": [240, 240, 236], "roles": ["surface", "texture-base"]},
+      {"id": "signal-shallows", "rgb": [120, 220, 255], "roles": ["signal", "zone"]},
+      {"id": "signal-kelp", "rgb": [110, 230, 150], "roles": ["signal", "zone"]},
+      {"id": "signal-coral", "rgb": [255, 170, 200], "roles": ["signal", "zone"]},
+      {"id": "signal-storm", "rgb": [255, 210, 120], "roles": ["signal", "zone"]},
+      {"id": "signal-abyss", "rgb": [190, 140, 255], "roles": ["signal", "zone"]}
+    ],
+    "maximumDeltaE": 12,
+    "maximumOffPaletteFraction": 0.08
+  },
+  "objectTypes": {
+    "tree": {
+      "selector": {"tag": "RQEVisualRoot", "attributeEquals": {"VisualType": "tree"}},
+      "minimumInstances": 40,
+      "maximumInstances": 900,
+      "scale": {
+        "boundsMethod": "oriented-box",
+        "minimumSize": [1.5, 2, 1.5],
+        "maximumSize": [70, 90, 70],
+        "maximumRelativeMad": 0.95
+      }
+    },
+    "rock": {
+      "selector": {"tag": "RQEVisualRoot", "attributeEquals": {"VisualType": "rock"}},
+      "minimumInstances": 15,
+      "maximumInstances": 600,
+      "scale": {
+        "boundsMethod": "oriented-box",
+        "minimumSize": [0.4, 0.4, 0.4],
+        "maximumSize": [45, 40, 45],
+        "maximumRelativeMad": 0.95
+      }
+    },
+    "plant": {
+      "selector": {"tag": "RQEVisualRoot", "attributeEquals": {"VisualType": "plant"}},
+      "minimumInstances": 30,
+      "maximumInstances": 900,
+      "scale": {
+        "boundsMethod": "oriented-box",
+        "minimumSize": [0.3, 0.3, 0.3],
+        "maximumSize": [45, 70, 45],
+        "maximumRelativeMad": 0.95
+      }
+    },
+    "structure": {
+      "selector": {"tag": "RQEVisualRoot", "attributeEquals": {"VisualType": "structure"}},
+      "minimumInstances": 15,
+      "maximumInstances": 300,
+      "scale": {
+        "boundsMethod": "oriented-box",
+        "minimumSize": [0.5, 0.5, 0.5],
+        "maximumSize": [420, 140, 420],
+        "maximumRelativeMad": 0.95
+      }
+    },
+    "landmark": {
+      "selector": {"tag": "RQEVisualRoot", "attributeEquals": {"VisualType": "landmark"}},
+      "minimumInstances": 8,
+      "maximumInstances": 40,
+      "scale": {
+        "boundsMethod": "oriented-box",
+        "minimumSize": [2, 2, 2],
+        "maximumSize": [160, 160, 160],
+        "maximumRelativeMad": 0.95
+      }
+    }
+  },
+  "regionProfiles": {
+    "harbor": {
+      "density": {
+        "minimumRootsPer1000SquareStuds": 1.2,
+        "maximumRootsPer1000SquareStuds": 60,
+        "minimumFootprintCoverage": 0.03
+      },
+      "heightVariation": {"minimumP90MinusP10": 3, "maximumP90MinusP10": 140},
+      "materialVariety": {"minimumDistinctMaterials": 3, "maximumDominantFraction": 0.85},
+      "repetition": {"maximumIdenticalVariantRun": 6, "minimumVariantEntropy": 0.5}
+    },
+    "wilds": {
+      "density": {
+        "minimumRootsPer1000SquareStuds": 0.6,
+        "maximumRootsPer1000SquareStuds": 50,
+        "minimumFootprintCoverage": 0.02
+      },
+      "heightVariation": {"minimumP90MinusP10": 2, "maximumP90MinusP10": 140},
+      "materialVariety": {"minimumDistinctMaterials": 3, "maximumDominantFraction": 0.9},
+      "repetition": {"maximumIdenticalVariantRun": 7, "minimumVariantEntropy": 0.4}
+    }
+  },
+  "regionSets": {
+    "harbor-regions": {
+      "selector": {"tag": "RQEVisualRegion", "attributeEquals": {"VisualRegionProfile": "harbor"}},
+      "profile": "harbor",
+      "minimumRegions": 1,
+      "maximumRegions": 1,
+      "minimumProfileCoverage": 1
+    },
+    "wilds-regions": {
+      "selector": {"tag": "RQEVisualRegion", "attributeEquals": {"VisualRegionProfile": "wilds"}},
+      "profile": "wilds",
+      "minimumRegions": 2,
+      "maximumRegions": 4,
+      "minimumProfileCoverage": 1
+    }
+  },
+  "landmarks": {
+    "lighthouse": {
+      "selector": {"tag": "RQELandmark", "attributeEquals": {"LandmarkId": "lighthouse"}},
+      "anchorSelector": {"tag": "RQELandmarkAnchor", "attributeEquals": {"LandmarkId": "lighthouse"}},
+      "maximumDistance": 260,
+      "sampleSpacing": 12,
+      "eyeHeight": 5,
+      "raysPerAnchor": 9,
+      "minimumVisibleAnchorFraction": 0.55,
+      "maximumBlindSpotDegrees": 130,
+      "minimumRegionsVisibleFrom": 1
+    },
+    "sea-arch": {
+      "selector": {"tag": "RQELandmark", "attributeEquals": {"LandmarkId": "sea-arch"}},
+      "anchorSelector": {"tag": "RQELandmarkAnchor", "attributeEquals": {"LandmarkId": "sea-arch"}},
+      "maximumDistance": 240,
+      "sampleSpacing": 14,
+      "eyeHeight": 5,
+      "raysPerAnchor": 9,
+      "minimumVisibleAnchorFraction": 0.5,
+      "maximumBlindSpotDegrees": 140,
+      "minimumRegionsVisibleFrom": 1
+    }
+  },
+  "viewpoints": {
+    "harbor-desktop": {
+      "device": "desktop",
+      "resolution": [1920, 1080],
+      "landmark": "lighthouse",
+      "state": "play",
+      "camera": {"mode": "look-at-landmark", "distance": 90, "height": 34, "fieldOfView": 70, "yawDegrees": 25},
+      "rubric": {"composition": 0.25, "hierarchy": 0.2, "legibility": 0.2, "materiality": 0.15, "polish": 0.2}
+    },
+    "harbor-phone": {
+      "device": "phone",
+      "resolution": [390, 844],
+      "landmark": "lighthouse",
+      "state": "play",
+      "camera": {"mode": "look-at-landmark", "distance": 46, "height": 14, "fieldOfView": 78, "yawDegrees": 0},
+      "rubric": {"composition": 0.15, "hierarchy": 0.25, "legibility": 0.35, "materiality": 0.1, "polish": 0.15}
+    },
+    "harbor-tablet": {
+      "device": "tablet",
+      "resolution": [1024, 768],
+      "landmark": "lighthouse",
+      "state": "play",
+      "camera": {"mode": "look-at-landmark", "distance": 64, "height": 20, "fieldOfView": 74, "yawDegrees": 0},
+      "rubric": {"composition": 0.2, "hierarchy": 0.2, "legibility": 0.3, "materiality": 0.1, "polish": 0.2}
+    }
+  },
+  "evaluationStates": {
+    "play": {
+      "scenario": "scenarios/play.json",
+      "requiredViewpoints": ["harbor-desktop", "harbor-phone", "harbor-tablet"],
+      "minimumRuleCoverage": 0.6
+    }
+  }
+}

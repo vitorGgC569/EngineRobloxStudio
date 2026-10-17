@@ -45,6 +45,7 @@ gate is green.
 from __future__ import annotations
 
 import json
+import hashlib
 import sys
 import time
 from dataclasses import dataclass, field
@@ -93,14 +94,17 @@ class Report:
 
 
 def stamp(place: Path) -> str:
-    """What identifies *this* build, so a receipt cannot outlive it.
+    """Content identity for the exact place build a receipt authorizes.
 
-    Size and modification time, not a hash: a place file is megabytes and this
-    runs on every publish. The pair changes whenever rojo writes, which is the
-    only event that matters.
+    Size + mtime collided in practice: a rebuilt place can have the same byte
+    count and callers can preserve timestamps. Release evidence must identify
+    bytes, not filesystem metadata, so this gate pays the cost of SHA-256.
     """
-    info = place.stat()
-    return f"{info.st_size}:{int(info.st_mtime)}"
+    digest = hashlib.sha256()
+    with place.open("rb") as handle:
+        while chunk := handle.read(1024 * 1024):
+            digest.update(chunk)
+    return digest.hexdigest()
 
 
 def receipt_path(game: str) -> Path:
@@ -110,10 +114,12 @@ def receipt_path(game: str) -> Path:
 def write_receipt(game: str, place: Path, report: "Report") -> Path:
     RECEIPTS.mkdir(parents=True, exist_ok=True)
     path = receipt_path(game)
+    evidence_present = bool(report.measured)
     path.write_text(json.dumps({
         "game": game,
         "build": stamp(place),
-        "passed": not report.failed,
+        "passed": evidence_present and not report.failed,
+        "evidencePresent": evidence_present,
         "at": time.strftime("%Y-%m-%dT%H:%M:%S"),
         "measured": report.measured,
         "findings": [{"severity": f.severity, "what": f.what}
@@ -166,10 +172,7 @@ def _server_session(bridge: Any) -> str | None:
     has no PlayerGui at all -- so an unpinned check reports an empty interface
     for a game whose interface is fine.
     """
-    import urllib.request
-
-    with urllib.request.urlopen("http://127.0.0.1:8790/status", timeout=8) as raw:
-        status = json.load(raw)
+    status = bridge.status()
     for session in status.get("sessions") or []:
         if session.get("context") in ("server", "run"):
             return session["session"]
@@ -251,32 +254,82 @@ def inspect_ui(bridge: Any, report: Report, where: str = "") -> None:
         report.add("warning", f"{len(blank)} text elements are empty{tag}")
 
 
-def inspect_frame(path: Path, report: Report) -> None:
-    """Arithmetic on the pixels: is this a picture of a game, or of nothing."""
+def inspect_frame(path: Path, report: Report, region: Any = None) -> None:
+    """Measure only the game region; unknown framing is blocked evidence."""
     try:
         from PIL import Image
     except ImportError:
         report.add("warning", "Pillow missing; the frame was not measured")
         return
 
+    from rqe.viewport import crop
+
+    if region is None:
+        report.add(
+            "error",
+            "the game's region of the frame is unknown",
+            "measuring the whole Studio window would score the ribbon and "
+            "Explorer instead of the game",
+        )
+        return
+
     with Image.open(path) as image:
-        frame = image.convert("RGB")
+        frame = crop(image.convert("RGB"), region)
         pixels = list(frame.getdata())
+
+    report.measured["frameRegion"] = region.to_dict()
 
     tones = {(_luma(p) * 16) // 1 for p in pixels}
     report.measured["tones"] = len(tones)
     if len(tones) < 5:
-        report.add("error", "the frame is nearly a flat colour",
-                   f"{len(tones)} distinct tones. A minimised window and a "
-                   "dead client both look like this.")
+        report.add(
+            "error",
+            "the frame is nearly a flat colour",
+            f"{len(tones)} distinct tones. A dead client looks exactly like this.",
+        )
 
     brightest = max(pixels, key=_luma)
     darkest = min(pixels, key=_luma)
     spread = _luma(brightest) - _luma(darkest)
     report.measured["contrast"] = round(spread, 3)
     if spread < MIN_CONTRAST:
-        report.add("error", "the frame has almost no contrast",
-                   f"luminance spread {spread:.2f}")
+        report.add(
+            "error",
+            "the frame has almost no contrast",
+            f"luminance spread {spread:.2f}",
+        )
+
+
+def _native_viewport_shot(
+    bridge: Any,
+    session: str,
+    name: str,
+    *,
+    include_ui: bool = True,
+) -> tuple[Path, Any]:
+    """Capture only Studio's rendered viewport, never the desktop window."""
+    from rqe.capture import capture_native_viewpoint
+    from rqe.viewport import Rect
+
+    SHOTS.mkdir(parents=True, exist_ok=True)
+    output = SHOTS / f"{name}-{int(time.time() * 1000)}.png"
+    shot = capture_native_viewpoint(
+        bridge,
+        target="",
+        output=output,
+        viewpoint=name,
+        expected_session=session,
+        world_only=False,
+        include_ui=include_ui,
+    )
+    if not shot.trustworthy:
+        raise RuntimeError(
+            "native Studio viewport capture was not trustworthy: "
+            + "; ".join(shot.integrity_issues)
+        )
+    if shot.width <= 0 or shot.height <= 0:
+        raise RuntimeError("native Studio viewport capture returned an empty frame")
+    return output, Rect(0, 0, shot.width, shot.height)
 
 
 def run(game: str, wait: float = 9.0, panels: tuple[str, ...] = (),
@@ -287,7 +340,6 @@ def run(game: str, wait: float = 9.0, panels: tuple[str, ...] = (),
     plays it, waits for the world to settle, photographs it, and measures.
     """
     sys.path.insert(0, str(REPO))
-    from forge.cli import look
     from rqe.hub import lifecycle
 
     report = Report(game=game)
@@ -297,12 +349,34 @@ def run(game: str, wait: float = 9.0, panels: tuple[str, ...] = (),
         return report
 
     bridge = _bridge()
-    lifecycle.restart_for_bridge(place, REPO / ".tmp" / "studio-recovery",
-                                 bridge=bridge, wait_seconds=240)
+    ensured = lifecycle.ensure_studio_session(
+        place,
+        REPO / ".tmp" / "studio-recovery",
+        bridge,
+        wait_seconds=45,
+        background=True,
+        allow_cold_launch=False,
+    )
+    if not ensured.get("ready"):
+        report.add(
+            "error",
+            "background Studio session is unavailable",
+            str(ensured.get("reason") or "open the built place once explicitly in Studio"),
+        )
+        return report
+
     bridge.unpin()
-    started = lifecycle.start_play_solo(bridge=bridge, wait_seconds=120)
+    started = lifecycle.start_play_solo(
+        bridge=bridge,
+        wait_seconds=120,
+        allow_foreground_fallback=False,
+    )
     if not started.get("started"):
-        report.add("error", "the game would not start")
+        report.add(
+            "error",
+            "the game would not start through StudioTestService",
+            str(started.get("reason") or started.get("nativeAttempt") or ""),
+        )
         return report
 
     #[[
@@ -416,9 +490,22 @@ def run(game: str, wait: float = 9.0, panels: tuple[str, ...] = (),
     inspect_ui(bridge, report)
 
     SHOTS.mkdir(parents=True, exist_ok=True)
-    shot = look.shoot(f"{game}-hud")
+    with bridge.lease_scope(
+        agent_id="forge-playtest-native-capture",
+        session_id=session,
+        context="running",
+        ttl_seconds=120.0,
+    ):
+        shot, region = _native_viewport_shot(
+            bridge,
+            session,
+            f"{game}-hud",
+            include_ui=True,
+        )
     report.shots.append(str(shot))
-    inspect_frame(shot, report)
+    report.measured["viewport"] = region.to_dict()
+    report.measured["captureBackend"] = "StudioCaptureService"
+    inspect_frame(shot, report, region)
 
     #: Panels are opened through the game's own opener when it has one, because
     #: synthetic input is refused by Studio and screen-coordinate clicking
@@ -471,11 +558,25 @@ def run(game: str, wait: float = 9.0, panels: tuple[str, ...] = (),
         last: Exception | None = None
         for path in hooks:
             try:
-                bridge.call("client.invoke_bindable",
-                            {"path": path,
-                             "argument": f"open:{panel}"}, timeout=45)
-                time.sleep(0.8)
-                report.shots.append(str(look.shoot(f"{game}-{panel}")))
+                with bridge.lease_scope(
+                    agent_id="forge-playtest-panel",
+                    session_id=session,
+                    context="running",
+                    ttl_seconds=120.0,
+                ):
+                    bridge.call(
+                        "client.invoke_bindable",
+                        {"path": path, "argument": f"open:{panel}"},
+                        timeout=45,
+                    )
+                    time.sleep(0.8)
+                    panel_shot, _panel_region = _native_viewport_shot(
+                        bridge,
+                        session,
+                        f"{game}-{panel}",
+                        include_ui=True,
+                    )
+                report.shots.append(str(panel_shot))
                 #[[
                 #   Measured, not merely photographed.
                 #

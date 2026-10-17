@@ -178,6 +178,20 @@ def funnels(events: list[dict]) -> list[dict[str, Any]]:
     subtly different number.
     """
     furthest: dict[str, dict[str, int]] = defaultdict(dict)
+    #: The two columns this could not produce, and the reason it now must.
+    #:
+    #: A step was an integer, so a report said "step 4" where a designer needs
+    #: "hatch_another"; and there was no clock, so it could say how many people
+    #: stopped and never *where the time went*.
+    #:
+    #: The only real retention record in this repository -- from a published
+    #: game with fifty new players -- turns on the second one. Step four to
+    #: five converts at 79%, which reads as healthy, while the time jumps from
+    #: 82 to 218 seconds. A hundred and thirty-six seconds in which nothing
+    #: happens is where those players went, and no conversion rate says so.
+    labels: dict[str, dict[int, str]] = defaultdict(dict)
+    timings: dict[str, dict[int, list[float]]] = defaultdict(lambda: defaultdict(list))
+
     for event in events:
         if not event["name"].startswith("funnel."):
             continue
@@ -188,6 +202,11 @@ def funnels(events: list[dict]) -> list[dict[str, Any]]:
             continue
         current = furthest[name].get(str(subject), 0)
         furthest[name][str(subject)] = max(current, int(step))
+        if props.get("id"):
+            labels[name][int(step)] = str(props["id"])
+        elapsed = props.get("secondsSinceSeen")
+        if isinstance(elapsed, (int, float)) and elapsed >= 0:
+            timings[name][int(step)].append(float(elapsed))
 
     reports = []
     for name, subjects in sorted(furthest.items()):
@@ -196,21 +215,38 @@ def funnels(events: list[dict]) -> list[dict[str, Any]]:
         top = max(subjects.values())
         reached = [sum(1 for value in subjects.values() if value >= step)
                    for step in range(1, top + 1)]
-        steps, previous = [], None
+        steps, previous, previous_time = [], None, None
+        widest_gap, widest_at = 0.0, None
         for index, count in enumerate(reached, start=1):
+            seen = timings[name].get(index) or []
+            at = round(sum(seen) / len(seen), 1) if seen else None
+            gap = None
+            if at is not None and previous_time is not None:
+                gap = round(at - previous_time, 1)
+                if gap > widest_gap:
+                    widest_gap, widest_at = gap, index
             steps.append({
                 "step": index,
+                "id": labels[name].get(index, f"step_{index}"),
                 "reached": count,
                 "lost": (previous - count) if previous is not None else 0,
                 "retention": round(count / previous, 3) if previous else 1.0,
+                "meanSecondsToReach": at,
+                "secondsSincePrevious": gap,
             })
             previous = count
+            if at is not None:
+                previous_time = at
         worst = min(steps[1:], key=lambda item: item["retention"], default=None)
         reports.append({
             "funnel": name,
             "subjects": len(subjects),
             "steps": steps,
             "worstStep": worst["step"] if worst else None,
+            #: Reported beside the worst conversion because they are usually
+            #: different steps, and the slowest one is the one nobody looks at.
+            "slowestStep": widest_at,
+            "slowestGapSeconds": round(widest_gap, 1) if widest_at else None,
         })
     return reports
 
@@ -390,9 +426,25 @@ def render(summary: dict[str, Any]) -> str:
 
     for report in summary["funnels"]:
         lines.append(f"  funnel {report['funnel']} ({report['subjects']} subjects)")
+        lines.append(f"      {'':2} {'step':<22} {'reached':>7} {'kept':>6} "
+                     f"{'at':>7}   gap")
         for step in report["steps"]:
-            lines.append(f"      step {step['step']}  {step['reached']:>5} "
-                         f"({step['retention']:.0%} kept)")
+            at = step.get("meanSecondsToReach")
+            gap = step.get("secondsSincePrevious")
+            #: Ninety seconds of nothing is the shape of a player closing the
+            #: game, and it hides behind a healthy-looking conversion rate. It
+            #: is flagged rather than left to be noticed.
+            note = ""
+            if gap is not None:
+                note = f"+{gap:.0f}s" + ("   <-- dead time" if gap >= 90 else "")
+            lines.append(
+                f"      {step['step']:>2} {step.get('id', ''):<22} "
+                f"{step['reached']:>7} {step['retention']:>5.0%} "
+                f"{(f'{at:.0f}s' if at is not None else '-'):>7}   {note}")
+        if report.get("slowestStep"):
+            lines.append(f"      slowest gap: step {report['slowestStep']} "
+                         f"(+{report['slowestGapSeconds']:.0f}s); "
+                         f"worst conversion: step {report['worstStep']}")
 
     if summary["errors"]:
         lines.append(f"  errors           {len(summary['errors'])} distinct")

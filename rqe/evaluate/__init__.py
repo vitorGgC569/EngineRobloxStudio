@@ -384,7 +384,7 @@ def record_evaluation_baseline(
 
 
 def collect_runtime_evidence(
-    hub: str = "http://127.0.0.1:8790",
+    hub: str = "",
     *,
     budget: dict[str, Any] | None = None,
     capture: dict[str, Any] | None = None,

@@ -16,15 +16,14 @@ from pathlib import Path
 from typing import Any
 
 from .server import EngineMcpServer, Tool, ToolError
+from ..security import SecurityBoundaryError, resolve_inside, validate_path_component
 
 
-def _inside(root: Path, relative: str, label: str) -> Path:
-    path = (root / relative).resolve()
+def _inside(root: Path, relative: str, label: str, **checks: Any) -> Path:
     try:
-        path.relative_to(root.resolve())
-    except ValueError as exc:
-        raise ToolError(f"{label} must stay inside the project root") from exc
-    return path
+        return resolve_inside(root, relative, label=label, **checks)
+    except SecurityBoundaryError as exc:
+        raise ToolError(str(exc)) from exc
 
 
 def register_media_tools(server: EngineMcpServer) -> EngineMcpServer:
@@ -55,7 +54,13 @@ def register_media_tools(server: EngineMcpServer) -> EngineMcpServer:
             raise ToolError(f"{name}: {exc}") from exc
 
         output_dir = _inside(root, arguments.get("outputDir", ".tmp/audio"), "outputDir")
-        wav_path = sound.write_wav(output_dir / f"{arguments.get('id', name)}.wav")
+        output_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            artifact_id = validate_path_component(arguments.get("id", name), label="audio id")
+            wav_target = resolve_inside(output_dir, f"{artifact_id}.wav", label="audio output", suffixes=(".wav",))
+        except SecurityBoundaryError as exc:
+            raise ToolError(str(exc)) from exc
+        wav_path = sound.write_wav(wav_target)
 
         payload: dict[str, Any] = {
             "generator": name,
@@ -65,7 +70,7 @@ def register_media_tools(server: EngineMcpServer) -> EngineMcpServer:
             "encoder": encoder_available(),
         }
         if arguments.get("encodeTo"):
-            target = output_dir / f"{arguments.get('id', name)}.{arguments['encodeTo']}"
+            target = resolve_inside(output_dir, f"{artifact_id}.{arguments['encodeTo']}", label="encoded audio output", suffixes=(".mp3", ".ogg"))
             payload["encoded"] = encode(wav_path, target)
         else:
             # Said even when nobody asked, because a wav offered for upload is
@@ -146,7 +151,13 @@ def register_media_tools(server: EngineMcpServer) -> EngineMcpServer:
             animation = generator()
 
         output_dir = _inside(root, arguments.get("outputDir", ".tmp/animation"), "outputDir")
-        path = animation.write(output_dir / f"{animation.id}.rbxmx")
+        output_dir.mkdir(parents=True, exist_ok=True)
+        try:
+            animation_id = validate_path_component(animation.id, label="animation id")
+            target = resolve_inside(output_dir, f"{animation_id}.rbxmx", label="animation output", suffixes=(".rbxmx",))
+        except SecurityBoundaryError as exc:
+            raise ToolError(str(exc)) from exc
+        path = animation.write(target)
         return {
             "animation": animation.id,
             "file": str(path.relative_to(root)),

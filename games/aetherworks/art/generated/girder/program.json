@@ -1,0 +1,91 @@
+{
+  "schemaVersion": 1,
+  "id": "girder",
+  "result": "asset",
+  "units": "studs",
+  "steps": [
+    {
+      "op": "box",
+      "name": "beam",
+      "size": [
+        2,
+        1,
+        9
+      ],
+      "location": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "beam",
+      "width": 0.18,
+      "segments": 2
+    },
+    {
+      "op": "box",
+      "name": "joint",
+      "size": [
+        2.8,
+        1.6,
+        1
+      ],
+      "location": [
+        0,
+        0,
+        3.7
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "joint",
+      "width": 0.15,
+      "segments": 2
+    },
+    {
+      "op": "box",
+      "name": "joint2",
+      "size": [
+        2.8,
+        1.6,
+        1
+      ],
+      "location": [
+        0,
+        0,
+        -3.7
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "joint2",
+      "width": 0.15,
+      "segments": 2
+    },
+    {
+      "op": "join",
+      "name": "asset",
+      "targets": [
+        "beam",
+        "joint",
+        "joint2"
+      ]
+    },
+    {
+      "op": "uv_unwrap",
+      "target": "asset",
+      "method": "smart"
+    },
+    {
+      "op": "triangulate",
+      "target": "asset"
+    }
+  ],
+  "metadata": {
+    "author": "Aetherworks",
+    "license": "project-original",
+    "purpose": "finished modular industrial art"
+  }
+}

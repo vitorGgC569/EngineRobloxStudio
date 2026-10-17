@@ -31,8 +31,12 @@ Queue.__index = Queue
 
 function Queue.new(config: Config?): Self
 	local cfg = config or {}
+	-- `or` keeps 0: Luau treats it as truthy, and form then hands back an
+	-- empty player list without taking anyone.
+	local playersPerMatch = cfg.playersPerMatch or 2
+	assert(type(playersPerMatch) == "number" and playersPerMatch >= 1, "playersPerMatch must be at least 1")
 	return setmetatable({
-		playersPerMatch = cfg.playersPerMatch or 2,
+		playersPerMatch = playersPerMatch,
 		order = {},
 		members = {},
 		presenceChecker = nil,
@@ -49,6 +53,10 @@ function Queue.setClock(self: Self, clock: () -> number)
 end
 
 function Queue.join(self: Self, key: string): (boolean, string?)
+	-- An empty key used to occupy a match slot.
+	if type(key) ~= "string" or key == "" then
+		return false, "invalid_key"
+	end
 	if self.members[key] then
 		return false, "already_queued"
 	end

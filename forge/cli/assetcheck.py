@@ -32,6 +32,7 @@ import sys
 from datetime import datetime, timezone
 from pathlib import Path
 from typing import Any
+from rqe.workspace import hub_url
 
 REPO = Path(__file__).resolve().parents[2]
 REGISTRY = REPO / "forge" / "catalog" / "assets-verified.json"
@@ -47,10 +48,24 @@ LINE_COMMENT = re.compile(r"--[^\n]*")
 
 
 def scan(roots: list[Path]) -> dict[str, list[str]]:
-    """Every asset reference in live code, with where it was found."""
+    """Every asset reference in live code, with where it was found.
+
+    *Live* code, which is the word doing the work. An id inside
+    `forge/kits/*/salvage/` belongs to somebody else's published game: it was
+    valid there, this project will never verify it, and there is nothing to fix.
+    Scanning those anyway is how `forge doctor .` came to report 1423 errors of
+    which 1389 were unactionable, burying the one that was.
+
+    `.tmp/` is excluded for the same reason from the other direction: it holds
+    generated probe scripts, so the check was reading ids out of a file the
+    check itself had written.
+    """
+    from forge.cli.doctor import _ignored
+
     found: dict[str, list[str]] = {}
     for root in roots:
-        for path in sorted(root.rglob("*.lua")):
+        candidates = list(root.rglob("*.lua")) + list(root.rglob("*.luau"))
+        for path in sorted(p for p in candidates if not _ignored(p)):
             text = path.read_text(encoding="utf-8", errors="ignore")
             text = LINE_COMMENT.sub("", BLOCK_COMMENT.sub("", text))
             for match in ID_PATTERN.finditer(text):
@@ -150,7 +165,7 @@ class BridgeError(RuntimeError):
 def bridge_exec(source: str, timeout: int = 300) -> Any:
     proc = subprocess.run(
         [sys.executable, str(REPO / "rqe.py"), "studio", "call", "bridge.exec",
-         "--params", json.dumps({"source": source}), "--timeout", str(timeout)],
+         "--allow-arbitrary", "--params", json.dumps({"source": source}), "--timeout", str(timeout)],
         capture_output=True, text=True, timeout=timeout + 30, cwd=str(REPO),
     )
     raw = proc.stdout.strip() or proc.stderr.strip()
@@ -184,7 +199,7 @@ def verify(refs: list[str]) -> dict:
     _sys.path.insert(0, str(REPO))
     from rqe.hub.client import StudioBridge
 
-    bridge = StudioBridge("http://127.0.0.1:8790")
+    bridge = StudioBridge(hub_url())
     results: dict[str, Any] = {}
 
     # Batched: one round trip per twenty ids rather than per id.

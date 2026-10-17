@@ -10,6 +10,7 @@ local PathfindingService = game:GetService("PathfindingService")
 local Workspace = game:GetService("Workspace")
 
 local Errors = require(script.Parent.Parent.Errors)
+local History = require(script.Parent.Parent.History)
 local Refs = require(script.Parent.Parent.Refs)
 local Resolve = require(script.Parent.Parent.Resolve)
 local Serialize = require(script.Parent.Parent.Serialize)
@@ -298,6 +299,18 @@ function TerrainCommands.terrain(params: { [string]: any }): any
 		requestedSize = Serialize.roundVector(vector(params.size, "size"), 3),
 		snappedSize = Serialize.roundVector(region.Size, 3),
 	}
+end
+
+local terrainImpl=TerrainCommands.terrain
+
+TerrainCommands.terrain=function(params:{[string]:any}):any
+	local mode=params.mode or "read"
+	if mode=="write" or mode=="clear" then
+		return History.record("RQE world.terrain "..mode,function()
+			return terrainImpl(params)
+		end)
+	end
+	return terrainImpl(params)
 end
 
 return TerrainCommands

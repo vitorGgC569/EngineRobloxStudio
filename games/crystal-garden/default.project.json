@@ -1,0 +1,21 @@
+{
+  "name": "Jardim de Cristais",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "Shared": {"$path": "src/shared"},
+      "WorldKit": {"$path": "../../roblox/lib/WorldKit"},
+      "GameKit": {"$path": "../../roblox/lib/GameKit"}
+    },
+    "ServerScriptService": {"$properties": {"LoadStringEnabled": true}, "Server": {"$path": "src/server"}},
+    "StarterPlayer": {
+      "$properties": {"CameraMaxZoomDistance": 75, "CameraMinZoomDistance": 8},
+      "StarterPlayerScripts": {"Client": {"$path": "src/client"}}
+    },
+    "Workspace": {"$properties": {"FallenPartsDestroyHeight": -100, "Gravity": 196.2}},
+    "Lighting": {"$properties": {"ClockTime": 14, "Brightness": 1.8, "Ambient": [0.28, 0.30, 0.34], "OutdoorAmbient": [0.46, 0.49, 0.53], "GlobalShadows": true}},
+    "StarterGui": {"$properties": {"ResetPlayerGuiOnSpawn": false}},
+    "Players": {"$properties": {"RespawnTime": 3}},
+    "SoundService": {"$properties": {"RespectFilteringEnabled": true}}
+  }
+}

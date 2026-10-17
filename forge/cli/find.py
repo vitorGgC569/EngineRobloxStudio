@@ -51,6 +51,24 @@ SCORE_BODY = 4
 #: is literally called what you searched for.
 BODY_CAP = 20
 
+#: And function hits are capped for the same reason, which the body cap alone
+#: did not achieve.
+#:
+#: `Clock` beat `DailyRewardCalendar` for "daily login reward calendar" even
+#: after coverage weighting, because it accumulated 80 from two summary hits
+#: plus 60 from `dailySeed` and `dayNumber` plus the body cap -- 160 of weak
+#: signal against a name match worth 100. Every term was behaving as specified
+#: and the total was still wrong: unbounded accumulation of weak evidence is
+#: how a search convinces itself.
+FUNCTION_CAP = 60
+
+#: What a hit that answers none of the query is still worth, as a multiplier.
+#:
+#: Not zero: coverage is computed over words, and "grip" alone is the right
+#: answer to "weld a weapon into the hand". Low enough that answering one word
+#: of four cannot beat answering three.
+COVERAGE_FLOOR = 0.25
+
 #[[
 #   Words that match everything and mean nothing.
 #
@@ -117,34 +135,112 @@ def _first_doc_block(text: str) -> str:
     return body.strip()
 
 
-#: Cache the compiled patterns; a search walks every file in the repo and
-#: recompiling per file is most of the runtime.
-_PATTERNS: dict[str, re.Pattern[str]] = {}
+#: Words, as a reader of this code would split them.
+#:
+#: `[A-Za-z][a-z0-9]*` takes one capital and the lowercase run after it, so a
+#: camelCase or PascalCase identifier comes apart into the words somebody meant
+#: when they typed it:
+#:
+#:     DailyRewardCalendar  -> daily reward calendar
+#:     RightHand            -> right hand
+#:     dailySeed            -> daily seed
+#:     HandGenerator        -> hand generator
+#:     Handler              -> handler          (one word: "hand" must not match)
+_WORD = re.compile(r"[A-Za-z][a-z0-9]*|[0-9]+")
+
+#: Tokenising is cached because a search reads every file in the repository and
+#: most of the runtime was the splitting, not the matching.
+_WORDS: dict[str, tuple[str, ...]] = {}
 
 
-def _pattern(needle: str) -> re.Pattern[str]:
-    """A word, not a substring, and camelCase counts as a word break.
+def _words(text: str) -> tuple[str, ...]:
+    """Every word in a string, lowercased, camelCase taken apart."""
 
-    Plain `str.count` looked right and ranked a mining game above `Rig.grip`
-    for "weld weapon hand grip", because `RebirthHandler` contains "hand" and a
-    143-file kit contains it many times. Requiring a boundary on both sides
-    kills that: "hand" no longer matches `Handler` (followed by a lowercase
-    letter) but still matches `RightHand`, `hand.CFrame` and `HandGenerator`,
-    which are all genuinely about a hand.
+    if len(text) < 400:
+        found = _WORDS.get(text)
+        if found is not None:
+            return found
+        found = tuple(w.lower() for w in _WORD.findall(text))
+        _WORDS[text] = found
+        return found
+    return tuple(w.lower() for w in _WORD.findall(text))
 
-    This is the whole relevance model, and it is deliberately this small --
-    see the module docstring on why cleverness fails in the wrong direction.
-    """
-    found = _PATTERNS.get(needle)
-    if found is None:
-        found = re.compile(r"(?<![a-z])" + re.escape(needle) + r"(?![a-z])",
-                           re.IGNORECASE)
-        _PATTERNS[needle] = found
-    return found
+
+#[[
+#   Why this replaced a regular expression, and what the regular expression did.
+#
+#   Relevance here was `(?<![a-z])needle(?![a-z])` with `re.IGNORECASE`, and its
+#   docstring said it matched `RightHand`, `hand.CFrame` and `HandGenerator`
+#   while rejecting `Handler`. Three of those four claims were false, and in the
+#   same direction:
+#
+#       hand in RightHand        False
+#       hand in HandGenerator    False
+#       hand in hand.CFrame      True
+#       hand in Handler          False   (the only one it got right)
+#
+#   `IGNORECASE` applies to the lookarounds too, so `(?![a-z])` rejects an
+#   uppercase letter as well -- which is exactly the camelCase boundary the
+#   pattern was written to allow. The consequence is not subtle: this module
+#   exists because an agent rewrote `Rig.grip` by hand, and searching for "hold
+#   a weapon in the hand" could never have matched `RightHand` in `Rig.grip`.
+#
+#   A word list has no lookarounds to get wrong, and every example above is a
+#   line in the comment on `_WORD` that anyone can check by reading.
+#]]
 
 
 def _count(needles: list[str], haystack: str) -> int:
-    return sum(len(_pattern(n).findall(haystack)) for n in needles)
+    """How many word positions in `haystack` are one of `needles`."""
+
+    if not needles:
+        return 0
+    wanted = set(needles)
+    return sum(1 for word in _words(haystack) if word in wanted)
+
+
+def _covered(needles: list[str], haystack: str) -> int:
+    """How many *distinct* query words appear at all. Repeats do not count."""
+
+    if not needles:
+        return 0
+    present = set(_words(haystack))
+    return sum(1 for n in needles if n in present)
+
+
+def _coverage(needles: list[str], *texts: str) -> float:
+    """The fraction of the query a hit accounts for, across everything it has.
+
+    Why this exists
+    ---------------
+
+    `forge find "daily login reward calendar"` returned `Core.Clock` above
+    `Progression.DailyRewardCalendar` -- a module literally named after the
+    query, two rows down from a clock.
+
+    The arithmetic explains it. `Clock` has two functions whose names contain
+    "daily" and "day" (`dailySeed`, `dayNumber`), and two function hits at 30
+    each beat one name hit at 100. Every word of the score was doing what it
+    was told and the answer was still wrong, because the model counted *how
+    often* a word appeared and never asked *how much of the question* was
+    answered. `Clock` matches one word of four. `DailyRewardCalendar` matches
+    three.
+
+    So the raw score is scaled by coverage, which is the cheapest correct fix:
+    it needs no stemming, no synonyms and no embedding -- all of which fail in
+    the direction this module's docstring warns about -- and it cannot promote
+    anything, only demote a hit that answers a fraction of the question.
+    """
+
+    if not needles:
+        return 1.0
+    joined = "\n".join(texts)
+    fraction = _covered(needles, joined) / len(needles)
+    #: Floor rather than a raw fraction. A single-word match on a
+    #: four-word query is still worth showing -- it is how `Rig.grip` is found
+    #: from "weld a weapon to the hand" -- it just must not outrank a module
+    #: that answers three of the four.
+    return COVERAGE_FLOOR + (1.0 - COVERAGE_FLOOR) * fraction
 
 
 def _search_engine(needles: list[str]) -> list[Hit]:
@@ -163,17 +259,22 @@ def _search_engine(needles: list[str]) -> list[Hit]:
         score = 0
         detail: list[str] = []
 
-        if _count(needles, name):
-            score += SCORE_NAME
+        #: Weighted by how much of the query the *name* answers. A module
+        #: called `DailyRewardCalendar` answers three words of "daily login
+        #: reward calendar"; one called `Clock` answers none of them, and a
+        #: flat bonus could not tell those apart.
+        score += SCORE_NAME * _covered(needles, name)
         score += SCORE_SUMMARY * min(2, _count(needles, summary))
 
+        functions = 0
         for fn in module.get("functions", []):
             signature = fn.get("signature", "")
             fn_summary = fn.get("summary", "") or ""
             if _count(needles, signature) or _count(needles, fn_summary):
-                score += SCORE_FUNCTION
+                functions += SCORE_FUNCTION
                 if len(detail) < 4:
                     detail.append(signature)
+        score += min(FUNCTION_CAP, functions)
 
         path = REPO / module.get("file", "")
         if path.exists():
@@ -185,6 +286,9 @@ def _search_engine(needles: list[str]) -> list[Hit]:
                 pass
 
         if score:
+            signatures = " ".join(fn.get("signature", "")
+                                  for fn in module.get("functions", []))
+            score = round(score * _coverage(needles, name, summary, signatures))
             hits.append(Hit("engine", name, module.get("file", ""),
                             summary, score, detail))
     return hits
@@ -221,8 +325,7 @@ def _search_games(needles: list[str]) -> list[Hit]:
             rel = path.relative_to(game_dir).as_posix()
             stem = path.stem
             score = 0
-            if _count(needles, stem):
-                score += SCORE_NAME
+            score += SCORE_NAME * _covered(needles, stem)
             summary = _first_doc_block(text)
             score += SCORE_SUMMARY * min(2, _count(needles, summary))
             score += min(BODY_CAP, SCORE_BODY * _count(needles, text))
@@ -301,7 +404,7 @@ def _search_kits(needles: list[str]) -> list[Hit]:
     for kit_dir in sorted(kits.iterdir()):
         if not kit_dir.is_dir():
             continue
-        score = SCORE_NAME if _count(needles, kit_dir.name) else 0
+        score = SCORE_NAME * _covered(needles, kit_dir.name)
 
         #: Names of files inside a kit are the cheapest strong signal: a kit
         #: with `Zombie.rbxmx` in it is about zombies.
@@ -326,8 +429,72 @@ def _search_kits(needles: list[str]) -> list[Hit]:
 
         if score:
             summary, notes = kit_description(kit_dir)
+            score = round(score * _coverage(
+                needles, kit_dir.name, summary, " ".join(matched_files)))
             hits.append(Hit("kits", kit_dir.name, f"forge/kits/{kit_dir.name}",
                             summary, score, notes + matched_files))
+    return hits
+
+
+#: The other library, and the reason this shelf had to exist.
+#:
+#: `roblox/lib` holds GameKit, WorldKit, Core and Behaviours -- 20,423 lines
+#: that 19 of the 45 games in this repository are written against, because the
+#: production pipeline emits `require(ReplicatedStorage.GameKit)` and never the
+#: word Forge. None of it was searchable from here.
+#:
+#: So an agent asking "does an economy already exist" was shown `Forge.Economy`
+#: and never told about `GameKit.Economy`, and an agent working on a generated
+#: game was shown neither, because the answer it needed was in the half this
+#: command could not see. Nine concepts are implemented twice in this
+#: repository, and a search that shows one of each pair is worse than no search:
+#: it answers confidently and incompletely.
+LIBRARY_ROOTS = ("GameKit", "WorldKit", "Core", "Behaviours", "Iso2D")
+
+
+def _search_library(needles: list[str]) -> list[Hit]:
+    """Modules in `roblox/lib`, the second library in this repository."""
+
+    hits: list[Hit] = []
+    lib = REPO / "roblox" / "lib"
+    if not lib.is_dir():
+        return hits
+
+    for root in LIBRARY_ROOTS:
+        base = lib / root
+        if not base.is_dir():
+            continue
+        for path in _lua_files(base):
+            if "salvage" in path.parts or "Vendor" in path.parts:
+                continue
+            try:
+                text = path.read_text(encoding="utf-8", errors="ignore")
+            except OSError:
+                continue
+            stem = path.parent.name if path.name in ("init.lua", "init.luau") else path.stem
+            name = f"{root}.{stem}" if stem != root else root
+            score = SCORE_NAME * _covered(needles, stem)
+            summary = _first_doc_block(text)
+            score += SCORE_SUMMARY * min(2, _count(needles, summary))
+
+            detail: list[str] = []
+            functions = 0
+            for line in text.splitlines():
+                stripped = line.strip()
+                if not stripped.startswith("function "):
+                    continue
+                if _count(needles, stripped):
+                    functions += SCORE_FUNCTION
+                    if len(detail) < 4:
+                        detail.append(stripped[len("function "):].rstrip())
+            score += min(FUNCTION_CAP, functions)
+
+            score += min(BODY_CAP, SCORE_BODY * _count(needles, text))
+            if score:
+                score = round(score * _coverage(needles, name, summary, text))
+                hits.append(Hit("library", name,
+                                path.relative_to(REPO).as_posix(),
+                                summary, score, detail))
     return hits
 
 
@@ -336,7 +503,8 @@ def search(query: str, limit: int = 8) -> dict[str, list[Hit]]:
                if len(w) > 2 and w.lower() not in STOPWORDS]
     if not needles:
         return {}
-    everything = _search_engine(needles) + _search_games(needles) + _search_kits(needles)
+    everything = (_search_engine(needles) + _search_library(needles)
+                  + _search_games(needles) + _search_kits(needles))
     by_shelf: dict[str, list[Hit]] = {}
     for hit in everything:
         by_shelf.setdefault(hit.shelf, []).append(hit)
@@ -349,6 +517,7 @@ def search(query: str, limit: int = 8) -> dict[str, list[Hit]]:
 SHELF_TITLES = {
     "kits": "KITS - whole projects already built",
     "engine": "ENGINE - modules in forge/luau/Forge",
+    "library": "LIBRARY - modules in roblox/lib (GameKit, WorldKit, Core)",
     "games": "GAMES - working examples in games/*/src",
 }
 
@@ -362,7 +531,7 @@ def render(query: str, results: dict[str, list[Hit]]) -> str:
     out = [f"forge find: {query}", ""]
     #: Kits first, deliberately. They are whole games and the most expensive
     #: thing to miss, and they are the shelf an agent is least likely to check.
-    for shelf in ("kits", "engine", "games"):
+    for shelf in ("kits", "engine", "library", "games"):
         hits = results.get(shelf)
         if not hits:
             continue

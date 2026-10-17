@@ -1,0 +1,379 @@
+{
+  "$schema": "../schemas/game-contract.schema.json",
+  "schemaVersion": 1,
+  "contractId": "producer-probe.release",
+  "productId": "producer-probe",
+  "productTruth": {
+    "intentId": "producer-probe.intent",
+    "semanticBindings": {
+      "worldRoles": {
+        "primary-landmark": [
+          "world_primary_landmark"
+        ]
+      },
+      "uiSurfaces": {
+        "initial-interface": [
+          "ui_initial_surface"
+        ]
+      },
+      "gameplayVerbs": {
+        "collect": [
+          "gameplay_collect"
+        ],
+        "sell": [
+          "gameplay_sell"
+        ],
+        "upgrade": [
+          "gameplay_upgrade"
+        ],
+        "unlock": [
+          "gameplay_unlock"
+        ],
+        "buy": [
+          "gameplay_buy"
+        ]
+      }
+    }
+  },
+  "game": {
+    "name": "Producer Probe",
+    "genre": "simulator",
+    "max_players": 1,
+    "target_devices": [
+      "desktop",
+      "phone"
+    ]
+  },
+  "performance_budget": {
+    "client": {
+      "target_fps": 60,
+      "max_frame_ms": 16.667
+    },
+    "instances": {
+      "max_workspace": 25000
+    },
+    "mobile": {
+      "mandatory": true
+    }
+  },
+  "visualQuality": {
+    "spec": "visual/visual-quality.json",
+    "specId": "producer-probe.visual",
+    "schemaMajor": 1,
+    "required": true,
+    "release": {
+      "minimumScore": 100,
+      "minimumRuleCoverage": 1,
+      "minimumValidationLevel": "VISUALLY_VALIDATED",
+      "missingEvidence": "FAIL"
+    }
+  },
+  "release_gate": {
+    "required_categories": [
+      "structural",
+      "assets",
+      "security",
+      "geometry",
+      "navigation",
+      "performance",
+      "runtime",
+      "ui",
+      "gameplay",
+      "visual",
+      "persistence"
+    ],
+    "forbidden_sources": [
+      "headless-runtime",
+      "fixture"
+    ],
+    "minimum_requirement_coverage": 1,
+    "minimum_category_coverage": {
+      "structural": 1,
+      "assets": 1,
+      "security": 1,
+      "geometry": 1,
+      "navigation": 1,
+      "performance": 1,
+      "runtime": 1,
+      "ui": 1,
+      "gameplay": 1,
+      "visual": 1,
+      "persistence": 1
+    },
+    "minimum_validation_by_type": {
+      "structural": "STATICALLY_VALIDATED",
+      "security": "STATICALLY_VALIDATED",
+      "geometry": "RUNTIME_VALIDATED",
+      "navigation": "RUNTIME_VALIDATED",
+      "runtime": "RUNTIME_VALIDATED",
+      "performance": "RUNTIME_VALIDATED",
+      "visual": "VISUALLY_VALIDATED",
+      "ui": "E2E_VALIDATED",
+      "gameplay": "E2E_VALIDATED",
+      "persistence": "E2E_VALIDATED",
+      "multiplayer": "E2E_VALIDATED"
+    },
+    "maximum_evidence_age_seconds_by_level": {
+      "STATICALLY_VALIDATED": 3600,
+      "RUNTIME_VALIDATED": 1800,
+      "VISUALLY_VALIDATED": 1800,
+      "E2E_VALIDATED": 1800
+    },
+    "minimum_visual_score": 100,
+    "require_trustworthy_captures": true
+  },
+  "requirements": [
+    {
+      "id": "structural_integrity",
+      "probe": "structural_integrity",
+      "type": "structural",
+      "category": "structural",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "filesystem"
+        ]
+      }
+    },
+    {
+      "id": "contract_schema",
+      "probe": "contract_schema",
+      "type": "structural",
+      "category": "structural",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "contract-validator"
+        ]
+      }
+    },
+    {
+      "id": "fixture_excluded",
+      "probe": "fixture_excluded",
+      "type": "structural",
+      "category": "structural",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "release-orchestrator"
+        ]
+      }
+    },
+    {
+      "id": "visual_spec_schema",
+      "probe": "visual_spec_schema",
+      "type": "structural",
+      "category": "structural",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "visual-spec-validator"
+        ]
+      }
+    },
+    {
+      "id": "product_truth_alignment",
+      "probe": "product_truth_alignment",
+      "type": "runtime",
+      "category": "structural",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "RUNTIME_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "product-truth-validator"
+        ]
+      }
+    },
+    {
+      "id": "asset_security",
+      "probe": "asset_security",
+      "type": "security",
+      "category": "security",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "release-static-validator"
+        ]
+      }
+    },
+    {
+      "id": "visual_asset_quality",
+      "probe": "visual_asset_quality",
+      "type": "structural",
+      "category": "assets",
+      "severity": "major",
+      "validation": {
+        "minimum_level": "STATICALLY_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "visual-asset-validator"
+        ]
+      }
+    },
+    {
+      "id": "ground_support",
+      "probe": "ground_support",
+      "type": "geometry",
+      "category": "geometry",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "RUNTIME_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "studio-bridge"
+        ]
+      }
+    },
+    {
+      "id": "world_primary_landmark",
+      "probe": "objective_reachable",
+      "type": "navigation",
+      "category": "navigation",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "RUNTIME_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "studio-bridge"
+        ]
+      }
+    },
+    {
+      "id": "performance_budget",
+      "probe": "performance_budget",
+      "type": "performance",
+      "category": "performance",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "RUNTIME_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "studio-bridge"
+        ]
+      }
+    },
+    {
+      "id": "runtime_error",
+      "probe": "runtime_error",
+      "type": "runtime",
+      "category": "runtime",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "RUNTIME_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "studio-bridge"
+        ]
+      }
+    },
+    {
+      "id": "ui_initial_surface",
+      "probe": "ui_initial_surface",
+      "type": "ui",
+      "category": "ui",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "E2E_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "studio-scenario"
+        ]
+      }
+    },
+    {
+      "id": "gameplay_collect",
+      "probe": "core_loop_collect",
+      "type": "gameplay",
+      "category": "gameplay",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "E2E_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "studio-scenario"
+        ]
+      }
+    },
+    {
+      "id": "gameplay_sell",
+      "probe": "core_loop_sell",
+      "type": "gameplay",
+      "category": "gameplay",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "E2E_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "studio-scenario"
+        ]
+      }
+    },
+    {
+      "id": "gameplay_upgrade",
+      "probe": "core_loop_upgrade",
+      "type": "gameplay",
+      "category": "gameplay",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "E2E_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "studio-scenario"
+        ]
+      }
+    },
+    {
+      "id": "gameplay_unlock",
+      "probe": "core_loop_unlock",
+      "type": "gameplay",
+      "category": "gameplay",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "E2E_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "studio-scenario"
+        ]
+      }
+    },
+    {
+      "id": "gameplay_buy",
+      "probe": "core_loop_buy",
+      "type": "gameplay",
+      "category": "gameplay",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "E2E_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "studio-scenario"
+        ]
+      }
+    },
+    {
+      "id": "persistence_rejoin",
+      "probe": "persistence_rejoin",
+      "type": "persistence",
+      "category": "persistence",
+      "severity": "critical",
+      "validation": {
+        "minimum_level": "E2E_VALIDATED",
+        "minimum_coverage": 1,
+        "allowed_sources": [
+          "studio-scenario"
+        ]
+      }
+    }
+  ]
+}

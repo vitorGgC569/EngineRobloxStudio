@@ -1,0 +1,42 @@
+{
+  "schemaVersion": 1,
+  "id": "casing",
+  "result": "case",
+  "units": "studs",
+  "steps": [
+    {
+      "op": "box",
+      "name": "case",
+      "size": [
+        1,
+        1,
+        1
+      ],
+      "location": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "case",
+      "width": 0.12,
+      "segments": 2
+    },
+    {
+      "op": "uv_unwrap",
+      "target": "case",
+      "method": "smart"
+    },
+    {
+      "op": "triangulate",
+      "target": "case"
+    }
+  ],
+  "metadata": {
+    "author": "Aetherworks",
+    "license": "project-original",
+    "purpose": "finished modular industrial art"
+  }
+}

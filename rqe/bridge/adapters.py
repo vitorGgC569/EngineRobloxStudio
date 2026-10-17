@@ -189,33 +189,118 @@ class StudioGameAdapter:
     def __init__(self, transport: RpcTransport) -> None:
         self.transport = transport
 
+    @staticmethod
+    def _successful(value: Any) -> dict[str, Any]:
+        """Normalize successful tool payloads without inventing tool details."""
+        if isinstance(value, dict):
+            result = dict(value)
+            result.setdefault("success", True)
+            return result
+        if value is None:
+            return {"success": True}
+        return {"success": True, "result": value}
+
+    @staticmethod
+    def _console_errors(value: Any) -> list[Any]:
+        if isinstance(value, dict):
+            explicit = value.get("errors")
+            if isinstance(explicit, list):
+                return explicit
+            entries = (
+                value.get("entries")
+                or value.get("messages")
+                or value.get("output")
+                or []
+            )
+        elif isinstance(value, list):
+            entries = value
+        elif isinstance(value, str):
+            return [
+                line for line in value.splitlines()
+                if "error" in line.casefold()
+            ]
+        else:
+            return []
+
+        if not isinstance(entries, list):
+            return []
+        errors = []
+        for entry in entries:
+            if isinstance(entry, dict):
+                severity = str(
+                    entry.get("severity")
+                    or entry.get("type")
+                    or entry.get("messageType")
+                    or ""
+                ).casefold()
+                if "error" in severity:
+                    errors.append(entry)
+            elif "error" in str(entry).casefold():
+                errors.append(entry)
+        return errors
+
     def start(self) -> dict[str, Any]:
         self.transport.call("playtest_start", {})
         return self.observe("graybox")
 
     def stop(self) -> dict[str, Any]:
-        return self.transport.call("playtest_stop", {}) or {"success": True}
+        return self._successful(self.transport.call("playtest_stop", {}))
 
     def observe(self, mode: str = "blackbox") -> dict[str, Any]:
         screen = self.transport.call("screen_capture", {"camera": "player_view"})
-        console = self.transport.call("console_read", {}) or {"errors": []}
-        state = self.transport.call("quality_probe_observe", {"mode": mode}) or {}
-        return {"mode": mode, **state, "screenshot": screen, "consoleErrors": console.get("errors", [])}
+        console = self.transport.call("console_read", {})
+        state_raw = self.transport.call(
+            "quality_probe_observe",
+            {"mode": mode},
+        )
+        state = dict(state_raw) if isinstance(state_raw, dict) else {}
+        if state_raw not in (None, {}) and not isinstance(state_raw, dict):
+            state["probeResult"] = state_raw
+        return {
+            "mode": mode,
+            **state,
+            "screenshot": screen,
+            "consoleErrors": self._console_errors(console),
+        }
 
     def execute(self, action: AgentAction) -> dict[str, Any]:
         p = action.params
         if action.type in {"keyboard", "keyboard_sequence", "key_down", "key_up"}:
-            return self.transport.call("user_keyboard_input", {"keys": p.get("keys", [p.get("key")]), "duration_ms": p.get("duration_ms", 250)}) or {"success": True}
+            return self._successful(self.transport.call(
+                "user_keyboard_input",
+                {
+                    "keys": p.get("keys", [p.get("key")]),
+                    "duration_ms": p.get("duration_ms", 250),
+                },
+            ))
         if action.type in {"mouse_click", "mouse_move"}:
             action_name = "click" if action.type == "mouse_click" else "move"
-            return self.transport.call("user_mouse_input", {"action": action_name, **p}) or {"success": True}
+            return self._successful(self.transport.call(
+                "user_mouse_input",
+                {"action": action_name, **p},
+            ))
         if action.type == "look":
-            return self.transport.call("user_mouse_input", {"action": "move", **p}) or {"success": True}
+            return self._successful(self.transport.call(
+                "user_mouse_input",
+                {"action": "move", **p},
+            ))
         if action.type == "walk_to":
-            return self.transport.call("character_navigation", {"target": p.get("target"), "timeout": p.get("timeout", 8), "mode": p.get("controller", "human")}) or {"success": False, "reason": "no_result"}
+            return self._successful(self.transport.call(
+                "character_navigation",
+                {
+                    "target": p.get("target"),
+                    "timeout": p.get("timeout", 8),
+                    "mode": p.get("controller", "human"),
+                },
+            ))
         if action.type == "interact":
-            return self.transport.call("user_keyboard_input", {"keys": ["E"], "duration_ms": 150}) or {"success": True}
-        return self.transport.call("game_act", action.to_dict()) or {"success": False, "reason": "no_result"}
+            return self._successful(self.transport.call(
+                "user_keyboard_input",
+                {"keys": ["E"], "duration_ms": 150},
+            ))
+        return self._successful(
+            self.transport.call("game_act", action.to_dict())
+        )
 
     def get_player(self) -> dict[str, Any]:
         return self.transport.call("quality_probe_player", {}) or {}

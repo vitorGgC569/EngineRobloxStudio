@@ -116,6 +116,99 @@ class Verdict:
         }
 
 
+#: How this ladder maps onto the one the release gate actually reads.
+#:
+#: There are two of them, and that is the finding rather than the design.
+#: `rqe/models.py` carries NOT_VALIDATED -> STATICALLY_VALIDATED ->
+#: RUNTIME_VALIDATED -> VISUALLY_VALIDATED -> E2E_VALIDATED, and every probe,
+#: every artifact and the gate itself speak it. This module carries
+#: COMMAND / BEHAVIOR / E2E / NOT_VALIDATED, and until now its only importer
+#: was its own unit test -- the module that names the project's central idea
+#: was wired to nothing.
+#:
+#: The two are not redundant. `models` grades *how a claim was measured*;
+#: this grades *what the measurement observed*. A capture is
+#: VISUALLY_VALIDATED and says nothing about whether the game changed; a
+#: verdict is E2E_SUCCESS and says nothing about whether a human looked. So
+#: they are kept and the relationship is stated, rather than one being deleted
+#: and its distinction lost.
+#:
+#: The mapping is deliberately conservative: a verdict never claims a level
+#: above what its own evidence supports, and NOT_VALIDATED maps to
+#: NOT_VALIDATED, which the gate refuses.
+GATE_LEVELS: dict[str, str] = {
+    NOT_VALIDATED: "NOT_VALIDATED",
+    FAILED: "RUNTIME_VALIDATED",
+    COMMAND_SUCCESS: "STATICALLY_VALIDATED",
+    BEHAVIOR_SUCCESS: "RUNTIME_VALIDATED",
+    E2E_SUCCESS: "E2E_VALIDATED",
+}
+
+
+def gate_level(level: str) -> str:
+    """The `rqe.models` validation level a verdict at `level` can support.
+
+    `FAILED` maps to RUNTIME_VALIDATED rather than to nothing, because a
+    failure that was *observed* is a real measurement of the product -- the
+    gate needs to be able to record it as such, and the alternative is a
+    refusal that reads as "we did not look".
+    """
+
+    try:
+        return GATE_LEVELS[level]
+    except KeyError:
+        raise EvidenceError(f"unknown evidence level: {level}") from None
+
+
+def as_evidence(verdict: Verdict, *, probe: str, category: str,
+                severity: str = "major", source: str = "game-agent-bridge",
+                run_id: str = "", build_hash: str = ""):
+    """One verdict, as the `Evidence` record the release gate consumes.
+
+    This is the seam that was missing. `evidence.py` described the distinction
+    the whole engine is built on -- a command that was accepted is not a
+    behaviour that was seen is not a game that changed -- and nothing could
+    carry that distinction into the gate, so it was written down and never
+    enforced.
+
+    `conclusive` is the load-bearing field: a NOT_VALIDATED verdict is a
+    failure of the *instrument*, and marking it inconclusive is what stops the
+    gate reporting it as a failure of the product.
+    """
+
+    from .models import Evidence
+
+    level = gate_level(verdict.level)
+    if verdict.level == NOT_VALIDATED:
+        status = "WARN"
+    elif verdict.passed:
+        status = "PASS"
+    else:
+        status = "FAIL"
+
+    details = dict(verdict.observed)
+    if verdict.blocked_by:
+        details["blockedBy"] = verdict.blocked_by
+    if verdict.remedy:
+        details["remedy"] = verdict.remedy
+    details["evidenceLevel"] = verdict.level
+
+    return Evidence(
+        id=f"{probe}.{verdict.action}",
+        probe=probe,
+        category=category,
+        status=status,
+        severity=severity,
+        message=verdict.reason or verdict.action,
+        source=source,
+        validation_level=level,
+        details=details,
+        run_id=run_id or None,
+        build_hash=build_hash or None,
+        conclusive=verdict.level != NOT_VALIDATED,
+    )
+
+
 def not_validated(action: str, *, blocked_by: str, remedy: str = "") -> Verdict:
     """The instrument cannot answer. Say so, and name it."""
 

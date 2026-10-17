@@ -1,14 +1,15 @@
 --!strict
 -- Simulation control and the guarded execution escape hatch.
 --
--- `run.start` uses RunService:Run(), which is scriptable from a plugin. That
--- matters: it means an agent can bring a place to life and measure the world its
--- scripts generate without driving the keyboard. Play Solo (a real player
--- character) is not scriptable and stays with the OS-level harness.
+-- `run.start` uses RunService:Run() for a bare-server simulation. Real
+-- Play, Run and multiplayer sessions are controlled separately through
+-- StudioTestService, so neither path needs keyboard focus or Studio shortcuts.
 
 local RunService = game:GetService("RunService")
+local ScriptEditorService = game:GetService("ScriptEditorService")
 
 local Errors = require(script.Parent.Parent.Errors)
+local History = require(script.Parent.Parent.History)
 local Runtime = require(script.Parent.Runtime)
 
 local SessionCommands = {}
@@ -156,15 +157,10 @@ end
 
 --- run.stop: end the simulation and return Studio to edit mode.
 ---
---- Stops a `RunService:Run()` simulation cleanly. It is **not** the way to end a
---- Play Solo session: `RunService:Stop()` ends the simulation but leaves Studio
---- in a state where the next F5 is swallowed, and the only cure is restarting
---- Studio. That cost three restarts in one session before it was named.
----
---- Callers wanting a session they can start again should use
---- `rqe.hub.lifecycle.stop_play_solo`, which sends Shift+F5 to a play session
---- and reserves this command for a `run` context -- the distinction it already
---- documents at length.
+--- Stops a `RunService:Run()` bare simulation cleanly. It is not the way to
+--- finish a StudioTestService Play/Run/multiplayer job; those sessions are
+--- identity-bound and must end through `test.finish` /
+--- `rqe.hub.lifecycle.stop_play_solo`.
 function SessionCommands.stop(_params: { [string]: any }): any
 	if not RunService:IsRunning() then
 		return { stopped = false, alreadyStopped = true, context = Runtime.context() }
@@ -180,10 +176,8 @@ function SessionCommands.stop(_params: { [string]: any }): any
 		stopped = true,
 		context = Runtime.context(),
 		isRunning = RunService:IsRunning(),
-		--: Named in the result, not only in a comment, because the caller who
-		--: needs to know is the one about to press F5 and find nothing happens.
-		note = "a Play Solo session stopped this way will not accept F5 again; "
-			.. "use stop_play_solo for a restartable stop",
+		note = "run.stop is only for RunService bare simulations; "
+			.. "use test.finish/stop_play_solo for StudioTestService sessions",
 	}
 end
 
@@ -203,7 +197,7 @@ end
 --- Needed because a plugin only exists in the edit and server DataModels, while
 --- ProximityPrompt activation and GUI input only work on the client. Installing
 --- this LocalScript is what makes the client half of a game addressable.
-function SessionCommands.installClient(params: { [string]: any }): any
+local function installClientImpl(params: { [string]: any }): any
 	local ClientSource = require(script.Parent.Parent.ClientSource)
 	local parent = starterPlayerScripts()
 
@@ -215,8 +209,20 @@ function SessionCommands.installClient(params: { [string]: any }): any
 
 	local localScript = Instance.new("LocalScript")
 	localScript.Name = CLIENT_SCRIPT_NAME
-	localScript.Source = ClientSource
 	localScript.Parent = parent
+	local sourceOk, sourceError = pcall(function()
+		ScriptEditorService:UpdateSourceAsync(localScript, function(_old)
+			return ClientSource
+		end)
+	end)
+	if not sourceOk then
+		localScript:Destroy()
+		Errors.raise(
+			Errors.EXEC,
+			"ScriptEditorService:UpdateSourceAsync failed while installing client bridge: "
+				.. tostring(sourceError)
+		)
+	end
 
 	-- Create the meeting point at edit time so it is saved with the place and
 	-- replicates before the client script's WaitForChild runs. Creating it
@@ -245,7 +251,7 @@ function SessionCommands.installClient(params: { [string]: any }): any
 end
 
 --- bridge.remove_client: take the instrumentation back out of the place.
-function SessionCommands.removeClient(_params: { [string]: any }): any
+local function removeClientImpl(_params: { [string]: any }): any
 	local parent = starterPlayerScripts()
 	local existing = parent:FindFirstChild(CLIENT_SCRIPT_NAME)
 	local channel = game:GetService("ReplicatedStorage"):FindFirstChild("RQEClientChannel")
@@ -259,6 +265,18 @@ function SessionCommands.removeClient(_params: { [string]: any }): any
 		channel:Destroy()
 	end
 	return { removed = true, script = existing ~= nil, channel = channel ~= nil }
+end
+
+SessionCommands.installClient = function(params: { [string]: any }): any
+	return History.record("RQE bridge.install_client", function()
+		return installClientImpl(params)
+	end)
+end
+
+SessionCommands.removeClient = function(params: { [string]: any }): any
+	return History.record("RQE bridge.remove_client", function()
+		return removeClientImpl(params)
+	end)
 end
 
 --- bridge.exec: run Luau supplied by the hub.

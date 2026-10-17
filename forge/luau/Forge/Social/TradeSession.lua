@@ -59,15 +59,39 @@ local function validOffer(offer: Offer?): boolean
 	if not offer then
 		return false
 	end
-	if offer.currency ~= nil and offer.currency < 0 then
-		return false
+	-- NaN < 0 is false, so a bare less-than accepts currency 0/0 and stores it.
+	if offer.currency ~= nil then
+		local currency = offer.currency
+		if type(currency) ~= "number" or currency ~= currency or currency < 0 then
+			return false
+		end
 	end
 	for _, stack in offer.items do
-		if stack.count <= 0 then
+		local count = stack.count
+		-- NaN <= 0 is false, so a bare comparison accepts a count of 0/0.
+		if type(count) ~= "number" or count ~= count or count <= 0 then
 			return false
 		end
 	end
 	return true
+end
+
+-- The offer used to keep the caller's stack tables. Raising the count after
+-- the offer, including after both sides had locked, changed what result()
+-- would transfer.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
 end
 
 function TradeSession.new(config: { a: string, b: string, cooldownSeconds: number?, clock: (() -> number)? }): Self
@@ -114,7 +138,7 @@ function TradeSession.offer(self: Self, side: string, offer: Offer): (boolean, s
 	if not validOffer(offer) then
 		return false, "invalid_offer"
 	end
-	state.offer = { items = table.clone(offer.items), currency = offer.currency }
+	state.offer = deepCopy(offer, {})
 	self.lastOfferAt[side] = now
 	return true, nil
 end
@@ -176,8 +200,8 @@ function TradeSession.result(self: Self): { from: string, to: string, give: Offe
 	return {
 		from = self.a,
 		to = self.b,
-		give = sa.offer :: Offer,
-		take = sb.offer :: Offer,
+		give = deepCopy(sa.offer, {}),
+		take = deepCopy(sb.offer, {}),
 	}
 end
 

@@ -22,22 +22,32 @@ import json
 from pathlib import Path
 from typing import Any
 
-from .server import Tool
+from .server import Tool, ToolError
 
 
 def _call(method: str, params: dict[str, Any], *, timeout: float = 60.0,
-          context: str | None = None) -> dict[str, Any]:
+          context: str | None = None, allow_arbitrary: bool = False) -> dict[str, Any]:
     """One bridge call, with the failure returned rather than raised."""
 
     from ..hub.client import StudioBridge
+    from ..hub.commands import load_default_registry
 
-    bridge = StudioBridge()
+    bridge = StudioBridge(allow_arbitrary=allow_arbitrary)
     try:
         if context == "running":
             bridge.pin_to_running()
         else:
             bridge.pin_to_any()
-        return {"ok": True, "result": bridge.call(method, params, timeout=timeout)}
+        spec = load_default_registry(verify_dispatcher=False).require(method)
+        if spec.lease_targeted:
+            with bridge.lease_scope(
+                agent_id="mcp-engine-tools",
+                ttl_seconds=max(30.0, min(timeout + 30.0, 300.0)),
+            ):
+                result = bridge.call(method, params, timeout=timeout)
+        else:
+            result = bridge.call(method, params, timeout=timeout)
+        return {"ok": True, "result": result}
     except Exception as error:  # noqa: BLE001
         return {"ok": False, "error": str(error)}
 
@@ -62,6 +72,49 @@ def register_programming_tools(server: Any) -> Any:
         return sdkindex.source(
             server.root, str(arguments["name"]),
             around=int(around) if around is not None else None)
+
+    def reuse_search(arguments: dict[str, Any]) -> dict[str, Any]:
+        """The four shelves at once: engine, second library, games, kits.
+
+        `sdk_search` above reads library source and answers with signatures.
+        It cannot see `games/` or `forge/kits/`, and a kit is a *finished game*
+        -- the single most expensive thing in this repository to miss. An agent
+        began writing a zombie system with a complete, running zombie survival
+        game in `forge/kits/infected/`, and the reason was not missing
+        information: it was that the only command that searched kits was the
+        CLI, and an agent driving through MCP had no route to it.
+
+        Same corpus, same ranking and same output as `forge find`, so the two
+        front doors cannot answer differently.
+        """
+
+        import sys
+
+        root = str(server.root)
+        if root not in sys.path:
+            sys.path.insert(0, root)
+        from forge.cli.find import render, search
+
+        query = str(arguments["query"])
+        limit = int(arguments.get("limit", 8))
+        results = search(query, limit=limit)
+        return {
+            "query": query,
+            "shelves": {
+                shelf: [
+                    {
+                        "name": hit.name,
+                        "where": hit.where,
+                        "summary": hit.summary[:300],
+                        "detail": list(hit.detail[:6]),
+                        "score": hit.score,
+                    }
+                    for hit in hits
+                ]
+                for shelf, hits in results.items()
+            },
+            "report": render(query, results),
+        }
 
     def sdk_surface(_arguments: dict[str, Any]) -> dict[str, Any]:
         return sdkindex.surface(server.root)
@@ -94,10 +147,44 @@ def register_programming_tools(server: Any) -> Any:
     # -- writing --------------------------------------------------------
 
     def code_write(arguments: dict[str, Any]) -> dict[str, Any]:
+        import os
+        import tempfile
+
+        from ..security import SecurityBoundaryError, resolve_inside
+
         path = str(arguments["path"])
         source = str(arguments["source"])
         kind = str(arguments.get("kind") or "module")
 
+        if len(source.encode("utf-8")) > 1_048_576:
+            return {"written": False, "error": "source exceeds the 1 MiB code_write limit"}
+
+        disk = arguments.get("file")
+        target = None
+        staged = None
+        if disk:
+            try:
+                target = resolve_inside(
+                    server.root,
+                    str(disk),
+                    label="code_write file",
+                    suffixes=(".lua", ".luau"),
+                )
+            except SecurityBoundaryError as exc:
+                return {"written": False, "error": str(exc)}
+            if target.exists() and not bool(arguments.get("overwrite")):
+                try:
+                    unchanged = target.read_text(encoding="utf-8") == source
+                except OSError:
+                    unchanged = False
+                if not unchanged:
+                    return {
+                        "written": False,
+                        "error": (
+                            f"{disk} already exists; read it first and pass overwrite:true "
+                            "only when replacing it is intentional"
+                        ),
+                    }
         # Compile first. A module written with a syntax error becomes a module
         # that fails at require time with a message naming nothing, which is
         # exactly the trap this surface exists to remove.
@@ -113,17 +200,32 @@ def register_programming_tools(server: Any) -> Any:
                     "note": "not written; fix the syntax and call again",
                 }
 
-        answer = _call("code.write", {"path": path, "source": source, "kind": kind})
+        if target is not None:
+            target.parent.mkdir(parents=True, exist_ok=True)
+            handle, temporary = tempfile.mkstemp(prefix=f".{target.name}.", dir=target.parent)
+            staged = Path(temporary)
+            try:
+                with os.fdopen(handle, "w", encoding="utf-8", newline="\n") as stream:
+                    stream.write(source)
+            except BaseException:
+                staged.unlink(missing_ok=True)
+                raise
+
+        try:
+            answer = _call("code.write", {"path": path, "source": source, "kind": kind})
+        except BaseException:
+            if staged is not None:
+                staged.unlink(missing_ok=True)
+            raise
         if not answer.get("ok"):
+            if staged is not None:
+                staged.unlink(missing_ok=True)
             return {"written": False, "error": answer.get("error")}
 
         # Keep the file on disk too, when the caller aims at the library. The
         # place is where it runs; the repository is where it survives a rebuild.
-        disk = arguments.get("file")
-        if disk:
-            target = server.root / str(disk)
-            target.parent.mkdir(parents=True, exist_ok=True)
-            target.write_text(source, encoding="utf-8")
+        if target is not None and staged is not None:
+            os.replace(staged, target)
             sdkindex.refresh()
 
         result = dict(answer["result"])
@@ -159,6 +261,9 @@ def register_programming_tools(server: Any) -> Any:
     # -- running --------------------------------------------------------
 
     def run_luau(arguments: dict[str, Any]) -> dict[str, Any]:
+        from .capabilities import require_arbitrary_code
+
+        require_arbitrary_code()
         source = str(arguments["source"])
         where = str(arguments.get("context") or "any")
         answer = _call(
@@ -166,6 +271,7 @@ def register_programming_tools(server: Any) -> Any:
             {"source": source, "chunkName": str(arguments.get("name") or "rqe.run")},
             timeout=float(arguments.get("timeout") or 60.0),
             context="running" if where in ("server", "run", "running") else None,
+            allow_arbitrary=True,
         )
         if not answer.get("ok"):
             return {"ran": False, "error": answer.get("error")}
@@ -178,9 +284,12 @@ def register_programming_tools(server: Any) -> Any:
         return answer.get("result", answer)
 
     def test_run(arguments: dict[str, Any]) -> dict[str, Any]:
+        from .capabilities import require_arbitrary_code
+
+        require_arbitrary_code()
         answer = _call("test.run", {
             "source": str(arguments["source"]),
-        }, timeout=float(arguments.get("timeout") or 90.0))
+        }, timeout=float(arguments.get("timeout") or 90.0), allow_arbitrary=True)
         if not answer.get("ok"):
             return {"ran": False, "error": answer.get("error")}
         return answer["result"]
@@ -308,6 +417,28 @@ def register_programming_tools(server: Any) -> Any:
     ))
 
     server.register(Tool(
+        name="reuse_search",
+        description=(
+            "Does this already exist? Searches all four shelves at once -- the "
+            "Forge engine, the roblox/lib library, every game's source, and the "
+            "kits, which are whole finished games. Ask with a sentence, not a "
+            "filename: 'hold a weapon in the hand', 'daily login reward'. Call "
+            "this BEFORE writing any system. `sdk_search` reads library "
+            "signatures only and cannot see games or kits."
+        ),
+        input_schema={
+            "type": "object",
+            "required": ["query"],
+            "properties": {
+                "query": {"type": "string",
+                          "description": "what you are about to build, as a sentence"},
+                "limit": {"type": "integer", "minimum": 1, "maximum": 40},
+            },
+        },
+        handler=reuse_search,
+    ))
+
+    server.register(Tool(
         name="sdk_source",
         description=(
             "The actual code of a module or function, to read and to copy. When "
@@ -363,7 +494,11 @@ def register_programming_tools(server: Any) -> Any:
                 "source": {"type": "string"},
                 "kind": {"type": "string", "enum": ["module", "server", "client"]},
                 "file": {"type": "string",
-                         "description": "optional repo path to save the same source to"},
+                          "description": "optional repo path to save the same source to"},
+                "overwrite": {
+                    "type": "boolean",
+                    "description": "required when replacing an existing repository file",
+                },
             },
         },
         handler=code_write,

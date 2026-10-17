@@ -98,14 +98,18 @@ def test_dark_chrome_is_counted_as_dark_without_the_crop(tmp_path):
         "this fixture no longer reproduces the bug it guards")
 
 
-def test_the_sweep_passes_a_viewport_by_default():
-    """Not an accident of the caller. The default has to carry it."""
+def test_native_corpus_does_not_crop_studio_chrome_by_default():
+    """Native StudioCaptureService frames contain no Studio ribbon/panels.
+
+    Applying the old window-grab crop to a native viewport would crop the game
+    itself, so the default must be no crop.
+    """
 
     signature = inspect.signature(corpus_visual.sweep)
-    assert signature.parameters["viewport"].default == corpus_visual.STUDIO_VIEWPORT
+    assert signature.parameters["viewport"].default is None
 
     signature = inspect.signature(corpus_visual.look_at)
-    assert signature.parameters["viewport"].default == corpus_visual.STUDIO_VIEWPORT
+    assert signature.parameters["viewport"].default is None
 
 
 # -- the edit-context bug -----------------------------------------------------
@@ -182,3 +186,13 @@ def test_the_sample_is_deterministic():
     assert [look["id"] for look in first["looks"]] != \
            [look["id"] for look in other["looks"]], (
         "a different seed must choose differently, or the seed does nothing")
+
+
+def test_corpus_uses_native_capture_and_fail_closed_session_reuse():
+    source = inspect.getsource(corpus_visual.look_at)
+    assert "capture_native_viewpoint" in source
+    assert "ensure_studio_session" in source
+    assert "allow_cold_launch=allow_cold_launch" in source
+    assert "allow_foreground_fallback=False" in source
+    assert "capture_viewpoint(" not in source
+    assert "restart_for_bridge(" not in source

@@ -12,10 +12,11 @@ credential cannot be written into an agent transcript.
 from __future__ import annotations
 
 import os
-from pathlib import Path
 from typing import Any
 
 from .server import EngineMcpServer, Tool, ToolError
+from ..safe_io import SafeIoError, read_bytes_limited
+from ..security import SecurityBoundaryError, resolve_inside
 
 
 def _client():
@@ -65,18 +66,31 @@ def register_cloud_tools(server: EngineMcpServer) -> EngineMcpServer:
     ))
 
     def cloud_publish(arguments: dict[str, Any]) -> dict[str, Any]:
+        from .capabilities import require_publication
+
+        # Saved versions are already an external write; "publish=false" is not
+        # a dry run and therefore uses the same operator-granted capability.
+        require_publication()
         universe, place = _target(arguments)
         if not place:
             raise ToolError("placeId is required to publish")
 
-        relative = arguments["placeFile"]
-        path = (root / relative).resolve()
         try:
-            path.relative_to(root.resolve())
-        except ValueError as exc:
-            raise ToolError("placeFile must stay inside the project root") from exc
-        if not path.is_file():
-            raise ToolError(f"place file not found: {path}")
+            path = resolve_inside(
+                root,
+                arguments["placeFile"],
+                label="placeFile",
+                must_exist=True,
+                file_only=True,
+                suffixes=(".rbxl", ".rbxlx"),
+            )
+            payload = read_bytes_limited(
+                path,
+                128 * 1024 * 1024,
+                label="placeFile",
+            )
+        except (SecurityBoundaryError, SafeIoError) as exc:
+            raise ToolError(str(exc)) from exc
 
         published = bool(arguments.get("publish", False))
         if published and arguments.get("confirmPublish") is not True:
@@ -88,7 +102,6 @@ def register_cloud_tools(server: EngineMcpServer) -> EngineMcpServer:
                 "confirmPublish=true alongside publish=true"
             )
 
-        payload = path.read_bytes()
         result = _client().publish_place(
             universe, place, payload,
             published=published,

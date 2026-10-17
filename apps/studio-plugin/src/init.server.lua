@@ -11,6 +11,9 @@
 -- STATICALLY_VALIDATED from RUNTIME_VALIDATED.
 
 local RunService = game:GetService("RunService")
+-- Native Play and multiplayer create a client plugin context as well. Only
+-- the server can poll HTTP; LocalScripts use the installed client relay.
+if RunService:IsRunning() and RunService:IsClient() and not RunService:IsServer() then return end
 
 local Auth = require(script.Auth)
 local Config = require(script.Config)
@@ -76,21 +79,71 @@ end
 --- Flush the in-memory result outbox without losing a completed command when
 --- the hub answers ambiguously or the socket drops. Reporting is idempotent at
 --- the hub: a duplicate correlation id is rejected rather than re-applied.
+---
+--- `report` yields. The poll loop and the background flusher both call this.
+--- Without the guard, each can clone `pending` before the other clears it and
+--- both post the same batch.
+local flushing = false
+
 local function flushPending(transport: any, pending: { any }): boolean
-	if #pending == 0 then
+	if flushing or #pending == 0 then
 		return true
 	end
+	flushing = true
 	local batch = table.clone(pending)
 	table.clear(pending)
-	if transport:report(batch) then
-		return true
+	local ok, accepted = pcall(function()
+		return transport:report(batch)
+	end)
+	if not ok or accepted ~= true then
+		--[[
+			An uncodable result must not become a permanent block.
+
+			Measured: one response carrying a value `JSONEncode` cannot
+			represent (a buffer, in that case) failed every flush, the loop
+			reconnected on each failure, the same batch was retried forever,
+			and the bridge never polled again -- one command bricked the
+			session. When the failure is encoding, the *response* is the
+			problem, so replace it with one that encodes and let the caller
+			see an honest error instead of a timeout. Transport failures keep
+			the batch for retry: there the response may still be good.
+		]]
+		local encodeFailure = tostring(transport.lastError or ""):find("could not encode", 1, true) ~= nil
+		if encodeFailure then
+			local doomed = batch
+			batch = {}
+			for _, response in ipairs(doomed) do
+				table.insert(batch, {
+					id = response.id,
+					ok = false,
+					elapsedMs = response.elapsedMs or 0,
+					context = response.context or "unknown",
+					place = response.place or game.Name,
+					error = {
+						code = "E_SERIALIZE",
+						message = "response could not be encoded as JSON: "
+							.. tostring(transport.lastError),
+					},
+				})
+			end
+			pcall(function()
+				transport:report(batch)
+			end)
+			flushing = false
+			return true
+		end
+		-- New command threads may have appended while RequestAsync yielded.
+		-- Restore the older batch ahead of them so completion order remains
+		-- deterministic. A throw used to leave `flushing` true, and every
+		-- later flush then pretended the outbox was empty.
+		for index = #batch, 1, -1 do
+			table.insert(pending, 1, batch[index])
+		end
+		flushing = false
+		return false
 	end
-	-- New command threads may have appended while RequestAsync yielded. Restore
-	-- the older batch ahead of them so completion order remains deterministic.
-	for index = #batch, 1, -1 do
-		table.insert(pending, 1, batch[index])
-	end
-	return false
+	flushing = false
+	return true
 end
 
 --- Responses from commands still running on their own threads.
@@ -132,7 +185,12 @@ local function loop()
 		-- Flush completed work before considering a context switch. Every result
 		-- must be reported by the exact session that polled its command.
 		if not flushPending(transport, pending) then
-			setStatus(string.format("result outbox blocked (%s); retrying", tostring(transport.lastError)))
+			-- The hub answers an unknown session with 409 on /bridge/result, the
+			-- same as on /bridge/poll. Poll drops the session and the next cycle
+			-- handshakes again. Leaving `connected` true here retries that dead
+			-- session forever and never reaches poll, so the outbox cannot drain.
+			setStatus(string.format("result outbox blocked (%s); reconnecting", tostring(transport.lastError)))
+			transport:disconnect()
 			task.wait(backoff)
 			backoff = math.min(backoff * 2, Config.MAX_RECONNECT_DELAY_SECONDS)
 			continue
@@ -174,14 +232,33 @@ local function loop()
 		for _, command in ipairs(commands) do
 			activeCommands += 1
 			task.spawn(function()
-				local response = handle(command)
+				-- handle is not supposed to throw. If it does, the counter
+				-- used to stay raised and a context change waited forever,
+				-- because the decrement sat on the success path only.
+				local ok, response = pcall(handle, command)
+				if not ok then
+					response = {
+						id = command.id,
+						ok = false,
+						error = tostring(response),
+						elapsedMs = 0,
+						context = "unknown",
+						place = game.Name,
+					}
+				end
 				table.insert(pending, response)
 				activeCommands -= 1
 			end)
 		end
 
 		if not flushPending(transport, pending) then
-			setStatus(string.format("result outbox blocked (%s); retrying", tostring(transport.lastError)))
+			-- Same dead session as the flush before poll. Waiting here leaves
+			-- `connected` true, so the background flusher keeps posting it.
+			setStatus(string.format("result outbox blocked (%s); reconnecting", tostring(transport.lastError)))
+			transport:disconnect()
+			task.wait(backoff)
+			backoff = math.min(backoff * 2, Config.MAX_RECONNECT_DELAY_SECONDS)
+			continue
 		end
 		-- The outbox is also drained by `flusher` below, on its own clock.
 
@@ -206,8 +283,14 @@ end
 local function flusher()
 	while state.running do
 		local transport = state.transport
-		if transport ~= nil and #pending > 0 then
-			flushPending(transport, pending)
+		-- A disconnect is how a dead session is dropped. Reporting through it
+		-- anyway posts a nil session every 50ms until the poll loop wakes.
+		-- A failed report has to drop it here too: poll can be blocked for
+		-- the whole hold, and the loop will not see this failure until then.
+		if transport ~= nil and transport.connected and #pending > 0 then
+			if not flushPending(transport, pending) then
+				transport:disconnect()
+			end
 		end
 		task.wait(0.05)
 	end
@@ -218,7 +301,7 @@ local function start()
 		return
 	end
 	state.running = true
-	state.transport = Transport.new(hubUrl(), Auth.bearerToken)
+	state.transport = Transport.new(hubUrl(), Auth.bearerToken, Auth.installationId)
 	setStatus("starting")
 	task.spawn(loop)
 	task.spawn(flusher)

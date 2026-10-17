@@ -17,16 +17,20 @@ how good the result is.
 What this does and does not do
 ------------------------------
 
-It watches the source, and on a change it rebuilds and restarts Studio into the
-new place. That is roughly fifteen seconds instead of three and a half minutes,
-and -- more to the point -- it is zero commands instead of four, so the order
-cannot be got wrong.
+It watches source, rebuilds the on-disk place, and uses Rojo's sourcemap to
+decide whether the already-open Studio DataModel can be updated safely.
 
-It is not hot reload. Roblox has no mechanism to swap a module in a running
-DataModel from outside it, and `code.reload` only replaces scripts that already
-exist in the open place. A new file, a renamed one, or a changed project
-manifest all need the place rebuilt. Pretending otherwise would produce the
-worst outcome available: a session that looks updated and is not.
+Existing Lua/Luau scripts that map to a concrete Script, LocalScript or
+ModuleScript are synchronized through the bridge's native `code.write` /
+`code.reload` path. The whole changed batch is compiled before the first
+mutation, and an active Play Solo is stopped and restarted through
+StudioTestService -- never by foreground focus or F5.
+
+Structural changes stay fail-closed. Deleted files, project manifests, TOML/JSON
+changes or anything Rojo cannot map to a script return `coldReloadRequired`.
+The watcher does not restart Studio unless the caller explicitly opted into
+`--allow-cold-reload`. A session that merely *looks* updated is worse than a
+named cold-reload requirement.
 """
 
 from __future__ import annotations
@@ -68,7 +72,7 @@ def _changes(before: dict[str, float], after: dict[str, float]) -> list[str]:
 
 
 def run(project: Path, engine: Path, rebuild: Callable[[], bool],
-        reload_studio: Callable[[], dict[str, Any]],
+        reload_studio: Callable[[list[str]], dict[str, Any]],
         settle: float = 0.6, poll: float = 1.0,
         progress: Any = print) -> None:
     """Watch, rebuild, reload. Runs until interrupted.
@@ -108,7 +112,36 @@ def run(project: Path, engine: Path, rebuild: Callable[[], bool],
             progress("  build failed -- Studio still has the previous place")
             continue
 
-        outcome = reload_studio()
+        outcome = reload_studio(changed)
+
+        if outcome.get("hotReloaded"):
+            count = int(outcome.get("hotReloaded") or 0)
+            restarted = outcome.get("playRestarted") is True
+            progress(
+                f"  hot-reloaded {count} script{'' if count == 1 else 's'} "
+                f"in {time.time() - started:.0f}s"
+                + ("; Play Solo restarted natively" if restarted else "")
+            )
+            continue
+
+        if outcome.get("coldReloadRequired"):
+            paths = outcome.get("coldChanges") or []
+            head = ", ".join(Path(p).name for p in paths[:3])
+            if len(paths) > 3:
+                head += f" and {len(paths) - 3} more"
+            progress(
+                "  build is ready, but this change needs a cold Studio reload"
+                + (f": {head}" if head else "")
+            )
+            continue
+
+        if outcome.get("skipped"):
+            progress(
+                f"  built in {time.time() - started:.0f}s; Studio not reloaded "
+                f"({outcome.get('reason') or 'cold reload disabled'})"
+            )
+            continue
+
         sessions = len((outcome.get("handshake") or {}).get("sessions") or [])
         progress(f"  reloaded in {time.time() - started:.0f}s "
                  f"({sessions} session{'' if sessions == 1 else 's'} connected)")

@@ -31,6 +31,23 @@ type Self = {
 
 MobCatalog.__index = MobCatalog
 
+-- table.clone shares the entry tables. A later write to the caller's entry,
+-- or to the table pick() returned, would rewrite every later pick.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 function MobCatalog.new(entries: { Entry }): Self
 	assert(#entries > 0, "MobCatalog needs entries")
 	local weights: { number } = {}
@@ -42,11 +59,11 @@ function MobCatalog.new(entries: { Entry }): Self
 		total += w
 	end
 	assert(total > 0, "catalog weights must sum to a positive value")
-	return setmetatable({ entries = table.clone(entries), weights = weights }, MobCatalog)
+	return setmetatable({ entries = deepCopy(entries, {}), weights = weights }, MobCatalog)
 end
 
 function MobCatalog.pick(self: Self, rng: Rng.Generator): Entry
-	return self.entries[Rng.weightedPick(rng, self.weights)]
+	return deepCopy(self.entries[Rng.weightedPick(rng, self.weights)], {})
 end
 
 -- Uniform point on an annulus around centre.

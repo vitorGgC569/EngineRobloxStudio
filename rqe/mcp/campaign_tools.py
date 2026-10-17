@@ -21,15 +21,15 @@ from pathlib import Path
 from typing import Any
 
 from .server import EngineMcpServer, Tool, ToolError
+from ..safe_io import SafeIoError, atomic_write_text, read_text_limited
+from ..security import SecurityBoundaryError, resolve_inside, validate_path_component
 
 
-def _inside(root: Path, relative: str, label: str) -> Path:
-    path = (root / relative).resolve()
+def _inside(root: Path, relative: str, label: str, **checks: Any) -> Path:
     try:
-        path.relative_to(root.resolve())
-    except ValueError as exc:
-        raise ToolError(f"{label} must stay inside the project root") from exc
-    return path
+        return resolve_inside(root, relative, label=label, **checks)
+    except SecurityBoundaryError as exc:
+        raise ToolError(str(exc)) from exc
 
 
 def register_campaign_tools(server: EngineMcpServer) -> EngineMcpServer:
@@ -173,25 +173,43 @@ def register_campaign_tools(server: EngineMcpServer) -> EngineMcpServer:
 
         from ..orchestrator.blueprint import compile_production_blueprint
 
-        source = _inside(root, arguments["definition"], "definition")
-        if not source.is_file():
-            raise ToolError(f"game definition not found: {source}")
+        source = _inside(
+            root,
+            arguments["definition"],
+            "definition",
+            must_exist=True,
+            file_only=True,
+            suffixes=(".json",),
+        )
         try:
-            plan = compile_production_blueprint(json.loads(source.read_text(encoding="utf-8")))
+            document = read_text_limited(source, 4 * 1024 * 1024, label="game definition")
+            plan = compile_production_blueprint(json.loads(document))
         except Exception as exc:  # noqa: BLE001
             raise ToolError(f"{type(exc).__name__}: {exc}") from exc
 
         payload = plan.to_dict() if hasattr(plan, "to_dict") else {}
         output = _inside(root, arguments.get("output", ".tmp/plans"), "output")
         output.mkdir(parents=True, exist_ok=True)
-        written = output / f"{payload.get('blueprintId') or source.stem}.plan.json"
-        written.write_text(json.dumps(payload, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
+        try:
+            plan_id = validate_path_component(
+                payload.get("planId") or source.stem,
+                label="planId",
+            )
+            written = resolve_inside(output, f"{plan_id}.plan.json", label="plan output")
+            write_status = atomic_write_text(
+                written,
+                json.dumps(payload, indent=2, ensure_ascii=False) + "\n",
+                overwrite=bool(arguments.get("overwrite")),
+            )
+        except (SecurityBoundaryError, SafeIoError) as exc:
+            raise ToolError(str(exc)) from exc
 
         from .factory_tools import _summarise_plan
 
         return {
             "definition": str(source.relative_to(root)),
             "plan": str(written.relative_to(root)),
+            "writeStatus": write_status,
             **_summarise_plan(payload),
             "note": "a plan describes what would be built; nothing has been executed",
         }
@@ -209,6 +227,7 @@ def register_campaign_tools(server: EngineMcpServer) -> EngineMcpServer:
             "properties": {
                 "definition": {"type": "string", "minLength": 1},
                 "output": {"type": "string"},
+                "overwrite": {"type": "boolean"},
             },
         },
         handler=factory_create_project,
@@ -232,7 +251,12 @@ def register_campaign_tools(server: EngineMcpServer) -> EngineMcpServer:
             TransitionError,
         )
 
-        journal_path = _inside(root, arguments.get("journal", ".tmp/campaign.sqlite"), "journal")
+        journal_path = _inside(
+            root,
+            arguments.get("journal", ".tmp/campaign.sqlite"),
+            "journal",
+            suffixes=(".sqlite", ".sqlite3", ".db"),
+        )
         journal_path.parent.mkdir(parents=True, exist_ok=True)
         journal = SQLiteJournal(journal_path)
 
@@ -316,14 +340,21 @@ def register_campaign_tools(server: EngineMcpServer) -> EngineMcpServer:
         that moment is never reached by accident.
         """
 
-        run_dir = _inside(root, arguments["run"], "run")
-        gate_path = run_dir / "gate.json"
+        run_dir = _inside(root, arguments["run"], "run", must_exist=True, directory_only=True)
+        gate_path = _inside(
+            root,
+            str((run_dir / "gate.json").relative_to(root)),
+            "gate",
+            suffixes=(".json",),
+        )
         if not gate_path.is_file():
             raise ToolError(
                 f"{run_dir} has no gate.json; a run that was never evaluated cannot be promoted"
             )
-
-        gate = json.loads(gate_path.read_text(encoding="utf-8"))
+        try:
+            gate = json.loads(read_text_limited(gate_path, 8 * 1024 * 1024, label="release gate"))
+        except (SafeIoError, json.JSONDecodeError) as exc:
+            raise ToolError(f"cannot read release gate: {exc}") from exc
         allowed = bool(gate.get("releaseAllowed"))
         blockers = gate.get("blockers") or []
 
@@ -360,9 +391,14 @@ def register_campaign_tools(server: EngineMcpServer) -> EngineMcpServer:
                 "remains a separate human action"
             ),
         }
-        (run_dir / "promotion.json").write_text(
-            json.dumps(receipt, indent=2, ensure_ascii=False) + "\n", encoding="utf-8"
-        )
+        try:
+            atomic_write_text(
+                run_dir / "promotion.json",
+                json.dumps(receipt, indent=2, ensure_ascii=False) + "\n",
+                overwrite=False,
+            )
+        except SafeIoError as exc:
+            raise ToolError(str(exc)) from exc
         return receipt
 
     server.register(Tool(

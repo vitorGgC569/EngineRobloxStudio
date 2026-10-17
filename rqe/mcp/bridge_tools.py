@@ -5,10 +5,11 @@ That was the right first step and the wrong final shape: if MCP is the interface
 to the engine, then the engine's largest surface -- 57 typed commands against a
 live DataModel -- cannot be reachable only from a Python CLI.
 
-Exposed as **three** tools rather than fifty-seven, on purpose:
+Exposed as **four** tools rather than one descriptor per Studio command, on purpose:
 
   bridge_status    what is connected, and in which context
   bridge_commands  the command surface, grouped into families
+  bridge_lease     acquire, renew or release a fenced build/session lease
   bridge_call      invoke any command, validated against the manifest
 
 One `bridge_call` keeps the manifest as the single source of truth. Fifty-seven
@@ -33,25 +34,35 @@ import os
 from typing import Any
 
 from .server import EngineMcpServer, Tool, ToolError
+from ..security import SecurityBoundaryError, validate_hub_url
+from ..workspace import hub_url
 
 
-DEFAULT_HUB_URL = "http://127.0.0.1:8790"
+DEFAULT_HUB_URL = hub_url()
 
 
 def _hub_url(arguments: dict[str, Any]) -> str:
-    return (
+    candidate = (
         arguments.get("hub")
         or os.environ.get("RQE_HUB_URL")
         or DEFAULT_HUB_URL
     )
+    try:
+        return validate_hub_url(str(candidate))
+    except SecurityBoundaryError as exc:
+        raise ToolError(str(exc)) from exc
 
 
-def _bridge(arguments: dict[str, Any]):
+def _bridge(arguments: dict[str, Any], *, allow_arbitrary: bool = False):
     from ..hub.client import StudioBridge
 
     # The token is read from the environment only. Accepting it as an argument
     # would put a credential into the agent transcript.
-    return StudioBridge(_hub_url(arguments), token=os.environ.get("RQE_BRIDGE_TOKEN"))
+    return StudioBridge(
+        _hub_url(arguments),
+        token=os.environ.get("RQE_BRIDGE_TOKEN"),
+        allow_arbitrary=allow_arbitrary,
+    )
 
 
 def _family(method: str) -> str:
@@ -122,6 +133,7 @@ def register_bridge_tools(server: EngineMcpServer) -> EngineMcpServer:
                 "idempotency": spec.idempotency,
                 "contexts": list(spec.contexts),
                 "availability": spec.availability,
+                "selector": spec.selector,
                 "params": spec.params_schema if arguments.get("includeSchemas") else None,
             })
         if wanted and not families:
@@ -153,6 +165,82 @@ def register_bridge_tools(server: EngineMcpServer) -> EngineMcpServer:
         handler=bridge_commands,
     ))
 
+    lease_schema: dict[str, Any] = {
+        "type": "object",
+        "additionalProperties": True,
+        "required": ["leaseId", "fence", "runId", "agentId", "buildId", "session"],
+        "properties": {
+            "leaseId": {"type": "string", "minLength": 1},
+            "fence": {"type": "integer", "minimum": 1},
+            "runId": {"type": "string", "minLength": 1},
+            "agentId": {"type": "string", "minLength": 1},
+            "buildId": {"type": "string", "minLength": 1},
+            "session": {"type": "string", "minLength": 1},
+        },
+    }
+
+    def bridge_lease(arguments: dict[str, Any]) -> dict[str, Any]:
+        from ..hub.protocol import BridgeError
+
+        operation = arguments["operation"]
+        bridge = _bridge(arguments)
+        try:
+            if operation == "acquire":
+                required = ("runId", "agentId", "buildId", "session")
+                missing = [name for name in required if not arguments.get(name)]
+                if missing:
+                    raise ToolError("acquire requires " + ", ".join(missing))
+                lease = bridge.acquire_lease(
+                    run_id=arguments["runId"],
+                    agent_id=arguments["agentId"],
+                    build_id=arguments["buildId"],
+                    session_id=arguments["session"],
+                    ttl_seconds=float(arguments.get("ttlSeconds", 30)),
+                )
+            elif operation == "renew":
+                if not isinstance(arguments.get("lease"), dict):
+                    raise ToolError("renew requires the complete lease receipt")
+                lease = bridge.renew_lease(
+                    arguments["lease"],
+                    ttl_seconds=float(arguments.get("ttlSeconds", 30)),
+                )
+            else:
+                if not isinstance(arguments.get("lease"), dict):
+                    raise ToolError("release requires the complete lease receipt")
+                lease = bridge.release_lease(arguments["lease"])
+        except ToolError:
+            raise
+        except BridgeError as exc:
+            raise ToolError(f"{getattr(exc, 'code', 'E_BRIDGE')}: {exc}") from exc
+        except Exception as exc:  # noqa: BLE001
+            raise ToolError(f"{type(exc).__name__}: {exc}") from exc
+        return {"operation": operation, "lease": lease}
+
+    server.register(Tool(
+        name="bridge_lease",
+        description=(
+            "Acquire, renew, or release the exclusive fenced lease required by Studio "
+            "commands whose manifest selector.build is required. Pass the returned "
+            "receipt unchanged to bridge_call and renew it before it expires."
+        ),
+        input_schema={
+            "type": "object",
+            "additionalProperties": False,
+            "required": ["operation"],
+            "properties": {
+                "operation": {"type": "string", "enum": ["acquire", "renew", "release"]},
+                "runId": {"type": "string", "minLength": 1},
+                "agentId": {"type": "string", "minLength": 1},
+                "buildId": {"type": "string", "minLength": 1},
+                "session": {"type": "string", "minLength": 1},
+                "ttlSeconds": {"type": "number", "minimum": 1, "maximum": 300},
+                "lease": lease_schema,
+                "hub": {"type": "string", "minLength": 1},
+            },
+        },
+        handler=bridge_lease,
+    ))
+
     def bridge_call(arguments: dict[str, Any]) -> dict[str, Any]:
         from ..hub.commands import CommandValidationError, load_default_registry
         from ..hub.protocol import BridgeError
@@ -175,7 +263,13 @@ def register_bridge_tools(server: EngineMcpServer) -> EngineMcpServer:
                 f"{method} is declared {spec.availability} in the manifest and will not be dispatched"
             )
 
-        bridge = _bridge(arguments)
+        allow_arbitrary = spec.effect == "arbitrary"
+        if allow_arbitrary:
+            from .capabilities import require_arbitrary_code
+
+            require_arbitrary_code()
+
+        bridge = _bridge(arguments, allow_arbitrary=allow_arbitrary)
         if arguments.get("pinToRunning"):
             try:
                 bridge.pin_to_running()
@@ -183,7 +277,12 @@ def register_bridge_tools(server: EngineMcpServer) -> EngineMcpServer:
                 raise ToolError(f"could not pin to a running session: {exc}") from exc
 
         try:
-            result = bridge.call(method, params, timeout=float(arguments.get("timeoutSeconds", 30)))
+            result = bridge.call(
+                method,
+                params,
+                timeout=float(arguments.get("timeoutSeconds", 30)),
+                lease=arguments.get("lease"),
+            )
         except BridgeError as exc:
             # The bridge's own refusals -- lease conflicts, wrong context, a
             # disconnected session -- keep their code. Flattening them into a
@@ -226,6 +325,7 @@ def register_bridge_tools(server: EngineMcpServer) -> EngineMcpServer:
                         "reads can land on different DataModels and quietly mix two worlds."
                     ),
                 },
+                "lease": lease_schema,
             },
         },
         handler=bridge_call,

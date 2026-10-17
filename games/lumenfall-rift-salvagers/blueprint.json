@@ -1,0 +1,297 @@
+{
+  "schemaVersion": 1,
+  "blueprintId": "lumenfall-rift-salvagers",
+  "revision": "1.0.0",
+  "engine": {
+    "engineId": "rqe",
+    "version": "2.0.0",
+    "sourceRoots": [
+      "rqe",
+      "schemas",
+      "apps/studio-plugin",
+      "roblox/lib"
+    ]
+  },
+  "projects": [
+    {
+      "schemaVersion": 1,
+      "projectId": "project-lumenfall-rift-salvagers",
+      "productId": "lumenfall-rift-salvagers",
+      "revision": "1.0.0",
+      "seed": 46045639,
+      "genre": "roguelite",
+      "templateId": "template-roguelite-v1",
+      "sourceRoot": "games/lumenfall-rift-salvagers",
+      "artifactRoot": "artifacts/products/lumenfall-rift-salvagers",
+      "productIntentRef": {
+        "productId": "lumenfall-rift-salvagers",
+        "artifactId": "lumenfall-rift-salvagers.product_intent",
+        "kind": "PRODUCT_INTENT",
+        "path": "games/lumenfall-rift-salvagers/definition/product-intent.json",
+        "sha256": "91f561dd7c6b5244cd336cdacd68b32efad84100cf78f98fc2abfc07056c1dbf"
+      },
+      "referenceBundleRef": {
+        "productId": "lumenfall-rift-salvagers",
+        "artifactId": "lumenfall-rift-salvagers.reference_bundle",
+        "kind": "REFERENCE_BUNDLE",
+        "path": "games/lumenfall-rift-salvagers/definition/reference-bundle.json",
+        "sha256": "b0d8c0d38d889dc6de8c16ae5caf04f3f65faa647035dca381b8cd0d8cb75fa4"
+      },
+      "subsystems": [
+        {
+          "id": "world",
+          "capability": "a sequence of gated level volumes",
+          "dependencies": []
+        },
+        {
+          "id": "interface",
+          "capability": "store presence and player-facing screens",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "telemetry",
+          "capability": "analytics",
+          "dependencies": [
+            "world"
+          ]
+        },
+        {
+          "id": "gameplay",
+          "capability": "inventory, progression, save",
+          "dependencies": [
+            "world"
+          ]
+        }
+      ],
+      "ownership": [
+        {
+          "subsystemId": "world",
+          "ownerRole": "world-agent",
+          "writeRoots": [
+            "games/lumenfall-rift-salvagers/src/world"
+          ]
+        },
+        {
+          "subsystemId": "interface",
+          "ownerRole": "interface-agent",
+          "writeRoots": [
+            "games/lumenfall-rift-salvagers/src/interface"
+          ]
+        },
+        {
+          "subsystemId": "telemetry",
+          "ownerRole": "telemetry-agent",
+          "writeRoots": [
+            "games/lumenfall-rift-salvagers/src/telemetry"
+          ]
+        },
+        {
+          "subsystemId": "gameplay",
+          "ownerRole": "gameplay-agent",
+          "writeRoots": [
+            "games/lumenfall-rift-salvagers/src/gameplay"
+          ]
+        }
+      ],
+      "deviceViewpointMatrix": {
+        "devices": [
+          {
+            "id": "desktop",
+            "viewportWidth": 1920,
+            "viewportHeight": 1080,
+            "inputModes": [
+              "KEYBOARD_MOUSE"
+            ]
+          },
+          {
+            "id": "phone",
+            "viewportWidth": 390,
+            "viewportHeight": 844,
+            "inputModes": [
+              "TOUCH"
+            ]
+          }
+        ],
+        "viewpoints": [
+          {
+            "id": "overview",
+            "purpose": "world readability",
+            "cameraMode": "FIXED"
+          },
+          {
+            "id": "player",
+            "purpose": "core interaction",
+            "cameraMode": "PLAYER"
+          }
+        ],
+        "combinations": [
+          {
+            "deviceId": "desktop",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "desktop",
+            "viewpointId": "player"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "overview"
+          },
+          {
+            "deviceId": "phone",
+            "viewpointId": "player"
+          }
+        ]
+      },
+      "scenarioClasses": [
+        {
+          "id": "first-session",
+          "class": "ONBOARDING",
+          "requiredForRelease": true,
+          "actorProfile": "new-player"
+        },
+        {
+          "id": "traversal",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "combat",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "core-loop",
+          "class": "CORE_LOOP",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        },
+        {
+          "id": "progression",
+          "class": "PROGRESSION",
+          "requiredForRelease": true,
+          "actorProfile": "returning-player"
+        }
+      ],
+      "assetNeeds": [
+        {
+          "id": "experience-icon",
+          "type": "ICON",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        },
+        {
+          "id": "experience-thumbnail",
+          "type": "IMAGE",
+          "strategy": "EITHER",
+          "requiredForRelease": true,
+          "consumers": [
+            "interface"
+          ],
+          "acceptanceProfileId": "release-quality"
+        }
+      ],
+      "qualityProfiles": [
+        {
+          "id": "release-quality",
+          "requiredForRelease": true,
+          "appliesTo": [
+            "GAMEPLAY",
+            "VISUAL",
+            "ASSETS",
+            "RELEASE"
+          ],
+          "inputRef": {
+            "productId": "lumenfall-rift-salvagers",
+            "artifactId": "lumenfall-rift-salvagers.quality_profile",
+            "kind": "QUALITY_PROFILE",
+            "path": "games/lumenfall-rift-salvagers/definition/release-quality.json",
+            "sha256": "04b9324914f57c5a48f5afdf7ee0e2cb4e120fe3d854d7bf9536f1d90346d310"
+          }
+        }
+      ],
+      "outputArtifactRefs": [
+        {
+          "productId": "lumenfall-rift-salvagers",
+          "artifactId": "lumenfall-rift-salvagers.production_plan",
+          "kind": "PRODUCTION_PLAN",
+          "path": "artifacts/products/lumenfall-rift-salvagers/production_plan"
+        },
+        {
+          "productId": "lumenfall-rift-salvagers",
+          "artifactId": "lumenfall-rift-salvagers.source_bundle",
+          "kind": "SOURCE_BUNDLE",
+          "path": "artifacts/products/lumenfall-rift-salvagers/source_bundle"
+        },
+        {
+          "productId": "lumenfall-rift-salvagers",
+          "artifactId": "lumenfall-rift-salvagers.asset_manifest",
+          "kind": "ASSET_MANIFEST",
+          "path": "artifacts/products/lumenfall-rift-salvagers/asset_manifest"
+        },
+        {
+          "productId": "lumenfall-rift-salvagers",
+          "artifactId": "lumenfall-rift-salvagers.build_place",
+          "kind": "BUILD_PLACE",
+          "path": "artifacts/products/lumenfall-rift-salvagers/build_place"
+        },
+        {
+          "productId": "lumenfall-rift-salvagers",
+          "artifactId": "lumenfall-rift-salvagers.integration_manifest",
+          "kind": "INTEGRATION_MANIFEST",
+          "path": "artifacts/products/lumenfall-rift-salvagers/integration_manifest"
+        },
+        {
+          "productId": "lumenfall-rift-salvagers",
+          "artifactId": "lumenfall-rift-salvagers.measurement_run",
+          "kind": "MEASUREMENT_RUN",
+          "path": "artifacts/products/lumenfall-rift-salvagers/measurement_run"
+        },
+        {
+          "productId": "lumenfall-rift-salvagers",
+          "artifactId": "lumenfall-rift-salvagers.scenario_results",
+          "kind": "SCENARIO_RESULTS",
+          "path": "artifacts/products/lumenfall-rift-salvagers/scenario_results"
+        },
+        {
+          "productId": "lumenfall-rift-salvagers",
+          "artifactId": "lumenfall-rift-salvagers.capture_bundle",
+          "kind": "CAPTURE_BUNDLE",
+          "path": "artifacts/products/lumenfall-rift-salvagers/capture_bundle"
+        },
+        {
+          "productId": "lumenfall-rift-salvagers",
+          "artifactId": "lumenfall-rift-salvagers.quality_review",
+          "kind": "QUALITY_REVIEW",
+          "path": "artifacts/products/lumenfall-rift-salvagers/quality_review"
+        },
+        {
+          "productId": "lumenfall-rift-salvagers",
+          "artifactId": "lumenfall-rift-salvagers.repair_plan",
+          "kind": "REPAIR_PLAN",
+          "path": "artifacts/products/lumenfall-rift-salvagers/repair_plan"
+        },
+        {
+          "productId": "lumenfall-rift-salvagers",
+          "artifactId": "lumenfall-rift-salvagers.regression_run",
+          "kind": "REGRESSION_RUN",
+          "path": "artifacts/products/lumenfall-rift-salvagers/regression_run"
+        },
+        {
+          "productId": "lumenfall-rift-salvagers",
+          "artifactId": "lumenfall-rift-salvagers.release_candidate",
+          "kind": "RELEASE_CANDIDATE",
+          "path": "artifacts/products/lumenfall-rift-salvagers/release_candidate"
+        }
+      ]
+    }
+  ]
+}

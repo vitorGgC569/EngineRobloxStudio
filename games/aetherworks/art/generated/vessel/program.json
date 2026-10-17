@@ -1,0 +1,92 @@
+{
+  "schemaVersion": 1,
+  "id": "vessel",
+  "result": "asset",
+  "units": "studs",
+  "steps": [
+    {
+      "op": "cylinder",
+      "name": "vessel",
+      "radius": 3,
+      "depth": 6,
+      "location": [
+        0,
+        0,
+        0
+      ],
+      "vertices": 32
+    },
+    {
+      "op": "cone",
+      "name": "shoulder",
+      "radius": 3,
+      "depth": 1.5,
+      "location": [
+        0,
+        0,
+        3.75
+      ],
+      "vertices": 32,
+      "radiusTop": 2
+    },
+    {
+      "op": "cone",
+      "name": "bottom",
+      "radius": 2,
+      "depth": 0.9,
+      "location": [
+        0,
+        0,
+        -3.45
+      ],
+      "vertices": 32,
+      "radiusTop": 3
+    },
+    {
+      "op": "bevel",
+      "target": "vessel",
+      "width": 0.16,
+      "segments": 2
+    },
+    {
+      "op": "bevel",
+      "target": "shoulder",
+      "width": 0.16,
+      "segments": 2
+    },
+    {
+      "op": "bevel",
+      "target": "bottom",
+      "width": 0.16,
+      "segments": 2
+    },
+    {
+      "op": "join",
+      "name": "asset",
+      "targets": [
+        "vessel",
+        "shoulder",
+        "bottom"
+      ]
+    },
+    {
+      "op": "smooth_shade",
+      "target": "asset",
+      "angle": 35
+    },
+    {
+      "op": "uv_unwrap",
+      "target": "asset",
+      "method": "smart"
+    },
+    {
+      "op": "triangulate",
+      "target": "asset"
+    }
+  ],
+  "metadata": {
+    "author": "Aetherworks",
+    "license": "project-original",
+    "purpose": "finished modular industrial art"
+  }
+}

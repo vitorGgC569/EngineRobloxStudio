@@ -10,6 +10,24 @@
 
 local SeasonalEvent = {}
 
+-- `table.clone` copied the array and left each milestone table shared.
+-- Raising `at` on the caller's table after `new` moved the threshold
+-- `milestonesReached` still compared against.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 type Self = {
 	currencyName: string,
 	milestones: { { at: number, rewardId: string } },
@@ -27,7 +45,7 @@ function SeasonalEvent.new(config: {
 	maxWaveBonus: number?,
 	respawnSeconds: number?,
 }): Self
-	local milestones = table.clone(config.milestones or {})
+	local milestones = deepCopy(config.milestones or {}, {}) :: { { at: number, rewardId: string } }
 	table.sort(milestones, function(a, b)
 		return a.at < b.at
 	end)
@@ -47,6 +65,10 @@ function SeasonalEvent.waveSize(self: Self, playerCount: number): number
 end
 
 function SeasonalEvent.canCollect(self: Self, collectorPos: { x: number, z: number }, targetPos: { x: number, z: number }, maxDistance: number): boolean
+	-- A negative reach refuses the collector standing on the target.
+	if maxDistance < 0 then
+		maxDistance = 0
+	end
 	local dx, dz = targetPos.x - collectorPos.x, targetPos.z - collectorPos.z
 	return math.sqrt(dx * dx + dz * dz) <= maxDistance
 end

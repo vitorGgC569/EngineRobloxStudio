@@ -18,22 +18,22 @@ from pathlib import Path
 from typing import Any
 
 from .server import EngineMcpServer, Tool, ToolError
+from ..security import SecurityBoundaryError, resolve_inside
+from ..workspace import hub_url
 
 
-def _inside(root: Path, relative: str, label: str) -> Path:
-    path = (root / relative).resolve()
+def _inside(root: Path, relative: str, label: str, **checks: Any) -> Path:
     try:
-        path.relative_to(root.resolve())
-    except ValueError as exc:
-        raise ToolError(f"{label} must stay inside the project root") from exc
-    return path
+        return resolve_inside(root, relative, label=label, **checks)
+    except SecurityBoundaryError as exc:
+        raise ToolError(str(exc)) from exc
 
 
 def _bridge(arguments: dict[str, Any]):
     from ..hub.client import StudioBridge
 
     return StudioBridge(
-        arguments.get("hub") or os.environ.get("RQE_HUB_URL", "http://127.0.0.1:8790"),
+        arguments.get("hub") or hub_url(),
         token=os.environ.get("RQE_BRIDGE_TOKEN"),
     )
 
@@ -46,9 +46,14 @@ def register_lifecycle_tools(server: EngineMcpServer) -> EngineMcpServer:
     def studio_open(arguments: dict[str, Any]) -> dict[str, Any]:
         from ..hub import lifecycle
 
-        place = _inside(root, arguments["place"], "place")
-        if not place.is_file():
-            raise ToolError(f"place file not found: {place}")
+        if arguments.get("confirmColdLaunch") is not True:
+            raise ToolError(
+                "cold-launching Studio can raise a visible window even when background mode "
+                "is requested. Use studio_ensure first; pass confirmColdLaunch=true only "
+                "when opening Studio is explicitly acceptable."
+            )
+
+        place = _inside(root, arguments["place"], "place", must_exist=True, file_only=True, suffixes=(".rbxl", ".rbxlx"))
 
         if lifecycle.studio_running() and arguments.get("confirmReplaceSession") is not True:
             # Opening a place while Studio is running either opens a second
@@ -72,8 +77,9 @@ def register_lifecycle_tools(server: EngineMcpServer) -> EngineMcpServer:
     server.register(Tool(
         name="studio_open",
         description=(
-            "Launch Roblox Studio on a place file, in the background by default. Refuses "
-            "if a session is already running unless replacement is confirmed."
+            "Explicit cold launch of Roblox Studio. This may briefly create a visible window even "
+            "in background mode, so confirmColdLaunch=true is required. Routine automation "
+            "should use studio_ensure and reuse a persistent session."
         ),
         input_schema={
             "type": "object",
@@ -82,10 +88,75 @@ def register_lifecycle_tools(server: EngineMcpServer) -> EngineMcpServer:
             "properties": {
                 "place": {"type": "string", "minLength": 1},
                 "background": {"type": "boolean"},
+                "confirmColdLaunch": {"type": "boolean"},
                 "confirmReplaceSession": {"type": "boolean"},
             },
         },
         handler=studio_open,
+    ))
+
+
+
+    def studio_ensure(arguments: dict[str, Any]) -> dict[str, Any]:
+        """Reuse one compatible Studio session without surprising the user."""
+        from ..hub import lifecycle
+
+        place = _inside(
+            root,
+            arguments["place"],
+            "place",
+            must_exist=True,
+            file_only=True,
+            suffixes=(".rbxl", ".rbxlx"),
+        )
+        archive_root = _inside(
+            root,
+            arguments.get("archiveRoot", ".tmp/studio-recovery"),
+            "archiveRoot",
+        )
+        archive_root.mkdir(parents=True, exist_ok=True)
+
+        try:
+            detail = lifecycle.ensure_studio_session(
+                place,
+                archive_root,
+                _bridge(arguments),
+                wait_seconds=float(arguments.get("waitSeconds", 45)),
+                background=bool(arguments.get("background", True)),
+                allow_cold_launch=bool(arguments.get("allowColdLaunch", False)),
+            )
+        except Exception as exc:  # noqa: BLE001
+            raise ToolError(f"{type(exc).__name__}: {exc}") from exc
+
+        return {
+            "place": str(place.relative_to(root)),
+            "ready": bool(detail.get("ready")),
+            "reused": bool(detail.get("reused")),
+            "coldLaunched": bool(detail.get("coldLaunched")),
+            "detail": detail,
+        }
+
+    server.register(Tool(
+        name="studio_ensure",
+        description=(
+            "Reuse a compatible persistent Studio bridge session without foreground focus. "
+            "By default this FAILS CLOSED instead of opening Studio. Pass allowColdLaunch=true "
+            "only when a one-time cold Studio launch is explicitly acceptable."
+        ),
+        input_schema={
+            "type": "object",
+            "required": ["place"],
+            "additionalProperties": False,
+            "properties": {
+                "place": {"type": "string", "minLength": 1},
+                "archiveRoot": {"type": "string"},
+                "waitSeconds": {"type": "number", "exclusiveMinimum": 0, "maximum": 180},
+                "background": {"type": "boolean"},
+                "allowColdLaunch": {"type": "boolean"},
+                "hub": {"type": "string"},
+            },
+        },
+        handler=studio_ensure,
     ))
 
     def studio_restart(arguments: dict[str, Any]) -> dict[str, Any]:
@@ -96,12 +167,23 @@ def register_lifecycle_tools(server: EngineMcpServer) -> EngineMcpServer:
                 "restarting kills the running Studio and discards unsaved work; "
                 "pass confirmDiscardUnsavedWork=true to proceed"
             )
-        place = _inside(root, arguments["place"], "place")
-        if not place.is_file():
-            raise ToolError(f"place file not found: {place}")
+        place = _inside(root, arguments["place"], "place", must_exist=True, file_only=True, suffixes=(".rbxl", ".rbxlx"))
+
+        archive_root = _inside(
+            root,
+            arguments.get("archiveRoot", ".tmp/studio-recovery"),
+            "archiveRoot",
+        )
+        archive_root.mkdir(parents=True, exist_ok=True)
 
         try:
-            detail = lifecycle.restart_for_bridge(place, _bridge(arguments))
+            detail = lifecycle.restart_for_bridge(
+                place,
+                archive_root,
+                bridge=_bridge(arguments),
+                wait_seconds=float(arguments.get("waitSeconds", 180)),
+                background=bool(arguments.get("background", True)),
+            )
         except Exception as exc:  # noqa: BLE001
             raise ToolError(f"{type(exc).__name__}: {exc}") from exc
         return {"place": str(place.relative_to(root)), "detail": detail}
@@ -118,6 +200,9 @@ def register_lifecycle_tools(server: EngineMcpServer) -> EngineMcpServer:
             "additionalProperties": False,
             "properties": {
                 "place": {"type": "string", "minLength": 1},
+                "archiveRoot": {"type": "string"},
+                "waitSeconds": {"type": "number", "exclusiveMinimum": 0, "maximum": 300},
+                "background": {"type": "boolean"},
                 "hub": {"type": "string"},
                 "confirmDiscardUnsavedWork": {"type": "boolean"},
             },
@@ -143,9 +228,10 @@ def register_lifecycle_tools(server: EngineMcpServer) -> EngineMcpServer:
     server.register(Tool(
         name="studio_play",
         description=(
-            "Start or stop a Play Solo session, giving the server and client halves a "
-            "running place to answer from. Run mode does not always revert cleanly, so "
-            "`restart` reopens the place first."
+            "Start or stop Play Solo through the native StudioTestService bridge. "
+            "The normal path never focuses Studio or sends F5/Shift+F5; foreground "
+            "fallbacks are disabled. Use studio_ensure first so this never cold-launches "
+            "Studio unexpectedly."
         ),
         input_schema={
             "type": "object",
@@ -197,9 +283,7 @@ def register_lifecycle_tools(server: EngineMcpServer) -> EngineMcpServer:
                     "the local provider needs a catalog path; there is no default, because "
                     "guessing one answers a question about assets with a different file"
                 )
-            catalog_path = _inside(root, relative, "catalog")
-            if not catalog_path.is_file():
-                raise ToolError(f"asset catalogue not found: {catalog_path}")
+            catalog_path = _inside(root, relative, "catalog", must_exist=True, file_only=True, suffixes=(".json",))
             try:
                 catalog = AssetCatalog.from_dict(read_json(catalog_path))
             except ValueError as exc:
@@ -289,9 +373,7 @@ def register_lifecycle_tools(server: EngineMcpServer) -> EngineMcpServer:
         step becomes an asset id nobody can tell apart from a real one.
         """
 
-        request = _inside(root, arguments["request"], "request")
-        if not request.is_file():
-            raise ToolError(f"work request not found: {request}")
+        request = _inside(root, arguments["request"], "request", must_exist=True, file_only=True, suffixes=(".json",))
         try:
             prepared, written = _operations(arguments).prepare_file(request)
         except ToolError:
@@ -335,9 +417,7 @@ def register_lifecycle_tools(server: EngineMcpServer) -> EngineMcpServer:
         from ..assets.integration import build_integration_bundle
         from ..project import read_json
 
-        catalog_path = _inside(root, arguments["catalog"], "catalog")
-        if not catalog_path.is_file():
-            raise ToolError(f"asset catalogue not found: {catalog_path}")
+        catalog_path = _inside(root, arguments["catalog"], "catalog", must_exist=True, file_only=True, suffixes=(".json",))
         try:
             catalog = AssetCatalog.from_dict(read_json(catalog_path))
         except ValueError as exc:

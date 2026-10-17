@@ -1,39 +1,17 @@
-"""Start and stop a Studio session with a server and clients, unattended.
+"""Start and stop native Studio multiplayer tests unattended.
 
-How this works
---------------
+The preferred backend is Roblox's StudioTestService exposed by the bridge as
+`test.start(mode="multiplayer")` / `test.finish`. It creates the server and
+requested clients without focusing Studio, pressing F7, clicking the toolbar or
+moving the user's mouse.
 
-Roblox exposes no API for a local multiplayer test. `RunService` gives an
-edit-mode run with no players and `start_play_solo` gives exactly one, so
-anything that only exists because other people are in the game -- plot
-ownership, permissions, per-player replication -- needs the UI.
+The coordinate/F7 implementation below is retained only as an explicit legacy
+fallback for older Studio builds. Public `start()` and `stop()` never use that
+foreground path unless the caller passes `allow_foreground_fallback=True`.
 
-Two facts make it automatable, and both had to be found by looking:
-
-  * **`Teste > Iniciar teste de sessao > Servidor e clientes` is bound to F7.**
-    Reading Studio's classic menu bar turned that up; the ribbon itself is
-    Qt-drawn and invisible to UI Automation, which reports five controls for the
-    entire window.
-
-  * **The client-count spinner only accepts input while no session is running.**
-    This cost an afternoon. Clicking it was tried directly, by typing into the
-    field, and with a stepped hover and a long dwell, at coordinates confirmed
-    against a pixel grid -- and the value never moved, because a session was
-    live throughout. With the session stopped, the first ordinary click works.
-
-    The lesson is not about spinners. Three techniques were blamed for a
-    failure that belonged to program state, and the coordinates were right the
-    whole time.
-
-So the order matters: stop, set the count, then F7. `start` does exactly that.
-
-Verification is by outcome, never by screenshot
------------------------------------------------
-
-Nothing here trusts that a keystroke landed. A session exists when a `server`
-context appears on the bridge, and players are counted from `run.state`. A
-Studio that was not focused, or a shortcut that moved, shows up as "the player
-count did not change" -- the honest failure, and the one a caller can act on.
+Verification is always by runtime outcome: the bridge must observe the server
+session and the requested player count. A native command returning successfully
+is not by itself proof that multiplayer became ready.
 """
 
 from __future__ import annotations
@@ -196,7 +174,7 @@ def set_clients(bridge: Any, count: int, maximum: int = 8) -> dict[str, Any]:
     `count` times, and the value is known by construction.
     """
     if _players(bridge) is not None:
-        stop(bridge)
+        _stop_legacy(bridge)
         time.sleep(3)
     if _players(bridge) is not None:
         return {"set": False, "reason": "a session is still running; the spinner stays disabled"}
@@ -228,7 +206,7 @@ def client_count_hint() -> str:
             "one step this cannot do")
 
 
-def start(bridge: Any, clients: int = 2, timeout: float = 240.0) -> dict[str, Any]:
+def _start_legacy(bridge: Any, clients: int = 2, timeout: float = 240.0) -> dict[str, Any]:
     """Start a server and bring `clients` players into it.
 
     F7 opens the session; the ribbon's own client count is whatever it was left
@@ -283,7 +261,7 @@ def start(bridge: Any, clients: int = 2, timeout: float = 240.0) -> dict[str, An
     return result
 
 
-def stop(bridge: Any) -> dict[str, Any]:
+def _stop_legacy(bridge: Any) -> dict[str, Any]:
     """End the session with Shift+F5, the shortcut the menu itself advertises."""
     hwnd, title = editor_window()
     _focus(hwnd)
@@ -293,3 +271,302 @@ def stop(bridge: Any) -> dict[str, Any]:
     u.keybd_event(VK_SHIFT, 0, 2, 0)
     time.sleep(3)
     return {"stopped": _players(bridge) is None, "window": title}
+
+
+def start(
+    bridge: Any,
+    clients: int = 2,
+    timeout: float = 240.0,
+    *,
+    allow_foreground_fallback: bool = False,
+) -> dict[str, Any]:
+    """Start a multiplayer Studio test natively, without touching the UI."""
+    clients = max(1, min(int(clients), 8))
+    try:
+        sessions = bridge.status().get("sessions", [])
+    except Exception as exc:
+        sessions = []
+        native_error = str(exc)
+    else:
+        native_error = ""
+
+    edit = next(
+        (item for item in sessions
+         if item.get("context") == "edit" and int(item.get("polls") or 0) > 0),
+        None,
+    )
+    if edit is not None:
+        previous_pin = getattr(bridge, "pinned_session", None)
+        bridge.pinned_session = str(edit["session"])
+        try:
+            capabilities = bridge.call("bridge.capabilities", {}, timeout=15)
+            methods = set(capabilities.get("methods") or [])
+            if "test.start" in methods:
+                known = {str(item.get("session")) for item in sessions}
+                with bridge.lease_scope(
+                    agent_id="studio-teamtest-native-start",
+                    session_id=bridge.pinned_session,
+                    ttl_seconds=60.0,
+                    release_required=False,
+                ):
+                    started = bridge.call(
+                        "test.start",
+                        {
+                            "mode": "multiplayer",
+                            "players": clients,
+                            "args": {"source": "rqe.hub.teamtest"},
+                        },
+                        timeout=20,
+                    )
+
+                test_id = str(started.get("id") or "")
+                deadline = time.monotonic() + timeout
+                server_session = None
+                joined = 0
+                while time.monotonic() < deadline:
+                    current = bridge.status().get("sessions", [])
+                    fresh = [
+                        item for item in current
+                        if str(item.get("session")) not in known
+                        and item.get("context") in {"server", "run"}
+                    ]
+                    if fresh:
+                        server_session = fresh[0]
+                        bridge.pinned_session = str(server_session["session"])
+                        joined = _players(bridge) or 0
+                        if joined >= clients:
+                            return {
+                                "started": True,
+                                "native": True,
+                                "controller": "StudioTestService",
+                                "foregroundFallbackUsed": False,
+                                "testId": test_id,
+                                "players": joined,
+                                "wanted": clients,
+                                "enough": True,
+                                "serverSession": server_session["session"],
+                            }
+                    time.sleep(0.5)
+
+                return {
+                    "started": bool(server_session),
+                    "native": True,
+                    "controller": "StudioTestService",
+                    "foregroundFallbackUsed": False,
+                    "testId": test_id,
+                    "players": joined,
+                    "wanted": clients,
+                    "enough": joined >= clients,
+                    "reason": (
+                        "native multiplayer test started but the requested "
+                        "player count did not become ready before timeout"
+                    ),
+                }
+            native_error = "connected plugin does not expose test.start"
+        except Exception as exc:
+            native_error = f"{type(exc).__name__}: {exc}"
+        finally:
+            if not getattr(bridge, "pinned_session", None):
+                bridge.pinned_session = previous_pin
+    elif not native_error:
+        native_error = "no healthy edit bridge session is available"
+
+    if not allow_foreground_fallback:
+        return {
+            "started": False,
+            "native": False,
+            "foregroundFallbackUsed": False,
+            "reason": (
+                "StudioTestService multiplayer start is unavailable and the "
+                "foreground F7 fallback is disabled: " + native_error
+            ),
+        }
+
+    legacy = _start_legacy(bridge, clients=clients, timeout=timeout)
+    legacy["native"] = False
+    legacy["foregroundFallbackUsed"] = True
+    legacy["nativeError"] = native_error
+    return legacy
+
+
+
+def add_players(
+    bridge: Any,
+    count: int,
+    timeout: float = 45.0,
+) -> dict[str, Any]:
+    """Add clients to an active native multiplayer test without Studio UI."""
+    count = int(count)
+    if count < 1 or count > 8:
+        return {
+            "added": False,
+            "reason": "count must be between 1 and 8",
+            "foregroundFallbackUsed": False,
+        }
+
+    try:
+        sessions = bridge.status().get("sessions", [])
+        runtime = next(
+            (
+                item
+                for item in sessions
+                if item.get("context") in {"server", "run"}
+                and int(item.get("polls") or 0) > 0
+            ),
+            None,
+        )
+        if runtime is None:
+            return {
+                "added": False,
+                "reason": "no healthy native multiplayer runtime session is active",
+                "foregroundFallbackUsed": False,
+            }
+
+        bridge.pinned_session = str(runtime["session"])
+        capabilities = bridge.call("bridge.capabilities", {}, timeout=12)
+        methods = set(capabilities.get("methods") or [])
+        if "test.add_players" not in methods:
+            return {
+                "added": False,
+                "reason": "connected plugin does not expose test.add_players",
+                "foregroundFallbackUsed": False,
+            }
+
+        before = _players(bridge) or 0
+        with bridge.lease_scope(
+            agent_id="studio-teamtest-native-add-players",
+            session_id=bridge.pinned_session,
+            ttl_seconds=45.0,
+            release_required=False,
+        ):
+            receipt = bridge.call(
+                "test.add_players",
+                {"count": count},
+                timeout=20,
+            )
+
+        target = before + count
+        deadline = time.monotonic() + timeout
+        observed = before
+        while time.monotonic() < deadline:
+            observed = _players(bridge) or 0
+            if observed >= target:
+                return {
+                    "added": True,
+                    "native": True,
+                    "controller": "StudioTestService",
+                    "foregroundFallbackUsed": False,
+                    "requested": count,
+                    "before": before,
+                    "players": observed,
+                    "receipt": receipt,
+                }
+            time.sleep(0.5)
+
+        return {
+            "added": False,
+            "native": True,
+            "controller": "StudioTestService",
+            "foregroundFallbackUsed": False,
+            "requested": count,
+            "before": before,
+            "players": observed,
+            "reason": "AddPlayers returned but the requested clients did not become ready before timeout",
+            "receipt": receipt,
+        }
+    except Exception as exc:
+        return {
+            "added": False,
+            "native": True,
+            "foregroundFallbackUsed": False,
+            "reason": f"{type(exc).__name__}: {exc}",
+        }
+
+def stop(
+    bridge: Any,
+    timeout: float = 45.0,
+    *,
+    allow_foreground_fallback: bool = False,
+) -> dict[str, Any]:
+    """Stop a native multiplayer test without focusing any Studio window."""
+    native_error = ""
+    try:
+        sessions = bridge.status().get("sessions", [])
+        runtime = [
+            item for item in sessions
+            if item.get("context") in {"server", "run"}
+        ]
+        if not runtime:
+            return {
+                "stopped": True,
+                "native": True,
+                "foregroundFallbackUsed": False,
+                "reason": "no runtime session is active",
+            }
+
+        for candidate in runtime:
+            bridge.pinned_session = str(candidate["session"])
+            capabilities = bridge.call("bridge.capabilities", {}, timeout=12)
+            methods = set(capabilities.get("methods") or [])
+            if "test.status" not in methods or "test.finish" not in methods:
+                continue
+            status = bridge.call("test.status", {}, timeout=12)
+            args = status.get("args") if isinstance(status, dict) else None
+            test_id = args.get("rqeTestId") if isinstance(args, dict) else None
+            if not test_id:
+                continue
+
+            with bridge.lease_scope(
+                agent_id="studio-teamtest-native-stop",
+                session_id=bridge.pinned_session,
+                ttl_seconds=45.0,
+                release_required=False,
+            ):
+                bridge.call(
+                    "test.finish",
+                    {
+                        "testId": str(test_id),
+                        "result": {"source": "rqe.hub.teamtest", "stopped": True},
+                    },
+                    timeout=20,
+                )
+
+            deadline = time.monotonic() + timeout
+            while time.monotonic() < deadline:
+                live = [
+                    item for item in bridge.status().get("sessions", [])
+                    if item.get("context") in {"server", "run", "client"}
+                ]
+                if not live:
+                    return {
+                        "stopped": True,
+                        "native": True,
+                        "controller": "StudioTestService",
+                        "foregroundFallbackUsed": False,
+                        "testId": str(test_id),
+                    }
+                time.sleep(0.5)
+
+            native_error = "test.finish returned but runtime sessions remained active"
+            break
+        else:
+            native_error = "runtime session is not controlled by StudioTestService"
+    except Exception as exc:
+        native_error = f"{type(exc).__name__}: {exc}"
+
+    if not allow_foreground_fallback:
+        return {
+            "stopped": False,
+            "native": False,
+            "foregroundFallbackUsed": False,
+            "reason": (
+                "native multiplayer stop was unavailable and foreground "
+                "Shift+F5 fallback is disabled: " + native_error
+            ),
+        }
+
+    legacy = _stop_legacy(bridge)
+    legacy["native"] = False
+    legacy["foregroundFallbackUsed"] = True
+    legacy["nativeError"] = native_error
+    return legacy

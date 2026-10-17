@@ -38,6 +38,27 @@ local buffer: { Entry } = {}
 local sinks: { (batch: { Entry }) -> boolean? } = {}
 local funnels: { [string]: { [string]: number } } = {} -- funnel -> subject -> furthest step
 local funnelCounts: { [string]: { [number]: number } } = {}
+
+--[[
+	Step names, and when each subject first arrived.
+
+	Both exist because of one measured absence. The only real retention record
+	in this repository -- `forge/kits/halo/.../retention/*.json`, from a
+	published game with fifty new players -- reads like this:
+
+		4  hatch_another   reached 19  rate 38%  conversion 79%  at  82s
+		5  first_fight     reached 15  rate 30%  conversion 79%  at 218s
+
+	Step four to five converts at 79%, which looks healthy, and the *time*
+	jumps from 82 to 218 seconds: a hundred and thirty-six seconds in which
+	nothing happens. That is where the players went, and no conversion rate
+	says so. Only `meanSecondsToReach` does.
+
+	This funnel could not produce that number, and its steps were integers, so
+	a report said "step 4" where a designer needs "hatch_another".
+]]
+local funnelSteps: { [string]: { string } } = {}   -- funnel -> ordered step ids
+local firstSeen: { [string]: number } = {}         -- subject -> os.time() of arrival
 local marks: { [string]: { [string]: number } } = {}
 local errorCounts: { [string]: { count: number, first: number, last: number, sample: string } } = {}
 local sessions: { [Player]: { started: number, events: number } } = {}
@@ -95,7 +116,33 @@ end
 	step transition instead would answer the same question with fifty times the
 	volume, and the question is always "where do they stop".
 ]]
+--[[
+	Declare a funnel's steps, in order, by name.
+
+	Optional: a funnel with no declaration still records numbers, which is what
+	every existing caller does. Declaring turns a drop-off report from "step 4"
+	into "hatch_another", and it is the difference between a number somebody
+	can act on and one they have to go and look up.
+]]
+function Telemetry.defineFunnel(name: string, steps: { string })
+	funnelSteps[name] = table.clone(steps)
+end
+
+--[[
+	Remember when a subject arrived, so time-to-reach can be measured.
+
+	Called by `Telemetry.funnel` on a subject's first step, so an existing game
+	gets the number without changing a line. A game that wants the clock to
+	start at join rather than at first step calls this from its join handler.
+]]
+function Telemetry.seen(subject: string, at: number?)
+	if firstSeen[subject] == nil then
+		firstSeen[subject] = at or os.time()
+	end
+end
+
 function Telemetry.funnel(name: string, step: number, subject: string)
+	Telemetry.seen(subject)
 	local perSubject = funnels[name]
 	if not perSubject then
 		perSubject = {}
@@ -114,7 +161,21 @@ function Telemetry.funnel(name: string, step: number, subject: string)
 		counts[reached] = (counts[reached] or 0) + 1
 	end
 
-	Telemetry.event("funnel." .. name, { step = step, subject = subject })
+	--[[
+		Emitted with everything the aggregate on the other side needs.
+
+		`secondsSinceSeen` is the whole point: the counters below live in one
+		server process and die with it, so the only durable account of a funnel
+		is the event stream -- and a stream without a clock cannot answer where
+		the gap is.
+	]]
+	local declared = funnelSteps[name]
+	Telemetry.event("funnel." .. name, {
+		step = step,
+		subject = subject,
+		id = declared and declared[step] or nil,
+		secondsSinceSeen = os.time() - (firstSeen[subject] or os.time()),
+	})
 end
 
 -- Drop-off per step: the shape a designer actually reads.
@@ -130,8 +191,10 @@ function Telemetry.funnelReport(name: string): { [string]: any }
 	local previousCount = nil
 	for _, step in steps do
 		local count = counts[step]
+		local declared = funnelSteps[name]
 		table.insert(report, {
 			step = step,
+			id = declared and declared[step] or nil,
 			reached = count,
 			dropFromPrevious = previousCount and (previousCount - count) or 0,
 			retention = previousCount and previousCount > 0 and (count / previousCount) or 1,

@@ -27,15 +27,25 @@ type Self = {
 GroundLoot.__index = GroundLoot
 
 function GroundLoot.new(config: { ownerWindow: number?, clock: (() -> number)? }): Self
+	-- 0 is a legal window: the drop is public at once. Only a missing
+	-- window takes the default, so a negative one cannot sneak past.
+	local ownerWindow = 10
+	if config.ownerWindow ~= nil then
+		ownerWindow = config.ownerWindow
+	end
+	assert(type(ownerWindow) == "number" and ownerWindow >= 0, "ownerWindow must be a number >= 0")
 	return setmetatable({
 		drops = {},
-		ownerWindow = config.ownerWindow or 10,
+		ownerWindow = ownerWindow,
 		clock = config.clock or os.time,
 		nextId = 1,
 	}, GroundLoot)
 end
 
 function GroundLoot.drop(self: Self, itemId: string, count: number, ownerUserId: number?): string
+	-- An empty id used to land on the floor, and pickup handed that stack back.
+	assert(type(itemId) == "string" and itemId ~= "", "itemId must be a non-empty string")
+	assert(count >= 1, "count must be at least 1")
 	local id = "drop_" .. tostring(self.nextId)
 	self.nextId += 1
 	self.drops[id] = {

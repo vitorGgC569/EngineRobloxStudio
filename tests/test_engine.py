@@ -4,6 +4,7 @@ import tempfile
 import unittest
 from pathlib import Path
 
+from tests.support import copy_project
 from rqe.audit import run_audit
 from rqe.project import Project
 from rqe.scanner import scan_structure
@@ -29,11 +30,25 @@ class EngineTests(unittest.TestCase):
             )
         )
         self.assertTrue(any("diagnostic only" in reason for reason in report.release_reasons))
+        for category in ("performance", "geometry", "ui"):
+            self.assertEqual(report.scores[category], 0.0, category)
+        # The shipped game-state fixture and the headless runtime are full of
+        # healthy literals. Those probes must not come back as passes.
+        healthy_literals = {
+            "spawn_clearance", "path_exists", "objective_reachable", "floor_progression",
+            "door_clearance", "stairs_validity", "interaction_distance", "camera_obstruction",
+            "remote_security", "runtime_error", "persistence", "multiplayer_isolation",
+            "asset_security", "visual_quality", "visual_snapshot_bundle",
+            "performance_budget", "floating_objects", "ui_visibility",
+        }
+        for item in report.evidence:
+            if item.source == "headless-runtime" and item.probe in healthy_literals:
+                self.assertNotEqual(item.status, "PASS", item.probe)
 
     def test_floating_object_blocks_release(self):
         with tempfile.TemporaryDirectory() as directory:
             temp_root = Path(directory) / "project"
-            shutil.copytree(ROOT, temp_root)
+            copy_project(ROOT, temp_root)
             fixture_path = temp_root / "roblox/mvp/game-state.json"
             fixture = json.loads(fixture_path.read_text(encoding="utf-8"))
             fixture["geometry"]["floating"].append("TestRock")
@@ -45,7 +60,7 @@ class EngineTests(unittest.TestCase):
     def test_static_scanner_detects_suspicious_require(self):
         with tempfile.TemporaryDirectory() as directory:
             temp_root = Path(directory) / "project"
-            shutil.copytree(ROOT, temp_root)
+            copy_project(ROOT, temp_root)
             bad_script = temp_root / "roblox/mvp/src/ServerScriptService/BadAsset.server.lua"
             bad_script.write_text("local x = require(123456)\n", encoding="utf-8")
             project = Project.load(temp_root)
@@ -76,7 +91,7 @@ class EngineTests(unittest.TestCase):
     def test_invalid_asset_allocation_blocks_release(self):
         with tempfile.TemporaryDirectory() as directory:
             temp_root = Path(directory) / "project"
-            shutil.copytree(ROOT, temp_root)
+            copy_project(ROOT, temp_root)
             manifest_path = temp_root / "assets/asset-manifest.json"
             manifest = json.loads(manifest_path.read_text(encoding="utf-8"))
             manifest["assets"][0]["allocatedTo"] = []

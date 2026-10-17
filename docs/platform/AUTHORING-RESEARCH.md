@@ -1,11 +1,13 @@
 # Authoring capability research — the theoretical ceiling
 
-Research only. No plan, no implementation. This document inventories what the
-Roblox platform actually exposes to a program that wants to *build* a game, as
-opposed to *judge* one. Every claim carries a source; anything unverified is
-marked.
+This document inventories what the Roblox platform actually exposes to a
+program that wants to *build* a game, as opposed to *judge* one. Every claim
+carries a source; anything unverified is marked.
 
-Cut-off of the research pass: August 2026.
+Research cut-off: August 2026. Implementation alignment pass: 23 September
+2026. The built-in Studio MCP federation described in section 0.1 is now
+implemented in `rqe/bridge/studio_mcp.py`; lower sections remain capability
+research unless they explicitly name an implementation.
 
 ---
 
@@ -25,7 +27,7 @@ Servers → "Studio as MCP server"). Its tool surface:
 | Playtest | `get_studio_state`, `start_stop_play`, `get_console_output`, `screen_capture` |
 | **Input simulation** | `character_navigation`, `user_keyboard_input`, `user_mouse_input` |
 | Docs/skills | `http_get`, `skill` |
-| Sessions | `list_roblox_studios`, `set_active_studio` |
+| Sessions | `list_roblox_studios`; every targeted call carries `studio_id` |
 
 Two things matter here.
 
@@ -40,6 +42,15 @@ level a third-party plugin does not get. This is a capability gap that is
 server built on `axum` that a Studio plugin long polls". The inverted-flow
 design was correct. It is now also officially supported, which means the
 question is federation, not replacement.
+
+That federation is now concrete. `RobloxStudioMcpTransport` speaks the
+built-in stdio MCP and selects an exact open Studio by `studio_id`, place
+name, or place id; `FederatedStudioTransport` routes play/stop, viewport
+capture, console, navigation, keyboard and mouse to Roblox's implementation
+while retaining the RQE extension for product-specific probes, telemetry,
+network/device controls, serialization and release provenance. It never starts
+Roblox Studio itself. If no exact open Studio can be selected, it fails closed
+instead of falling back to window focus or F5.
 
 The earlier standalone server (`Roblox/studio-rust-mcp-server`, 6 tools:
 `run_code`, `insert_model`, `get_console_output`, `start_stop_play`,

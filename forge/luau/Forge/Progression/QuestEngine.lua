@@ -34,6 +34,24 @@ type Self = {
 	defs: { [string]: QuestDef },
 }
 
+-- table.clone keeps the stages array and each objective. A goal written
+-- after register, or through the table get() hands back, then changes how
+-- many events finish the quest.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 QuestEngine.__index = QuestEngine
 
 function QuestEngine.new(): Self
@@ -55,11 +73,15 @@ function QuestEngine.register(self: Self, def: QuestDef): ()
 			error("unknown objective kind")
 		end
 	end
-	self.defs[def.id] = table.clone(def)
+	self.defs[def.id] = deepCopy(def, {}) :: QuestDef
 end
 
 function QuestEngine.get(self: Self, questId: string): QuestDef?
-	return self.defs[questId]
+	local def = self.defs[questId]
+	if not def then
+		return nil
+	end
+	return deepCopy(def, {}) :: QuestDef
 end
 
 function QuestEngine.start(self: Self, questId: string): QuestState?
@@ -74,7 +96,7 @@ function QuestEngine.currentObjective(self: Self, state: QuestState): Objective?
 	if not def or state.done then
 		return nil
 	end
-	return def.stages[state.stage].objective
+	return deepCopy(def.stages[state.stage].objective, {}) :: Objective
 end
 
 -- Counting objective event; `inRange` is the server's distance verdict.

@@ -13,12 +13,16 @@ with a real Humanoid, and run.
 """
 
 import json
-import urllib.request
+import sys
 from pathlib import Path
 
-ROOT = Path(r"C:\Users\vitor\OneDrive\Desktop\RobloxGamesMCP")
+ROOT = Path(__file__).resolve().parents[1]
+sys.path.insert(0, str(ROOT))
+
+from rqe.hub.client import StudioBridge  # noqa: E402
+
+
 FORGE = ROOT / "forge" / "luau" / "Forge"
-RPC = "http://127.0.0.1:8790/rpc"
 
 MODULES = {
     "Stance": FORGE / "Weapon" / "Stance.lua",
@@ -148,26 +152,23 @@ def main() -> int:
             f'local {name} = require({name}Module)\n'
         )
 
-    payload = {
-        "jsonrpc": "2.0", "id": 1, "method": "bridge.exec",
-        "params": {"source": "".join(parts) + TEST,
-                   "_context": "edit", "_timeout": 120},
-    }
-    request = urllib.request.Request(
-        RPC, data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"})
-    with urllib.request.urlopen(request, timeout=150) as response:
-        body = json.load(response)
-
-    if body.get("error"):
-        print("ERRO", json.dumps(body["error"], indent=1)[:600])
-        return 1
-    result = (body.get("result") or {})
-    if not result.get("ok"):
-        print("ERRO", json.dumps(result.get("error"), indent=1, ensure_ascii=False)[:600])
+    bridge = StudioBridge(allow_arbitrary=True)
+    try:
+        with bridge.lease_scope(
+            agent_id="studio-check-new-systems",
+            context="edit",
+            ttl_seconds=150.0,
+        ):
+            result = bridge.call(
+                "bridge.exec",
+                {"source": "".join(parts) + TEST, "chunkName": "studio-check-new-systems"},
+                timeout=120,
+            )
+    except Exception as exc:  # noqa: BLE001 - standalone diagnostic output
+        print("ERRO", json.dumps({"type": type(exc).__name__, "message": str(exc)}, indent=1)[:600])
         return 1
 
-    returned = result["result"]["returned"]
+    returned = result["returned"]
     for name, outcome in sorted(returned["checks"].items()):
         mark = " " if outcome == "ok" else "!"
         print(f" {mark} {name}: {outcome}")

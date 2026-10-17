@@ -104,7 +104,7 @@ function Property.setFor(self: Property, clientKey: string, value: any): { Inten
 		return {} -- the client would receive exactly what it already has
 	end
 	if value == self.defaultValue then
-		return self.revokeFor(clientKey)
+		return self:revokeFor(clientKey)
 	end
 	self.overrides[clientKey] = value
 	return emit(self, "one", clientKey, value)

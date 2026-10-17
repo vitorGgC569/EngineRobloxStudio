@@ -206,8 +206,24 @@ def build() -> dict:
     modules = [m for m in modules if m.functions or m.summary]
     total = sum(len(m.functions) for m in modules)
 
+    #[[
+    #   No timestamp in the committed index, deliberately.
+    #
+    #   This carried `datetime.now()` to the second, and CI regenerates the
+    #   index and refuses the build when it differs from the committed copy.
+    #   Those two facts together mean the check could **never** pass: two runs
+    #   in the same second are the only way it ever would.
+    #
+    #   That step has therefore failed on every CI run since it was written,
+    #   and a gate that always refuses is a gate everyone learns to scroll
+    #   past -- which is how six genuinely failing tests sat beside it
+    #   unnoticed for twenty-five commits.
+    #
+    #   Git already records when this file changed and who changed it. What
+    #   the index needs is to be *identical* when the engine is identical, so
+    #   that a difference means a real difference.
+    #]]
     return {
-        "generatedAt": datetime.now(timezone.utc).isoformat(timespec="seconds"),
         "engine": "Forge",
         "modules": len(modules),
         "functions": total,

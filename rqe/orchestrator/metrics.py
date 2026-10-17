@@ -9,6 +9,7 @@ index nor its optional latest pointer can authorize a release.
 from __future__ import annotations
 
 import argparse
+import hashlib
 import json
 import os
 import re
@@ -50,7 +51,11 @@ class VerifiedRun:
             raise MetricsError(f"run {self.run_id}: artifact reference is not hash-bound: {reference!r}")
         target = self.directory / reference
         try:
-            return json.loads(target.read_text(encoding="utf-8"))
+            payload = _safe_artifact_path(self.directory, reference).read_bytes()
+            expected = self.artifacts[reference]
+            if len(payload) != expected["bytes"] or hashlib.sha256(payload).hexdigest() != expected["sha256"]:
+                raise MetricsError(f"run {self.run_id}: artifact changed after verification: {reference}")
+            return json.loads(payload.decode("utf-8"))
         except (OSError, UnicodeDecodeError, json.JSONDecodeError) as exc:
             raise MetricsError(f"run {self.run_id}: artifact {reference!r} is not valid JSON: {exc}") from exc
 

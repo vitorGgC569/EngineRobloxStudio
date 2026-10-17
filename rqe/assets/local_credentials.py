@@ -3,7 +3,7 @@
 Why this module exists
 ----------------------
 
-`rqe assets` reads `RQE_ROBLOX_OPEN_CLOUD_API_KEY` from the environment, which
+All RQE and Forge surfaces read `ROBLOX_OPEN_CLOUD_KEY` from the environment, which
 is the right interface for CI and the wrong one for a person sitting at their
 own machine: they have a key file, they do not have a shell profile, and the
 capability report cheerfully says `search: AVAILABLE` right up until the API
@@ -11,9 +11,9 @@ answers `roblox_authorization_blocked`.
 
 So this reads the key from a file and puts it in the environment, and nothing
 else. It never prints the key, never returns it to a caller that did not ask,
-and never writes it anywhere. The file itself is excluded from git by
-`.gitignore` (`docs/goal/`, `*.txt`) and must stay that way -- it authenticates
-as a real Roblox account.
+and never writes it anywhere. The only repository-local location is
+`.secrets/roblox-open-cloud.key`, which is excluded as a directory. A design
+note under `docs/` can therefore never silently become executable authority.
 
 The file format
 ---------------
@@ -38,15 +38,11 @@ import os
 from pathlib import Path
 from typing import Any
 
-#: Where the operator keeps the key. Checked in order; the first that exists
-#: wins. Nothing here is committed.
-DEFAULT_LOCATIONS = (
-    Path("docs/goal/key.txt"),
-    Path(".secrets/roblox-open-cloud.key"),
-)
-
-#: The environment variable the rest of `rqe assets` already reads.
-ENV_VAR = "RQE_ROBLOX_OPEN_CLOUD_API_KEY"
+#: One canonical name across Open Cloud, assets, Forge and MCP. The old RQE
+#: spelling is accepted only as a migration source and immediately normalised.
+ENV_VAR = "ROBLOX_OPEN_CLOUD_KEY"
+LEGACY_ENV_VARS = ("RQE_ROBLOX_OPEN_CLOUD_API_KEY",)
+RELATIVE_KEY_PATH = Path(".secrets/roblox-open-cloud.key")
 
 #: Every Roblox JWT starts with this header once base64-decoded.
 _JWT_PREFIX = "eyJ"
@@ -63,16 +59,30 @@ def _session_token(raw: str) -> str | None:
     return raw[marker:] if marker > 0 else None
 
 
-def describe(path: Path | None = None) -> dict[str, Any]:
+def _locations(root: Path | None = None) -> tuple[Path, ...]:
+    base = (root or Path.cwd()).resolve()
+    locations = [base / RELATIVE_KEY_PATH]
+    local_app_data = os.environ.get("LOCALAPPDATA")
+    if local_app_data:
+        locations.append(
+            Path(local_app_data).resolve()
+            / "RQE"
+            / "credentials"
+            / "roblox-open-cloud.key"
+        )
+    return tuple(locations)
+
+
+def describe(path: Path | None = None, *, root: Path | None = None) -> dict[str, Any]:
     """What the key file contains, with the key itself left out.
 
     Deliberately returns no secret. This is what a `--check` prints and what a
     log may keep: the owner it authenticates as, whether the bundled session
     token has expired, and nothing that would let a reader use the credential.
     """
-    source = _locate(path)
+    source = _locate(path, root=root)
     if source is None:
-        return {"found": False, "searched": [str(p) for p in DEFAULT_LOCATIONS]}
+        return {"found": False, "searched": [str(p) for p in _locations(root)]}
 
     raw = source.read_text(encoding="utf-8").strip()
     token = _session_token(raw)
@@ -122,7 +132,12 @@ def describe(path: Path | None = None) -> dict[str, Any]:
     return out
 
 
-def check(path: Path | None = None, timeout: float = 15.0) -> dict[str, Any]:
+def check(
+    path: Path | None = None,
+    timeout: float = 15.0,
+    *,
+    root: Path | None = None,
+) -> dict[str, Any]:
     """Ask Open Cloud whether it accepts this credential.
 
     One request, no secret in the result. This exists because `describe` cannot
@@ -137,10 +152,10 @@ def check(path: Path | None = None, timeout: float = 15.0) -> dict[str, Any]:
     import urllib.error
     import urllib.request
 
-    source = _locate(path)
+    source = _locate(path, root=root)
     if source is None:
         return {"found": False, "ok": False,
-                "searched": [str(p) for p in DEFAULT_LOCATIONS]}
+                "searched": [str(p) for p in _locations(root)]}
 
     key = source.read_text(encoding="utf-8").strip()
     #: A cheap authenticated endpoint. Any 2xx proves the key is live; the body
@@ -169,16 +184,28 @@ def check(path: Path | None = None, timeout: float = 15.0) -> dict[str, Any]:
                 "meaning": f"could not reach Open Cloud: {error}"}
 
 
-def _locate(path: Path | None = None) -> Path | None:
+def _locate(path: Path | None = None, *, root: Path | None = None) -> Path | None:
+    allowed = {candidate.resolve() for candidate in _locations(root)}
     if path is not None:
-        return path if path.is_file() else None
-    for candidate in DEFAULT_LOCATIONS:
-        if candidate.is_file():
+        candidate = path.resolve()
+        if candidate not in allowed:
+            raise ValueError(
+                "credential path is fixed; use ROBLOX_OPEN_CLOUD_KEY or "
+                + ", ".join(str(item) for item in sorted(allowed, key=str))
+            )
+        return candidate if candidate.is_file() and not candidate.is_symlink() else None
+    for candidate in allowed:
+        if candidate.is_file() and not candidate.is_symlink():
             return candidate
     return None
 
 
-def load(path: Path | None = None, *, overwrite: bool = False) -> bool:
+def load(
+    path: Path | None = None,
+    *,
+    overwrite: bool = False,
+    root: Path | None = None,
+) -> bool:
     """Put the API key into the environment for this process only.
 
     Returns whether the environment now carries a key. An existing value is
@@ -188,7 +215,13 @@ def load(path: Path | None = None, *, overwrite: bool = False) -> bool:
     if os.environ.get(ENV_VAR) and not overwrite:
         return True
 
-    source = _locate(path)
+    if not overwrite:
+        for legacy in LEGACY_ENV_VARS:
+            if os.environ.get(legacy):
+                os.environ[ENV_VAR] = os.environ[legacy]
+                return True
+
+    source = _locate(path, root=root)
     if source is None:
         return False
 

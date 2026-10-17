@@ -1,8 +1,7 @@
 {
-  "generatedAt": "2026-09-02T13:57:29+00:00",
   "engine": "Forge",
-  "modules": 232,
-  "functions": 1619,
+  "modules": 236,
+  "functions": 1641,
   "examples": [
     "Access",
     "Anim",
@@ -95,7 +94,7 @@
     {
       "name": "Anim",
       "summary": "Anim — layered procedural animation with markers",
-      "functions": 24
+      "functions": 26
     },
     {
       "name": "AntiCheatMath",
@@ -155,6 +154,11 @@
     {
       "name": "Bank",
       "summary": "Bank — sounds every game can play, so no game starts mute",
+      "functions": 3
+    },
+    {
+      "name": "BarrierRun",
+      "summary": "!strict Deterministic distance runner",
       "functions": 3
     },
     {
@@ -463,6 +467,11 @@
       "functions": 7
     },
     {
+      "name": "Hatch",
+      "summary": "Hatch — open a thing, get a thing, want the next thing",
+      "functions": 10
+    },
+    {
       "name": "HitGeometry",
       "summary": "HitGeometry — analytical OBB / sphere / cone overlap tests",
       "functions": 5
@@ -556,6 +565,11 @@
       "name": "LiveOps",
       "summary": "LiveOps — changing a running game without shipping a new one",
       "functions": 17
+    },
+    {
+      "name": "Loop",
+      "summary": "Loop — the degree between a primitive and a game",
+      "functions": 0
     },
     {
       "name": "Lottery",
@@ -753,6 +767,11 @@
       "functions": 4
     },
     {
+      "name": "Proportions",
+      "summary": "!strict Absolute avatar proportions, relative to the original rig (never compounded)",
+      "functions": 1
+    },
+    {
       "name": "QualityTierSelector",
       "summary": "QualityTierSelector — post-processing tier by screen capability",
       "functions": 4
@@ -845,7 +864,7 @@
     {
       "name": "Save",
       "summary": "Save — player profiles that survive, migrate and do not corrupt",
-      "functions": 10
+      "functions": 13
     },
     {
       "name": "Scale",
@@ -995,7 +1014,7 @@
     {
       "name": "Telemetry",
       "summary": "Telemetry — what actually happened, in a live game",
-      "functions": 14
+      "functions": 16
     },
     {
       "name": "TelemetrySync",
@@ -1100,7 +1119,7 @@
     {
       "name": "VersionRollbackStore",
       "summary": "VersionRollbackStore — persists the version ring across servers",
-      "functions": 2
+      "functions": 3
     },
     {
       "name": "Viewmodel",
@@ -1365,7 +1384,7 @@
     {
       "name": "AbilitySystem",
       "file": "forge/luau/Forge/Combat/AbilitySystem.lua",
-      "lines": 125,
+      "lines": 184,
       "summary": "AbilitySystem — GUID-addressable casts with cast times and cooldowns. Every ability execution gets a GUID at cast start; damage events later cite that GUID, which is what lets the validator tie a hit to a real, timely execution instead of trusting the client's word. States: idle -> casting -> executing -> cooldown.",
       "examples": [],
       "functions": [
@@ -1376,7 +1395,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 38
+          "line": 56
         },
         {
           "name": "AbilitySystem.register",
@@ -1385,7 +1404,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 51
+          "line": 69
         },
         {
           "name": "AbilitySystem.cooldownOf",
@@ -1394,7 +1413,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 57
+          "line": 96
         },
         {
           "name": "AbilitySystem.remainingCooldown",
@@ -1403,7 +1422,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 63
+          "line": 102
         },
         {
           "name": "AbilitySystem.resetCooldown",
@@ -1412,7 +1431,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 71
+          "line": 116
         },
         {
           "name": "AbilitySystem.isCasting",
@@ -1421,7 +1440,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 75
+          "line": 120
         },
         {
           "name": "AbilitySystem.cast",
@@ -1430,7 +1449,7 @@
           "returns": "(string?, string?)",
           "summary": "Begins a cast; returns the GUID or nil+reason. Fails closed.",
           "examples": [],
-          "line": 80
+          "line": 125
         },
         {
           "name": "AbilitySystem.tick",
@@ -1439,7 +1458,7 @@
           "returns": "(string?, { [string]: any }?)",
           "summary": "Completes the pending cast when its time has elapsed.",
           "examples": [],
-          "line": 107
+          "line": 157
         },
         {
           "name": "AbilitySystem._execute",
@@ -1448,7 +1467,7 @@
           "returns": "(string, { [string]: any })",
           "summary": "",
           "examples": [],
-          "line": 117
+          "line": 176
         }
       ],
       "describes": false
@@ -1456,7 +1475,7 @@
     {
       "name": "AccelMove",
       "file": "forge/luau/Forge/Movement/AccelMove.lua",
-      "lines": 67,
+      "lines": 88,
       "summary": "AccelMove — plane-velocity movement feel with split accel/brake. Source-style movement: a LinearVelocity-style plane whose target is `desired direction * max speed`, approached with different rates for accelerating and stopping. Pure integrator over plain vectors so the client controller stays a thin shell and the feel lives in config.",
       "examples": [],
       "functions": [
@@ -1467,7 +1486,7 @@
           "returns": "Vec2",
           "summary": "desiredDir need not be normalized; zero means \"brake\".",
           "examples": [],
-          "line": 38
+          "line": 55
         },
         {
           "name": "AccelMove.impulse",
@@ -1476,7 +1495,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 56
+          "line": 77
         },
         {
           "name": "AccelMove.stop",
@@ -1485,7 +1504,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 61
+          "line": 82
         }
       ],
       "describes": false
@@ -2072,7 +2091,7 @@
     {
       "name": "AggroTable",
       "file": "forge/luau/Forge/Combat/AggroTable.lua",
-      "lines": 110,
+      "lines": 132,
       "summary": "AggroTable — symmetric threat with decay, assist sharing and rage latch. Tank/heal combat needs threat, not \"who hit last\": every damaging action adds threat, it decays continuously, assists earn a share, fear acts as negative threat (clamped at zero), and a rage latch freezes the target onto the top contributor for a minimum duration so kiting cannot cheese the switch.",
       "examples": [],
       "functions": [
@@ -2090,9 +2109,9 @@
           "signature": "AggroTable.add(self: Self, key: string, amount: number)",
           "kind": "function",
           "returns": "()",
-          "summary": "amount may be negative (fear/heal-as-threat reduction); clamped at 0.",
+          "summary": "amount may be negative (fear/heal-as-threat reduction); clamped at 0. NaN is not less than 0, so math.max would store it and entries would report a threat that is not a number.",
           "examples": [],
-          "line": 44
+          "line": 46
         },
         {
           "name": "AggroTable.damage",
@@ -2101,7 +2120,7 @@
           "returns": "()",
           "summary": "Damage event: primary contributor full, others get the assist share.",
           "examples": [],
-          "line": 49
+          "line": 54
         },
         {
           "name": "AggroTable.decay",
@@ -2110,7 +2129,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 66
+          "line": 83
         },
         {
           "name": "AggroTable.latch",
@@ -2119,7 +2138,7 @@
           "returns": "string?",
           "summary": "Latches onto current leader for the minimum duration.",
           "examples": [],
-          "line": 78
+          "line": 100
         },
         {
           "name": "AggroTable.entries",
@@ -2128,7 +2147,7 @@
           "returns": "{ Entry }",
           "summary": "",
           "examples": [],
-          "line": 98
+          "line": 120
         }
       ],
       "describes": false
@@ -2136,7 +2155,7 @@
     {
       "name": "Anim",
       "file": "forge/luau/Forge/Anim/init.lua",
-      "lines": 841,
+      "lines": 866,
       "summary": "Anim — layered procedural animation with markers. Why not AnimationTrack and rbxassetid ------------------------------------- Authored animation needs the Animation Editor and an upload, which means a human in a GUI for every timing change. That is fine for a studio and fatal for an agent: the one thing that most needs iteration becomes the one thing that cannot be iterated. Here a clip is *data*. It works on R6 and R15, it needs no asset, and — the part that actually matters — it carries its own MARKERS. The frame a sword becomes dangerous lives in the same table as the pose that swings it. Move the pose, the hit window moves with it. That is what makes combat timing tunable without touching combat logic. This does not replace authored animation. When you have a real animator, keep the clip names and the marker names and swap the pose source; every system that listened for \"hit\" still works. Track convention (degrees) -------------------------- swing   forward/back — the primary axis of a limb spread  outward, away from the body twist   rotation about the limb's own axis, or torso yaw Usage -----",
       "examples": [
         "local anim = Anim.new(character)\nanim:setLocomotion(Anim.profiles.grounded)\nanim:onMarker(function(clip, marker) ... end)",
@@ -2173,13 +2192,31 @@
           "line": 157
         },
         {
+          "name": "Anim.isRigReady",
+          "signature": "Anim.isRigReady(character: Model)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "CollectionService tags can replicate before the model's joints and Part refs. A complete skeleton is required before capturing rest poses.",
+          "examples": [],
+          "line": 254
+        },
+        {
+          "name": "Anim.waitForRig",
+          "signature": "Anim.waitForRig(character: Model, timeout: number?)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "",
+          "examples": [],
+          "line": 268
+        },
+        {
           "name": "Anim.new",
           "signature": "Anim.new(character: Model)",
           "kind": "function",
           "returns": "any",
           "summary": "",
           "examples": [],
-          "line": 252
+          "line": 277
         },
         {
           "name": "Animator:setProfile",
@@ -2188,7 +2225,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 342
+          "line": 367
         },
         {
           "name": "Animator:setLocomotion",
@@ -2197,7 +2234,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 346
+          "line": 371
         },
         {
           "name": "Animator:onMarker",
@@ -2206,7 +2243,7 @@
           "returns": null,
           "summary": "(clipName, markerName, playback)",
           "examples": [],
-          "line": 351
+          "line": 376
         },
         {
           "name": "Animator:play",
@@ -2215,7 +2252,7 @@
           "returns": "any",
           "summary": "",
           "examples": [],
-          "line": 361
+          "line": 386
         },
         {
           "name": "Animator:stop",
@@ -2224,7 +2261,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 415
+          "line": 440
         },
         {
           "name": "Animator:stopAll",
@@ -2233,7 +2270,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 427
+          "line": 452
         },
         {
           "name": "Animator:isPlaying",
@@ -2242,7 +2279,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 437
+          "line": 462
         },
         {
           "name": "Animator:setRootMotion",
@@ -2253,7 +2290,7 @@
           "examples": [
             "dodge = {\nduration = 0.45,\nrootMotion = { k(0, 0, 0, 0), k(0.3, 0, 0, -14), k(0.45, 0, 0, -16) },\ntracks = { ... },\n}"
           ],
-          "line": 466
+          "line": 491
         },
         {
           "name": "Animator:_rootMotion",
@@ -2262,7 +2299,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 470
+          "line": 495
         },
         {
           "name": "Animator:setAdditive",
@@ -2271,7 +2308,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 504
+          "line": 529
         },
         {
           "name": "Animator:clearAdditive",
@@ -2280,7 +2317,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 508
+          "line": 533
         },
         {
           "name": "Animator:_fireMarker",
@@ -2289,7 +2326,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 512
+          "line": 537
         },
         {
           "name": "Animator:_locomotion",
@@ -2298,7 +2335,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 521
+          "line": 546
         },
         {
           "name": "Animator:update",
@@ -2307,7 +2344,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 572
+          "line": 597
         },
         {
           "name": "Animator:reset",
@@ -2316,7 +2353,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 684
+          "line": 709
         },
         {
           "name": "Animator:destroy",
@@ -2325,7 +2362,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 697
+          "line": 722
         },
         {
           "name": "Animator:describe",
@@ -2334,7 +2371,7 @@
           "returns": "{ [string]: any }",
           "summary": "What the validation half reads to prove a character is animating at all.",
           "examples": [],
-          "line": 707
+          "line": 732
         },
         {
           "name": "Anim.bind",
@@ -2343,7 +2380,7 @@
           "returns": "RBXScriptConnection",
           "summary": "Drive an animator on the right loop for its context. RenderStepped on a client so the pose is computed for the frame being drawn; Heartbeat on the server, where there is no frame to be early for. This is only safe because `Rig.stripDefaultAnimate` has removed Roblox's own animator first. While that is still present it rewrites the same joints every frame and no render priority is late enough to beat it -- that was measured, not assumed.",
           "examples": [],
-          "line": 752
+          "line": 777
         },
         {
           "name": "Anim.setTrail",
@@ -2352,7 +2389,7 @@
           "returns": null,
           "summary": "Weapon trails are the most common thing markers drive, so it ships here.",
           "examples": [],
-          "line": 784
+          "line": 809
         },
         {
           "name": "Anim.describe",
@@ -2361,7 +2398,7 @@
           "returns": "{ [string]: any }",
           "summary": "Module-level description: which clips are registered and whether each one carries markers. A clip with no markers is a pose with no timing.",
           "examples": [],
-          "line": 802
+          "line": 827
         }
       ],
       "describes": true
@@ -2807,7 +2844,7 @@
     {
       "name": "Audio",
       "file": "forge/luau/Forge/Audio/init.lua",
-      "lines": 436,
+      "lines": 463,
       "summary": "Audio — sound as data, pooled, grouped and ducked. `Feel` was built on the argument that impact is where \"functional\" becomes \"professional\", and then shipped only the half you can see. A hit with a particle and no sound has no weight; a hit with a sound and no particle still lands. Three things that separate this from `Instance.new(\"Sound\")` at the call site: * **Pitch variation by default.** The same sample at the same pitch twelve * **Pooling.** Creating and destroying a Sound per hit allocates during * **Groups.** Master/music/sfx/ui/ambient exist from the start, so a",
       "examples": [
         "Audio.define(\"hit.blade\", {\nid = \"rbxassetid://9118823103\",\nvolume = 0.6,\npitch = { 0.92, 1.08 },     -- randomised per play\ngroup = \"sfx\",\n})",
@@ -3137,7 +3174,7 @@
     {
       "name": "Balance",
       "file": "forge/luau/Forge/Economy/Balance.lua",
-      "lines": 190,
+      "lines": 215,
       "summary": "Balance — a multi-currency wallet with atomic spending. Currencies are declared up front with their metadata; anything outside the registry cannot be minted by accident, and a debit that cannot be covered everywhere is applied nowhere: Currencies marked big = true store BigNumber values internally and snapshot to exact scientific-notation strings.",
       "examples": [
         "local wallet = Balance.new({\ncurrencies = {\ngold = { start = 0 },\ngems = { start = 0, big = true },\n},\n})",
@@ -3151,7 +3188,7 @@
           "returns": "Balance",
           "summary": "",
           "examples": [],
-          "line": 99
+          "line": 116
         },
         {
           "name": "Balance.get",
@@ -3160,7 +3197,7 @@
           "returns": "any",
           "summary": "============================ queries and edits ==============================",
           "examples": [],
-          "line": 114
+          "line": 131
         },
         {
           "name": "Balance.credit",
@@ -3169,7 +3206,7 @@
           "returns": "Balance",
           "summary": "",
           "examples": [],
-          "line": 122
+          "line": 139
         },
         {
           "name": "Balance.canAfford",
@@ -3178,7 +3215,7 @@
           "returns": "boolean",
           "summary": "================================ spending ===================================",
           "examples": [],
-          "line": 134
+          "line": 153
         },
         {
           "name": "Balance.debit",
@@ -3187,7 +3224,7 @@
           "returns": "(boolean, Costs)",
           "summary": "",
           "examples": [],
-          "line": 139
+          "line": 158
         },
         {
           "name": "Balance.snapshot",
@@ -3196,7 +3233,7 @@
           "returns": "Snapshot",
           "summary": "=============================== persistence =================================",
           "examples": [],
-          "line": 155
+          "line": 180
         },
         {
           "name": "Balance.restore",
@@ -3205,7 +3242,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 169
+          "line": 194
         }
       ],
       "describes": false
@@ -3291,6 +3328,43 @@
           "summary": "",
           "examples": [],
           "line": 128
+        }
+      ],
+      "describes": false
+    },
+    {
+      "name": "BarrierRun",
+      "file": "forge/luau/Forge/Progression/BarrierRun.lua",
+      "lines": 50,
+      "summary": "!strict Deterministic distance runner. The server owns time, energy and payouts; presentation and theme belong to the caller. A finished run cannot pay twice.",
+      "examples": [],
+      "functions": [
+        {
+          "name": "BarrierRun.new",
+          "signature": "BarrierRun.new(config: any, energy: number)",
+          "kind": "function",
+          "returns": "any",
+          "summary": "",
+          "examples": [],
+          "line": 8
+        },
+        {
+          "name": "Run:step",
+          "signature": "Run:step(dt: number)",
+          "kind": "method",
+          "returns": "{any}",
+          "summary": "",
+          "examples": [],
+          "line": 20
+        },
+        {
+          "name": "Run:cancel",
+          "signature": "Run:cancel()",
+          "kind": "method",
+          "returns": null,
+          "summary": "",
+          "examples": [],
+          "line": 45
         }
       ],
       "describes": false
@@ -3977,7 +4051,7 @@
     {
       "name": "CardCycle",
       "file": "forge/luau/Forge/Match/CardCycle.lua",
-      "lines": 115,
+      "lines": 129,
       "summary": "CardCycle — deterministic deck / hand / next-card rotation. The Clash-style hand is four cards plus a preview of the fifth; playing a card slides `next` into the hand and pulls a fresh preview. When the draw pile runs dry the discard reshuffles with the same seeded stream, so two clients replaying the same seed see identical cycles forever.",
       "examples": [
         "local cycle = CardCycle.new({ cards = deckIds, handSize = 4, seed = 7 })\nlocal result = cycle:play(cycle:hand()[1])"
@@ -4008,7 +4082,7 @@
           "returns": "{ string }",
           "summary": "",
           "examples": [],
-          "line": 89
+          "line": 103
         },
         {
           "name": "CardCycle.peek",
@@ -4017,7 +4091,7 @@
           "returns": "string",
           "summary": "",
           "examples": [],
-          "line": 93
+          "line": 107
         },
         {
           "name": "CardCycle.has",
@@ -4026,7 +4100,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 97
+          "line": 111
         },
         {
           "name": "CardCycle.play",
@@ -4035,7 +4109,7 @@
           "returns": "PlayResult",
           "summary": "",
           "examples": [],
-          "line": 101
+          "line": 115
         }
       ],
       "describes": false
@@ -4210,7 +4284,7 @@
     {
       "name": "ClassRegistry",
       "file": "forge/luau/Forge/Combat/ClassRegistry.lua",
-      "lines": 111,
+      "lines": 132,
       "summary": "ClassRegistry — declarative class movesets with fail-loud validation. Mines Fighting-game's ClassData (walk speeds, health pools, staminas, ability names with cooldowns) into one registrable shape. register() rejects malformed definitions immediately — a nil cooldown discovered mid-fight costs far more than an assert at boot. Registering the same class id twice is treated as programmer error, never a silent overwrite. Pure data: no Instances, no services.",
       "examples": [],
       "functions": [
@@ -4221,7 +4295,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 41
+          "line": 58
         },
         {
           "name": "ClassRegistry:register",
@@ -4230,7 +4304,7 @@
           "returns": "ClassDefinition",
           "summary": "",
           "examples": [],
-          "line": 47
+          "line": 64
         },
         {
           "name": "ClassRegistry:get",
@@ -4239,7 +4313,7 @@
           "returns": "ClassDefinition?",
           "summary": "",
           "examples": [],
-          "line": 90
+          "line": 107
         },
         {
           "name": "ClassRegistry:has",
@@ -4248,7 +4322,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 94
+          "line": 115
         },
         {
           "name": "ClassRegistry:cooldownOf",
@@ -4257,7 +4331,7 @@
           "returns": "number?",
           "summary": "",
           "examples": [],
-          "line": 98
+          "line": 119
         }
       ],
       "describes": false
@@ -4976,7 +5050,7 @@
     {
       "name": "ComboSequencer",
       "file": "forge/luau/Forge/Combat/ComboSequencer.lua",
-      "lines": 142,
+      "lines": 184,
       "summary": "ComboSequencer — data-driven attack chains with input buffering. Steps are inert data ({name, damage, windup, recovery, nextWindow}); the sequencer owns none of their meaning. Late presses are buffered for `bufferWindow` seconds (Fighting-game waits out the current swing instead of dropping inputs) and chains decay after `resetTimeout` seconds without an accepted link — SwordDude resets its combo after 0.5 s. Passing the final step wraps to the first, matching ChangeCombo; set loop = false to end chains there instead. Timing of windup/recovery/nextWindow stays with the caller — it decides when to call advance; the sequencer only judges whether a press links.",
       "examples": [],
       "functions": [
@@ -4987,7 +5061,7 @@
           "returns": null,
           "summary": "============================== construction =================================",
           "examples": [],
-          "line": 40
+          "line": 57
         },
         {
           "name": "ComboSequencer:indexOf",
@@ -4996,7 +5070,7 @@
           "returns": "number",
           "summary": "============================== chain state ==================================",
           "examples": [],
-          "line": 79
+          "line": 111
         },
         {
           "name": "ComboSequencer:press",
@@ -5005,7 +5079,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 89
+          "line": 121
         },
         {
           "name": "ComboSequencer:buffered",
@@ -5014,7 +5088,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 94
+          "line": 131
         },
         {
           "name": "ComboSequencer:advance",
@@ -5023,7 +5097,7 @@
           "returns": "Step?",
           "summary": "Resolves the buffered press against the step being performed. Returns the next step table (read-only by convention), or nil when no press is pending, the press sits outside the buffer window, or the chain timed out — in which case the stale press is dropped too.",
           "examples": [],
-          "line": 106
+          "line": 143
         },
         {
           "name": "ComboSequencer:reset",
@@ -5032,7 +5106,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 136
+          "line": 178
         }
       ],
       "describes": false
@@ -5040,7 +5114,7 @@
     {
       "name": "Companion",
       "file": "forge/luau/Forge/Companion/init.lua",
-      "lines": 121,
+      "lines": 145,
       "summary": "Companion — things that follow you, and stay readable while they do. Pets, drones, hired workers, a bodyguard, a squad. The genre changes and the problems do not: where does each one stand, what does it do while nothing is happening, and how does it get there without fighting physics. Generalised from a shipped simulator, which is where the parts that are not obvious come from: * followers are sorted **small to front** and spaced by their own * the idle wander waits on the **leader's** stillness, not the follower's, * crowding is resolved by **pushing targets apart**, never by collision, Three things that system knew and this deliberately does not do -------------------------------------------------------------- **No physics.** The version this comes from began as one cloned script per follower driving unanchored parts on the server, and its own config carries the warning: several active at once \"tanks server FPS\". Formation maths returns offsets; moving something is the caller's, on the client, where a cosmetic follower belongs. **No teleport watchdog here.** That system needed one -- followers fell off the map, and the comment records it as a bug that survived ten months. A watchdog belongs to whatever owns the parts, because only that knows what \"lost\" means for its own world. **No ownership of what a follower *is*.** Its power, its rarity, its inventory slot: that is the game's, and a follow system that also owned those would be a pet system rather than a companion one.",
       "examples": [
         "local Companion = Forge.Companion",
@@ -5074,8 +5148,8 @@
     {
       "name": "Core",
       "file": "forge/luau/Forge/Core/init.lua",
-      "lines": 30,
-      "summary": "Core — primitives with no Roblox opinions in them. Everything here is testable without a DataModel, which is why it is separate. If a module in this folder reaches for a service, it is in the wrong folder. Every file beside this one is listed below, deliberately by hand. Four of them were not, and the omission is invisible until something asks: `Boot` sat on disk, compiled, specced and unreachable, and the first game written against it died on `attempt to index nil with 'declareMany'`. A folder is not an index.",
+      "lines": 45,
+      "summary": "Core — primitives with no Roblox opinions in them. Everything here is testable without a DataModel, which is why it is separate. If a module in this folder reaches for a service, it is in the wrong folder. Every file beside this one is reachable as `Core.<Name>`, resolved on demand by the metatable at the bottom. It used to be a list maintained by hand, and four modules were missing from it: `Boot` sat on disk, compiled, specced and unreachable, and the first game written against it died on `attempt to index nil with 'declareMany'`. A hand-written index is a folder somebody has to remember to copy, so it is gone.",
       "examples": [],
       "functions": [],
       "describes": false
@@ -5083,7 +5157,7 @@
     {
       "name": "CrateRoll",
       "file": "forge/luau/Forge/Progression/CrateRoll.lua",
-      "lines": 76,
+      "lines": 102,
       "summary": "CrateRoll — deterministic crate loot with pity and weighted tables. Crates roll from a weighted table under a seeded rng so any drop is replayable from (crateId, seed). A pity counter guarantees a rare after N unlucky rolls — the retention mechanic that keeps crates honest.",
       "examples": [],
       "functions": [
@@ -5094,7 +5168,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 25
+          "line": 43
         },
         {
           "name": "CrateRoll.roll",
@@ -5103,7 +5177,7 @@
           "returns": "Drop",
           "summary": "",
           "examples": [],
-          "line": 42
+          "line": 68
         }
       ],
       "describes": false
@@ -5111,7 +5185,7 @@
     {
       "name": "CrossServerChannels",
       "file": "forge/luau/Forge/Tycoon/CrossServerChannels.lua",
-      "lines": 87,
+      "lines": 89,
       "summary": "CrossServerChannels — global radio, shouts and ad rotation. Global features ride one MessagingService-style topic contract: publish returns the message envelope, receive validates it before use. Ads rotate deterministically by time slot; the radio validates asset type before broadcasting.",
       "examples": [],
       "functions": [
@@ -5122,7 +5196,7 @@
           "returns": "(RadioMessage?, string?)",
           "summary": "Only whitelisted asset types may broadcast globally.",
           "examples": [],
-          "line": 59
+          "line": 61
         },
         {
           "name": "CrossServerChannels.buildShout",
@@ -5131,7 +5205,7 @@
           "returns": "(ShoutMessage?, string?)",
           "summary": "Text is already chat-filtered upstream (server responsibility).",
           "examples": [],
-          "line": 70
+          "line": 72
         },
         {
           "name": "CrossServerChannels.currentAd",
@@ -5140,7 +5214,7 @@
           "returns": "string?",
           "summary": "Deterministic rotation: same slot index picks the same ad everywhere.",
           "examples": [],
-          "line": 78
+          "line": 80
         }
       ],
       "describes": false
@@ -5295,7 +5369,7 @@
     {
       "name": "DailyRewardCalendar",
       "file": "forge/luau/Forge/Progression/DailyRewardCalendar.lua",
-      "lines": 128,
+      "lines": 145,
       "summary": "DailyRewardCalendar — login streaks over absolute UTC days, no Instances. Mined from minershaven DailyRewards: a claim counts as consecutive only when it lands on the day right after the last one (rawday == day() - 1); anything older resets the streak to 1. Rewards cycle through fixed slots, the way Berezaa's handler hands out crates on streak positions. State is `{ lastClaimDay = number?, streak = number }` — plain data, safe to serialize. Days are `math.floor(timestamp / 86400)`; passing an explicit timestamp to `claim` keeps the module deterministic under tests.",
       "examples": [
         "local calendar = DailyRewardCalendar.new({\nmilestones = { [3] = \"unreal_box\", [5] = \"inferno_box\", [7] = \"spectral_box\" },\ncycleLength = 7,\nnow = os.time,\n})",
@@ -5309,7 +5383,7 @@
           "returns": "Calendar",
           "summary": "",
           "examples": [],
-          "line": 59
+          "line": 76
         },
         {
           "name": "DailyRewardCalendar.cycleDayFor",
@@ -5318,7 +5392,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 72
+          "line": 89
         },
         {
           "name": "DailyRewardCalendar.claim",
@@ -5327,7 +5401,7 @@
           "returns": "(CalendarState, any?, StreakInfo)",
           "summary": "",
           "examples": [],
-          "line": 76
+          "line": 93
         },
         {
           "name": "DailyRewardCalendar.preview",
@@ -5336,7 +5410,7 @@
           "returns": "{ StreakInfo }",
           "summary": "",
           "examples": [],
-          "line": 105
+          "line": 122
         }
       ],
       "describes": false
@@ -6016,7 +6090,7 @@
     {
       "name": "Director",
       "file": "forge/luau/Forge/Match/Director.lua",
-      "lines": 129,
+      "lines": 147,
       "summary": "Director — match rotation with map voting and live admin override. The match director decides what runs next: a playlist of maps/modes, player voting in the intermission, and an admin force-next that wins over any vote. Pure decision layer over injected clock.",
       "examples": [],
       "functions": [
@@ -6027,7 +6101,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 25
+          "line": 43
         },
         {
           "name": "Director.vote",
@@ -6036,7 +6110,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 37
+          "line": 55
         },
         {
           "name": "Director.forceNext",
@@ -6045,7 +6119,7 @@
           "returns": "boolean",
           "summary": "Admin override; survives until consumed.",
           "examples": [],
-          "line": 51
+          "line": 69
         },
         {
           "name": "Director.next",
@@ -6054,7 +6128,7 @@
           "returns": "PlaylistEntry",
           "summary": "Resolves and advances; returns the chosen entry.",
           "examples": [],
-          "line": 63
+          "line": 81
         }
       ],
       "describes": false
@@ -6530,7 +6604,7 @@
     {
       "name": "Enchanting",
       "file": "forge/luau/Forge/Progression/Enchanting.lua",
-      "lines": 135,
+      "lines": 151,
       "summary": "Enchanting: costed upgrade rolls over item slots. The vesteria contract: an enchant consumes a material item plus gold, respects the slot's upgrade cap, and appends one modifier rolled inside declared ranges (flat or percent). A blessed variant widens the ranges by a multiplier. The caller validates funds/ownership and persists the returned slot; this module owns the rules.",
       "examples": [],
       "functions": [
@@ -6541,7 +6615,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 49
+          "line": 66
         },
         {
           "name": "Enchanting.define",
@@ -6550,7 +6624,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 53
+          "line": 70
         },
         {
           "name": "Enchanting.costOf",
@@ -6559,7 +6633,7 @@
           "returns": "(string?, number?)",
           "summary": "",
           "examples": [],
-          "line": 64
+          "line": 81
         },
         {
           "name": "Enchanting.roll",
@@ -6568,7 +6642,7 @@
           "returns": "(SlotData?, string?)",
           "summary": "Rolls one enchant onto a CLONE of the slot. Caller debits materials. blessed doubles range width around the midpoint when it procs.",
           "examples": [],
-          "line": 74
+          "line": 91
         },
         {
           "name": "Enchanting.rngChance",
@@ -6577,7 +6651,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 126
+          "line": 142
         }
       ],
       "describes": false
@@ -6585,7 +6659,7 @@
     {
       "name": "EntitlementTags",
       "file": "forge/luau/Forge/LiveOps/EntitlementTags.lua",
-      "lines": 80,
+      "lines": 97,
       "summary": "EntitlementTags — validated gamepass/badge/group tags on a player. Whole systems gate on entitlements (VIP, Premium, seasonal artifacts), but ownership must be re-validated, never trusted from the client. The checker is injected; this module turns it into a tag set with a diff so servers react only to changes.",
       "examples": [],
       "functions": [
@@ -6596,7 +6670,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 33
+          "line": 50
         },
         {
           "name": "EntitlementTags.refresh",
@@ -6605,7 +6679,7 @@
           "returns": "{ added: { string }, removed: { string } }",
           "summary": "",
           "examples": [],
-          "line": 44
+          "line": 61
         },
         {
           "name": "EntitlementTags.has",
@@ -6614,7 +6688,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 75
+          "line": 92
         }
       ],
       "describes": false
@@ -6963,7 +7037,7 @@
     {
       "name": "EntityCatalog",
       "file": "forge/luau/Forge/Combat/EntityCatalog.lua",
-      "lines": 109,
+      "lines": 130,
       "summary": "EntityCatalog — combat units as validated data with special hooks. Unit definitions are content: hp/damage/attackSpeed/range/cost plus an optional special (splash, lifesteal, buff aura, spawn-on-deploy). The catalog validates every definition at registration — a typo in a special's params is a boot error, not a runtime surprise.",
       "examples": [],
       "functions": [
@@ -6974,7 +7048,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 60
+          "line": 77
         },
         {
           "name": "EntityCatalog.define",
@@ -6983,7 +7057,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 64
+          "line": 81
         },
         {
           "name": "EntityCatalog.get",
@@ -6992,7 +7066,7 @@
           "returns": "UnitDef?",
           "summary": "",
           "examples": [],
-          "line": 79
+          "line": 96
         },
         {
           "name": "EntityCatalog.expandDeploy",
@@ -7001,7 +7075,7 @@
           "returns": "{ string }",
           "summary": "Deploy-time expansion: spawn specials materialize extra units.",
           "examples": [],
-          "line": 84
+          "line": 105
         },
         {
           "name": "EntityCatalog.list",
@@ -7010,7 +7084,7 @@
           "returns": "{ UnitDef }",
           "summary": "",
           "examples": [],
-          "line": 97
+          "line": 118
         }
       ],
       "describes": false
@@ -7290,7 +7364,7 @@
     {
       "name": "FairnessBudget",
       "file": "forge/luau/Forge/LiveOps/FairnessBudget.lua",
-      "lines": 63,
+      "lines": 75,
       "summary": "FairnessBudget — assisted hands with an evidence-gated debit. When the puzzle hands a player nothing playable, fairness grants assistance — but only after verifying no legal move existed, and each grant debits a bounded budget that refills slowly. Assistance without evidence would be a cheat channel; without budget it would be infinite.",
       "examples": [],
       "functions": [
@@ -7308,9 +7382,9 @@
           "signature": "FairnessBudget.requestAssist(self: Self, hasLegalMove: boolean)",
           "kind": "function",
           "returns": "(boolean, string?)",
-          "summary": "hasLegalMove is the EVIDENCE callback (pure rules check); no move = grant eligible.",
+          "summary": "Only an explicit false is evidence that no legal move existed. nil and true are not that evidence, so they must not debit the budget.",
           "examples": [],
-          "line": 45
+          "line": 57
         },
         {
           "name": "FairnessBudget.remaining",
@@ -7319,7 +7393,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 57
+          "line": 69
         }
       ],
       "describes": false
@@ -7492,7 +7566,7 @@
     {
       "name": "FishingMinigame",
       "file": "forge/luau/Forge/Progression/FishingMinigame.lua",
-      "lines": 161,
+      "lines": 183,
       "summary": "FishingMinigame: session GUID, bite windows and level-gated loot. The vesteria contract: casting opens a session with a GUID; the fish bites at a seeded moment; reeling is only honored inside a small forgiveness window after the bite (latency compensation); the loot pool filters by profession level and rod tier before rolling. Pure state machine. Rod animations and the spawned fish item are callers.",
       "examples": [],
       "functions": [
@@ -7503,7 +7577,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 67
+          "line": 84
         },
         {
           "name": "FishingMinigame.cast",
@@ -7512,7 +7586,7 @@
           "returns": "(string?, string?)",
           "summary": "Casts a line; returns the session GUID. One session at a time.",
           "examples": [],
-          "line": 72
+          "line": 94
         },
         {
           "name": "FishingMinigame.tick",
@@ -7521,7 +7595,7 @@
           "returns": "{ string }",
           "summary": "Advances timing; returns events (\"bite\"/\"escape\") for this tick.",
           "examples": [],
-          "line": 88
+          "line": 110
         },
         {
           "name": "FishingMinigame.reel",
@@ -7530,7 +7604,7 @@
           "returns": "(string, string?)",
           "summary": "Reel attempt. Success requires the bite window (+ latency forgiveness).",
           "examples": [],
-          "line": 108
+          "line": 130
         },
         {
           "name": "FishingMinigame.rollLoot",
@@ -7539,7 +7613,7 @@
           "returns": "string?",
           "summary": "Weighted roll filtered by profession level and rod tier.",
           "examples": [],
-          "line": 131
+          "line": 153
         },
         {
           "name": "FishingMinigame.resetSession",
@@ -7548,7 +7622,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 156
+          "line": 178
         }
       ],
       "describes": false
@@ -7597,7 +7671,7 @@
     {
       "name": "Formula",
       "file": "forge/luau/Forge/Economy/Formula.lua",
-      "lines": 217,
+      "lines": 234,
       "summary": "Formula — an immutable, renderable chain of arithmetic operations. Every chain call returns a NEW formula; the receiver is never mutated, so a partly-built chain is safe to share and extend from. Hand `adapt(...)` any module exposing new/add/sub/mul/div/powInt/compare to run the same chain on BigNumber values instead of doubles.",
       "examples": [
         "local f = Formula.start()\n:mul(2)\n:add(5)\n:pow(2)",
@@ -7611,7 +7685,7 @@
           "returns": "Formula",
           "summary": "",
           "examples": [],
-          "line": 90
+          "line": 107
         },
         {
           "name": "Formula.adapt",
@@ -7620,7 +7694,7 @@
           "returns": "Ops",
           "summary": "",
           "examples": [],
-          "line": 100
+          "line": 117
         }
       ],
       "describes": false
@@ -7981,7 +8055,7 @@
     {
       "name": "GridPlacement",
       "file": "forge/luau/Forge/Tycoon/GridPlacement.lua",
-      "lines": 194,
+      "lines": 218,
       "summary": "GridPlacement — pure placement math for tycoon building. The miner's-haven school of placement: raycast to the ground plane, snap to a grid of cell centres, respect the footprint rotated in 90° steps, refuse anything that pokes outside the plot or overlaps an obstacle/occupied cell, and hand the server real cell keys so it can validate every placement itself. Everything here is planar XZ math. The client renders ghosts from the plan; the server runs the same planner and only trusts `fits`.",
       "examples": [],
       "functions": [
@@ -7992,7 +8066,7 @@
           "returns": "ItemSpec?",
           "summary": "",
           "examples": [],
-          "line": 64
+          "line": 82
         },
         {
           "name": "GridPlacement.rotatedFootprint",
@@ -8001,7 +8075,7 @@
           "returns": "(number, number)",
           "summary": "Rotation in quarter turns clockwise; odd turns swap the footprint axes.",
           "examples": [],
-          "line": 69
+          "line": 93
         },
         {
           "name": "GridPlacement.snap",
@@ -8010,7 +8084,7 @@
           "returns": "Vec2",
           "summary": "",
           "examples": [],
-          "line": 77
+          "line": 101
         },
         {
           "name": "GridPlacement.fits",
@@ -8019,7 +8093,7 @@
           "returns": "(boolean, string?)",
           "summary": "Authoritative check: inside plot, clear of static obstacles and free cells. Returns ok plus the first reason/collision found (stable for probes).",
           "examples": [],
-          "line": 107
+          "line": 131
         },
         {
           "name": "GridPlacement.place",
@@ -8028,7 +8102,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 130
+          "line": 154
         },
         {
           "name": "GridPlacement.release",
@@ -8037,7 +8111,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 143
+          "line": 167
         },
         {
           "name": "GridPlacement.isOccupied",
@@ -8046,7 +8120,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 154
+          "line": 178
         },
         {
           "name": "GridPlacement.multiOffsets",
@@ -8055,7 +8129,7 @@
           "returns": "{ Vec2 }",
           "summary": "Offsets (in world units) for placing `count` copies packed around the first, used by bulk-buy flows.",
           "examples": [],
-          "line": 167
+          "line": 191
         },
         {
           "name": "GridPlacement.axisLock",
@@ -8064,7 +8138,7 @@
           "returns": "Vec2",
           "summary": "Magnetic axis lock: dominant direction wins, the other axis is zeroed.",
           "examples": [],
-          "line": 186
+          "line": 210
         }
       ],
       "describes": false
@@ -8100,7 +8174,7 @@
     {
       "name": "GroundLoot",
       "file": "forge/luau/Forge/Tycoon/GroundLoot.lua",
-      "lines": 76,
+      "lines": 86,
       "summary": "GroundLoot — dropped physical items with temporary ownership. Loot that hits the floor belongs briefly to its source's killer (owner window), then becomes public. The ledger tracks drops by id, expires ownership, and answers pickup attempts with stable reasons.",
       "examples": [],
       "functions": [
@@ -8120,7 +8194,7 @@
           "returns": "string",
           "summary": "",
           "examples": [],
-          "line": 38
+          "line": 45
         },
         {
           "name": "GroundLoot.pickup",
@@ -8129,7 +8203,7 @@
           "returns": "(boolean, string?, string?, number?)",
           "summary": "",
           "examples": [],
-          "line": 51
+          "line": 61
         },
         {
           "name": "GroundLoot.publicDrops",
@@ -8138,7 +8212,7 @@
           "returns": "{ { id: string, itemId: string, count: number } }",
           "summary": "Drops past their owner window become public automatically on read.",
           "examples": [],
-          "line": 64
+          "line": 74
         }
       ],
       "describes": false
@@ -8146,7 +8220,7 @@
     {
       "name": "GuildModel",
       "file": "forge/luau/Forge/Social/GuildModel.lua",
-      "lines": 130,
+      "lines": 151,
       "summary": "GuildModel — persistent group with ranks, funds and upgrades. Guild data lives in one record mutated atomically by the server; this model owns the rules: rank-gated actions (invite/exile/upgrade), donations into shared funds, exponential upgrade cost. State in/out — no globals, no services.",
       "examples": [],
       "functions": [
@@ -8175,7 +8249,7 @@
           "returns": "(State?, string?)",
           "summary": "",
           "examples": [],
-          "line": 70
+          "line": 79
         },
         {
           "name": "GuildModel.exile",
@@ -8184,7 +8258,7 @@
           "returns": "(State?, string?)",
           "summary": "",
           "examples": [],
-          "line": 87
+          "line": 100
         },
         {
           "name": "GuildModel.donate",
@@ -8193,7 +8267,7 @@
           "returns": "(State?, string?)",
           "summary": "",
           "examples": [],
-          "line": 102
+          "line": 114
         },
         {
           "name": "GuildModel.upgradeCost",
@@ -8202,7 +8276,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 114
+          "line": 129
         },
         {
           "name": "GuildModel.applyUpgrade",
@@ -8211,10 +8285,116 @@
           "returns": "(State?, string?)",
           "summary": "",
           "examples": [],
-          "line": 118
+          "line": 133
         }
       ],
       "describes": false
+    },
+    {
+      "name": "Hatch",
+      "file": "forge/luau/Forge/Loop/Hatch.lua",
+      "lines": 347,
+      "summary": "Hatch — open a thing, get a thing, want the next thing. The most-run loop on Roblox, and the one this repository had every piece of and no assembly for. `Progression.CrateRoll` is the weighted draw; `Telemetry.funnel` is the measurement; `Progression.Achievements` is the collection. Composing them by hand is four modules of wiring somebody has to get right, and in thirty-nine games nobody did. Every number below came from a measurement ------------------------------------------ `forge/kits/halo/.../retention/2026-07-21_*.json` -- a published game, fifty new players, a ten-step funnel with times on it. What it says: Three readings, and each one is a constant in this file: * **28% left before the first hatch, which landed at 22 seconds.** So the * **The steepest loss is a *gap*, not a rate.** Step four to five converts * **After minute five, conversion is 100%.** The game was never the And 74% of new players left before earning level 2, which is why `tier2At` is a required parameter rather than an option: a loop whose second rung is unreachable in a first session is a loop with one rung. Theme is nouns -------------- Same loop, same numbers, different game. That is the thing the production pipeline could not express: nineteen generated games share one structure and differ only in an item list, which is this mistake with the halves swapped.",
+      "examples": [
+        "1 hatch_first_egg   reached 36  72%   at  22s\n2 equip_pet         reached 29  58%   at  42s\n3 farm_crystals     reached 24  48%   at  62s\n4 hatch_another     reached 19  38%   at  82s\n5 first_fight       reached 15  30%   at 218s   <-- 136 seconds of nothing\n...\n7,8,9              conversion 100%",
+        "first draw is free and immediate. A loop whose first payout is behind a\ncost loses a quarter of its players before it has shown them anything.",
+        "at 79% -- healthy -- and the time jumps 82s to 218s. `MAX_DEAD_SECONDS`\nexists because of that number, and `Hatch:check()` reports a violation\nrather than waiting for players to find it.",
+        "problem. Everything that matters happens in the first ninety seconds,\nwhich is what `EARLY_WINDOW_SECONDS` bounds.",
+        "Hatch.new({ noun = \"egg\", verb = \"hatch\", drops = ... })\nHatch.new({ noun = \"anime egg\", verb = \"crack\", drops = ... })"
+      ],
+      "functions": [
+        {
+          "name": "Hatch.new",
+          "signature": "Hatch.new(config: Config)",
+          "kind": "function",
+          "returns": "Self",
+          "summary": "Build the loop, and declare its funnel in the same call. The declaration is not optional and not the caller's job. Two games are published from this repository and neither can say whether anybody stayed, because declaring a funnel was something a game had to remember. Here it happens because the loop exists.",
+          "examples": [],
+          "line": 131
+        },
+        {
+          "name": "Hatch.crateFor",
+          "signature": "Hatch.crateFor(self: Self, subject: string)",
+          "kind": "function",
+          "returns": "any",
+          "summary": ": This player's own crate, and its own pity counter.",
+          "examples": [],
+          "line": 181
+        },
+        {
+          "name": "Hatch.label",
+          "signature": "Hatch.label(self: Self)",
+          "kind": "function",
+          "returns": "string",
+          "summary": ": What to call the thing, so a caller never hardcodes \"egg\".",
+          "examples": [],
+          "line": 191
+        },
+        {
+          "name": "Hatch.isFree",
+          "signature": "Hatch.isFree(self: Self, subject: string)",
+          "kind": "function",
+          "returns": "boolean",
+          "summary": "Whether this player's first payout is still free. The whole of the first-hatch finding, as a function a caller can branch on rather than a rule in a comment.",
+          "examples": [],
+          "line": 202
+        },
+        {
+          "name": "Hatch.open",
+          "signature": "Hatch.open(self: Self, subject: string, rng: (() -> number)?)",
+          "kind": "function",
+          "returns": "(any, number)",
+          "summary": "One draw, with the funnel and the reveal attached. Returns the drop and the step it moved the player to, so a caller can show the right thing without recomputing what just happened.",
+          "examples": [],
+          "line": 212
+        },
+        {
+          "name": "Hatch.kept",
+          "signature": "Hatch.kept(self: Self, subject: string)",
+          "kind": "function",
+          "returns": null,
+          "summary": ": They did something with what they got: equipped, placed, used.",
+          "examples": [],
+          "line": 252
+        },
+        {
+          "name": "Hatch.sawCollection",
+          "signature": "Hatch.sawCollection(self: Self, subject: string)",
+          "kind": "function",
+          "returns": null,
+          "summary": ": They looked at the collection. In every game of this shape the collection : is the reason to come back, and a player who never opens it has not been : given one.",
+          "examples": [],
+          "line": 260
+        },
+        {
+          "name": "Hatch.reachedTierTwo",
+          "signature": "Hatch.reachedTierTwo(self: Self, subject: string)",
+          "kind": "function",
+          "returns": null,
+          "summary": ": The rung 74% of halo's new players never reached.",
+          "examples": [],
+          "line": 266
+        },
+        {
+          "name": "Hatch.check",
+          "signature": "Hatch.check(self: Self, subject: string)",
+          "kind": "function",
+          "returns": "{ { rule: string, detail: string } }",
+          "summary": "Is this loop breaking its own rules, right now, for this player. The findings are the three the halo funnel names, checked live rather than discovered in a report a month later. A caller runs this on a tick and acts on what comes back -- an idle prompt, a free draw, an unlocked rung.",
+          "examples": [],
+          "line": 278
+        },
+        {
+          "name": "Hatch.describe",
+          "signature": "Hatch.describe(self: Self)",
+          "kind": "function",
+          "returns": "{ [string]: any }",
+          "summary": ": What this loop is, for a validator and for a reader.",
+          "examples": [],
+          "line": 320
+        }
+      ],
+      "describes": true
     },
     {
       "name": "HitGeometry",
@@ -8329,7 +8509,7 @@
     {
       "name": "HitscanValidator",
       "file": "forge/luau/Forge/Movement/HitscanValidator.lua",
-      "lines": 68,
+      "lines": 100,
       "summary": "HitscanValidator — server-side validation for instant-shot weapons. The client reports \"I fired from here along this ray\"; the server decides truth. Cooldown per shooter, range check against the claimed hit point, and line-of-sight through an injected probe. The visual tracer is the client's business; this module only says yes or no.",
       "examples": [],
       "functions": [
@@ -8340,7 +8520,7 @@
           "returns": "(boolean, string?)",
           "summary": "Rate gate; returns false while cooling down.",
           "examples": [],
-          "line": 39
+          "line": 54
         }
       ],
       "describes": false
@@ -8451,7 +8631,7 @@
     {
       "name": "IdleGenerator",
       "file": "forge/luau/Forge/Progression/IdleGenerator.lua",
-      "lines": 95,
+      "lines": 111,
       "summary": "IdleGenerator — coin pickups with respawn and an upgrade pad. The idle-tycoon floor: world coins that vanish when collected and reappear after a cooldown, plus a single upgrade pad with debounced purchases on a linear cost curve. Pure bookkeeping over keys.",
       "examples": [],
       "functions": [
@@ -8471,7 +8651,7 @@
           "returns": "(number, string?)",
           "summary": "Collect attempt; returns the payout when the coin was live.",
           "examples": [],
-          "line": 57
+          "line": 69
         },
         {
           "name": "IdleGenerator.isLive",
@@ -8480,7 +8660,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 69
+          "line": 81
         },
         {
           "name": "IdleGenerator.upgradeCost",
@@ -8489,7 +8669,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 74
+          "line": 86
         },
         {
           "name": "IdleGenerator.tryUpgrade",
@@ -8498,7 +8678,7 @@
           "returns": "(boolean, number?)",
           "summary": "Debounced purchase; caller checks funds.",
           "examples": [],
-          "line": 79
+          "line": 91
         },
         {
           "name": "IdleGenerator.passiveIncome",
@@ -8507,7 +8687,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 90
+          "line": 102
         }
       ],
       "describes": false
@@ -8515,7 +8695,7 @@
     {
       "name": "IncomeEngine",
       "file": "forge/luau/Forge/Economy/IncomeEngine.lua",
-      "lines": 111,
+      "lines": 127,
       "summary": "IncomeEngine — cached aggregation of passive income sources. Contributors layer three ways and reduce to one number — the shape every idle game reinvents: (base + Σadd) · Πmul, all raised to Πpow. The total is cached and only rebuilt when a contributor or external multiplier changes.",
       "examples": [
         "local engine = IncomeEngine.new({ base = 10 })\nengine:addContributor(\"prestige\", { kind = \"mul\", value = 3 })\nengine:setMultiplier(\"mul\", 2)\nengine:total()      --> 60\nengine:tick(0.5)    --> 30 earned over half a second"
@@ -8546,7 +8726,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 56
+          "line": 63
         },
         {
           "name": "IncomeEngine.setMultiplier",
@@ -8555,7 +8735,7 @@
           "returns": null,
           "summary": "========================== external multipliers =============================",
           "examples": [],
-          "line": 65
+          "line": 72
         },
         {
           "name": "IncomeEngine.clearMultiplier",
@@ -8564,7 +8744,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 70
+          "line": 82
         },
         {
           "name": "IncomeEngine.total",
@@ -8573,7 +8753,7 @@
           "returns": "number",
           "summary": "=============================== evaluation ==================================",
           "examples": [],
-          "line": 79
+          "line": 91
         },
         {
           "name": "IncomeEngine.tick",
@@ -8582,7 +8762,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 106
+          "line": 118
         }
       ],
       "describes": false
@@ -9622,7 +9802,7 @@
     {
       "name": "LiveConfig",
       "file": "forge/luau/Forge/Save/LiveConfig.lua",
-      "lines": 80,
+      "lines": 96,
       "summary": "LiveConfig — runtime tuning without republishing. Game feel numbers (round times, prices, drop weights) change after launch. Values live in one config record; the cache refreshes on a periodic poll and every read falls back to the compiled default when the store is unavailable — tuning can degrade, never break the game.",
       "examples": [],
       "functions": [
@@ -9633,7 +9813,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 49
+          "line": 67
         },
         {
           "name": "LiveConfig.get",
@@ -9642,7 +9822,7 @@
           "returns": "any",
           "summary": "",
           "examples": [],
-          "line": 66
+          "line": 84
         },
         {
           "name": "LiveConfig.getNumber",
@@ -9651,7 +9831,7 @@
           "returns": "number?",
           "summary": "Reads always return a number; missing keys are a boot error at call site.",
           "examples": [],
-          "line": 74
+          "line": 90
         }
       ],
       "describes": false
@@ -9823,9 +10003,18 @@
       "describes": true
     },
     {
+      "name": "Loop",
+      "file": "forge/luau/Forge/Loop/init.lua",
+      "lines": 80,
+      "summary": "Loop — the degree between a primitive and a game. What was missing ---------------- This engine has 58 families of primitives and a shelf of finished games, and nothing in between. `Progression.CrateRoll` is correct weighted-draw arithmetic with a pity counter, and it is **0% of a loop**: it does not know when the first draw should land, what the reveal looks like, why a run of commons is where somebody closes the game, or that the collection is the reason to come back. The gap is not theoretical. Thirty-two retention modules were written and sixteen were never called by any game, because composing them by hand is work an agent does not do. Meanwhile the production pipeline grew a *second engine* rather than use this one, for exactly this reason: it needed things that were opinionated and composable, and a library that refuses to have opinions has neither. `Forge/init.lua` says it never writes gameplay, and that rule is right for a library a person reads. For an agent assembling a game alone it is the ceiling. A Loop is the resolution: it does not decide **what your game is**, it carries **what is already known about this shape of game** -- and the agent edits from there. What a Loop is, exactly ----------------------- Four things, and it is not one unless it has all four: 1. the primitives, wired to each other; 2. **numbers that came from a measurement**, not from taste; 3. the moment -- what the player sees when it pays out; 4. **its own funnel, emitted by construction.** The fourth is the one that makes this more than a template. Two games are published from this repository and neither can say whether anybody stayed, because neither declares a funnel and nobody remembers to. A Loop declares its own, so a game built on one produces the drop-off report the moment it has players -- and `forge analytics` already reads exactly that shape. Where the numbers come from --------------------------- `forge/kits/halo/salvage/docs/wiki/raw/retention/` holds the only real retention record here: a published game, fifty new players, a ten-step funnel with times. It is the source for every constant a Loop ships with, and each one names the observation it came from rather than a preference. Theme is not structure ---------------------- A Loop is parameterised on nouns. \"Crack open pet eggs\" and \"crack open anime eggs\" are the same loop with a different `noun`, which is the thing the factory has been unable to express -- nineteen generated games share one structure and differ only in an item list, which is the mirror image of the same mistake.",
+      "examples": [],
+      "functions": [],
+      "describes": false
+    },
+    {
       "name": "Lottery",
       "file": "forge/luau/Forge/LiveOps/Lottery.lua",
-      "lines": 100,
+      "lines": 157,
       "summary": "Lottery — cumulative-range loot rolls with contextual weights. A loot pool is a list of entries whose weights are computed at roll time from context: the player's wealth band, VIP status, event multipliers. Weights become adjacent numeric ranges over one integer space; a single roll lands in exactly one range. Deterministic under the injected rng — QA replays any drop.",
       "examples": [],
       "functions": [
@@ -9836,16 +10025,16 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 32
+          "line": 49
         },
         {
           "name": "Lottery.add",
           "signature": "Lottery.add(self: Self, id: string, spec: { weight: number?, weightFn: ((RollContext) -> number)? })",
           "kind": "function",
           "returns": "()",
-          "summary": "Static weight or dynamic rule; the function wins when both given.",
+          "summary": "Static weight or dynamic rule; the function wins when both given. A missing weight still means 0. math.huge is a number, so it used to be stored, and a roll above 0 then skipped that entry for the last finite one.",
           "examples": [],
-          "line": 37
+          "line": 56
         },
         {
           "name": "Lottery.idIndex",
@@ -9854,7 +10043,7 @@
           "returns": "number?",
           "summary": "",
           "examples": [],
-          "line": 46
+          "line": 76
         },
         {
           "name": "Lottery.roll",
@@ -9863,7 +10052,7 @@
           "returns": "string?",
           "summary": "Rolls an entry id; nil only when every weight is zero.",
           "examples": [],
-          "line": 64
+          "line": 103
         },
         {
           "name": "Lottery.wealthWeight",
@@ -9872,7 +10061,7 @@
           "returns": "(RollContext) -> number",
           "summary": "Wealth-band helper: scale a base weight by how rich the roller is. bands = {{above=0, mult=1}, {above=10000, mult=1.5}, ...} evaluated top-down.",
           "examples": [],
-          "line": 86
+          "line": 132
         }
       ],
       "describes": false
@@ -9880,7 +10069,7 @@
     {
       "name": "Luck",
       "file": "forge/luau/Forge/LiveOps/Luck.lua",
-      "lines": 184,
+      "lines": 220,
       "summary": "Luck — shifting the odds toward the rare end, without breaking the economy. `Progression.CrateRoll` rolls a weighted table and guarantees a rare after enough failures. Luck is the other half of every gacha economy: the temporary or purchased multiplier that makes rare outcomes more likely while it lasts. Two decisions from a shipped simulator, both of which exist because the obvious version broke something. Luck does not stack. It arbitrates. ----------------------------------- A player with a luck gamepass, a luck potion and a lucky player standing in their server does **not** get 2 x 3 x 2. They get the best single source. Multiplying is the obvious implementation and it is how gacha economies die: sources are added over a game's life, each one reasonable on its own, and their product eventually makes the rarest tier common. Taking the maximum means a new source can never do more than the strongest existing one, so the ceiling is a number somebody chose rather than a number that emerged. Luck earned by progress is measured by *coverage*, not by volume --------------------------------------------------------------- If a game pays luck for collecting things, pay it for the **fraction of the collection discovered**, never for the raw number of rolls. The shipped game's note on this is blunt: not raw count, index -- so that parking on one source and grinding it forever stops paying luck. A count-based bonus rewards the exact behaviour a collection game does not want, which is a player farming the single cheapest source until the numbers get large. A coverage-based one pays for breadth, which is the behaviour the collection exists to encourage. What luck does to the table --------------------------- It multiplies the weight of everything at or above a rarity threshold, then the roll renormalises as it always would. Common outcomes are not made rarer directly; they shrink because the rare end grew. This keeps a luck multiplier readable -- \"twice as likely to see a legendary\" is true -- and it cannot ever remove an outcome from the table.",
       "examples": [
         "local multiplier = Luck.best({\n{ active = hasGamepass, multiplier = 2, source = \"gamepass\" },\n{ active = potionActive, multiplier = 3, source = \"potion\" },\n})",
@@ -9903,7 +10092,7 @@
           "returns": "number",
           "summary": "Luck earned from how much of a collection has been found. `discovered / obtainable` scaled to `maxBonus`, returned as a multiplier. A player who has found none of it gets 1; one who has found all of it gets `1 + maxBonus`. `obtainable` is the count a player can actually still get -- not everything that has ever existed. Counting retired or event-limited entries in the denominator means the bonus can never be completed, and a bonus that cannot be completed stops motivating the moment players work that out.",
           "examples": [],
-          "line": 99
+          "line": 102
         },
         {
           "name": "Luck.apply",
@@ -9912,7 +10101,7 @@
           "returns": "{ any }",
           "summary": "Reweight a drop table by a luck multiplier. `minRarity` is the lowest rarity luck touches; anything below it keeps its weight. Returns a new table -- the caller's drops are configuration and must not be mutated by a roll, or two players with different luck would fight over the same numbers. Weights, not probabilities: the roll normalises, so this never has to produce something summing to one and never has to decide what to take away from the common outcomes.",
           "examples": [],
-          "line": 119
+          "line": 138
         },
         {
           "name": "Luck.odds",
@@ -9921,7 +10110,7 @@
           "returns": "{ [string]: number }",
           "summary": "The chance of each outcome, as a fraction, for a UI that shows odds. Worth having in the library rather than in each game's UI: a displayed odds table computed separately from the roll is a displayed odds table that will eventually disagree with it, and players notice that faster than they notice anything else.",
           "examples": [],
-          "line": 144
+          "line": 165
         },
         {
           "name": "Luck.effect",
@@ -9930,7 +10119,7 @@
           "returns": "number",
           "summary": "How much luck actually changed a given outcome's odds. For the \"your luck makes this 2.4x more likely\" line. Computed from the two tables rather than from the multiplier, because the multiplier is not the answer: renormalisation means a 2x weight on one of several rare outcomes is less than 2x on the final chance.",
           "examples": [],
-          "line": 167
+          "line": 203
         },
         {
           "name": "Luck.describe",
@@ -9939,7 +10128,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 176
+          "line": 212
         }
       ],
       "describes": true
@@ -10252,7 +10441,7 @@
     {
       "name": "Migrator",
       "file": "forge/luau/Forge/Save/Migrator.lua",
-      "lines": 128,
+      "lines": 133,
       "summary": "Migrator — versioned, side-effect-free profile upgrades. Saved data outlives code. The moment a field changes meaning instead of being added, every returning profile is misread in ways that look like unrelated bugs — unless each old shape has an explicit step to the next. Migrator runs those steps in ascending order from the stored version and then reconciles the template so no field is ever nil where the game expects a value. Returns `{ data, fromVersion, toVersion }`. Profiles written by a NEWER build are reconciled but never downgraded or re-stamped — this server does not know what those fields mean yet. Pure: the input table is copied first, transforms receive the copy, and nothing here touches DataStores (the adapter owns that).",
       "examples": [
         "local migrator = Migrator.new({\nversion = 3,\nmigrations = {\n[2] = function(data) return data end,\n},\ndefaults = { level = 1, wallet = { gold = 0 } },\n})\nlocal result = migrator:migrate(loadedData)"
@@ -10420,7 +10609,7 @@
     {
       "name": "MobCatalog",
       "file": "forge/luau/Forge/AI/MobCatalog.lua",
-      "lines": 61,
+      "lines": 78,
       "summary": "MobCatalog — weighted spawner specification. Spawn choice and spawn placement are data, not code: entries with size/speed/weight, geometric-weighted size rolls, ring placement around a centre. Deterministic under the injected rng so QA can reproduce any wave.",
       "examples": [],
       "functions": [
@@ -10431,7 +10620,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 34
+          "line": 51
         },
         {
           "name": "MobCatalog.pick",
@@ -10440,7 +10629,7 @@
           "returns": "Entry",
           "summary": "",
           "examples": [],
-          "line": 48
+          "line": 65
         },
         {
           "name": "MobCatalog.ringPoint",
@@ -10449,7 +10638,7 @@
           "returns": "SpawnPoint",
           "summary": "Uniform point on an annulus around centre.",
           "examples": [],
-          "line": 53
+          "line": 70
         }
       ],
       "describes": false
@@ -10570,10 +10759,10 @@
     {
       "name": "Monetization",
       "file": "forge/luau/Forge/Monetization/init.lua",
-      "lines": 309,
+      "lines": 273,
       "summary": "Monetization — passes, products and receipts that cannot double-grant. `ProcessReceipt` is the most dangerous callback in Roblox. Roblox retries it until it returns `PurchaseGranted`, which means: * return the wrong value and the player is charged and gets nothing; * grant without recording and a retry grants twice; * error inside the handler and Roblox keeps calling it, forever. So the grant and the record are one operation, keyed on the receipt's own `PurchaseId`, in a DataStore. That is the entire correctness story and it is not optional.",
       "examples": [
-        "Monetization.defineProduct(\"small_coins\", {\nproductId = 123456,\ngrant = function(player) addCoins(player, 500) end,\n})",
+        "Monetization.defineProduct(\"small_coins\", {\nproductId = 123456,\napply = function(profile) profile.gold += 500 end,\n})",
         "Monetization.definePass(\"vip\", {\npassId = 987654,\nonOwned = function(player) applyVip(player) end,\n})",
         "Monetization.prompt(player, \"small_coins\")\nif Monetization.owns(player, \"vip\") then ... end"
       ],
@@ -10585,7 +10774,7 @@
           "returns": null,
           "summary": "=============================== definitions ================================",
           "examples": [],
-          "line": 70
+          "line": 68
         },
         {
           "name": "Monetization.definePass",
@@ -10594,7 +10783,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 75
+          "line": 73
         },
         {
           "name": "Monetization.defineMany",
@@ -10603,7 +10792,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 79
+          "line": 77
         },
         {
           "name": "Monetization.productNames",
@@ -10612,7 +10801,7 @@
           "returns": "{ string }",
           "summary": "",
           "examples": [],
-          "line": 88
+          "line": 86
         },
         {
           "name": "Monetization.passNames",
@@ -10621,7 +10810,7 @@
           "returns": "{ string }",
           "summary": "",
           "examples": [],
-          "line": 97
+          "line": 95
         },
         {
           "name": "Monetization.owns",
@@ -10630,7 +10819,7 @@
           "returns": "boolean",
           "summary": "Cached, because `UserOwnsGamePassAsync` is a web call and gameplay asks \"does this player have VIP\" in places that run every frame. The cache expires so a mid-session purchase is picked up without a rejoin.",
           "examples": [],
-          "line": 112
+          "line": 110
         },
         {
           "name": "Monetization.refreshOwnership",
@@ -10639,7 +10828,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 139
+          "line": 137
         },
         {
           "name": "Monetization.prompt",
@@ -10648,7 +10837,7 @@
           "returns": "boolean",
           "summary": "================================= prompts ==================================",
           "examples": [],
-          "line": 147
+          "line": 145
         },
         {
           "name": "Monetization.processReceipt",
@@ -10657,7 +10846,7 @@
           "returns": "Enum.ProductPurchaseDecision",
           "summary": "The receipt handler, callable directly. Roblox owns the real one, which makes it unreachable from a test — and this is the one function in the engine whose bug costs money. Exposing it lets a live suite deliver the same receipt twice and assert that the grant happened once, which is the failure Roblox's retry behaviour causes routinely.",
           "examples": [],
-          "line": 248
+          "line": 220
         },
         {
           "name": "Monetization.start",
@@ -10666,7 +10855,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 252
+          "line": 224
         },
         {
           "name": "Monetization.describe",
@@ -10675,7 +10864,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 296
+          "line": 260
         }
       ],
       "describes": true
@@ -10840,7 +11029,7 @@
     {
       "name": "Nav",
       "file": "forge/luau/Forge/Nav/init.lua",
-      "lines": 376,
+      "lines": 426,
       "summary": "Nav — getting from here to there without walking into things. Until now every actor in this engine moved by pointing itself at its target and calling `Humanoid:MoveTo`. On a flat arena that is invisible. On any world with a rock in it, the enemy walks into the rock and stays there, pressing forward forever, which is the single most recognisable \"this is an amateur Roblox game\" behaviour there is. This wraps Roblox's own `PathfindingService` — a real navmesh computed from the real world, not a grid this engine invented — and adds the parts that service leaves to you: * repathing when the target moves, throttled so a chasing enemy does not * waypoint following with a stuck detector, because a computed path is * a straight-line fallback, so a failed path degrades to the old --- On costs ------------------------------------------------------------ `AgentParameters` are the difference between an enemy that squeezes through a doorway and one that refuses to. They are exposed per agent rather than fixed, because a hulking brute genuinely does need a wider path than a stalker, and pretending otherwise is how you get a boss stuck on a fence.",
       "examples": [
         "recompute a path sixty times a second;",
@@ -10856,7 +11045,7 @@
           "returns": "({ PathWaypoint }, string)",
           "summary": "Compute a path, or say why not. Returns the waypoint list and a status string. The status matters: a caller that treats \"NoPath\" the same as \"Success with zero waypoints\" will happily report that an actor has arrived when it never set off.",
           "examples": [],
-          "line": 72
+          "line": 74
         },
         {
           "name": "Nav.reachable",
@@ -10865,7 +11054,7 @@
           "returns": "boolean",
           "summary": "Is there a walkable route at all? Cheap enough to ask before committing to a fight: an enemy that cannot reach the player should give up and go home rather than press against a wall until the session ends.",
           "examples": [],
-          "line": 104
+          "line": 106
         },
         {
           "name": "Agent:_resolveTarget",
@@ -10874,7 +11063,7 @@
           "returns": "Vector3?",
           "summary": "",
           "examples": [],
-          "line": 121
+          "line": 123
         },
         {
           "name": "Agent:_repath",
@@ -10883,7 +11072,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 135
+          "line": 137
         },
         {
           "name": "Agent:_step",
@@ -10892,7 +11081,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 166
+          "line": 187
         },
         {
           "name": "Agent:stop",
@@ -10901,7 +11090,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 239
+          "line": 282
         },
         {
           "name": "Agent:describe",
@@ -10910,7 +11099,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 247
+          "line": 292
         },
         {
           "name": "Nav.follow",
@@ -10919,7 +11108,7 @@
           "returns": "any",
           "summary": "Put an actor on a path and keep it there. `target` may be a Vector3, a Model, or a function returning either — the function form is what makes chasing work, because the goal is re-read every step rather than captured once.",
           "examples": [],
-          "line": 266
+          "line": 312
         },
         {
           "name": "Nav.stop",
@@ -10928,7 +11117,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 298
+          "line": 347
         },
         {
           "name": "Nav.start",
@@ -10937,7 +11126,7 @@
           "returns": null,
           "summary": "One connection for every agent. The alternative — a coroutine per enemy — is the pattern this engine exists to avoid: two hundred actors become two hundred schedulable threads and the frame time stops being anybody's fault in particular.",
           "examples": [],
-          "line": 312
+          "line": 361
         },
         {
           "name": "Nav.agentCount",
@@ -10946,7 +11135,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 333
+          "line": 382
         },
         {
           "name": "Nav.modifier",
@@ -10955,7 +11144,7 @@
           "returns": null,
           "summary": "Mark something as a cost or a blocker for pathfinding. Roblox reads `PathfindingModifier` off parts, which is the only way to say \"this is water, prefer to go around\" or \"this door is passable\". Wrapped here so a game never has to name the class.",
           "examples": [],
-          "line": 348
+          "line": 397
         },
         {
           "name": "Nav.setCosts",
@@ -10964,7 +11153,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 357
+          "line": 406
         },
         {
           "name": "Nav.describe",
@@ -10973,7 +11162,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 363
+          "line": 412
         }
       ],
       "describes": true
@@ -10981,7 +11170,7 @@
     {
       "name": "Navigator",
       "file": "forge/luau/Forge/AI/Navigator.lua",
-      "lines": 118,
+      "lines": 167,
       "summary": "Navigator — waypoint following with stuck detection and recovery. PathfindingService returns waypoints; this module walks them and handles the part that actually breaks in production: getting stuck. Progress is measured against expected speed; after `stuckSeconds` without progress the navigator re-requests a path through an injected callback, optionally with a jittered goal to escape local minima.",
       "examples": [],
       "functions": [
@@ -10992,7 +11181,7 @@
           "returns": "Vec3?",
           "summary": "",
           "examples": [],
-          "line": 53
+          "line": 98
         },
         {
           "name": "Navigator.update",
@@ -11001,7 +11190,7 @@
           "returns": "({ x: number, z: number }, boolean)",
           "summary": "Feed current position each tick; returns movement direction toward the active waypoint (unit XZ), plus whether a repath just happened.",
           "examples": [],
-          "line": 59
+          "line": 108
         },
         {
           "name": "Navigator.finished",
@@ -11010,7 +11199,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 113
+          "line": 162
         }
       ],
       "describes": false
@@ -11018,7 +11207,7 @@
     {
       "name": "Net",
       "file": "forge/luau/Forge/Net/init.lua",
-      "lines": 420,
+      "lines": 429,
       "summary": "Net — a typed, validated, rate-limited bus between client and server. Roblox gives you RemoteEvent, which is a hole in your server. Every exploit that matters in a Roblox game goes through one: the client sends `{ price = 0 }` and the server believes it. The defence is not vigilance, it is making the unsafe path harder to write than the safe one. So: an event that is not declared does not exist, every client->server packet is shape-checked before your handler sees it, and every one is rate limited whether you remembered to think about it or not. Server: Client: Nothing here decides what your events mean. It only decides that they are declared, shaped and throttled.",
       "examples": [
         "Net.define({\nAttack    = { dir = \"c2s\", rate = 6, shape = { dir = \"Vector3\" } },\nBuyItem   = { dir = \"c2s\", rate = 4, shape = { shop = \"string\", item = \"string\" } },\nStateSync = { dir = \"s2c\" },\nGetShop   = { dir = \"c2s\", kind = \"function\", shape = { shop = \"string\" } },\n})",
@@ -11051,7 +11240,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 169
+          "line": 170
         },
         {
           "name": "Net.handles",
@@ -11060,7 +11249,7 @@
           "returns": "boolean",
           "summary": "Whether anything is actually listening. `defined` says the remote instance exists; this says somebody called `Net.on` for it. The gap between those two is the hardest failure in a Roblox codebase to see: firing into a defined remote with no handler raises nothing anywhere, and the client simply hangs until it times out -- which looks exactly like a broken button. A game can now assert it in a live scenario instead of discovering it by pressing every control.",
           "examples": [],
-          "line": 185
+          "line": 186
         },
         {
           "name": "Net.listening",
@@ -11069,7 +11258,7 @@
           "returns": "{ string }",
           "summary": "",
           "examples": [],
-          "line": 189
+          "line": 190
         },
         {
           "name": "Net.manifest",
@@ -11078,7 +11267,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 198
+          "line": 199
         },
         {
           "name": "Net.fire",
@@ -11087,7 +11276,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 242
+          "line": 243
         },
         {
           "name": "Net.fireAll",
@@ -11096,7 +11285,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 247
+          "line": 248
         },
         {
           "name": "Net.fireExcept",
@@ -11105,7 +11294,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 252
+          "line": 253
         },
         {
           "name": "Net.fireNear",
@@ -11114,7 +11303,7 @@
           "returns": null,
           "summary": "Only players within `radius` of `position` receive it. In an open world this is the difference between 20 KB/s and 400 KB/s per client, and it is the single highest-leverage networking decision in the whole engine.",
           "examples": [],
-          "line": 265
+          "line": 266
         },
         {
           "name": "Net.fireList",
@@ -11123,7 +11312,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 278
+          "line": 279
         },
         {
           "name": "Net.send",
@@ -11132,7 +11321,7 @@
           "returns": null,
           "summary": "=============================== client =====================================",
           "examples": [],
-          "line": 287
+          "line": 288
         },
         {
           "name": "Net.request",
@@ -11141,7 +11330,7 @@
           "returns": "any",
           "summary": "",
           "examples": [],
-          "line": 294
+          "line": 295
         },
         {
           "name": "Net.on",
@@ -11150,7 +11339,7 @@
           "returns": "RBXScriptConnection?",
           "summary": "============================== listening =================================== One `on` for both sides. On the server the handler receives (player, payload) and only runs if the packet passed the gate; on the client it receives (payload).",
           "examples": [],
-          "line": 306
+          "line": 307
         },
         {
           "name": "Net.describe",
@@ -11159,7 +11348,7 @@
           "returns": "{ [string]: any }",
           "summary": "What a validator reads: the whole wire contract, plus how many handlers are actually attached. A declared event with no listener is a wiring bug.",
           "examples": [],
-          "line": 377
+          "line": 386
         }
       ],
       "describes": true
@@ -11393,7 +11582,7 @@
     {
       "name": "ObjectiveTracker",
       "file": "forge/luau/Forge/UI/ObjectiveTracker.lua",
-      "lines": 56,
+      "lines": 78,
       "summary": "ObjectiveTracker — current objective text plus 3D marker plan. Quest/HUD guidance needs two things in sync: the objective text and a marker that follows the target (by tag or name). The marker is a rendering PLAN (screen-independent), so the client binds it and the probes can verify the chosen target.",
       "examples": [],
       "functions": [
@@ -11404,7 +11593,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 29
+          "line": 47
         },
         {
           "name": "ObjectiveTracker.setObjective",
@@ -11413,7 +11602,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 33
+          "line": 51
         },
         {
           "name": "ObjectiveTracker.setMarkers",
@@ -11422,7 +11611,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 37
+          "line": 55
         },
         {
           "name": "ObjectiveTracker.advance",
@@ -11431,7 +11620,7 @@
           "returns": "boolean",
           "summary": "Advances to the next marker when the current target was reached.",
           "examples": [],
-          "line": 43
+          "line": 61
         },
         {
           "name": "ObjectiveTracker.activeMarker",
@@ -11440,7 +11629,7 @@
           "returns": "Marker?",
           "summary": "",
           "examples": [],
-          "line": 51
+          "line": 69
         }
       ],
       "describes": false
@@ -11651,7 +11840,7 @@
     {
       "name": "Perception",
       "file": "forge/luau/Forge/AI/Perception.lua",
-      "lines": 102,
+      "lines": 119,
       "summary": "Perception — sight/hearing with a memory window. Real bots do not forget what they saw one frame ago. The sensor keeps a last-seen timestamp per key inside `memorySeconds`, merges fresh observations (FOV-filtered, LOS already resolved by the caller) with audible pings, and answers \"who do I still believe is where?\".",
       "examples": [],
       "functions": [
@@ -11662,7 +11851,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 34
+          "line": 51
         },
         {
           "name": "Perception.setFacing",
@@ -11671,7 +11860,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 46
+          "line": 63
         },
         {
           "name": "Perception.observe",
@@ -11680,7 +11869,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 54
+          "line": 71
         },
         {
           "name": "Perception.known",
@@ -11689,7 +11878,7 @@
           "returns": "{ Memory }",
           "summary": "Everything remembered within the memory window; positions are as of lastSeen (the brain extrapolates if it wants to).",
           "examples": [],
-          "line": 84
+          "line": 101
         },
         {
           "name": "Perception.forget",
@@ -11698,7 +11887,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 97
+          "line": 114
         }
       ],
       "describes": false
@@ -11706,7 +11895,7 @@
     {
       "name": "Permissions",
       "file": "forge/luau/Forge/Social/Permissions.lua",
-      "lines": 114,
+      "lines": 116,
       "summary": "Permissions — hierarchical ACL for shared entities (plots, servers, guilds). Owner > Manager > Trusted > Default, Banned below all. Levels are integers; actions declare the minimum level they accept. Grant/revoke return a new state so the caller can persist the exact delta. A ban blocks every action including defaults.",
       "examples": [],
       "functions": [
@@ -11726,7 +11915,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 56
+          "line": 58
         },
         {
           "name": "Permissions.check",
@@ -11735,7 +11924,7 @@
           "returns": "(boolean, string?)",
           "summary": "",
           "examples": [],
-          "line": 66
+          "line": 68
         },
         {
           "name": "Permissions.grant",
@@ -11744,7 +11933,7 @@
           "returns": "State?",
           "summary": "",
           "examples": [],
-          "line": 81
+          "line": 83
         },
         {
           "name": "Permissions.revoke",
@@ -11753,7 +11942,7 @@
           "returns": "State",
           "summary": "",
           "examples": [],
-          "line": 100
+          "line": 102
         }
       ],
       "describes": false
@@ -11973,7 +12162,7 @@
     {
       "name": "PlaytimeLadder",
       "file": "forge/luau/Forge/Progression/PlaytimeLadder.lua",
-      "lines": 328,
+      "lines": 429,
       "summary": "PlaytimeLadder — rewards for time spent, without paying people to be absent. `DailyRewardCalendar` rewards coming back on consecutive days.    This rewards staying once you are here: a ladder of milestones at five minutes, fifteen, thirty, an hour, each with something at the top of it. Written rather than salvaged ---------------------------- Unlike most of this engine, this one has no shipped antecedent: none of the production games read for it had a session-time ladder, so nothing here is somebody else's hard-won tuning and it should not be presented as such. What it does carry across is the shape of the reward systems that *were* there -- claim rather than grant, persist the claim not the timer, keep the policy pure and testable -- plus one problem those systems did not have to solve. The AFK problem is the whole design ----------------------------------- A ladder that counts wall-clock time pays players for leaving the game open on a second monitor. Every serious implementation of this eventually grows an idle check, and bolting one on afterwards is how you end up with a timer that behaves differently in three places. So `tick` takes an `active` flag and **the caller decides what active means** -- moving, clicking, being in combat, not being in the lobby. This module will not guess, because the answer differs per game and a wrong guess silently either pays AFK farmers or punishes someone reading a quest log. Two things make it usable rather than merely correct: * **Grace.** Idleness has to persist before the clock stops. Without it, * **A cap on the drift.** Once idle beyond the grace, time stops Claim, do not grant ------------------- Reaching a rung makes it *claimable*; it does not hand anything over. A reward granted at the moment of arrival lands while the player is mid-fight, mid-menu or mid-cutscene, and a grant that nobody sees may as well not have happened. The claim is also the thing worth persisting -- see below. Persist the claim, not the clock -------------------------------- Save which rungs are claimed and, for lifetime ladders, the accumulated total. Never save \"seconds until the next rung\": that is derived, and a derived value in a save file is a value that will one day disagree with what it was derived from.",
       "examples": [
         "local ladder = PlaytimeLadder.define(\"session\", {\nscope = \"session\",\nrungs = {\n{ at = 300, reward = { coins = 100 } },\n{ at = 900, reward = { coins = 300 } },\n{ at = 1800, reward = { gems = 5 } },\n},\n})",
@@ -11989,7 +12178,7 @@
           "returns": "any",
           "summary": "Register a ladder. Rungs are sorted by time, so a caller may list them in any order and a generated ladder needs no discipline about it.",
           "examples": [],
-          "line": 119
+          "line": 142
         },
         {
           "name": "PlaytimeLadder.get",
@@ -11998,7 +12187,7 @@
           "returns": "any?",
           "summary": "",
           "examples": [],
-          "line": 144
+          "line": 200
         },
         {
           "name": "PlaytimeLadder.begin",
@@ -12007,7 +12196,7 @@
           "returns": "State",
           "summary": "A fresh state, or one restored from a save. A session ladder ignores any saved elapsed time -- that is what makes it a session ladder -- but still honours saved claims, so a game can switch a ladder from lifetime to session without players re-earning what they had.",
           "examples": [],
-          "line": 155
+          "line": 211
         },
         {
           "name": "PlaytimeLadder.save",
@@ -12016,7 +12205,7 @@
           "returns": "any",
           "summary": ": What to persist. Deliberately not the whole state: `idleFor` is meaningless : across a session boundary and saving it would only invite it being trusted.",
           "examples": [],
-          "line": 173
+          "line": 257
         },
         {
           "name": "PlaytimeLadder.tick",
@@ -12025,7 +12214,7 @@
           "returns": "number",
           "summary": "Advance the clock. `active` is the game's own judgement, and the reason this module refuses to form one. Passing `true` unconditionally gives a wall-clock ladder, which is a legitimate choice for a game where merely being present is the point. Returns the seconds actually credited, which is `dt` or zero. Callers that want to show \"paused\" in a HUD read it rather than re-deriving the idle rule.",
           "examples": [],
-          "line": 191
+          "line": 275
         },
         {
           "name": "PlaytimeLadder.isPaused",
@@ -12034,7 +12223,7 @@
           "returns": "boolean",
           "summary": ": True while the clock is stopped, for a HUD that wants to say so. A ladder : that pauses silently reads as broken rather than as working correctly.",
           "examples": [],
-          "line": 209
+          "line": 298
         },
         {
           "name": "PlaytimeLadder.claimable",
@@ -12043,7 +12232,7 @@
           "returns": "{ Rung }",
           "summary": "Rungs reached but not yet taken, in order. Returned rather than granted, and returning the whole list rather than one matters: a player who was away for the last three milestones should see all three waiting, not collect them one join at a time.",
           "examples": [],
-          "line": 220
+          "line": 309
         },
         {
           "name": "PlaytimeLadder.claim",
@@ -12052,7 +12241,7 @@
           "returns": "any?",
           "summary": "Take one rung. Returns its reward, or nil if it was not available. Nil covers both \"not reached yet\" and \"already taken\", and the caller does not need to tell them apart: in either case nothing is owed. Checking the claim inside here rather than trusting the caller is what makes a double click harmless.",
           "examples": [],
-          "line": 238
+          "line": 333
         },
         {
           "name": "PlaytimeLadder.claimAll",
@@ -12061,7 +12250,7 @@
           "returns": "{ any }",
           "summary": ": Everything outstanding at once, for a \"collect all\" button.",
           "examples": [],
-          "line": 263
+          "line": 358
         },
         {
           "name": "PlaytimeLadder.next",
@@ -12070,7 +12259,7 @@
           "returns": "(Rung?, number?)",
           "summary": "The next rung and the seconds until it, for a countdown. Returns nil when every rung is claimed and the ladder does not loop, which is a real state a HUD should render as \"done\" rather than as a stuck timer.",
           "examples": [],
-          "line": 283
+          "line": 378
         },
         {
           "name": "PlaytimeLadder.progress",
@@ -12079,7 +12268,7 @@
           "returns": "number",
           "summary": ": Progress toward the next rung, 0..1, for a bar. One when nothing is left.",
           "examples": [],
-          "line": 293
+          "line": 394
         },
         {
           "name": "PlaytimeLadder.describe",
@@ -12088,7 +12277,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 314
+          "line": 415
         }
       ],
       "describes": true
@@ -12244,7 +12433,7 @@
     {
       "name": "PrestigeVault",
       "file": "forge/luau/Forge/Progression/PrestigeVault.lua",
-      "lines": 110,
+      "lines": 128,
       "summary": "PrestigeVault — the sacrifice vault, as pure item bookkeeping. Mined from minershaven: sacrificing seals gear away in storage, soulbound items never leave your hands, and milestone lives (10, 100) pay the stash back — ReturnItems fires the moment a rebirth crosses life 100. The vault only accepts while `life` is below `requiredLife`; past that point sealing is refused because every deposit would be returned immediately. Pure: `seal` returns a report and never mutates its inputs; the caller persists `result.vaulted`. `returnAll(vault)` hands the sealed items back.",
       "examples": [
         "local vault = PrestigeVault.new({\nrequiredLife = 100,\nsoulboundCheck = function(item) return item.soulbound == true end,\nmilestoneUnlocks = { [10] = { \"final_upgrader\" }, [100] = { \"vault_refund\" } },\n})",
@@ -12258,7 +12447,7 @@
           "returns": "Vault",
           "summary": "",
           "examples": [],
-          "line": 52
+          "line": 70
         },
         {
           "name": "PrestigeVault.seal",
@@ -12267,7 +12456,7 @@
           "returns": "SealResult",
           "summary": "",
           "examples": [],
-          "line": 73
+          "line": 91
         },
         {
           "name": "PrestigeVault.returnAll",
@@ -12276,7 +12465,7 @@
           "returns": "{ any }",
           "summary": "",
           "examples": [],
-          "line": 101
+          "line": 119
         }
       ],
       "describes": false
@@ -12519,6 +12708,25 @@
       "describes": true
     },
     {
+      "name": "Proportions",
+      "file": "forge/luau/Forge/Rig/Proportions.lua",
+      "lines": 47,
+      "summary": "!strict Absolute avatar proportions, relative to the original rig (never compounded). R15 uses Roblox's scale channels so attachments, animation constraints, layered accessories and HipHeight are rebuilt together by the engine.",
+      "examples": [],
+      "functions": [
+        {
+          "name": "Proportions.apply",
+          "signature": "Proportions.apply(character: Model, factors: any)",
+          "kind": "function",
+          "returns": "any",
+          "summary": "",
+          "examples": [],
+          "line": 7
+        }
+      ],
+      "describes": false
+    },
+    {
       "name": "QualityTierSelector",
       "file": "forge/luau/Forge/UI/QualityTierSelector.lua",
       "lines": 79,
@@ -12742,7 +12950,7 @@
     {
       "name": "QuestEngine",
       "file": "forge/luau/Forge/Progression/QuestEngine.lua",
-      "lines": 122,
+      "lines": 144,
       "summary": "QuestEngine — declarative multi-stage quests with count/time objectives. A quest is data: stages with either a counting objective (tag-scoped interactions validated against a max distance) or a timed objective (accumulate dt while a condition holds). The engine owns stage state and advancement; the server feeds events. Rewards and chaining ride on completion.",
       "examples": [],
       "functions": [
@@ -12753,7 +12961,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 39
+          "line": 57
         },
         {
           "name": "QuestEngine.register",
@@ -12762,7 +12970,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 43
+          "line": 61
         },
         {
           "name": "QuestEngine.get",
@@ -12771,7 +12979,7 @@
           "returns": "QuestDef?",
           "summary": "",
           "examples": [],
-          "line": 61
+          "line": 79
         },
         {
           "name": "QuestEngine.start",
@@ -12780,7 +12988,7 @@
           "returns": "QuestState?",
           "summary": "",
           "examples": [],
-          "line": 65
+          "line": 87
         },
         {
           "name": "QuestEngine.currentObjective",
@@ -12789,7 +12997,7 @@
           "returns": "Objective?",
           "summary": "",
           "examples": [],
-          "line": 72
+          "line": 94
         },
         {
           "name": "QuestEngine.reportEvent",
@@ -12798,7 +13006,7 @@
           "returns": "(QuestState, boolean)",
           "summary": "Counting objective event; `inRange` is the server's distance verdict.",
           "examples": [],
-          "line": 81
+          "line": 103
         },
         {
           "name": "QuestEngine.tick",
@@ -12807,7 +13015,7 @@
           "returns": "(QuestState, boolean)",
           "summary": "Timed objective accumulation; conditionHeld comes from the server tick.",
           "examples": [],
-          "line": 91
+          "line": 113
         },
         {
           "name": "QuestEngine._maybeAdvance",
@@ -12816,7 +13024,7 @@
           "returns": "QuestState",
           "summary": "",
           "examples": [],
-          "line": 104
+          "line": 126
         }
       ],
       "describes": false
@@ -12861,7 +13069,7 @@
     {
       "name": "Queue",
       "file": "forge/luau/Forge/Match/Queue.lua",
-      "lines": 121,
+      "lines": 129,
       "summary": "Queue — FIFO matchmaking with presence validation and forfeit handling. A matchmaking queue is trivial until someone disconnects mid-queue and their ghost blocks a slot forever. This queue keeps order strictly FIFO, validates presence at formation time through an injected checker, drops the absent, and reports who left so the server can award a forfeit.",
       "examples": [],
       "functions": [
@@ -12881,7 +13089,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 43
+          "line": 47
         },
         {
           "name": "Queue.setClock",
@@ -12890,7 +13098,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 47
+          "line": 51
         },
         {
           "name": "Queue.join",
@@ -12899,7 +13107,7 @@
           "returns": "(boolean, string?)",
           "summary": "",
           "examples": [],
-          "line": 51
+          "line": 55
         },
         {
           "name": "Queue.leave",
@@ -12908,7 +13116,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 60
+          "line": 68
         },
         {
           "name": "Queue.size",
@@ -12917,7 +13125,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 74
+          "line": 82
         },
         {
           "name": "Queue.position",
@@ -12926,7 +13134,7 @@
           "returns": "number?",
           "summary": "",
           "examples": [],
-          "line": 78
+          "line": 86
         },
         {
           "name": "Queue.form",
@@ -12935,7 +13143,7 @@
           "returns": "({ [string]: any }?)",
           "summary": "Attempts to form one match from the head of the queue. Absent players are dropped first (and reported), so ghosts never block a match.",
           "examples": [],
-          "line": 89
+          "line": 97
         }
       ],
       "describes": false
@@ -13010,7 +13218,7 @@
     {
       "name": "RateLimit",
       "file": "forge/luau/Forge/Net/RateLimit.lua",
-      "lines": 90,
+      "lines": 110,
       "summary": "RateLimit — continuous token buckets keyed by arbitrary strings. Per-key (\"userId:event\") token bucket that refills continuously, so two half-windows cannot double-spend the way a fixed window allows (the roblox-infected convention). Pure: nothing here sleeps. The caller either injects a clock at construction (`{ now = fn }`) or passes `now` per call, which keeps every accept/reject decision replayable in tests. `try` spends one token and returns `(true)`; when dry it returns `(false, secondsUntilNextToken)` and records a violation against the key. `violations` reports that cumulative tally (anti-cheat fodder); `reset` wipes both bucket and tally for a key. New buckets start full.",
       "examples": [
         "local rl = RateLimit.new({ rate = 6, burst = 4 })\nlocal allowed, retryAfter = rl:try(\"42:FireWeapon\")"
@@ -13023,7 +13231,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 38
+          "line": 39
         },
         {
           "name": "RateLimit.try",
@@ -13032,7 +13240,7 @@
           "returns": "(boolean, number?)",
           "summary": "",
           "examples": [],
-          "line": 52
+          "line": 67
         },
         {
           "name": "RateLimit.violations",
@@ -13041,7 +13249,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 80
+          "line": 100
         },
         {
           "name": "RateLimit.reset",
@@ -13050,7 +13258,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 84
+          "line": 104
         }
       ],
       "describes": false
@@ -13058,7 +13266,7 @@
     {
       "name": "RebirthLoop",
       "file": "forge/luau/Forge/Progression/RebirthLoop.lua",
-      "lines": 131,
+      "lines": 149,
       "summary": "RebirthLoop — prestige arithmetic stripped of every side effect. Mined from minershaven: RebirthHandler charges MoneyLib.RebornPrice for the current life, jumps 1 + MoneyLib.LifeSkips lives when the balance dwarfs the price, then wipes the tycoon, rolls awards per crossed life and announces \"born into their Nth life\". All ceremony stays with the caller; this module only produces a plan. Lives are 1-based: `{ life = 1, balance = ... }` is a fresh save. Skipping follows MoneyLib.LifeSkips exactly — each extra life costs the base price times another 10^3, probed from 20 skips down to 1.",
       "examples": [
         "local loop = RebirthLoop.new({\nprice = function(life) return 2.5e19 ^ (1 + life * 0.00024) end,\nrewardsOnLife = { [10] = { \"inferno_box\" }, [100] = { \"final_upgrader\" } },\n})",
@@ -13072,7 +13280,7 @@
           "returns": "RebirthLoop",
           "summary": "",
           "examples": [],
-          "line": 64
+          "line": 82
         },
         {
           "name": "RebirthLoop.quote",
@@ -13081,7 +13289,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 88
+          "line": 106
         },
         {
           "name": "RebirthLoop.canRebirth",
@@ -13090,7 +13298,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 92
+          "line": 110
         },
         {
           "name": "RebirthLoop.skipsAffordable",
@@ -13099,7 +13307,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 96
+          "line": 114
         },
         {
           "name": "RebirthLoop.execute",
@@ -13108,7 +13316,7 @@
           "returns": "RebirthPlan?",
           "summary": "",
           "examples": [],
-          "line": 106
+          "line": 124
         }
       ],
       "describes": false
@@ -13116,7 +13324,7 @@
     {
       "name": "ReceiptLedger",
       "file": "forge/luau/Forge/Save/ReceiptLedger.lua",
-      "lines": 64,
+      "lines": 84,
       "summary": "ReceiptLedger — append-only, idempotent grant history. Purchases and redemptions must survive retries. A receipt id granted once is recorded forever; granting the same id again is a no-op that returns the state unchanged. That makes the whole ledger safe to replay: a retried write cannot double-grant, and a save built from an incomplete in-memory copy can never drop or overwrite an entry the store already holds. State is a plain `{ [receiptId]: payload }` table — DataStore-serializable. Nil payloads are recorded as `true`, because stores drop nil values and the entry's presence is the point.",
       "examples": [
         "local ledger = ReceiptLedger.new()\nlocal state, isNew = ledger:grant(profile.receipts, receiptId, payload)\nif isNew then profile.receipts = state end"
@@ -13129,7 +13337,7 @@
           "returns": "(LedgerState, boolean)",
           "summary": "Grant one receipt into `state` (nil means \"the ledger's own state\"). Union-reconcile semantics: an id already present keeps its ORIGINAL payload untouched — the existing record may be richer than what this call carries, so overwriting would trade a complete entry for an incomplete copy. Absence produces a NEW cloned state (callers decide when to adopt it).",
           "examples": [],
-          "line": 43
+          "line": 60
         },
         {
           "name": "Ledger:has",
@@ -13138,7 +13346,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 58
+          "line": 78
         }
       ],
       "describes": false
@@ -13203,7 +13411,7 @@
     {
       "name": "RegeneratingResource",
       "file": "forge/luau/Forge/Progression/RegeneratingResource.lua",
-      "lines": 72,
+      "lines": 76,
       "summary": "RegeneratingResource — capped resource with per-second regen and phase multipliers (overtime). The elixir/energy bar: linear regen toward a cap, optional multiplier by game phase, and a snapshot for throttled replication instead of every-frame sends.",
       "examples": [],
       "functions": [
@@ -13241,7 +13449,7 @@
           "returns": "number?",
           "summary": "Throttled replication value; only changes on interval boundaries.",
           "examples": [],
-          "line": 62
+          "line": 66
         }
       ],
       "describes": false
@@ -13354,7 +13562,7 @@
     {
       "name": "ResourceNodes",
       "file": "forge/luau/Forge/Tycoon/ResourceNodes.lua",
-      "lines": 67,
+      "lines": 68,
       "summary": "ResourceNodes — depleting resource nodes with replenish timers. Ore veins, trees, fishing spots: harvest N times then go dormant and replenish after a period. Ownership-free; the ledger is keyed by node id and safe to persist.",
       "examples": [],
       "functions": [
@@ -13383,7 +13591,7 @@
           "returns": "(boolean, string?)",
           "summary": "",
           "examples": [],
-          "line": 37
+          "line": 38
         },
         {
           "name": "ResourceNodes.isAvailable",
@@ -13392,7 +13600,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 55
+          "line": 56
         }
       ],
       "describes": false
@@ -13715,7 +13923,7 @@
     {
       "name": "RoundMachine",
       "file": "forge/luau/Forge/Match/RoundMachine.lua",
-      "lines": 121,
+      "lines": 147,
       "summary": "RoundMachine — pure round-phase state machine emitting effects. A match is a loop of named phases (WAITING -> INTERMISSION -> ACTIVE -> ROUND_END). The machine owns only time and phase index; every real consequence comes back as an effect list the caller applies, which keeps it headless-testable in milliseconds and replayable from any seed or clock.",
       "examples": [
         "local rm = RoundMachine.new({ phases = {\n{ name = \"INTERMISSION\", duration = 5 },\n{ name = \"ACTIVE\", duration = 90 },\n{ name = \"ROUND_END\", duration = 4 },\n}, rounds = 10 })",
@@ -13729,7 +13937,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 54
+          "line": 71
         },
         {
           "name": "RoundMachine.current",
@@ -13738,7 +13946,7 @@
           "returns": "string?",
           "summary": "",
           "examples": [],
-          "line": 67
+          "line": 89
         },
         {
           "name": "RoundMachine.iteration",
@@ -13747,7 +13955,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 74
+          "line": 96
         },
         {
           "name": "RoundMachine.remaining",
@@ -13756,7 +13964,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 78
+          "line": 100
         },
         {
           "name": "RoundMachine.tick",
@@ -13765,7 +13973,7 @@
           "returns": "{ Effect }",
           "summary": "",
           "examples": [],
-          "line": 85
+          "line": 107
         }
       ],
       "describes": false
@@ -13773,7 +13981,7 @@
     {
       "name": "Save",
       "file": "forge/luau/Forge/Save/init.lua",
-      "lines": 567,
+      "lines": 718,
       "summary": "Save — player profiles that survive, migrate and do not corrupt. Three failures this exists to prevent, all of which are invisible in Studio and expensive in production: 1. No session lock. Two servers hold the same profile, the second one saves last, and a player loses an evening of progress. 2. No migration. You add a field, every returning player has `nil` where a number should be, and a dozen systems break in ways that look unrelated. 3. No retry, no BindToClose. The server shuts down mid-write and the save is simply gone.",
       "examples": [
         "Save.configure({\nstore = \"Profiles_v1\",\ntemplate = { level = 1, gold = 0, inventory = {} },\nmigrations = {\n[2] = function(data) data.attributes = data.attributes or {} end,\n},\nversion = 2,\n})",
@@ -13787,7 +13995,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 62
+          "line": 69
         },
         {
           "name": "Save.backups",
@@ -13796,7 +14004,7 @@
           "returns": "{ any }",
           "summary": "Backups a game can offer to a player or a moderator. Returned newest first, with the timestamp and whether each one still verifies — a backup that fails its own checksum is worse than none, because restoring it looks like it worked.",
           "examples": [],
-          "line": 304
+          "line": 308
         },
         {
           "name": "Save.rollback",
@@ -13805,7 +14013,7 @@
           "returns": "boolean",
           "summary": "Restore one. The current profile becomes a backup first, so a rollback is itself undoable — a rollback that destroys the thing it replaced is how a support ticket becomes two.",
           "examples": [],
-          "line": 326
+          "line": 330
         },
         {
           "name": "Save.write",
@@ -13814,7 +14022,25 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 360
+          "line": 455
+        },
+        {
+          "name": "Save.commitReceipt",
+          "signature": "Save.commitReceipt(player: Player, receiptId: string, reducer: (any) -> any)",
+          "kind": "function",
+          "returns": "(boolean, boolean)",
+          "summary": "",
+          "examples": [],
+          "line": 484
+        },
+        {
+          "name": "Save.status",
+          "signature": "Save.status(player: Player)",
+          "kind": "function",
+          "returns": "any",
+          "summary": "",
+          "examples": [],
+          "line": 525
         },
         {
           "name": "Save.get",
@@ -13823,7 +14049,7 @@
           "returns": "any?",
           "summary": "",
           "examples": [],
-          "line": 421
+          "line": 536
         },
         {
           "name": "Save.observe",
@@ -13832,7 +14058,7 @@
           "returns": "any",
           "summary": "Connect to onLoaded AND replay it for everyone already loaded. This exists because of a bug that cost a session: in Studio the local player joins at server start, so `Save.start()` loads and fires `onLoaded` while the bootstrap is still setting up. A listener connected forty lines later — after terrain generation, say — never hears it, no character ever spawns, and the game looks like it simply did not run. `onLoaded:Connect` has that hazard by construction. `observe` does not, so prefer it for anything that must happen once per player.",
           "examples": [],
-          "line": 437
+          "line": 555
         },
         {
           "name": "Save.isLoaded",
@@ -13841,7 +14067,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 445
+          "line": 563
         },
         {
           "name": "Save.await",
@@ -13850,7 +14076,16 @@
           "returns": "any?",
           "summary": "Waits for the profile, with a timeout. Any system that needs a profile on join should call this rather than assuming load order.",
           "examples": [],
-          "line": 451
+          "line": 569
+        },
+        {
+          "name": "Save.flush",
+          "signature": "Save.flush(timeoutSeconds: number?)",
+          "kind": "function",
+          "returns": "any",
+          "summary": "",
+          "examples": [],
+          "line": 624
         },
         {
           "name": "Save.start",
@@ -13859,7 +14094,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 495
+          "line": 645
         },
         {
           "name": "Save.describe",
@@ -13868,7 +14103,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 527
+          "line": 678
         }
       ],
       "describes": true
@@ -14207,7 +14442,7 @@
     {
       "name": "Sched",
       "file": "forge/luau/Forge/Core/Sched.lua",
-      "lines": 195,
+      "lines": 197,
       "summary": "Sched — how work gets spread across frames. Two failure modes this exists to prevent: 1. One `RunService.Heartbeat:Connect` per entity. Two hundred wolves become two hundred connections, each paying dispatch overhead, none of them aware of the frame budget. Use a `group` and tick them together. 2. Generation loops that run to completion and freeze the server for eight seconds. Use `budgeted` and the work yields when the frame gets expensive.",
       "examples": [],
       "functions": [
@@ -14317,7 +14552,7 @@
           "returns": "(...any) -> ()",
           "summary": "Coalesces bursts into one call at the end of the frame. For \"state changed, resync the client\" paths that would otherwise fire twelve times in a tick.",
           "examples": [],
-          "line": 178
+          "line": 180
         }
       ],
       "describes": false
@@ -14325,7 +14560,7 @@
     {
       "name": "Scoreboard",
       "file": "forge/luau/Forge/Movement/Scoreboard.lua",
-      "lines": 63,
+      "lines": 89,
       "summary": "Scoreboard — K/D scoreboard with headshots and per-opponent detail. Kills, deaths and headshots aggregate per player; the matchup table records who killed whom how often, which feeds both leaderboards and balance analysis. Pure ledger; persistence is Save's job.",
       "examples": [],
       "functions": [
@@ -14336,7 +14571,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 29
+          "line": 46
         },
         {
           "name": "Scoreboard.get",
@@ -14345,7 +14580,7 @@
           "returns": "PlayerStats",
           "summary": "",
           "examples": [],
-          "line": 33
+          "line": 50
         },
         {
           "name": "Scoreboard.recordKill",
@@ -14354,7 +14589,7 @@
           "returns": "()",
           "summary": "recordKill(killer=1 victim=2): killer gains a kill (+headshot flag), victim gains a death; both record the matchup.",
           "examples": [],
-          "line": 39
+          "line": 60
         },
         {
           "name": "Scoreboard.snapshot",
@@ -14363,7 +14598,7 @@
           "returns": "{ [number]: PlayerStats }",
           "summary": "",
           "examples": [],
-          "line": 54
+          "line": 80
         }
       ],
       "describes": false
@@ -14408,7 +14643,7 @@
     {
       "name": "SeasonalEvent",
       "file": "forge/luau/Forge/LiveOps/SeasonalEvent.lua",
-      "lines": 66,
+      "lines": 88,
       "summary": "SeasonalEvent — temporary currency, spawn waves and milestone rewards. Seasonal content is the same shape every time: a throwaway currency, targets that spawn in waves scaled by how many players are hunting, collection with a reach check, and rewards at collection milestones. Pure bookkeeping; spawning/collecting happen at call sites.",
       "examples": [],
       "functions": [
@@ -14419,7 +14654,7 @@
           "returns": "number",
           "summary": "Wave density scales with hunters, capped so a full server doesn't flood.",
           "examples": [],
-          "line": 44
+          "line": 62
         },
         {
           "name": "SeasonalEvent.canCollect",
@@ -14428,7 +14663,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 49
+          "line": 67
         },
         {
           "name": "SeasonalEvent.milestonesReached",
@@ -14437,7 +14672,7 @@
           "returns": "{ string }",
           "summary": "Returns unclaimed milestone rewards crossed by `collected` total.",
           "examples": [],
-          "line": 55
+          "line": 77
         }
       ],
       "describes": false
@@ -14512,8 +14747,8 @@
     {
       "name": "ServerProfile",
       "file": "forge/luau/Forge/Save/ServerProfile.lua",
-      "lines": 113,
-      "summary": "ServerProfile — session-locked profile for a non-player entity. Some state belongs to the server, not a player: owner, managers, ban list, shared vaults. The profile is keyed by an entity key (PrivateServerId or JobId) with the same lock discipline as player profiles: reconcile on load, inline migrations, save-on-leave.",
+      "lines": 202,
+      "summary": "ServerProfile — session-locked profile for a non-player entity. Some state belongs to the server, not a player: owner, managers, ban list, shared vaults. The profile is keyed by an entity key (PrivateServerId or JobId) with the same lock discipline as player profiles: reconcile on load, inline migrations, save-on-leave. The schema version is part of the saved record. A migration step that already ran must not run again on the next load.",
       "examples": [],
       "functions": [
         {
@@ -14523,7 +14758,7 @@
           "returns": "(any?) -> ProfileData",
           "summary": "",
           "examples": [],
-          "line": 36
+          "line": 89
         },
         {
           "name": "ServerProfile.new",
@@ -14532,7 +14767,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 60
+          "line": 109
         },
         {
           "name": "ServerProfile.addMigration",
@@ -14541,7 +14776,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 70
+          "line": 119
         },
         {
           "name": "ServerProfile.load",
@@ -14550,7 +14785,7 @@
           "returns": "(boolean, string?)",
           "summary": "Loads once; subsequent calls are free. Failures surface to caller.",
           "examples": [],
-          "line": 75
+          "line": 124
         },
         {
           "name": "ServerProfile.get",
@@ -14559,16 +14794,16 @@
           "returns": "ProfileData?",
           "summary": "",
           "examples": [],
-          "line": 96
+          "line": 150
         },
         {
           "name": "ServerProfile.mutate",
           "signature": "ServerProfile.mutate(self: Self, transform: (ProfileData) -> ProfileData)",
           "kind": "function",
           "returns": "boolean",
-          "summary": "Atomic mutation through the store's update transform.",
+          "summary": "Atomic mutation through the store's update transform. The store passes the latest record into the callback. Reconcile that record first, so a settings key the session has never seen is still there, then lay the unsaved session settings over it. A load migration may have changed the session and not been saved yet; those values stay, and a stored key the session lacks is not wiped. The caller's transform runs once, on that record, inside the update. A failed update leaves the previous session profile where it was.",
           "examples": [],
-          "line": 101
+          "line": 163
         }
       ],
       "describes": false
@@ -14782,7 +15017,7 @@
     {
       "name": "SnapshotInterp",
       "file": "forge/luau/Forge/AI/SnapshotInterp.lua",
-      "lines": 117,
+      "lines": 134,
       "summary": "SnapshotInterp — client-side pose interpolation between network snapshots. The server replicates poses at 12-20 Hz; rendering runs at 60+. The rule that keeps crowds smooth: always blend FROM the last rendered pose (never rewind), with a span that stretches for large jumps and clamps so lag can never freeze or snap the visual.",
       "examples": [],
       "functions": [
@@ -14793,7 +15028,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 57
+          "line": 74
         },
         {
           "name": "SnapshotInterp.feed",
@@ -14802,7 +15037,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 66
+          "line": 83
         },
         {
           "name": "SnapshotInterp.present",
@@ -14811,7 +15046,7 @@
           "returns": "Pose?",
           "summary": "",
           "examples": [],
-          "line": 81
+          "line": 98
         },
         {
           "name": "SnapshotInterp.remove",
@@ -14820,7 +15055,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 112
+          "line": 129
         }
       ],
       "describes": false
@@ -15169,7 +15404,7 @@
     {
       "name": "State",
       "file": "forge/luau/Forge/State/init.lua",
-      "lines": 25,
+      "lines": 49,
       "summary": "State — the session's own truth, and who is allowed to see it. Three layers of state in this engine, and they are different things: `Data`   content. True before anybody joins, never changes at runtime. `Save`   what persists. Survives the server. `State`  the session. Who is in which room, what the score is, whose Extracted from a game built entirely on this pattern, where the whole of both halves — server and client — is one store, a set of reducers, and a middleware that decides what crosses the wire.",
       "examples": [
         "turn it is — gone when the server is, and the layer that\notherwise ends up as private tables in twelve modules that\ndisagree with each other."
@@ -15820,7 +16055,7 @@
     {
       "name": "TeamSpawns",
       "file": "forge/luau/Forge/Match/TeamSpawns.lua",
-      "lines": 46,
+      "lines": 63,
       "summary": "TeamSpawns — team-tagged spawn selection. Spawns are tagged (CollectionService names on the server); this picks a random spawn of the requested team with a lift offset so characters do not intersect the anchor. Deterministic under injected rng.",
       "examples": [],
       "functions": [
@@ -15831,7 +16066,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 22
+          "line": 39
         },
         {
           "name": "TeamSpawns.register",
@@ -15840,7 +16075,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 26
+          "line": 43
         },
         {
           "name": "TeamSpawns.pick",
@@ -15849,7 +16084,7 @@
           "returns": "(SpawnPoint?, string?)",
           "summary": "",
           "examples": [],
-          "line": 31
+          "line": 48
         },
         {
           "name": "TeamSpawns.count",
@@ -15858,7 +16093,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 40
+          "line": 57
         }
       ],
       "describes": false
@@ -15866,7 +16101,7 @@
     {
       "name": "Telemetry",
       "file": "forge/luau/Forge/Telemetry/init.lua",
-      "lines": 437,
+      "lines": 500,
       "summary": "Telemetry — what actually happened, in a live game. `Debug.expose` answers questions in a Studio session. It cannot tell you that 3% of players never finish spawning, that the tutorial loses a third of people at step four, or that one error fires eleven thousand times a day from one line. This is the module that substitutes for judgement. An agent proposing a balance change is guessing; a funnel showing where players stop is evidence. Forge does not pick a destination. Open Cloud, an HTTP endpoint, a DataStore, or `print` in development — you register a sink and the buffering, batching, retry and error aggregation are handled.",
       "examples": [
         "Telemetry.sink(function(batch) ... end)     -- you choose the destination\nTelemetry.event(\"salvage.opened\", { kind = \"hull\", player = id })\nTelemetry.funnel(\"onboarding\", 3, subject)\nTelemetry.mark(subject, \"first_kill\")"
@@ -15879,7 +16114,7 @@
           "returns": null,
           "summary": "A sink returns true if it accepted the batch. A sink that returns false or errors keeps the batch buffered for the next flush, which is what stops a transient HTTP failure from silently deleting an hour of data.",
           "examples": [],
-          "line": 63
+          "line": 84
         },
         {
           "name": "Telemetry.clearSinks",
@@ -15888,7 +16123,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 67
+          "line": 88
         },
         {
           "name": "Telemetry.event",
@@ -15897,16 +16132,34 @@
           "returns": null,
           "summary": "================================= events ===================================",
           "examples": [],
-          "line": 72
+          "line": 93
+        },
+        {
+          "name": "Telemetry.defineFunnel",
+          "signature": "Telemetry.defineFunnel(name: string, steps: { string })",
+          "kind": "function",
+          "returns": null,
+          "summary": "Declare a funnel's steps, in order, by name. Optional: a funnel with no declaration still records numbers, which is what every existing caller does. Declaring turns a drop-off report from \"step 4\" into \"hatch_another\", and it is the difference between a number somebody can act on and one they have to go and look up.",
+          "examples": [],
+          "line": 127
+        },
+        {
+          "name": "Telemetry.seen",
+          "signature": "Telemetry.seen(subject: string, at: number?)",
+          "kind": "function",
+          "returns": null,
+          "summary": "Remember when a subject arrived, so time-to-reach can be measured. Called by `Telemetry.funnel` on a subject's first step, so an existing game gets the number without changing a line. A game that wants the clock to start at join rather than at first step calls this from its join handler.",
+          "examples": [],
+          "line": 138
         },
         {
           "name": "Telemetry.funnel",
           "signature": "Telemetry.funnel(name: string, step: number, subject: string)",
           "kind": "function",
           "returns": null,
-          "summary": "A funnel records the furthest step each subject reached. Recording every step transition instead would answer the same question with fifty times the volume, and the question is always \"where do they stop\".",
+          "summary": "",
           "examples": [],
-          "line": 98
+          "line": 144
         },
         {
           "name": "Telemetry.funnelReport",
@@ -15915,7 +16168,7 @@
           "returns": "{ [string]: any }",
           "summary": "Drop-off per step: the shape a designer actually reads.",
           "examples": [],
-          "line": 121
+          "line": 182
         },
         {
           "name": "Telemetry.mark",
@@ -15924,7 +16177,7 @@
           "returns": null,
           "summary": "One-off milestones: first kill, first purchase, tutorial complete.",
           "examples": [],
-          "line": 145
+          "line": 208
         },
         {
           "name": "Telemetry.hasMark",
@@ -15933,7 +16186,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 159
+          "line": 222
         },
         {
           "name": "Telemetry.error",
@@ -15942,7 +16195,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 176
+          "line": 239
         },
         {
           "name": "Telemetry.errorReport",
@@ -15951,7 +16204,7 @@
           "returns": "{ any }",
           "summary": "",
           "examples": [],
-          "line": 189
+          "line": 252
         },
         {
           "name": "Telemetry.flush",
@@ -15960,7 +16213,7 @@
           "returns": "number",
           "summary": "================================== flush ===================================",
           "examples": [],
-          "line": 229
+          "line": 292
         },
         {
           "name": "Telemetry.start",
@@ -15969,7 +16222,7 @@
           "returns": null,
           "summary": "",
           "examples": [],
-          "line": 264
+          "line": 327
         },
         {
           "name": "Telemetry.dataStoreSink",
@@ -15978,7 +16231,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 334
+          "line": 397
         },
         {
           "name": "Telemetry.printSink",
@@ -15987,7 +16240,7 @@
           "returns": null,
           "summary": "A sink that prints, for development. Deliberately not the default: silently printing telemetry in production is how a game ships with no analytics and nobody noticing.",
           "examples": [],
-          "line": 384
+          "line": 447
         },
         {
           "name": "Telemetry.describe",
@@ -15996,7 +16249,7 @@
           "returns": "{ [string]: any }",
           "summary": "",
           "examples": [],
-          "line": 394
+          "line": 457
         }
       ],
       "describes": true
@@ -16050,7 +16303,7 @@
     {
       "name": "TeleportPads",
       "file": "forge/luau/Forge/Movement/TeleportPads.lua",
-      "lines": 55,
+      "lines": 71,
       "summary": "TeleportPads — pad-to-pad teleport bookkeeping with per-pad cooldown. Pads move characters between anchors; abuse comes from re-triggering the same pad instantly. Each pad has its own cooldown and a target pad id; the model validates the jump and reports the destination.",
       "examples": [],
       "functions": [
@@ -16079,7 +16332,7 @@
           "returns": "(string?, string?)",
           "summary": "Server calls when a character touches `padId`; returns destination or reason.",
           "examples": [],
-          "line": 36
+          "line": 47
         }
       ],
       "describes": false
@@ -16444,7 +16697,7 @@
     {
       "name": "TradeSession",
       "file": "forge/luau/Forge/Social/TradeSession.lua",
-      "lines": 189,
+      "lines": 213,
       "summary": "TradeSession — two-party trade as an explicit state machine. Trades go wrong when \"who agreed to what\" is fuzzy. This session tracks offers per side, a lock step (both sides freeze their offer), then confirmation; double confirmation produces the exact transfer list. Any cancellation is terminal. A failed-save flag (injected) blocks locking new value.",
       "examples": [],
       "functions": [
@@ -16455,7 +16708,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 73
+          "line": 97
         },
         {
           "name": "TradeSession.setDataSaveFailed",
@@ -16464,7 +16717,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 91
+          "line": 115
         },
         {
           "name": "TradeSession.offer",
@@ -16473,7 +16726,7 @@
           "returns": "(boolean, string?)",
           "summary": "",
           "examples": [],
-          "line": 95
+          "line": 119
         },
         {
           "name": "TradeSession.lock",
@@ -16482,7 +16735,7 @@
           "returns": "(boolean, string?)",
           "summary": "",
           "examples": [],
-          "line": 122
+          "line": 146
         },
         {
           "name": "TradeSession.confirm",
@@ -16491,7 +16744,7 @@
           "returns": "(boolean, string?)",
           "summary": "",
           "examples": [],
-          "line": 143
+          "line": 167
         },
         {
           "name": "TradeSession.cancel",
@@ -16500,7 +16753,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 161
+          "line": 185
         },
         {
           "name": "TradeSession.result",
@@ -16509,7 +16762,7 @@
           "returns": "{ from: string, to: string, give: Offer, take: Offer }?",
           "summary": "The exact transfer list once both sides confirmed; nil otherwise.",
           "examples": [],
-          "line": 171
+          "line": 195
         },
         {
           "name": "TradeSession.status",
@@ -16518,7 +16771,7 @@
           "returns": "(Status, string?)",
           "summary": "",
           "examples": [],
-          "line": 184
+          "line": 208
         }
       ],
       "describes": false
@@ -16826,7 +17079,7 @@
     {
       "name": "TutorialFlow",
       "file": "forge/luau/Forge/Progression/TutorialFlow.lua",
-      "lines": 99,
+      "lines": 116,
       "summary": "TutorialFlow — server-validated tutorial steps with telemetry hooks. The client can skip ahead all it wants: the step counter lives server-side, advances only when the server observed the required action, and every begin/finish of a step emits a mission event pair (attempts, duration) for analytics.",
       "examples": [],
       "functions": [
@@ -16837,7 +17090,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 31
+          "line": 48
         },
         {
           "name": "TutorialFlow.begin",
@@ -16846,7 +17099,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 40
+          "line": 57
         },
         {
           "name": "TutorialFlow.currentStep",
@@ -16855,7 +17108,7 @@
           "returns": "string?",
           "summary": "",
           "examples": [],
-          "line": 60
+          "line": 77
         },
         {
           "name": "TutorialFlow.completeStep",
@@ -16864,7 +17117,7 @@
           "returns": "(boolean, { kind: string, stepId: string, attempts: number, seconds: number }?)",
           "summary": "Server calls when it OBSERVED the action for the current step.",
           "examples": [],
-          "line": 69
+          "line": 86
         },
         {
           "name": "TutorialFlow.isFinished",
@@ -16873,7 +17126,7 @@
           "returns": "boolean",
           "summary": "",
           "examples": [],
-          "line": 89
+          "line": 106
         },
         {
           "name": "TutorialFlow.forget",
@@ -16882,7 +17135,7 @@
           "returns": "()",
           "summary": "",
           "examples": [],
-          "line": 94
+          "line": 111
         }
       ],
       "describes": false
@@ -17359,7 +17612,7 @@
     {
       "name": "VersionRollback",
       "file": "forge/luau/Forge/Save/VersionRollback.lua",
-      "lines": 66,
+      "lines": 104,
       "summary": "VersionRollback — save-file version history with rollback points. Every save bumps a local version; a bounded ring of recent payloads lives under an index key so support can restore a player to any recorded point. Rollback writes forward (new version with old data) — history is never rewritten.",
       "examples": [],
       "functions": [
@@ -17370,7 +17623,7 @@
           "returns": "Self",
           "summary": "",
           "examples": [],
-          "line": 28
+          "line": 47
         },
         {
           "name": "VersionRollback.record",
@@ -17379,7 +17632,7 @@
           "returns": "Snapshot",
           "summary": "",
           "examples": [],
-          "line": 37
+          "line": 56
         },
         {
           "name": "VersionRollback.list",
@@ -17388,7 +17641,7 @@
           "returns": "{ Snapshot }",
           "summary": "",
           "examples": [],
-          "line": 51
+          "line": 76
         },
         {
           "name": "VersionRollback.restore",
@@ -17397,7 +17650,7 @@
           "returns": "({ [string]: any }?, string?)",
           "summary": "Restoring produces NEW data at a new version; nothing is deleted.",
           "examples": [],
-          "line": 56
+          "line": 92
         }
       ],
       "describes": false
@@ -17405,18 +17658,27 @@
     {
       "name": "VersionRollbackStore",
       "file": "forge/luau/Forge/Save/VersionRollbackStore.lua",
-      "lines": 83,
-      "summary": "VersionRollbackStore — persists the version ring across servers. Combines the pure ring (Save.VersionRollback semantics) with two stores: a DataStore for payloads and an OrderedDataStore indexing timestamps, so support can list/restore from any server. Failures return ok=false; history is never truncated on error.",
+      "lines": 131,
+      "summary": "VersionRollbackStore — persists the version ring across servers. Combines the pure ring (Save.VersionRollback semantics) with two stores: a DataStore for payloads and an OrderedDataStore indexing timestamps, so support can list/restore from any server. Failures return ok=false; history is never truncated on error. The index used to be one global store whose every value was 0 and whose key was only the second. GetSortedAsync orders by value, so the page was not oldest-first, and two players writing in the same second shared a key. Each player now has their own index, the value is the timestamp, and the payload written is a copy.",
       "examples": [],
       "functions": [
         {
+          "name": "VersionRollbackStore.indexName",
+          "signature": "VersionRollbackStore.indexName(playerKey: string)",
+          "kind": "function",
+          "returns": "string",
+          "summary": "",
+          "examples": [],
+          "line": 47
+        },
+        {
           "name": "VersionRollbackStore.new",
-          "signature": "VersionRollbackStore.new(playerKey: string, maxHistory: number?)",
+          "signature": "VersionRollbackStore.new(playerKey: string, maxHistory: number?, stores: { payload: any, index: any }?)",
           "kind": "function",
           "returns": "any",
           "summary": "",
           "examples": [],
-          "line": 26
+          "line": 51
         },
         {
           "name": "VersionRollbackStore.record",
@@ -17425,7 +17687,7 @@
           "returns": "(number?, string?)",
           "summary": "Records one snapshot; returns the version number or nil+reason.",
           "examples": [],
-          "line": 43
+          "line": 75
         }
       ],
       "describes": false
@@ -17667,7 +17929,7 @@
     {
       "name": "VisualBinding",
       "file": "forge/luau/Forge/UI/VisualBinding.lua",
-      "lines": 89,
+      "lines": 106,
       "summary": "VisualKit.Binding — reactive data binding with text templates. The server publishes attributes; the HUD binds once: `\"{score} pts\"` re-renders when `score` changes, property bindings follow the same signal. No HUD code ever recomputes game state — it only formats. Pure: values come from an injected source table + change signal.",
       "examples": [],
       "functions": [],
@@ -17862,7 +18124,7 @@
     {
       "name": "VisualStack",
       "file": "forge/luau/Forge/UI/VisualStack.lua",
-      "lines": 120,
+      "lines": 126,
       "summary": "VisualKit.Stack — ordered screen stack with focus and input routing. Only the top of the stack receives input; screens beneath render but ignore presses. Push/pop/settle are explicit so transitions (slide out old, slide in new) have a deterministic order, mirroring Pretty's stack discipline.",
       "examples": [],
       "functions": [],
@@ -17982,7 +18244,7 @@
     {
       "name": "WaveSpawner",
       "file": "forge/luau/Forge/Match/WaveSpawner.lua",
-      "lines": 70,
+      "lines": 128,
       "summary": "WaveSpawner — timed waves scaled by player count. Round-based PvE needs waves that grow with the lobby but never flood the server: interval between waves, size formula base+perPlayer×n capped, and a max concurrent alive budget that delays spawning. Pure scheduler; actual NPC creation is the caller's callback.",
       "examples": [],
       "functions": [
@@ -17993,7 +18255,7 @@
           "returns": "number?",
           "summary": "Returns wave size when a new wave should start now; nil otherwise.",
           "examples": [],
-          "line": 48
+          "line": 97
         },
         {
           "name": "WaveSpawner.currentWave",
@@ -18002,7 +18264,7 @@
           "returns": "number",
           "summary": "",
           "examples": [],
-          "line": 65
+          "line": 123
         }
       ],
       "describes": false
@@ -18010,7 +18272,7 @@
     {
       "name": "Weapon",
       "file": "forge/luau/Forge/Weapon/init.lua",
-      "lines": 594,
+      "lines": 618,
       "summary": "Weapon — the layer between \"the player pressed fire\" and \"something took damage\". Combat already knows how to fly a projectile and how to apply damage. What was missing is everything in between: how often a weapon may fire, where the shot actually goes when the barrel is not perfectly still, how many rounds are left, and what happens while reloading. Those rules are the same for every shooter ever made, which is exactly why they belong here and not in the game. What this module does NOT decide: what a weapon is called, what it costs, who may hold it, what it looks like, or whether your game even has guns. It gives you numbers and a verdict; the game decides what they mean. --- Determinism, and why it matters ------------------------------------- Spread is generated from a seed, not from `math.random`. `Weapon.fire` returns the seed it used, so a client that predicts a shot and the server that resolves it produce the *same* pellet pattern from the same number. Without that, every shotgun blast disagrees between the two machines and you get corrections on every trigger pull. --- No update loop ------------------------------------------------------ Spread recovery, recoil decay and reload completion are all computed from timestamps when someone asks, never on a heartbeat. A hundred idle weapons cost nothing, because an idle weapon genuinely has nothing to do.",
       "examples": [
         "Weapon.define(\"longbow\", {\nmode = \"projectile\",\ndamage = 46, rpm = 55, range = 700,\ncharge = { time = 0.85, minRatio = 0.3 },\nmagazine = 1, reserve = math.huge, reloadTime = 0.55,\nprojectile = { speed = 190, gravity = 42 },\n})",

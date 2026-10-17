@@ -1,0 +1,150 @@
+{
+  "id": "lumenfall-core-loop-e2e",
+  "description": "Drive a real player through exploration, Lumen collection and combat using normal prompts, navigation, camera aiming and VirtualInput. Server-side player attributes are the postconditions.",
+  "requires": {
+    "playSession": true,
+    "clientBridge": true
+  },
+  "steps": [
+    {
+      "reset": {},
+      "comment": "core-loop evidence starts from a fresh exact-build session"
+    },
+    {
+      "attach": {},
+      "fatal": true
+    },
+    {
+      "navigate_to": {
+        "target": "game.Workspace.LumenWorld.LanternReach.LumenCrystal.ProximityPrompt",
+        "tolerance": 5,
+        "timeout": 60
+      },
+      "fatal": true,
+      "comment": "walk the authored navigation path into Lantern Reach"
+    },
+    {
+      "expect_prompt_in_range": {
+        "prompt": "LumenCrystal.ProximityPrompt",
+        "radius": 18
+      },
+      "fatal": true
+    },
+    {
+      "interact": {
+        "prompt": "game.Workspace.LumenWorld.LanternReach.LumenCrystal.ProximityPrompt",
+        "holdSeconds": 0.8
+      },
+      "fatal": true
+    },
+    {
+      "assert": {
+        "delta": {
+          "CarriedLumen": ">= 8"
+        }
+      },
+      "fatal": true,
+      "comment": "the server must credit real harvested Lumen"
+    },
+    {
+      "navigate_to": {
+        "target": "game.Workspace.LumenWorld.LanternReach.OverchargeBoon.OverchargeBoonPrompt",
+        "tolerance": 5,
+        "timeout": 30
+      },
+      "fatal": true,
+      "comment": "approach the temporary run-upgrade choice node"
+    },
+    {
+      "interact": {
+        "prompt": "game.Workspace.LumenWorld.LanternReach.OverchargeBoon.OverchargeBoonPrompt",
+        "holdSeconds": 0.6
+      },
+      "fatal": true
+    },
+    {
+      "assert": {
+        "RunBoon": "overcharge",
+        "RunPowerMultiplier": ">= 1.2"
+      },
+      "fatal": true,
+      "comment": "unlock must be player-observable and change the run"
+    },
+    {
+      "navigate_to": {
+        "target": "game.Workspace.Actors.Rift Skitter",
+        "tolerance": 7,
+        "timeout": 60
+      },
+      "fatal": true,
+      "comment": "approach an actual spawned enemy through navmesh"
+    },
+    {
+      "aim_at": {
+        "target": "game.Workspace.Actors.Rift Skitter",
+        "cameraDistance": 9,
+        "cameraHeight": 4,
+        "fieldOfView": 70
+      },
+      "fatal": true
+    },
+    {
+      "input": {
+        "action": "keys",
+        "keys": [
+          "E"
+        ],
+        "duration": 0.45
+      },
+      "fatal": true,
+      "comment": "charge/release heavy attack through public VirtualInput"
+    },
+    {
+      "wait": {
+        "seconds": 0.2
+      }
+    },
+    {
+      "assert": {
+        "CombatHitCount": ">= 1",
+        "CombatDamageDealt": "> 0"
+      },
+      "fatal": true,
+      "comment": "server-authoritative Combat.damage must observe a hit"
+    },
+    {
+      "release_camera": {},
+      "fatal": false
+    }
+  ],
+  "releaseEvidence": [
+    {
+      "id": "gameplay_explore",
+      "probe": "core_loop_explore",
+      "category": "gameplay",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED"
+    },
+    {
+      "id": "gameplay_fight",
+      "probe": "core_loop_fight",
+      "category": "gameplay",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED"
+    },
+    {
+      "id": "gameplay_collect",
+      "probe": "core_loop_collect",
+      "category": "gameplay",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED"
+    },
+    {
+      "id": "gameplay_unlock",
+      "probe": "core_loop_unlock",
+      "category": "gameplay",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED"
+    }
+  ]
+}

@@ -28,6 +28,24 @@ type Self = {
 
 Navigator.__index = Navigator
 
+-- table.clone keeps each waypoint, and currentGoal hands that point back.
+-- Moving x after new, or through the table currentGoal returns, changes
+-- the direction update walks. A path from requestPath has the same leak.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 function Navigator.new(config: {
 	waypoints: { Vec3 },
 	arriveDistance: number?,
@@ -36,12 +54,39 @@ function Navigator.new(config: {
 	requestPath: ((Vec3, Vec3) -> { Vec3 })?,
 	clock: (() -> number)?,
 }): Self
+	-- nil is the default. 0 is a real window. A negative window is already
+	-- elapsed, so the first update asks for a new path immediately.
+	local stuckSeconds = config.stuckSeconds
+	if stuckSeconds == nil then
+		stuckSeconds = 2.5
+	end
+	assert(type(stuckSeconds) == "number" and stuckSeconds >= 0, "stuckSeconds must be >= 0")
+	-- nil is the default. 0 means standing on the point. A negative radius is
+	-- never reached, so the navigator never finishes the only waypoint.
+	local arriveDistance = config.arriveDistance
+	if arriveDistance == nil then
+		arriveDistance = 3
+	end
+	assert(
+		type(arriveDistance) == "number" and arriveDistance >= 0 and arriveDistance < math.huge,
+		"arriveDistance must be >= 0"
+	)
+	-- nil is the default. A negative speed makes the progress step negative,
+	-- so the navigator looks stuck while it is still facing the waypoint.
+	local expectedSpeed = config.expectedSpeed
+	if expectedSpeed == nil then
+		expectedSpeed = 16
+	end
+	assert(
+		type(expectedSpeed) == "number" and expectedSpeed > 0 and expectedSpeed < math.huge,
+		"expectedSpeed must be > 0"
+	)
 	return setmetatable({
-		waypoints = table.clone(config.waypoints),
+		waypoints = deepCopy(config.waypoints, {}) :: { Vec3 },
 		index = 1,
-		arriveDistance = config.arriveDistance or 3,
-		expectedSpeed = config.expectedSpeed or 16,
-		stuckSeconds = config.stuckSeconds or 2.5,
+		arriveDistance = arriveDistance,
+		expectedSpeed = expectedSpeed,
+		stuckSeconds = stuckSeconds,
 		progressMemory = 0,
 		lastProgressAt = 0,
 		repathRequests = 0,
@@ -51,7 +96,11 @@ function Navigator.new(config: {
 end
 
 function Navigator.currentGoal(self: Self): Vec3?
-	return self.waypoints[self.index]
+	local goal = self.waypoints[self.index]
+	if not goal then
+		return nil
+	end
+	return deepCopy(goal, {}) :: Vec3
 end
 
 -- Feed current position each tick; returns movement direction toward the
@@ -89,7 +138,7 @@ function Navigator.update(self: Self, pos: Vec3, dt: number): ({ x: number, z: n
 			z = goal.z + jitterZ,
 		})
 		if #newPath > 0 then
-			self.waypoints = newPath
+			self.waypoints = deepCopy(newPath, {}) :: { Vec3 }
 			self.index = 1
 			self.repathRequests += 1
 			self.progressMemory = 0

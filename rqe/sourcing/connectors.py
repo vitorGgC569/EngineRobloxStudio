@@ -33,15 +33,18 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
 import shutil
 import urllib.error
 import urllib.request
 import zipfile
 from dataclasses import dataclass, field
-from pathlib import Path
+from pathlib import Path, PurePosixPath
+import re
 from typing import Any
 
 from .registry import LICENCES
+from ..http_safety import error_body_limited
 
 
 class ConnectorError(RuntimeError):
@@ -54,6 +57,11 @@ CACHE = Path(".tmp/sourcing")
 #: Kept small on purpose. A connector that will download anything is a supply
 #: chain risk wearing a convenience feature.
 MAX_DOWNLOAD_BYTES = 80 * 1024 * 1024
+MAX_EXTRACTED_BYTES = 320 * 1024 * 1024
+MAX_ARCHIVE_MEMBERS = 10_000
+MAX_API_RESPONSE_BYTES = 2 * 1024 * 1024
+MAX_ASSET_UPLOAD_BYTES = 50 * 1024 * 1024
+SAFE_IDENTIFIER = re.compile(r"^[a-z0-9][a-z0-9._-]{0,79}$")
 
 #: What a Roblox place can actually consume, per kind. A connector that returns
 #: a 4K EXR for a material has technically succeeded and practically wasted
@@ -120,14 +128,18 @@ CATALOGUES: tuple[Catalogue, ...] = (
     Catalogue("kenney", "audio", {
         "ui-audio": {
             "url": "https://kenney.nl/media/pages/assets/ui-audio/"
-                   "1194701369-1677495181/kenney_ui-audio.zip",
+                   "490d233f68-1677590494/kenney_ui-audio.zip",
+            "sha256": "946fc23a63d535d693eb31b2eabb80c8c28d6351e2186b344ceb71b2cb1d5eb6",
+            "bytes": 411949,
             "licence": "CC0",
             "covers": ["confirm", "denied", "click", "error", "switch", "rollover"],
             "note": "50+ interface sounds: clicks, switches, rollovers",
         },
         "impact-sounds": {
             "url": "https://kenney.nl/media/pages/assets/impact-sounds/"
-                   "3080119989-1677495200/kenney_impact-sounds.zip",
+                   "87b4ddecda-1677589768/kenney_impact-sounds.zip",
+            "sha256": "029d734af1582474edf3a694d1b0cebc97c1c152f2f39fa34d4c2bafc5de77f8",
+            "bytes": 800850,
             "licence": "CC0",
             "covers": ["damage", "build", "impact", "hit"],
             "note": "impacts and hits, for damage and construction feedback",
@@ -195,7 +207,9 @@ CATALOGUES: tuple[Catalogue, ...] = (
     Catalogue("kenney", "geometry", {
         "nature-kit": {
             "url": "https://kenney.nl/media/pages/assets/nature-kit/"
-                   "2013461503-1677495267/kenney_nature-kit.zip",
+                   "37ac38a37b-1677698939/kenney_nature-kit.zip",
+            "sha256": "fa7974a0d342bfe63c38664ba9f8ec1a4aab8ea25f099bdc56870e33588c4d9d",
+            "bytes": 10537521,
             "licence": "CC0",
             "covers": ["tree", "rock", "bush", "log", "plant"],
             "note": "stylised low-poly nature, close to the Roblox idiom",
@@ -220,6 +234,8 @@ def catalogues(kind: str = "") -> list[dict[str, Any]]:
                 "licence": licence.id,
                 "attributionRequired": licence.attribution,
                 "usable": licence.commercial,
+                "fetchable": bool(entry.get("url")),
+                "integrityPinned": bool(entry.get("sha256") and entry.get("bytes")),
                 "covers": entry.get("covers", []),
                 "note": entry.get("note", ""),
             })
@@ -247,6 +263,8 @@ def search(need: str, *, kind: str = "") -> list[dict[str, Any]]:
 
 def _download(url: str, destination: Path) -> int:
     destination.parent.mkdir(parents=True, exist_ok=True)
+    temporary = destination.with_name(destination.name + f".{os.getpid()}.part")
+    temporary.unlink(missing_ok=True)
     request = urllib.request.Request(url, headers={"User-Agent": "rqe-sourcing/1"})
     try:
         with urllib.request.urlopen(request, timeout=120) as response:
@@ -256,7 +274,7 @@ def _download(url: str, destination: Path) -> int:
                     f"{url} declares {declared} bytes, above the "
                     f"{MAX_DOWNLOAD_BYTES} this connector will take")
             written = 0
-            with destination.open("wb") as handle:
+            with temporary.open("xb") as handle:
                 while True:
                     chunk = response.read(64 * 1024)
                     if not chunk:
@@ -264,15 +282,18 @@ def _download(url: str, destination: Path) -> int:
                     written += len(chunk)
                     if written > MAX_DOWNLOAD_BYTES:
                         handle.close()
-                        destination.unlink(missing_ok=True)
+                        temporary.unlink(missing_ok=True)
                         raise ConnectorError(
                             f"{url} exceeded {MAX_DOWNLOAD_BYTES} bytes mid-stream")
                     handle.write(chunk)
+            os.replace(temporary, destination)
             return written
     except urllib.error.HTTPError as error:
         raise ConnectorError(f"{url} returned HTTP {error.code}") from error
     except urllib.error.URLError as error:
         raise ConnectorError(f"{url} could not be reached: {error.reason}") from error
+    finally:
+        temporary.unlink(missing_ok=True)
 
 
 def _sha256(path: Path) -> str:
@@ -284,6 +305,69 @@ def _sha256(path: Path) -> str:
                 break
             digest.update(chunk)
     return digest.hexdigest()
+
+
+def _identifier(value: str, label: str) -> str:
+    candidate = str(value or "").strip().lower()
+    if SAFE_IDENTIFIER.fullmatch(candidate) is None or ".." in candidate:
+        raise ConnectorError(f"{label} must be a safe 1-80 character identifier")
+    return candidate
+
+
+def _extract_archive(archive: Path, destination: Path, label: str) -> None:
+    """Extract a bounded zip without trusting names, links or declared sizes."""
+
+    try:
+        with zipfile.ZipFile(archive) as bundle:
+            members = bundle.infolist()
+            if len(members) > MAX_ARCHIVE_MEMBERS:
+                raise ConnectorError(
+                    f"{label} contains {len(members)} entries; limit is {MAX_ARCHIVE_MEMBERS}"
+                )
+            declared_total = sum(max(0, item.file_size) for item in members)
+            if declared_total > MAX_EXTRACTED_BYTES:
+                raise ConnectorError(
+                    f"{label} declares {declared_total} extracted bytes; limit is {MAX_EXTRACTED_BYTES}"
+                )
+            destination_root = destination.resolve()
+            seen: set[Path] = set()
+            written_total = 0
+            for member in members:
+                portable = PurePosixPath(member.filename.replace("\\", "/"))
+                if portable.is_absolute() or not portable.parts or any(
+                    part in {"", ".", ".."} or ":" in part for part in portable.parts
+                ):
+                    raise ConnectorError(f"{label} contains an unsafe path: {member.filename}")
+                # Unix mode 0120000 denotes a symbolic link. Links are never
+                # needed in an asset bundle and make containment time-dependent.
+                if ((member.external_attr >> 16) & 0o170000) == 0o120000:
+                    raise ConnectorError(f"{label} contains a symbolic link: {member.filename}")
+                target = (destination_root / Path(*portable.parts)).resolve()
+                try:
+                    target.relative_to(destination_root)
+                except ValueError as exc:
+                    raise ConnectorError(
+                        f"{label} contains a path that escapes extraction: {member.filename}"
+                    ) from exc
+                if target in seen:
+                    raise ConnectorError(f"{label} contains a duplicate path: {member.filename}")
+                seen.add(target)
+                if member.is_dir():
+                    target.mkdir(parents=True, exist_ok=True)
+                    continue
+                target.parent.mkdir(parents=True, exist_ok=True)
+                with bundle.open(member) as source, target.open("xb") as output:
+                    while chunk := source.read(64 * 1024):
+                        written_total += len(chunk)
+                        if written_total > MAX_EXTRACTED_BYTES:
+                            raise ConnectorError(
+                                f"{label} exceeded {MAX_EXTRACTED_BYTES} extracted bytes"
+                            )
+                        output.write(chunk)
+    except (zipfile.BadZipFile, RuntimeError, OSError) as exc:
+        if isinstance(exc, ConnectorError):
+            raise
+        raise ConnectorError(f"{label} is not a safe readable zip") from exc
 
 
 def _find(source: str, pack: str, kind: str = ""):
@@ -305,6 +389,8 @@ def fetch(source: str, pack: str, *, root: Path = Path("."),
     the unusable thing is already on disk, and things on disk get used.
     """
 
+    source = _identifier(source, "source")
+    pack = _identifier(pack, "pack")
     entry, kind = _find(source, pack, kind)
     if entry is None:
         raise ConnectorError(
@@ -325,27 +411,35 @@ def fetch(source: str, pack: str, *, root: Path = Path("."),
             f"{source}/{pack} has no direct download this connector may use. "
             f"Fetch it from the source and bring it in with adopt(): "
             f"licence {licence.id}, covers {', '.join(entry.get('covers', []))}")
+    expected_hash = str(entry.get("sha256") or "").lower()
+    expected_bytes = entry.get("bytes")
+    if not re.fullmatch(r"[0-9a-f]{64}", expected_hash) or not isinstance(expected_bytes, int):
+        raise ConnectorError(
+            f"{source}/{pack} has no pinned checksum and byte size; direct fetch is disabled"
+        )
 
     target = Path(root) / CACHE / source / pack
     archive = target / (pack + ".zip")
     if not archive.is_file():
         _download(entry["url"], archive)
+    actual_hash = _sha256(archive)
+    actual_bytes = archive.stat().st_size
+    if actual_hash != expected_hash or actual_bytes != expected_bytes:
+        archive.unlink(missing_ok=True)
+        raise ConnectorError(
+            f"{source}/{pack} failed integrity verification "
+            f"(sha256 {actual_hash}, bytes {actual_bytes})"
+        )
 
     extracted = target / "files"
     if not extracted.is_dir():
         extracted.mkdir(parents=True, exist_ok=True)
         try:
-            with zipfile.ZipFile(archive) as bundle:
-                for member in bundle.namelist():
-                    # Zip-slip: a member named ../../x escapes the extraction
-                    # root. Cheap to check, expensive to discover later.
-                    resolved = (extracted / member).resolve()
-                    if not str(resolved).startswith(str(extracted.resolve())):
-                        raise ConnectorError(
-                            f"{pack} holds a path that escapes its folder: {member}")
-                bundle.extractall(extracted)
-        except zipfile.BadZipFile as error:
+            _extract_archive(archive, extracted, f"{source}/{pack}")
+        except (ConnectorError, OSError) as error:
             shutil.rmtree(extracted, ignore_errors=True)
+            if isinstance(error, ConnectorError):
+                raise
             raise ConnectorError(f"{source}/{pack} is not a readable zip") from error
 
     wanted = USABLE_FORMATS.get(kind, set())
@@ -362,7 +456,9 @@ def fetch(source: str, pack: str, *, root: Path = Path("."),
         "licence": licence.id,
         "attributionRequired": licence.attribution,
         "url": entry["url"],
-        "archiveSha256": _sha256(archive),
+        "archiveSha256": actual_hash,
+        "archiveBytes": actual_bytes,
+        "integrityVerified": True,
         "files": len(files),
         "note": entry.get("note", ""),
     }
@@ -377,7 +473,9 @@ def assets(source: str, pack: str, *, root: Path = Path("."),
            kind: str = "", limit: int = 200) -> list[Asset]:
     """The usable files inside a fetched pack, each with its own hash."""
 
-    target = Path(root) / CACHE / source / pack
+    source = _identifier(source, "source")
+    pack = _identifier(pack, "pack")
+    target = Path(root).resolve() / CACHE / source / pack
     record_path = target / "provenance.json"
     if not record_path.is_file():
         raise ConnectorError(f"{source}/{pack} has not been fetched yet")
@@ -418,6 +516,10 @@ def adopt(path: Path, *, source: str, pack: str, kind: str, licence: str,
     project has no policy for is refused rather than assumed benign.
     """
 
+    source = _identifier(source, "source")
+    pack = _identifier(pack, "pack")
+    if kind not in USABLE_FORMATS:
+        raise ConnectorError(f"unsupported asset kind: {kind}")
     if licence not in LICENCES:
         raise ConnectorError(
             "unknown licence " + repr(licence) + "; known: "
@@ -427,24 +529,32 @@ def adopt(path: Path, *, source: str, pack: str, kind: str, licence: str,
         raise ConnectorError(
             licence + " may not ship in a generated game: " + terms.note)
 
-    origin = Path(path)
+    origin = Path(path).resolve()
     if not origin.is_dir():
         raise ConnectorError(str(path) + " is not a directory")
 
     wanted = USABLE_FORMATS.get(kind, set())
     files = sorted(
         item for item in origin.rglob("*")
-        if item.is_file() and (not wanted or item.suffix.lower() in wanted)
+        if item.is_file() and not item.is_symlink()
+        and (not wanted or item.suffix.lower() in wanted)
     )
     if not files:
         raise ConnectorError(
             str(path) + " holds no " + kind + " files this connector can use")
 
-    home = Path(root) / CACHE / source / pack
+    total_bytes = sum(item.stat().st_size for item in files)
+    if len(files) > MAX_ARCHIVE_MEMBERS or total_bytes > MAX_EXTRACTED_BYTES:
+        raise ConnectorError(
+            f"adopted pack exceeds limits: {len(files)} files, {total_bytes} bytes"
+        )
+    home = Path(root).resolve() / CACHE / source / pack
     target_dir = home / "files"
     target_dir.mkdir(parents=True, exist_ok=True)
     for item in files:
-        destination = target_dir / item.name
+        relative = item.resolve().relative_to(origin)
+        destination = target_dir / relative
+        destination.parent.mkdir(parents=True, exist_ok=True)
         if not destination.exists():
             shutil.copy2(item, destination)
 
@@ -464,16 +574,15 @@ def adopt(path: Path, *, source: str, pack: str, kind: str, licence: str,
     return record
 
 
-def publish(asset: Asset, *, key_path: Path, creator_user_id: str,
+def publish(asset: Asset, *, api_key: str, creator_user_id: str,
             display_name: str = "", timeout: float = 90.0) -> dict[str, Any]:
     """Upload one asset through Open Cloud and return the operation to poll.
 
     Separate from `fetch` and `adopt` because this is the irreversible half: it
     puts the asset on a real account, under a real name, through moderation.
 
-    The key is read from the file the caller names and used only as a header --
-    never logged, never returned, never taken as a plain argument that could end
-    up in a transcript.
+    The key is supplied by the internal credential loader and used only as a
+    header. Agent-facing tools never accept a key or a key-file path.
     """
 
     import mimetypes
@@ -489,7 +598,11 @@ def publish(asset: Asset, *, key_path: Path, creator_user_id: str,
             "Open Cloud has no asset type for " + repr(asset.kind)
             + "; geometry reaches a place through WorldKit.Mesh at runtime")
 
-    key = Path(key_path).read_text(encoding="utf-8").strip()
+    key = str(api_key or "").strip()
+    if not key:
+        raise ConnectorError("ROBLOX_OPEN_CLOUD_KEY is not configured")
+    if asset.bytes > MAX_ASSET_UPLOAD_BYTES or asset.path.stat().st_size > MAX_ASSET_UPLOAD_BYTES:
+        raise ConnectorError(f"asset exceeds the {MAX_ASSET_UPLOAD_BYTES}-byte upload limit")
     request = {
         "assetType": kinds[asset.kind],
         "displayName": display_name or asset.id,
@@ -527,11 +640,14 @@ def publish(asset: Asset, *, key_path: Path, creator_user_id: str,
                  "Content-Type": "multipart/form-data; boundary=" + boundary})
     try:
         with urllib.request.urlopen(http, timeout=timeout) as response:
-            body = json.loads(response.read().decode("utf-8"))
+            raw = response.read(MAX_API_RESPONSE_BYTES + 1)
+            if len(raw) > MAX_API_RESPONSE_BYTES:
+                raise ConnectorError("Open Cloud upload response exceeded the byte limit")
+            body = json.loads(raw.decode("utf-8"))
     except urllib.error.HTTPError as error:
         raise ConnectorError(
             "Open Cloud refused the upload: HTTP " + str(error.code) + " "
-            + error.read().decode("utf-8", "replace")[:200]) from error
+            + error_body_limited(error, 200).decode("utf-8", "replace")) from error
 
     return {
         "operationId": body.get("operationId"),
@@ -542,16 +658,23 @@ def publish(asset: Asset, *, key_path: Path, creator_user_id: str,
     }
 
 
-def operation(operation_id: str, *, key_path: Path,
+def operation(operation_id: str, *, api_key: str,
               timeout: float = 45.0) -> dict[str, Any]:
     """Where an upload got to. Carries the asset id once moderation answers."""
 
-    key = Path(key_path).read_text(encoding="utf-8").strip()
+    key = str(api_key or "").strip()
+    if not key:
+        raise ConnectorError("ROBLOX_OPEN_CLOUD_KEY is not configured")
+    if re.fullmatch(r"[A-Za-z0-9_-]{1,200}", operation_id) is None:
+        raise ConnectorError("operation id contains unsupported characters")
     http = urllib.request.Request(
         "https://apis.roblox.com/assets/v1/operations/" + operation_id,
         headers={"x-api-key": key})
     with urllib.request.urlopen(http, timeout=timeout) as response:
-        body = json.loads(response.read().decode("utf-8"))
+        raw = response.read(MAX_API_RESPONSE_BYTES + 1)
+        if len(raw) > MAX_API_RESPONSE_BYTES:
+            raise ConnectorError("Open Cloud operation response exceeded the byte limit")
+        body = json.loads(raw.decode("utf-8"))
     if not body.get("done"):
         return {"done": False, "operationId": operation_id}
     result = body.get("response") or {}

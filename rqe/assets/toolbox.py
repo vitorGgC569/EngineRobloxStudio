@@ -35,6 +35,8 @@ import urllib.parse
 import urllib.request
 from typing import Any
 
+from ..http_safety import json_object_limited
+
 #: The endpoints Studio's toolbox window uses. Public, unauthenticated.
 SEARCH_URL = "https://apis.roblox.com/toolbox-service/v1/marketplace/{category}"
 DETAILS_URL = "https://apis.roblox.com/toolbox-service/v1/items/details"
@@ -49,12 +51,17 @@ CATEGORY_AUDIO = 3
 
 #: Sent because these endpoints answer 403 to a bare urllib agent string.
 _AGENT = {"User-Agent": "Mozilla/5.0"}
+MAX_API_RESPONSE_BYTES = 4 * 1024 * 1024
 
 
 def _get(url: str, headers: dict[str, str] | None = None, timeout: float = 30.0) -> dict[str, Any]:
     request = urllib.request.Request(url, headers={**_AGENT, **(headers or {})})
     with urllib.request.urlopen(request, timeout=timeout) as response:
-        return json.loads(response.read().decode("utf-8", "replace"))
+        return json_object_limited(
+            response,
+            MAX_API_RESPONSE_BYTES,
+            label="Roblox Toolbox response",
+        )
 
 
 #: Roblox's own creator account.

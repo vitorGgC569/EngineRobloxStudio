@@ -1,0 +1,78 @@
+{
+  "name": "daocultivo",
+  "tree": {
+    "$className": "DataModel",
+
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Forge": { "$path": "../../forge/luau/Forge" },
+      "Shared": { "$path": "src/shared" }
+    },
+
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "$properties": {
+        "LoadStringEnabled": true
+      },
+      "Server": { "$path": "src/server" }
+    },
+
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$properties": {
+        "CameraMaxZoomDistance": 90,
+        "CameraMinZoomDistance": 6,
+        "EnableMouseLockOption": true,
+        "HealthDisplayDistance": 0,
+        "NameDisplayDistance": 60
+      },
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": { "$path": "src/client" }
+      }
+    },
+
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "StreamingEnabled": true,
+        "StreamingMinRadius": 128,
+        "StreamingTargetRadius": 640,
+        "FallenPartsDestroyHeight": -120,
+        "Gravity": 178
+      }
+    },
+
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": "Future",
+        "Ambient": [0.24, 0.24, 0.28],
+        "OutdoorAmbient": [0.46, 0.48, 0.54],
+        "Brightness": 2.15,
+        "ClockTime": 10,
+        "GeographicLatitude": 30,
+        "FogColor": [0.80, 0.86, 0.94],
+        "FogStart": 340,
+        "FogEnd": 1500,
+        "GlobalShadows": true,
+        "EnvironmentDiffuseScale": 0.4,
+        "EnvironmentSpecularScale": 0.3
+      }
+    },
+
+    "StarterGui": {
+      "$className": "StarterGui",
+      "$properties": {
+        "ResetPlayerGuiOnSpawn": false
+      }
+    },
+
+    "Players": {
+      "$className": "Players",
+      "$properties": {
+        "RespawnTime": 3
+      }
+    }
+  }
+}

@@ -29,6 +29,7 @@ function ResourceNodes.new(clock: (() -> number)?): Self
 end
 
 function ResourceNodes.define(self: Self, id: string, maxHarvests: number, replenishSeconds: number): ()
+	assert(type(id) == "string" and #id > 0, "id must be a non-empty string")
 	assert(not self.nodes[id], ("duplicate node %q"):format(id))
 	assert(maxHarvests >= 1 and replenishSeconds >= 0)
 	self.nodes[id] = { id = id, harvestsRemaining = maxHarvests, maxHarvests = maxHarvests, replenishSeconds = replenishSeconds, availableAt = 0 }

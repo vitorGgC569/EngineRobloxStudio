@@ -1,0 +1,58 @@
+{
+  "name": "echo-riot",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Forge": { "$path": "../../forge/luau/Forge" },
+      "Shared": { "$path": "src/shared" }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "EchoRiot": { "$path": "src/server" }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$properties": {
+        "CameraMaxZoomDistance": 42,
+        "CameraMinZoomDistance": 8,
+        "EnableMouseLockOption": false,
+        "HealthDisplayDistance": 0,
+        "NameDisplayDistance": 0
+      },
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "EchoRiot": { "$path": "src/client" }
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "StreamingEnabled": false,
+        "FallenPartsDestroyHeight": -120,
+        "Gravity": 196.2
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": "Future",
+        "Ambient": [0.10, 0.08, 0.16],
+        "OutdoorAmbient": [0.18, 0.14, 0.28],
+        "Brightness": 2.4,
+        "ClockTime": 20.4,
+        "GlobalShadows": true,
+        "EnvironmentDiffuseScale": 0.4,
+        "EnvironmentSpecularScale": 0.8
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "$properties": { "ResetPlayerGuiOnSpawn": false }
+    },
+    "Players": {
+      "$className": "Players",
+      "$properties": { "RespawnTime": 2 }
+    }
+  }
+}

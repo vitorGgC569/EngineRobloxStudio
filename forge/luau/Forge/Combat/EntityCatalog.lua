@@ -40,6 +40,23 @@ type Self = {
 
 EntityCatalog.__index = EntityCatalog
 
+-- table.clone shares nested tables. special and the definition get() hands
+-- back must not be the caller's table, or a later write rewrites the catalog.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 local function validateSpecial(special: Special?): ()
 	if not special then
 		return
@@ -73,11 +90,15 @@ function EntityCatalog.define(self: Self, def: UnitDef): ()
 		)
 	end
 	validateSpecial(def.special)
-	self.units[def.id] = table.clone(def)
+	self.units[def.id] = deepCopy(def, {})
 end
 
 function EntityCatalog.get(self: Self, id: string): UnitDef?
-	return self.units[id]
+	local stored = self.units[id]
+	if not stored then
+		return nil
+	end
+	return deepCopy(stored, {})
 end
 
 -- Deploy-time expansion: spawn specials materialize extra units.
@@ -97,7 +118,7 @@ end
 function EntityCatalog.list(self: Self): { UnitDef }
 	local out: { UnitDef } = {}
 	for _, def in self.units do
-		table.insert(out, def)
+		table.insert(out, deepCopy(def, {}))
 	end
 	table.sort(out, function(a, b)
 		return a.cost < b.cost

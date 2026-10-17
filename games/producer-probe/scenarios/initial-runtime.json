@@ -1,0 +1,20 @@
+{
+  "id": "producer-probe-initial-runtime",
+  "description": "Start a fresh running place and attach to a real player before initial-state captures. This proves session availability only; it intentionally makes no claim about the product-specific core loop.",
+  "requires": {
+    "playSession": true,
+    "clientBridge": true
+  },
+  "steps": [
+    {
+      "reset": {},
+      "comment": "initial-state evidence requires a fresh, exact-build session"
+    },
+    {
+      "attach": {},
+      "fatal": true,
+      "comment": "capture only after the bridge proves it controls a real player"
+    }
+  ],
+  "releaseEvidence": []
+}

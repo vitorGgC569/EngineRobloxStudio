@@ -14,7 +14,7 @@ from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from typing import Any
 
-PROTOCOL_VERSION = "rqe.bridge/1"
+PROTOCOL_VERSION = "rqe.bridge/2"
 
 #: Studio contexts a response can originate from. ``edit`` is the Studio place
 #: open in edit mode; ``run`` is a Play Solo / Run session; ``server`` and
@@ -39,6 +39,10 @@ class ErrorCode:
     LEASE_CONFLICT = "E_LEASE_CONFLICT"
     LEASE_STALE = "E_LEASE_STALE"
     TARGET_MISMATCH = "E_TARGET_MISMATCH"
+    CAPACITY = "E_CAPACITY"
+    UNAVAILABLE = "E_UNAVAILABLE"
+    SESSION_CONFLICT = "E_SESSION_CONFLICT"
+    RATE_LIMITED = "E_RATE_LIMITED"
 
 
 class BridgeError(RuntimeError):
@@ -166,6 +170,7 @@ class SessionInfo:
 
     id: str
     plugin_version: str
+    plugin_build_id: str
     studio_version: str
     place_name: str
     place_id: int
@@ -173,6 +178,9 @@ class SessionInfo:
     #: Stable per plugin instance. Lets the hub retire a session the same Studio
     #: abandoned when it switched between edit and run.
     client_id: str = ""
+    #: Stable identity of the installed plugin build. It is not a secret; the
+    #: per-session key proves continuity across reconnects.
+    installation_id: str = ""
     connected_at: str = field(default_factory=_now_iso)
     last_seen_monotonic: float = field(default_factory=time.monotonic)
     #: Set only when the plugin actually asks for work. A handshake proves a
@@ -198,7 +206,9 @@ class SessionInfo:
         return {
             "session": self.id,
             "clientId": self.client_id,
+            "installationId": self.installation_id,
             "pluginVersion": self.plugin_version,
+            "pluginBuildId": self.plugin_build_id,
             "studioVersion": self.studio_version,
             "place": {"name": self.place_name, "id": self.place_id},
             "context": self.context,

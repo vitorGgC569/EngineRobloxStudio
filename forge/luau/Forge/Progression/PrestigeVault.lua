@@ -49,6 +49,24 @@ export type Vault = typeof(setmetatable({} :: Internal, PrestigeVault))
 
 local DEFAULT_REQUIRED_LIFE = 999
 
+-- The unlock list used to keep the caller's reward tables. Renaming an id
+-- after `new`, or renaming the table `seal` inserted into `unlocked`, rewrote
+-- the reward the next seal handed out.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 function PrestigeVault.new(config: VaultConfig): Vault
 	local self: Internal = setmetatable({}, PrestigeVault)
 	self.requiredLife = config.requiredLife or DEFAULT_REQUIRED_LIFE
@@ -64,7 +82,7 @@ function PrestigeVault.new(config: VaultConfig): Vault
 		end
 		table.sort(self.milestones)
 		for _, milestone in self.milestones do
-			self.milestoneUnlocks[milestone] = config.milestoneUnlocks[milestone]
+			self.milestoneUnlocks[milestone] = deepCopy(config.milestoneUnlocks[milestone], {})
 		end
 	end
 	return self :: any
@@ -90,7 +108,7 @@ function PrestigeVault.seal(self: Vault, items: { any }, life: number): SealResu
 	for _, milestone in self.milestones do
 		if life >= milestone then
 			for _, reward in (self.milestoneUnlocks[milestone] or {}) do
-				table.insert(result.unlocked, reward)
+				table.insert(result.unlocked, deepCopy(reward, {}))
 			end
 		end
 	end

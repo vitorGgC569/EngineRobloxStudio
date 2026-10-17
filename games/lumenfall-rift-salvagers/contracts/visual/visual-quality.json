@@ -1,0 +1,543 @@
+{
+  "$schema": "../../schemas/visual-quality-spec.v1.schema.json",
+  "schemaVersion": 1,
+  "specId": "lumenfall-rift-salvagers.visual",
+  "productId": "lumenfall-rift-salvagers",
+  "productTruth": {
+    "intentId": "lumenfall-rift-salvagers.intent",
+    "calibrationId": "lumenfall-rift-salvagers.visual-calibration",
+    "semanticBindings": {
+      "worldRoles": {
+        "primary-landmark": {
+          "landmarkIds": [
+            "primary-landmark"
+          ],
+          "regionSetIds": [
+            "primary-regions"
+          ],
+          "viewpointIds": [
+            "initial-desktop",
+            "initial-phone"
+          ]
+        }
+      },
+      "uiSurfaces": {
+        "initial-interface": {
+          "landmarkIds": [],
+          "regionSetIds": [],
+          "viewpointIds": [
+            "initial-desktop",
+            "initial-phone"
+          ]
+        }
+      }
+    }
+  },
+  "revision": 1,
+  "units": {
+    "distance": "stud",
+    "density": "visualRootsPer1000SquareStuds",
+    "colorDifference": "CIEDE2000"
+  },
+  "classification": {
+    "candidateTag": "RQEVisualCandidate",
+    "rootTag": "RQEVisualRoot",
+    "typeAttribute": "VisualType",
+    "variantAttribute": "VisualVariant",
+    "assetKeyAttribute": "AssetKey",
+    "regionTag": "RQEVisualRegion",
+    "regionProfileAttribute": "VisualRegionProfile",
+    "landmarkTag": "RQELandmark",
+    "landmarkAnchorTag": "RQELandmarkAnchor",
+    "excludeTag": "RQEVisualExclude",
+    "minimumClassifiedFraction": 1
+  },
+  "palette": {
+    "swatches": [
+      {
+        "id": "accent-danger",
+        "rgb": [
+          222,
+          82,
+          67
+        ],
+        "roles": [
+          "accent"
+        ]
+      },
+      {
+        "id": "accent-gold",
+        "rgb": [
+          237,
+          200,
+          78
+        ],
+        "roles": [
+          "accent"
+        ]
+      },
+      {
+        "id": "accent-rare",
+        "rgb": [
+          175,
+          86,
+          202
+        ],
+        "roles": [
+          "accent"
+        ]
+      },
+      {
+        "id": "accent-success",
+        "rgb": [
+          61,
+          203,
+          61
+        ],
+        "roles": [
+          "accent"
+        ]
+      },
+      {
+        "id": "ground",
+        "rgb": [
+          60,
+          106,
+          34
+        ],
+        "roles": [
+          "dominant"
+        ]
+      },
+      {
+        "id": "ground-alt",
+        "rgb": [
+          52,
+          93,
+          29
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "ink",
+        "rgb": [
+          44,
+          40,
+          35
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "metal",
+        "rgb": [
+          147,
+          139,
+          128
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "metal-dark",
+        "rgb": [
+          70,
+          65,
+          60
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "neutral-light",
+        "rgb": [
+          236,
+          234,
+          231
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "path-alt",
+        "rgb": [
+          180,
+          173,
+          160
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "path-primary",
+        "rgb": [
+          201,
+          131,
+          110
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "pavement",
+        "rgb": [
+          143,
+          132,
+          112
+        ],
+        "roles": [
+          "dominant"
+        ]
+      },
+      {
+        "id": "slate",
+        "rgb": [
+          83,
+          76,
+          65
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "stone-primary",
+        "rgb": [
+          158,
+          148,
+          131
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "stone-secondary",
+        "rgb": [
+          124,
+          115,
+          98
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "structure-primary",
+        "rgb": [
+          164,
+          154,
+          139
+        ],
+        "roles": [
+          "dominant"
+        ]
+      },
+      {
+        "id": "structure-secondary",
+        "rgb": [
+          144,
+          93,
+          48
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "vegetation-bark",
+        "rgb": [
+          83,
+          54,
+          28
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "vegetation-leaf",
+        "rgb": [
+          89,
+          157,
+          50
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "vegetation-leaf-dark",
+        "rgb": [
+          81,
+          143,
+          45
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "water",
+        "rgb": [
+          50,
+          108,
+          129
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "wood-primary",
+        "rgb": [
+          131,
+          85,
+          44
+        ],
+        "roles": [
+          "supporting"
+        ]
+      },
+      {
+        "id": "wood-secondary",
+        "rgb": [
+          92,
+          59,
+          31
+        ],
+        "roles": [
+          "supporting"
+        ]
+      }
+    ],
+    "maximumDeltaE": 12.0,
+    "maximumOffPaletteFraction": 0
+  },
+  "objectTypes": {
+    "building": {
+      "selector": {
+        "tag": "RQEVisualRoot",
+        "attributeEquals": {
+          "VisualType": "building"
+        }
+      },
+      "minimumInstances": 1,
+      "maximumInstances": 25000,
+      "scale": {
+        "boundsMethod": "oriented-box",
+        "minimumSize": [
+          24.0,
+          18.0,
+          24.0
+        ],
+        "maximumSize": [
+          150.0,
+          136.0,
+          150.0
+        ],
+        "maximumRelativeMad": 1,
+        "groupByAttribute": "VisualVariant"
+      }
+    },
+    "interactive": {
+      "selector": {
+        "tag": "RQEVisualRoot",
+        "attributeEquals": {
+          "VisualType": "interactive"
+        }
+      },
+      "minimumInstances": 1,
+      "maximumInstances": 25000,
+      "scale": {
+        "boundsMethod": "oriented-box",
+        "minimumSize": [
+          0.8,
+          0.8,
+          0.8
+        ],
+        "maximumSize": [
+          24.0,
+          22.5,
+          24.0
+        ],
+        "maximumRelativeMad": 1,
+        "groupByAttribute": "VisualVariant"
+      }
+    },
+    "vegetation": {
+      "selector": {
+        "tag": "RQEVisualRoot",
+        "attributeEquals": {
+          "VisualType": "vegetation"
+        }
+      },
+      "minimumInstances": 1,
+      "maximumInstances": 25000,
+      "scale": {
+        "boundsMethod": "oriented-box",
+        "minimumSize": [
+          1.0,
+          2.5,
+          1.0
+        ],
+        "maximumSize": [
+          36.0,
+          68.0,
+          36.0
+        ],
+        "maximumRelativeMad": 1,
+        "groupByAttribute": "VisualVariant"
+      }
+    },
+    "landmark": {
+      "selector": {
+        "tag": "RQEVisualRoot",
+        "attributeEquals": {
+          "VisualType": "landmark"
+        }
+      },
+      "minimumInstances": 1,
+      "maximumInstances": 25000,
+      "scale": {
+        "boundsMethod": "oriented-box",
+        "minimumSize": [
+          24.0,
+          34.0,
+          24.0
+        ],
+        "maximumSize": [
+          300.0,
+          204.0,
+          300.0
+        ],
+        "maximumRelativeMad": 1,
+        "groupByAttribute": "VisualVariant"
+      }
+    }
+  },
+  "regionProfiles": {
+    "primary": {
+      "density": {
+        "minimumRootsPer1000SquareStuds": 0,
+        "maximumRootsPer1000SquareStuds": 100,
+        "minimumFootprintCoverage": 0
+      },
+      "heightVariation": {
+        "minimumP90MinusP10": 0,
+        "maximumP90MinusP10": 1000
+      },
+      "materialVariety": {
+        "minimumDistinctMaterials": 1,
+        "maximumDominantFraction": 1
+      },
+      "repetition": {
+        "maximumIdenticalVariantRun": 25000,
+        "minimumVariantEntropy": 0
+      }
+    }
+  },
+  "regionSets": {
+    "primary-regions": {
+      "selector": {
+        "tag": "RQEVisualRegion",
+        "attributeEquals": {
+          "VisualRegionProfile": "plaza"
+        }
+      },
+      "profile": "primary",
+      "minimumRegions": 1,
+      "maximumRegions": 2,
+      "minimumProfileCoverage": 1
+    }
+  },
+  "landmarks": {
+    "primary-landmark": {
+      "selector": {
+        "tag": "RQELandmark",
+        "attributeEquals": {
+          "LandmarkId": "primary-landmark"
+        }
+      },
+      "anchorSelector": {
+        "tag": "RQELandmarkAnchor",
+        "attributeEquals": {
+          "LandmarkId": "primary-landmark"
+        }
+      },
+      "maximumDistance": 900.0,
+      "sampleSpacing": 10,
+      "eyeHeight": 5,
+      "raysPerAnchor": 9,
+      "minimumVisibleAnchorFraction": 1,
+      "maximumBlindSpotDegrees": 0,
+      "minimumRegionsVisibleFrom": 1
+    }
+  },
+  "viewpoints": {
+    "initial-desktop": {
+      "device": "desktop",
+      "resolution": [
+        1920,
+        1080
+      ],
+      "landmark": "primary-landmark",
+      "state": "initial",
+      "camera": {
+        "mode": "look-at-landmark",
+        "distance": 42,
+        "height": 13,
+        "fieldOfView": 70,
+        "yawDegrees": 28
+      },
+      "rubric": {
+        "composition": 0.2,
+        "hierarchy": 0.2,
+        "legibility": 0.25,
+        "materiality": 0.15,
+        "polish": 0.2
+      }
+    },
+    "initial-phone": {
+      "device": "phone",
+      "resolution": [
+        390,
+        844
+      ],
+      "landmark": "primary-landmark",
+      "state": "initial",
+      "camera": {
+        "mode": "player-follow",
+        "distance": 18,
+        "height": 6,
+        "fieldOfView": 75,
+        "yawDegrees": 0
+      },
+      "rubric": {
+        "composition": 0.2,
+        "hierarchy": 0.2,
+        "legibility": 0.25,
+        "materiality": 0.15,
+        "polish": 0.2
+      }
+    }
+  },
+  "evaluationStates": {
+    "initial": {
+      "scenario": "scenarios/initial-runtime.json",
+      "requiredViewpoints": [
+        "initial-desktop",
+        "initial-phone"
+      ],
+      "minimumRuleCoverage": 1
+    }
+  }
+}

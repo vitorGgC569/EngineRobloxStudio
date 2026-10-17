@@ -1,0 +1,112 @@
+{
+  "schemaVersion": 1,
+  "id": "crystal_1",
+  "result": "asset",
+  "units": "studs",
+  "steps": [
+    {
+      "op": "cone",
+      "name": "body",
+      "radius": 1.1,
+      "depth": 2.2,
+      "location": [
+        0,
+        0,
+        0.1
+      ],
+      "vertices": 5,
+      "radiusTop": 0.85
+    },
+    {
+      "op": "cone",
+      "name": "crown",
+      "radius": 0.85,
+      "depth": 1.5,
+      "location": [
+        0,
+        0,
+        1.95
+      ],
+      "vertices": 5,
+      "radiusTop": 0
+    },
+    {
+      "op": "cone",
+      "name": "foot",
+      "radius": 0.5,
+      "depth": 0.7,
+      "location": [
+        0,
+        0,
+        -1.35
+      ],
+      "vertices": 5,
+      "radiusTop": 1.1
+    },
+    {
+      "op": "cone",
+      "name": "splinter0",
+      "radius": 0.3,
+      "depth": 0.9,
+      "location": [
+        0.95,
+        0.0,
+        -0.6
+      ],
+      "vertices": 5,
+      "radiusTop": 0
+    },
+    {
+      "op": "cone",
+      "name": "splinter1",
+      "radius": 0.3,
+      "depth": 0.9,
+      "location": [
+        -0.47499999999999976,
+        0.8227241335952168,
+        -0.6
+      ],
+      "vertices": 5,
+      "radiusTop": 0
+    },
+    {
+      "op": "cone",
+      "name": "splinter2",
+      "radius": 0.3,
+      "depth": 0.9,
+      "location": [
+        -0.4750000000000004,
+        -0.8227241335952166,
+        -0.6
+      ],
+      "vertices": 5,
+      "radiusTop": 0
+    },
+    {
+      "op": "join",
+      "name": "asset",
+      "targets": [
+        "body",
+        "crown",
+        "foot",
+        "splinter0",
+        "splinter1",
+        "splinter2"
+      ]
+    },
+    {
+      "op": "uv_unwrap",
+      "target": "asset",
+      "method": "smart"
+    },
+    {
+      "op": "triangulate",
+      "target": "asset"
+    }
+  ],
+  "metadata": {
+    "author": "Aetherworks",
+    "license": "project-original",
+    "purpose": "finished modular industrial art"
+  }
+}

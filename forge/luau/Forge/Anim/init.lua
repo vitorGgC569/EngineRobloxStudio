@@ -249,6 +249,31 @@ local function sampleTrack(track, t: number, ease: (number) -> number)
 	return last.swing, last.spread, last.twist
 end
 
+-- CollectionService tags can replicate before the model's joints and Part refs.
+-- A complete skeleton is required before capturing rest poses.
+function Anim.isRigReady(character: Model): boolean
+    local humanoid=character:FindFirstChildOfClass("Humanoid")
+    if not humanoid or not character:FindFirstChild("HumanoidRootPart") then return false end
+    local map=Anim.rigs[if humanoid.RigType==Enum.HumanoidRigType.R15 then "R15" else "R6"]
+    for _,def in map do
+        local joint=character:FindFirstChild(def.name,true)
+        if not joint then return false end
+        if joint:IsA("Motor6D") then
+            if not joint.Part0 or not joint.Part1 then return false end
+        elseif not joint:IsA("AnimationConstraint") then return false end
+    end
+    return true
+end
+
+function Anim.waitForRig(character: Model, timeout: number?): boolean
+    local deadline=os.clock()+math.clamp(timeout or 5,0,10)
+    repeat
+        if Anim.isRigReady(character) then return true end
+        if not character.Parent or os.clock()>=deadline then return false end
+        RunService.Heartbeat:Wait()
+    until false
+end
+
 function Anim.new(character: Model): any
 	local humanoid = character:FindFirstChildOfClass("Humanoid")
 	local rigType = (humanoid and humanoid.RigType == Enum.HumanoidRigType.R15) and "R15" or "R6"

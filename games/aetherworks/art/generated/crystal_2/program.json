@@ -1,0 +1,70 @@
+{
+  "schemaVersion": 1,
+  "id": "crystal_2",
+  "result": "asset",
+  "units": "studs",
+  "steps": [
+    {
+      "op": "cone",
+      "name": "body",
+      "radius": 1.1,
+      "depth": 2.2,
+      "location": [
+        0,
+        0,
+        0.1
+      ],
+      "vertices": 6,
+      "radiusTop": 0.85
+    },
+    {
+      "op": "cone",
+      "name": "crown",
+      "radius": 0.85,
+      "depth": 1.5,
+      "location": [
+        0,
+        0,
+        1.95
+      ],
+      "vertices": 6,
+      "radiusTop": 0.18
+    },
+    {
+      "op": "cone",
+      "name": "foot",
+      "radius": 0.5,
+      "depth": 0.7,
+      "location": [
+        0,
+        0,
+        -1.35
+      ],
+      "vertices": 6,
+      "radiusTop": 1.1
+    },
+    {
+      "op": "join",
+      "name": "asset",
+      "targets": [
+        "body",
+        "crown",
+        "foot"
+      ]
+    },
+    {
+      "op": "uv_unwrap",
+      "target": "asset",
+      "method": "smart"
+    },
+    {
+      "op": "triangulate",
+      "target": "asset"
+    }
+  ],
+  "metadata": {
+    "author": "Aetherworks",
+    "license": "project-original",
+    "purpose": "finished modular industrial art"
+  }
+}

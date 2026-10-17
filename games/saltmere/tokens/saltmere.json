@@ -1,0 +1,416 @@
+{
+  "$schema": "../../../schemas/design-tokens.v1.schema.json",
+  "schemaVersion": 1,
+  "tokenSetId": "saltmere",
+  "revision": 1,
+  "description": "Tidal saltworks on a late-afternoon marsh: brine pans, salt crust, timber and tar on the quay, copper only as a small accent. Dim brine-tinted light and coloured fog keep the saturated colours from blowing out.",
+  "provenance": {
+    "derivation": "external-reference",
+    "authoredBy": "presentation",
+    "authoredAt": "2026-10-13",
+    "note": "Palette sRGB values are the authored Config.colors roles for the saltworks, recorded here as art direction. They were not measured from a built Saltmere place, and no value in this file was taken from a candidate capture. Lighting budgets follow the platform rendering notes: brightness stays at 1.7 and ambient stays dim, because high brightness plus high ambient blows saturated colour out.",
+    "references": [
+      {
+        "id": "saltmere-design-presentation",
+        "kind": "document",
+        "note": "games/saltmere/DESIGN.md Presentation: late-afternoon marsh, low brightness, coloured fog, few lights. A design contract, not a measurement of a built place."
+      },
+      {
+        "id": "config-colors",
+        "kind": "specification",
+        "note": "sRGB triples are the authored Config.colors values (brine, salt, timber, tar, copper, marsh, foam, stone). They were not measured from this game."
+      },
+      {
+        "id": "engine-facts-rendering",
+        "kind": "document",
+        "note": "docs/platform/ENGINE-FACTS.md rendering: high brightness plus high ambient blows saturated colour out; few point lights; neon stacks."
+      }
+    ]
+  },
+  "scale": {
+    "character": {
+      "height": 5.0,
+      "width": 2.0,
+      "walkSpeed": 16,
+      "jumpHeight": 7.2,
+      "maxStepUp": 2.0,
+      "comfortableSlopeDegrees": 45
+    },
+    "grammar": {
+      "doorWidth": 6,
+      "doorHeight": 10,
+      "corridorWidth": 10,
+      "ceilingHeight": 12,
+      "stairRise": 1.2,
+      "stairRun": 2.2,
+      "railHeight": 3.2,
+      "roomMinDimension": 16,
+      "buildingMinFootprint": 16,
+      "buildingMinHeight": 14,
+      "landmarkMinHeight": 42,
+      "plotMinDimension": 80,
+      "avenueWidth": 18
+    },
+    "legibility": {
+      "labelReadDistance": 22,
+      "signageReadDistance": 80,
+      "landmarkReadDistance": 480,
+      "silhouetteReadDistance": 240
+    }
+  },
+  "palette": {
+    "harmony": {
+      "maxHueFamilies": 4,
+      "minLightnessSpread": 0.42,
+      "accentTotalMaxCoverage": 0.06,
+      "maxDeltaEToNearestRole": 12.0,
+      "forbiddenMaterials": [
+        "Neon",
+        "ForceField",
+        "Glass"
+      ]
+    },
+    "roles": {
+      "brine": {
+        "srgb": [48, 110, 112],
+        "material": "SmoothPlastic",
+        "tier": "dominant",
+        "usage": "Water in the pans and the flood channel. The working surface of the tide.",
+        "maxSurfaceCoverage": 0.32,
+        "reflectance": 0.12
+      },
+      "salt": {
+        "srgb": [236, 232, 220],
+        "material": "SmoothPlastic",
+        "tier": "supporting",
+        "usage": "Crystal crust on a settled pan and sacked salt waiting on the quay.",
+        "maxSurfaceCoverage": 0.18
+      },
+      "timber": {
+        "srgb": [92, 64, 46],
+        "material": "Wood",
+        "tier": "supporting",
+        "usage": "Quay planks, plot walkways, sluice boards and shed framing.",
+        "maxSurfaceCoverage": 0.26
+      },
+      "tar": {
+        "srgb": [28, 26, 24],
+        "material": "Plastic",
+        "tier": "supporting",
+        "usage": "Pitch seams and dark trim. The contrast floor the marsh is read against.",
+        "maxSurfaceCoverage": 0.1
+      },
+      "copper": {
+        "srgb": [176, 112, 62],
+        "material": "Metal",
+        "tier": "accent",
+        "usage": "Lantern housings and small fittings. An accent, never a field of lights.",
+        "maxSurfaceCoverage": 0.03
+      },
+      "marsh": {
+        "srgb": [62, 78, 58],
+        "material": "Plastic",
+        "tier": "dominant",
+        "usage": "Salt-marsh ground around the plots. The dominant ground of the works.",
+        "minSurfaceCoverage": 0.2,
+        "maxSurfaceCoverage": 0.5
+      },
+      "foam": {
+        "srgb": [210, 220, 216],
+        "material": "SmoothPlastic",
+        "tier": "supporting",
+        "usage": "Tide line and the pale edge where the flood meets the quay.",
+        "maxSurfaceCoverage": 0.08
+      },
+      "stone": {
+        "srgb": [128, 132, 128],
+        "material": "Concrete",
+        "tier": "supporting",
+        "usage": "Quay kerb, cistern courses and the base of the lighthouse.",
+        "maxSurfaceCoverage": 0.16
+      }
+    }
+  },
+  "spacing": {
+    "base": 4,
+    "steps": {
+      "none": 0,
+      "hair": 2,
+      "tight": 4,
+      "snug": 8,
+      "base": 12,
+      "roomy": 16,
+      "loose": 24,
+      "section": 32,
+      "page": 48
+    }
+  },
+  "typography": {
+    "family": "GothamSSm",
+    "base": 18,
+    "ratio": 1.25,
+    "steps": {
+      "caption": 13,
+      "body": 18,
+      "label": 22,
+      "subtitle": 28,
+      "title": 36,
+      "display": 46,
+      "hero": 58
+    },
+    "weights": {
+      "regular": "Regular",
+      "medium": "Medium",
+      "bold": "Bold"
+    }
+  },
+  "motion": {
+    "durations": {
+      "instant": 0.08,
+      "quick": 0.16,
+      "base": 0.24,
+      "slow": 0.4,
+      "deliberate": 0.7
+    },
+    "easings": {
+      "standard": {
+        "style": "Quad",
+        "direction": "Out"
+      },
+      "enter": {
+        "style": "Back",
+        "direction": "Out"
+      },
+      "exit": {
+        "style": "Quad",
+        "direction": "In"
+      },
+      "emphasis": {
+        "style": "Elastic",
+        "direction": "Out"
+      },
+      "linear": {
+        "style": "Linear",
+        "direction": "InOut"
+      }
+    }
+  },
+  "moods": {
+    "marsh-afternoon": {
+      "description": "Late afternoon over the salt marsh. The gameplay light: sun low, brightness 1.7, fill a dim brine tint so the pans stay coloured.",
+      "lighting": {
+        "technology": "Future",
+        "brightness": 1.7,
+        "clockTime": 16.8,
+        "geographicLatitude": 22,
+        "ambient": [40, 56, 56],
+        "outdoorAmbient": [82, 104, 102],
+        "colorShiftTop": [255, 214, 170],
+        "colorShiftBottom": [110, 128, 124],
+        "exposureCompensation": 0.0,
+        "environmentDiffuseScale": 0.4,
+        "environmentSpecularScale": 0.3,
+        "shadowSoftness": 0.35
+      },
+      "atmosphere": {
+        "density": 0.3,
+        "offset": 0.15,
+        "haze": 1.2,
+        "glare": 0.08,
+        "color": [168, 178, 176],
+        "decay": [72, 96, 94]
+      },
+      "clouds": {
+        "cover": 0.4,
+        "density": 0.45,
+        "color": [236, 226, 210]
+      },
+      "sky": {
+        "starCount": 0,
+        "sunAngularSize": 14,
+        "moonAngularSize": 8
+      },
+      "post": {
+        "bloom": {
+          "intensity": 0.25,
+          "size": 18,
+          "threshold": 1.35
+        },
+        "colorCorrection": {
+          "brightness": 0.0,
+          "contrast": 0.06,
+          "saturation": 0.04,
+          "tintColor": [255, 246, 232]
+        },
+        "sunRays": {
+          "intensity": 0.06,
+          "spread": 0.8
+        }
+      }
+    },
+    "marsh-overcast": {
+      "description": "Flat tide light for reading brine, timber and salt without a warm cast. Still dim: this is not a bright noon.",
+      "lighting": {
+        "technology": "Future",
+        "brightness": 1.35,
+        "clockTime": 14.5,
+        "geographicLatitude": 22,
+        "ambient": [52, 64, 62],
+        "outdoorAmbient": [96, 110, 106],
+        "colorShiftTop": [214, 220, 216],
+        "colorShiftBottom": [150, 162, 158],
+        "exposureCompensation": 0.0,
+        "environmentDiffuseScale": 0.5,
+        "environmentSpecularScale": 0.22,
+        "shadowSoftness": 0.7
+      },
+      "atmosphere": {
+        "density": 0.34,
+        "offset": 0.1,
+        "haze": 1.6,
+        "glare": 0.0,
+        "color": [176, 184, 180],
+        "decay": [120, 132, 128]
+      },
+      "clouds": {
+        "cover": 0.86,
+        "density": 0.7,
+        "color": [220, 224, 222]
+      },
+      "sky": {
+        "starCount": 0,
+        "sunAngularSize": 11,
+        "moonAngularSize": 8
+      },
+      "post": {
+        "bloom": {
+          "intensity": 0.12,
+          "size": 16,
+          "threshold": 1.6
+        },
+        "colorCorrection": {
+          "brightness": 0.0,
+          "contrast": 0.02,
+          "saturation": 0.0,
+          "tintColor": [236, 240, 238]
+        }
+      }
+    },
+    "marsh-dusk": {
+      "description": "Sun on the horizon after the harvest window. Darker fill, still not a night that needs a grid of lights.",
+      "lighting": {
+        "technology": "Future",
+        "brightness": 1.05,
+        "clockTime": 18.4,
+        "geographicLatitude": 22,
+        "ambient": [28, 40, 40],
+        "outdoorAmbient": [54, 70, 68],
+        "colorShiftTop": [186, 120, 86],
+        "colorShiftBottom": [48, 58, 56],
+        "exposureCompensation": 0.05,
+        "environmentDiffuseScale": 0.35,
+        "environmentSpecularScale": 0.4,
+        "shadowSoftness": 0.25
+      },
+      "atmosphere": {
+        "density": 0.38,
+        "offset": 0.08,
+        "haze": 1.4,
+        "glare": 0.12,
+        "color": [120, 110, 100],
+        "decay": [48, 56, 54]
+      },
+      "clouds": {
+        "cover": 0.5,
+        "density": 0.5,
+        "color": [196, 160, 140]
+      },
+      "sky": {
+        "starCount": 0,
+        "sunAngularSize": 16,
+        "moonAngularSize": 10
+      },
+      "post": {
+        "bloom": {
+          "intensity": 0.35,
+          "size": 20,
+          "threshold": 1.2
+        },
+        "colorCorrection": {
+          "brightness": 0.0,
+          "contrast": 0.08,
+          "saturation": 0.02,
+          "tintColor": [255, 228, 206]
+        },
+        "sunRays": {
+          "intensity": 0.1,
+          "spread": 0.85
+        }
+      }
+    }
+  },
+  "cameras": {
+    "quay-shoulder": {
+      "description": "Default third person on the quay. Wide enough to read a row of pans without turning.",
+      "fieldOfView": 72,
+      "pitchDegrees": -16,
+      "distance": 22,
+      "heightOffset": 2.5,
+      "minZoom": 8,
+      "maxZoom": 48
+    },
+    "plot-overview": {
+      "description": "Pulled back and down to read one plot of six pans, used when checking the tide.",
+      "fieldOfView": 64,
+      "pitchDegrees": -42,
+      "distance": 56,
+      "heightOffset": 6,
+      "minZoom": 28,
+      "maxZoom": 96
+    },
+    "hero": {
+      "description": "Low and close on a ready pan or the lighthouse for a still of the works.",
+      "fieldOfView": 44,
+      "pitchDegrees": -8,
+      "distance": 14,
+      "heightOffset": 1.6
+    },
+    "mobile-shoulder": {
+      "description": "Wider field so a thumb along the bottom of the screen does not cover the pans.",
+      "fieldOfView": 82,
+      "pitchDegrees": -18,
+      "distance": 20,
+      "heightOffset": 3.0,
+      "minZoom": 10,
+      "maxZoom": 40
+    }
+  },
+  "audio": {
+    "buses": {
+      "music": {
+        "gainDb": -12.0,
+        "routing": "device",
+        "description": "Sparse loop under the tide. Stays under the water."
+      },
+      "ui": {
+        "gainDb": -6.0,
+        "routing": "device",
+        "description": "Collect, sell, hire and refusal clicks."
+      },
+      "ambience": {
+        "gainDb": -14.0,
+        "routing": "emitter",
+        "description": "Flood, wind and birds along the marsh. Tied to the quay, not the whole map."
+      },
+      "work": {
+        "gainDb": -10.0,
+        "routing": "emitter",
+        "description": "Rakes, sluice boards and the smokehouse."
+      }
+    },
+    "spatial": {
+      "defaultRolloffMin": 8,
+      "defaultRolloffMax": 80
+    }
+  }
+}

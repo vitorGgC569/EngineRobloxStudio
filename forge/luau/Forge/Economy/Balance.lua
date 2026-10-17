@@ -96,6 +96,23 @@ export type Balance = typeof(setmetatable({} :: {
 	amounts: { [string]: any },
 }, Balance))
 
+-- The caller keeps the currency table it passed in. Setting `big` after new
+-- would make the next credit use BigNumber math on a plain number balance.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 function Balance.new(config: { currencies: CurrencyRegistry }?): Balance
 	local registry: CurrencyRegistry = if config ~= nil then config.currencies or {} else {}
 	local self = setmetatable({
@@ -103,8 +120,8 @@ function Balance.new(config: { currencies: CurrencyRegistry }?): Balance
 		amounts = {},
 	}, Balance)
 	for name, meta in registry do
-		self.registry[name] = meta
 		self.amounts[name] = initialValue(meta)
+		self.registry[name] = deepCopy(meta, {})
 	end
 	return self
 end
@@ -122,7 +139,9 @@ end
 function Balance.credit(self: Balance, gains: Costs): Balance
 	for name, gain in gains do
 		local meta = self.registry[name]
-		if meta ~= nil then
+		-- A negative gain is a spend. It must not skip the debit check.
+		-- math.huge is greater than 0, so it used to set the balance to infinity.
+		if meta ~= nil and type(gain) == "number" and gain > 0 and gain < math.huge then
 			self.amounts[name] = addTo(meta, self.amounts[name], gain)
 		end
 	end
@@ -137,6 +156,12 @@ function Balance.canAfford(self: Balance, costs: Costs): boolean
 end
 
 function Balance.debit(self: Balance, costs: Costs): (boolean, Costs)
+	for _, cost in costs do
+		-- A negative cost is a mint: leftover grows and the debit succeeds.
+		if cost <= 0 then
+			return false, {}
+		end
+	end
 	local affordable, remainder = evaluate(self, costs)
 	if not affordable then
 		return false, remainder

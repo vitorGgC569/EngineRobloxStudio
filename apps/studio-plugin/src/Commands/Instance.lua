@@ -22,6 +22,7 @@ local Errors = require(script.Parent.Parent.Errors)
 local Refs = require(script.Parent.Parent.Refs)
 local Resolve = require(script.Parent.Parent.Resolve)
 local Serialize = require(script.Parent.Parent.Serialize)
+local History = require(script.Parent.Parent.History)
 
 local InstanceCommands = {}
 
@@ -228,58 +229,62 @@ function InstanceCommands.create(params: { [string]: any }): any
 		Errors.raise("E_BAD_PARAMS", string.format("count must be an integer between 1 and %d", MAX_BATCH))
 	end
 
-	local created: { any } = {}
-	for index = 1, count do
-		local ok, instance = pcall(Instance.new, className)
-		if not ok or instance == nil then
-			Errors.raise("E_BAD_PARAMS", string.format(
-				"%q is not a creatable class: %s", className, tostring(instance)
-			))
-		end
-		if params.name ~= nil then
-			instance.Name = requireString(params, "name")
-			if count > 1 then
-				instance.Name = instance.Name .. tostring(index)
+	return History.record("RQE instance.create", function()
+		local created: { any } = {}
+		for index = 1, count do
+			local ok, instance = pcall(Instance.new, className)
+			if not ok or instance == nil then
+				Errors.raise("E_BAD_PARAMS", string.format(
+					"%q is not a creatable class: %s", className, tostring(instance)
+				))
 			end
+			if params.name ~= nil then
+				instance.Name = requireString(params, "name")
+				if count > 1 then
+					instance.Name = instance.Name .. tostring(index)
+				end
+			end
+			applyProperties(instance, params.properties)
+			applyAttributes(instance, params.attributes)
+			applyTags(instance, params.tags)
+			-- Parented last. Setting properties on an instance already in the
+			-- DataModel makes each write replicate separately and fires listeners
+			-- against a half-built object.
+			instance.Parent = parent
+			table.insert(created, describe(instance))
 		end
-		applyProperties(instance, params.properties)
-		applyAttributes(instance, params.attributes)
-		applyTags(instance, params.tags)
-		-- Parented last. Setting properties on an instance already in the
-		-- DataModel makes each write replicate separately and fires listeners
-		-- against a half-built object.
-		instance.Parent = parent
-		table.insert(created, describe(instance))
-	end
 
-	return { created = created, count = #created, parent = describe(parent) }
+		return { created = created, count = #created, parent = describe(parent) }
+	end)
 end
 
 --- instance.update: set properties, attributes and tags on an existing instance.
 function InstanceCommands.update(params: { [string]: any }): any
 	local instance = Resolve.instance(params.path)
-	local properties = applyProperties(instance, params.properties)
-	local attributes = applyAttributes(instance, params.attributes)
-	local tags = applyTags(instance, params.tags)
+	return History.record("RQE instance.update", function()
+		local properties = applyProperties(instance, params.properties)
+		local attributes = applyAttributes(instance, params.attributes)
+		local tags = applyTags(instance, params.tags)
 
-	local removedTags: { string } = {}
-	if params.removeTags ~= nil then
-		if type(params.removeTags) ~= "table" then
-			Errors.raise("E_BAD_PARAMS", "removeTags must be an array of strings")
+		local removedTags: { string } = {}
+		if params.removeTags ~= nil then
+			if type(params.removeTags) ~= "table" then
+				Errors.raise("E_BAD_PARAMS", "removeTags must be an array of strings")
+			end
+			for _, tag in ipairs(params.removeTags) do
+				CollectionService:RemoveTag(instance, tag)
+				table.insert(removedTags, tag)
+			end
 		end
-		for _, tag in ipairs(params.removeTags) do
-			CollectionService:RemoveTag(instance, tag)
-			table.insert(removedTags, tag)
-		end
-	end
 
-	return {
-		instance = describe(instance),
-		properties = properties,
-		attributes = attributes,
-		tags = tags,
-		removedTags = removedTags,
-	}
+		return {
+			instance = describe(instance),
+			properties = properties,
+			attributes = attributes,
+			tags = tags,
+			removedTags = removedTags,
+		}
+	end)
 end
 
 --- instance.delete: destroy an instance and report what went with it.
@@ -301,8 +306,10 @@ function InstanceCommands.delete(params: { [string]: any }): any
 		))
 	end
 	local record = describe(instance)
-	instance:Destroy()
-	return { destroyed = record, descendants = descendants }
+	return History.record("RQE instance.delete", function()
+		instance:Destroy()
+		return { destroyed = record, descendants = descendants }
+	end)
 end
 
 --- instance.clone: copy an instance, optionally into a different parent.
@@ -317,18 +324,20 @@ function InstanceCommands.clone(params: { [string]: any }): any
 		Errors.raise("E_BAD_PARAMS", string.format("count must be an integer between 1 and %d", MAX_BATCH))
 	end
 
-	local created: { any } = {}
-	for index = 1, count do
-		local copy = source:Clone()
-		if params.name ~= nil then
-			copy.Name = requireString(params, "name") .. (if count > 1 then tostring(index) else "")
+	return History.record("RQE instance.clone", function()
+		local created: { any } = {}
+		for index = 1, count do
+			local copy = source:Clone()
+			if params.name ~= nil then
+				copy.Name = requireString(params, "name") .. (if count > 1 then tostring(index) else "")
+			end
+			applyProperties(copy, params.properties)
+			applyAttributes(copy, params.attributes)
+			copy.Parent = parent
+			table.insert(created, describe(copy))
 		end
-		applyProperties(copy, params.properties)
-		applyAttributes(copy, params.attributes)
-		copy.Parent = parent
-		table.insert(created, describe(copy))
-	end
-	return { source = describe(source), created = created, count = #created }
+		return { source = describe(source), created = created, count = #created }
+	end)
 end
 
 --- instance.children: one level, cheap.

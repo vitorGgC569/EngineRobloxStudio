@@ -1,0 +1,94 @@
+{
+  "name": "snackroll",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Forge": {
+        "$path": "../../forge/luau/Forge"
+      },
+      "Shared": {
+        "$path": "src/shared"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "$properties": {
+        "LoadStringEnabled": false
+      },
+      "Server": {
+        "$path": "src/server"
+      },
+      "WorldKit": {
+        "$path": "../../roblox/lib/WorldKit"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$properties": {
+        "CameraMaxZoomDistance": 50,
+        "CameraMinZoomDistance": 9,
+        "EnableMouseLockOption": true,
+        "HealthDisplayDistance": 0,
+        "NameDisplayDistance": 60
+      },
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": {
+          "$path": "src/client"
+        }
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "StreamingEnabled": false,
+        "StreamingMinRadius": 128,
+        "StreamingTargetRadius": 640,
+        "FallenPartsDestroyHeight": -100,
+        "Gravity": 160
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": "Future",
+        "Ambient": [
+          0.21,
+          0.23,
+          0.28
+        ],
+        "OutdoorAmbient": [
+          0.46,
+          0.5,
+          0.56
+        ],
+        "Brightness": 2.25,
+        "ClockTime": 10.3,
+        "GeographicLatitude": 22,
+        "FogColor": [
+          0.74,
+          0.78,
+          0.82
+        ],
+        "FogStart": 500,
+        "FogEnd": 1900,
+        "GlobalShadows": true,
+        "EnvironmentDiffuseScale": 0.65,
+        "EnvironmentSpecularScale": 0.55
+      }
+    },
+    "StarterGui": {
+      "$className": "StarterGui",
+      "$properties": {
+        "ResetPlayerGuiOnSpawn": false
+      }
+    },
+    "Players": {
+      "$className": "Players",
+      "$properties": {
+        "RespawnTime": 3
+      }
+    }
+  }
+}

@@ -19,9 +19,26 @@ type Self = {
 
 Binding.__index = Binding
 
+-- A nested table used to stay the caller's. Editing it after `set`, or
+-- editing the table `get` returned, rewrote the value the next read saw.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 function Binding.new(initialData: { [string]: any }?): any
 	return setmetatable({
-		data = initialData or {},
+		data = deepCopy(initialData or {}, {}),
 		listeners = {},
 	}, Binding)
 end
@@ -38,12 +55,12 @@ function Binding.set(self: any, key: string, value: any): ()
 	if previous == value then
 		return
 	end
-	self.data[key] = value
+	self.data[key] = deepCopy(value, {})
 	fire(self, key)
 end
 
 function Binding.get(self: any, key: string): any
-	return self.data[key]
+	return deepCopy(self.data[key], {})
 end
 
 local function renderTemplate(template: string, data: { [string]: any }): string

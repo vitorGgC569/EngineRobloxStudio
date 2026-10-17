@@ -10,6 +10,24 @@
 
 local AbilitySystem = {}
 
+-- `register` stored the caller's table, and `_execute` handed `executionData`
+-- back. Setting cooldown after register, or damage on the returned payload,
+-- rewrote the next cast while the cooldown clock still used the old number.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 export type AbilityDef = {
 	name: string,
 	castTime: number?,
@@ -49,9 +67,30 @@ function AbilitySystem.new(config: { now: (() -> number)?, guidFactory: (() -> s
 end
 
 function AbilitySystem.register(self: Self, abilityId: string, def: AbilityDef): ()
+	-- An empty id still casts. A later hit then cites an ability with no name.
+	assert(type(abilityId) == "string" and #abilityId > 0, "ability id must be a non-empty string")
 	assert(not self.defs[abilityId], ("duplicate ability %q"):format(abilityId))
-	assert(def.cooldown >= 0, "cooldown cannot be negative")
-	self.defs[abilityId] = def
+	-- math.huge is at least 0. After one cast the remaining time stays
+	-- infinite, so the ability never becomes usable again.
+	assert(
+		type(def.cooldown) == "number"
+			and def.cooldown == def.cooldown
+			and def.cooldown >= 0
+			and def.cooldown < math.huge,
+		"cooldown cannot be negative"
+	)
+	-- nil stays nil; cast treats that as immediate. math.huge is truthy, so
+	-- executeAt would be infinite and tick would never finish the cast.
+	if def.castTime ~= nil then
+		assert(
+			type(def.castTime) == "number"
+				and def.castTime == def.castTime
+				and def.castTime >= 0
+				and def.castTime < math.huge,
+			"castTime must be >= 0"
+		)
+	end
+	self.defs[abilityId] = deepCopy(def, {}) :: AbilityDef
 end
 
 function AbilitySystem.cooldownOf(self: Self, abilityId: string): number
@@ -65,7 +104,13 @@ function AbilitySystem.remainingCooldown(self: Self, abilityId: string): number
 	if not until_ then
 		return 0
 	end
-	return math.max(0, until_ - self.now())
+	local now = self.now()
+	-- A NaN clock is not a time. Subtracting it does not produce the stored
+	-- cooldown, and this read must not rewrite cooldownUntil.
+	if type(now) ~= "number" or now ~= now or not (now > -math.huge and now < math.huge) then
+		return self:cooldownOf(abilityId)
+	end
+	return math.max(0, until_ - now)
 end
 
 function AbilitySystem.resetCooldown(self: Self, abilityId: string): ()
@@ -78,6 +123,12 @@ end
 
 -- Begins a cast; returns the GUID or nil+reason. Fails closed.
 function AbilitySystem.cast(self: Self, abilityId: string): (string?, string?)
+	local now = self.now()
+	-- A NaN clock would store NaN in cooldownUntil. A later real clock then
+	-- subtracts from NaN, and the cooldown has vanished.
+	if type(now) ~= "number" or now ~= now or not (now > -math.huge and now < math.huge) then
+		return nil, "bad_clock"
+	end
 	local def = self.defs[abilityId]
 	if not def then
 		return nil, "unknown_ability"
@@ -88,7 +139,6 @@ function AbilitySystem.cast(self: Self, abilityId: string): (string?, string?)
 	if self:remainingCooldown(abilityId) > 0 then
 		return nil, "cooldown"
 	end
-	local now = self.now()
 	local cast: Cast = {
 		guid = self.guidFactory(),
 		abilityId = abilityId,
@@ -106,7 +156,16 @@ end
 -- Completes the pending cast when its time has elapsed.
 function AbilitySystem.tick(self: Self): (string?, { [string]: any }?)
 	local cast = self.activeCast
-	if not cast or self.now() < cast.executeAt then
+	if not cast then
+		return nil, nil
+	end
+	local now = self.now()
+	-- NaN is not less than executeAt, so the cast would finish early and
+	-- _execute would store a NaN cooldown. Leave the cast pending.
+	if type(now) ~= "number" or now ~= now or not (now > -math.huge and now < math.huge) then
+		return nil, nil
+	end
+	if now < cast.executeAt then
 		return nil, nil
 	end
 	self.activeCast = nil
@@ -118,7 +177,7 @@ function AbilitySystem._execute(self: Self, cast: Cast): (string, { [string]: an
 	local def = self.defs[cast.abilityId] :: AbilityDef
 	self.cooldownUntil[cast.abilityId] = self.now() + def.cooldown
 	table.insert(self.executions, cast)
-	return cast.guid, def.executionData or {}
+	return cast.guid, deepCopy(def.executionData or {}, {}) :: { [string]: any }
 end
 
 return AbilitySystem

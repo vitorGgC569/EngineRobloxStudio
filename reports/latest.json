@@ -1,10 +1,10 @@
 {
   "engine": {
     "name": "Roblox Quality Engine",
-    "version": "0.1.0"
+    "version": "0.2.0"
   },
   "project": "C:\\Users\\vitor\\OneDrive\\Desktop\\RobloxGamesMCP",
-  "generatedAt": "2026-08-22T20:20:06.506847+00:00",
+  "generatedAt": "2026-09-04T18:39:05.419154+00:00",
   "summary": {
     "executed": 38,
     "PASS": 37,
@@ -362,7 +362,7 @@
         "status": "PASS",
         "studioDetected": true,
         "processRunning": false,
-        "executablePath": "C:\\Users\\vitor\\AppData\\Local\\Roblox\\Versions\\version-dcbeee682ce74ee0\\RobloxStudioBeta.exe",
+        "executablePath": "C:\\Users\\vitor\\AppData\\Local\\Roblox\\Versions\\version-9fe94fb0e9d84c25\\RobloxStudioBeta.exe",
         "captureAdapter": "runtime-manifest",
         "liveStudioCapture": true,
         "runtime": {
@@ -516,7 +516,7 @@
       "category": "gameplay",
       "status": "PASS",
       "severity": "critical",
-      "message": "Spawn sem obstrução",
+      "message": "spawn is clear",
       "details": {
         "clearance": true
       },
@@ -535,7 +535,7 @@
       "category": "geometry",
       "status": "PASS",
       "severity": "critical",
-      "message": "Spawn apoiado em superfície válida",
+      "message": "spawn rests on valid ground",
       "details": {
         "supportPart": "SpawnPad"
       },
@@ -578,7 +578,7 @@
       "category": "navigation",
       "status": "PASS",
       "severity": "critical",
-      "message": "Objetivo básico alcançável",
+      "message": "the basic objective is reachable",
       "details": {
         "objectives": [
           "BasicPackStore",
@@ -601,7 +601,7 @@
       "category": "geometry",
       "status": "PASS",
       "severity": "major",
-      "message": "Nenhuma colisão estrutural detectada",
+      "message": "no structural overlaps",
       "details": {
         "overlaps": []
       },
@@ -658,7 +658,7 @@
       "category": "gameplay",
       "status": "PASS",
       "severity": "major",
-      "message": "Portas têm passagem suficiente",
+      "message": "doorways have enough clearance",
       "details": {
         "doors": [
           {
@@ -709,7 +709,7 @@
       "category": "gameplay",
       "status": "PASS",
       "severity": "major",
-      "message": "Interações dentro do alcance",
+      "message": "interactions are within reach",
       "details": {
         "interactions": [
           {
@@ -741,7 +741,7 @@
       "category": "gameplay",
       "status": "PASS",
       "severity": "major",
-      "message": "Compra do próximo andar disponível no elevador",
+      "message": "the next floor can be bought at the lift",
       "details": {
         "prompt": "PurchaseFloorPrompt",
         "responsive": true
@@ -761,7 +761,7 @@
       "category": "visual",
       "status": "PASS",
       "severity": "minor",
-      "message": "Câmeras de teste sem obstrução",
+      "message": "test cameras are unobstructed",
       "details": {
         "obstructions": []
       },
@@ -780,7 +780,7 @@
       "category": "ui",
       "status": "PASS",
       "severity": "major",
-      "message": "Elementos de UI visíveis",
+      "message": "UI elements are visible",
       "details": {
         "elements": [
           {
@@ -878,7 +878,7 @@
       "category": "ui",
       "status": "PASS",
       "severity": "major",
-      "message": "Galeria de cartas visível e responsiva",
+      "message": "card gallery is visible and responsive",
       "details": {
         "responsive": true,
         "elements": [
@@ -923,7 +923,7 @@
       "category": "ui",
       "status": "PASS",
       "severity": "critical",
-      "message": "Botão de compra responde ao input",
+      "message": "the purchase button responds to input",
       "details": {
         "input": "activate PurchasePrompt",
         "response": true
@@ -943,7 +943,7 @@
       "category": "security",
       "status": "PASS",
       "severity": "critical",
-      "message": "Payload inválido rejeitado, rate limit e distância server-side ativos",
+      "message": "invalid payloads refused; rate limit and distance enforced server-side",
       "details": {
         "invalidPayloadRejected": true,
         "rateLimits": true,
@@ -983,7 +983,7 @@
       "category": "performance",
       "status": "PASS",
       "severity": "major",
-      "message": "Crescimento de memória dentro do orçamento",
+      "message": "memory growth is within budget",
       "details": {
         "memoryGrowthMb": 1.8,
         "budgetMb": 5
@@ -1003,7 +1003,7 @@
       "category": "performance",
       "status": "PASS",
       "severity": "major",
-      "message": "Nenhum vazamento de instâncias",
+      "message": "no instance leaks",
       "details": {
         "instanceGrowth": 0
       },
@@ -1022,7 +1022,7 @@
       "category": "performance",
       "status": "PASS",
       "severity": "major",
-      "message": "Nenhuma conexão duplicada",
+      "message": "no duplicate connections",
       "details": {
         "duplicateConnections": 0
       },
@@ -1041,7 +1041,7 @@
       "category": "persistence",
       "status": "PASS",
       "severity": "critical",
-      "message": "Estado preservado após reconnect",
+      "message": "state survived a reconnect",
       "details": {
         "beforeReconnect": {
           "currency": 900,
@@ -1090,7 +1090,7 @@
       "category": "performance",
       "status": "PASS",
       "severity": "major",
-      "message": "Performance dentro do orçamento",
+      "message": "performance is within budget",
       "details": {
         "frameMs": 12.4,
         "workspaceInstances": 184,
@@ -1187,7 +1187,7 @@
         "status": "PASS",
         "studioDetected": true,
         "processRunning": false,
-        "executablePath": "C:\\Users\\vitor\\AppData\\Local\\Roblox\\Versions\\version-dcbeee682ce74ee0\\RobloxStudioBeta.exe",
+        "executablePath": "C:\\Users\\vitor\\AppData\\Local\\Roblox\\Versions\\version-9fe94fb0e9d84c25\\RobloxStudioBeta.exe",
         "captureAdapter": "runtime-manifest",
         "liveStudioCapture": true,
         "runtime": {
@@ -1239,14 +1239,14 @@
       "category": "gameplay",
       "status": "PASS",
       "severity": "critical",
-      "message": "Agente completou o fluxo humano de compra",
+      "message": "the agent completed the human purchase flow",
       "details": {
         "scenario": "purchase-first-pack-human",
         "stepsExecuted": 7,
         "actionRecords": [
           {
             "sequence": 1,
-            "timestamp": "2026-08-22T20:20:06.506847+00:00",
+            "timestamp": "2026-09-04T18:39:05.419154+00:00",
             "before": {
               "mode": "blackbox",
               "screenshot": "headless://frame/000003.png",
@@ -1335,7 +1335,7 @@
           },
           {
             "sequence": 2,
-            "timestamp": "2026-08-22T20:20:06.506847+00:00",
+            "timestamp": "2026-09-04T18:39:05.419154+00:00",
             "before": {
               "mode": "blackbox",
               "screenshot": "headless://frame/000006.png",
@@ -1420,7 +1420,7 @@
           },
           {
             "sequence": 3,
-            "timestamp": "2026-08-22T20:20:06.506847+00:00",
+            "timestamp": "2026-09-04T18:39:05.419154+00:00",
             "before": {
               "mode": "blackbox",
               "screenshot": "headless://frame/000009.png",
@@ -1800,7 +1800,7 @@
       "status": "PASS",
       "studioDetected": true,
       "processRunning": false,
-      "executablePath": "C:\\Users\\vitor\\AppData\\Local\\Roblox\\Versions\\version-dcbeee682ce74ee0\\RobloxStudioBeta.exe",
+      "executablePath": "C:\\Users\\vitor\\AppData\\Local\\Roblox\\Versions\\version-9fe94fb0e9d84c25\\RobloxStudioBeta.exe",
       "captureAdapter": "runtime-manifest",
       "liveStudioCapture": true,
       "runtime": {
@@ -1909,7 +1909,7 @@
           },
           "evidence": {
             "sequence": 1,
-            "timestamp": "2026-08-22T20:20:06.506847+00:00",
+            "timestamp": "2026-09-04T18:39:05.419154+00:00",
             "before": {
               "mode": "blackbox",
               "screenshot": "headless://frame/000003.png",
@@ -2048,7 +2048,7 @@
           },
           "evidence": {
             "sequence": 2,
-            "timestamp": "2026-08-22T20:20:06.506847+00:00",
+            "timestamp": "2026-09-04T18:39:05.419154+00:00",
             "before": {
               "mode": "blackbox",
               "screenshot": "headless://frame/000006.png",
@@ -2183,7 +2183,7 @@
           },
           "evidence": {
             "sequence": 3,
-            "timestamp": "2026-08-22T20:20:06.506847+00:00",
+            "timestamp": "2026-09-04T18:39:05.419154+00:00",
             "before": {
               "mode": "blackbox",
               "screenshot": "headless://frame/000009.png",
@@ -2310,7 +2310,7 @@
     "actionRecords": [
       {
         "sequence": 1,
-        "timestamp": "2026-08-22T20:20:06.506847+00:00",
+        "timestamp": "2026-09-04T18:39:05.419154+00:00",
         "before": {
           "mode": "blackbox",
           "screenshot": "headless://frame/000003.png",
@@ -2399,7 +2399,7 @@
       },
       {
         "sequence": 2,
-        "timestamp": "2026-08-22T20:20:06.506847+00:00",
+        "timestamp": "2026-09-04T18:39:05.419154+00:00",
         "before": {
           "mode": "blackbox",
           "screenshot": "headless://frame/000006.png",
@@ -2484,7 +2484,7 @@
       },
       {
         "sequence": 3,
-        "timestamp": "2026-08-22T20:20:06.506847+00:00",
+        "timestamp": "2026-09-04T18:39:05.419154+00:00",
         "before": {
           "mode": "blackbox",
           "screenshot": "headless://frame/000009.png",

@@ -11,6 +11,7 @@ local ActorCommands = require(script.Parent.Commands.Actor)
 local AssetCommands = require(script.Parent.Commands.Assets)
 local BridgeCommands = require(script.Parent.Commands.Bridge)
 local CameraCommands = require(script.Parent.Commands.Camera)
+local CaptureCommands = require(script.Parent.Commands.Capture)
 local ClientCommands = require(script.Parent.Commands.Client)
 local CodeCommands = require(script.Parent.Commands.Code)
 local InspectCommands = require(script.Parent.Commands.Inspect)
@@ -19,11 +20,15 @@ local DataModelCommands = require(script.Parent.Commands.DataModel)
 local InstanceCommands = require(script.Parent.Commands.Instance)
 local PlayerCommands = require(script.Parent.Commands.Player)
 local ProductCommands = require(script.Parent.Commands.Product)
+local PlaceCommands = require(script.Parent.Commands.Place)
 local QualityCommands = require(script.Parent.Commands.Quality)
 local RuntimeCommands = require(script.Parent.Commands.Runtime)
+local SerializationCommands = require(script.Parent.Commands.Serialization)
 local SessionCommands = require(script.Parent.Commands.Session)
+local StudioCommands = require(script.Parent.Commands.Studio)
 local TelemetryCommands = require(script.Parent.Commands.Telemetry)
 local TerrainCommands = require(script.Parent.Commands.Terrain)
+local TestingCommands = require(script.Parent.Commands.Testing)
 local WorldCommands = require(script.Parent.Commands.World)
 
 local Dispatcher = {}
@@ -31,10 +36,26 @@ local Dispatcher = {}
 type Handler = (params: { [string]: any }) -> any
 
 local REGISTRY: { [string]: Handler } = {
+	["test.start"] = TestingCommands.start,
+	["test.status"] = TestingCommands.status,
+	["test.finish"] = TestingCommands.finish,
+	["test.leave"] = TestingCommands.leave,
+	["test.add_players"] = TestingCommands.addPlayers,
+	["test.device"] = TestingCommands.device,
+	["test.device_status"] = TestingCommands.deviceStatus,
+	["test.device_info"] = TestingCommands.deviceInfo,
+	["test.network"] = TestingCommands.network,
+	["test.network_status"] = TestingCommands.networkStatus,
 	-- bridge
 	["bridge.ping"] = BridgeCommands.ping,
 	["bridge.capabilities"] = BridgeCommands.capabilities,
 	["studio.info"] = BridgeCommands.info,
+	["studio.save_place"] = PlaceCommands.save,
+	["studio.list_places"] = PlaceCommands.list,
+	["studio.create_place"] = PlaceCommands.create,
+	["studio.environment"] = StudioCommands.environment,
+	["studio.selection"] = StudioCommands.selection,
+	["studio.select"] = StudioCommands.select,
 	["product.identity"] = ProductCommands.identity,
 
 	-- asset authoring. Local plugins are the only Studio surface where
@@ -61,6 +82,8 @@ local REGISTRY: { [string]: Handler } = {
 	["instance.descendants"] = InstanceCommands.descendants,
 	["instance.tags"] = InstanceCommands.tags,
 	["instance.attributes"] = InstanceCommands.attributes,
+	["instance.serialize"] = SerializationCommands.serialize,
+	["instance.deserialize"] = SerializationCommands.deserialize,
 
 	-- geometry
 	["world.raycast"] = WorldCommands.raycast,
@@ -132,6 +155,8 @@ local REGISTRY: { [string]: Handler } = {
 	["camera.orbit"] = CameraCommands.orbit,
 	["camera.follow"] = CameraCommands.follow,
 	["camera.viewpoint"] = CameraCommands.viewpoint,
+	["studio.capture_permission"] = CaptureCommands.permission,
+	["studio.capture_background"] = CaptureCommands.background,
 
 	-- the agent as a player
 	["actor.spawn"] = ActorCommands.spawn,
@@ -159,6 +184,7 @@ local REGISTRY: { [string]: Handler } = {
 	["client.gui_click"] = ClientCommands.guiClick,
 	["client.player_state"] = ClientCommands.playerState,
 	["client.logs"] = ClientCommands.logs,
+	["client.prediction"] = ClientCommands.prediction,
 	["client.gui_locate"] = ClientCommands.guiLocate,
 	["client.invoke_bindable"] = ClientCommands.invokeBindable,
 	["client.fire_remote"] = ClientCommands.fireRemote,
@@ -168,6 +194,8 @@ local REGISTRY: { [string]: Handler } = {
 	["client.gui_scroll"] = ClientCommands.guiScroll,
 	["client.viewport"] = ClientCommands.viewport,
 	["client.camera_set"] = ClientCommands.cameraSet,
+	["client.camera_get"] = ClientCommands.cameraGet,
+	["client.input"] = ClientCommands.input,
 	["client.camera_release"] = ClientCommands.cameraRelease,
 	["client.gui_snapshot"] = ClientCommands.guiSnapshot,
 }

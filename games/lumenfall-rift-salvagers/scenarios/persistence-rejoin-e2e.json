@@ -1,0 +1,63 @@
+{
+  "id": "lumenfall-persistence-rejoin-e2e",
+  "description": "Prove the Lumenfall profile is using real persistence, then restart the Play Solo session and verify a server-written profile counter survives the rejoin. Studio memory-only fallback must fail closed.",
+  "requires": {
+    "playSession": true,
+    "clientBridge": true
+  },
+  "steps": [
+    {
+      "reset": {},
+      "comment": "begin from a clean Play Solo player"
+    },
+    {
+      "attach": {},
+      "fatal": true
+    },
+    {
+      "assert": {
+        "SavePersistent": true,
+        "SaveMemoryOnly": false
+      },
+      "fatal": true,
+      "comment": "memory-only Studio fallback is not persistence evidence"
+    },
+    {
+      "remember": {
+        "attribute": "ProfileJoinCount",
+        "as": "joinCountBefore"
+      },
+      "fatal": true
+    },
+    {
+      "reset": {},
+      "comment": "leave and rejoin through a new Play Solo session"
+    },
+    {
+      "attach": {},
+      "fatal": true
+    },
+    {
+      "assert": {
+        "SavePersistent": true,
+        "SaveMemoryOnly": false,
+        "rememberedDelta": {
+          "ProfileJoinCount": {
+            "from": "joinCountBefore",
+            "expect": ">= 1"
+          }
+        }
+      },
+      "fatal": true
+    }
+  ],
+  "releaseEvidence": [
+    {
+      "id": "persistence_rejoin",
+      "probe": "persistence_rejoin",
+      "category": "persistence",
+      "severity": "critical",
+      "minimumValidationLevel": "E2E_VALIDATED"
+    }
+  ]
+}

@@ -21,6 +21,7 @@ from pathlib import Path
 from typing import Any
 
 from .server import EngineMcpServer, Tool, ToolError
+from ..security import SecurityBoundaryError, resolve_inside
 
 
 def _relative_path_schema(description: str) -> dict[str, Any]:
@@ -98,9 +99,19 @@ def register_engine_tools(server: EngineMcpServer) -> EngineMcpServer:
             tokens = load_token_set(root, arguments.get("tokenSet", "tokens/brickfarm.json"))
         except TokenError as exc:
             raise ToolError(str(exc)) from exc
-        spec_path = root / arguments["visualSpec"]
-        if not spec_path.is_file():
-            raise ToolError(f"visual spec not found: {spec_path}")
+        try:
+            spec_path = resolve_inside(
+                root,
+                arguments["visualSpec"],
+                label="visualSpec",
+                must_exist=True,
+                file_only=True,
+                suffixes=(".json",),
+            )
+        except SecurityBoundaryError as exc:
+            raise ToolError(str(exc)) from exc
+        if spec_path.stat().st_size > 4 * 1024 * 1024:
+            raise ToolError("visualSpec exceeds the 4 MiB input limit")
         spec = json.loads(spec_path.read_text(encoding="utf-8"))
         return check(spec, tokens).to_dict()
 

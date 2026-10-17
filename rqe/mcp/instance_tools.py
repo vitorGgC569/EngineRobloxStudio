@@ -67,11 +67,20 @@ def _resolve_lua(path: str) -> str:
 def _exec(source: str, chunk: str, timeout: float = 45.0) -> dict[str, Any]:
     from ..hub.client import StudioBridge
 
-    bridge = StudioBridge()
+    # This surface emits a fixed program from typed/JSON-escaped fields.  It is
+    # an audited use of the executor capability, not a raw-source escape hatch.
+    bridge = StudioBridge(allow_arbitrary=True)
     try:
-        bridge.pin_to_any()
-        answer = bridge.call("bridge.exec", {"source": source, "chunkName": chunk},
-                             timeout=timeout)
+        with bridge.lease_scope(
+            agent_id="mcp-instance-tools",
+            context="edit",
+            ttl_seconds=max(30.0, min(timeout + 30.0, 300.0)),
+        ):
+            answer = bridge.call(
+                "bridge.exec",
+                {"source": source, "chunkName": chunk},
+                timeout=timeout,
+            )
     except Exception as error:  # noqa: BLE001
         return {"ok": False, "error": str(error)}
     returned = answer.get("returned") if isinstance(answer, dict) else answer

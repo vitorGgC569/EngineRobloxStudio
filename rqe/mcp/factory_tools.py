@@ -23,15 +23,15 @@ from pathlib import Path
 from typing import Any
 
 from .server import EngineMcpServer, Tool, ToolError
+from ..security import SecurityBoundaryError, resolve_inside, validate_path_component
+from ..workspace import hub_url
 
 
-def _inside(root: Path, relative: str, label: str) -> Path:
-    path = (root / relative).resolve()
+def _inside(root: Path, relative: str, label: str, **checks: Any) -> Path:
     try:
-        path.relative_to(root.resolve())
-    except ValueError as exc:
-        raise ToolError(f"{label} must stay inside the project root") from exc
-    return path
+        return resolve_inside(root, relative, label=label, **checks)
+    except SecurityBoundaryError as exc:
+        raise ToolError(str(exc)) from exc
 
 
 def _summarise_plan(payload: dict[str, Any]) -> dict[str, Any]:
@@ -140,8 +140,8 @@ def register_factory_tools(server: EngineMcpServer) -> EngineMcpServer:
 
         project = arguments.get("project", "roblox/mvp/default.project.json")
         output = arguments.get("output", ".tmp/build.rbxlx")
-        project_path = _inside(root, project, "project")
-        output_path = _inside(root, output, "output")
+        project_path = _inside(root, project, "project", must_exist=True, file_only=True, suffixes=(".json",))
+        output_path = _inside(root, output, "output", suffixes=(".rbxl", ".rbxlx"))
         output_path.parent.mkdir(parents=True, exist_ok=True)
 
         process = subprocess.run(
@@ -193,13 +193,13 @@ def register_factory_tools(server: EngineMcpServer) -> EngineMcpServer:
     # ---------------------------------------------------------------- capture
 
     def capture_frame(arguments: dict[str, Any]) -> dict[str, Any]:
-        from ..capture import capture_viewpoint
+        from ..capture import capture_native_viewpoint, capture_viewpoint
         from ..hub.client import StudioBridge
 
         output_dir = _inside(root, arguments.get("outputDir", ".tmp/captures"), "outputDir")
         output_dir.mkdir(parents=True, exist_ok=True)
         bridge = StudioBridge(
-            arguments.get("hub") or os.environ.get("RQE_HUB_URL", "http://127.0.0.1:8790"),
+            arguments.get("hub") or hub_url(),
             token=os.environ.get("RQE_BRIDGE_TOKEN"),
         )
         # Pinned to the session running the game. Without it the camera command
@@ -242,20 +242,63 @@ def register_factory_tools(server: EngineMcpServer) -> EngineMcpServer:
             # this did -- produces a TypeError on the first real call, and both
             # capture tools carried it because neither had ever been run against
             # a live Studio.
-            shot = capture_viewpoint(
-                bridge,
-                world_only=world_only,
-                # No default. "Workspace" as a fallback silently reframed every
-                # capture that meant to photograph a pose the caller had set.
-                target=arguments.get("target", ""),
-                output=output_dir / f"{arguments['viewpoint']}.png",
-                viewpoint=arguments["viewpoint"],
-                expected_place=arguments.get("expectedPlace", ""),
-                # Named explicitly: the integrity check treats an empty expected
-                # session as "unverifiable" and refuses, which is the right
-                # default and the reason this must be passed rather than assumed.
-                expected_session=pinned,
+            viewpoint = validate_path_component(arguments["viewpoint"], label="viewpoint")
+            output_path = resolve_inside(
+                output_dir,
+                f"{viewpoint}.png",
+                label="capture output",
+                suffixes=(".png",),
             )
+            allow_legacy = bool(arguments.get("allowLegacyWindowCapture", False))
+            native_failure: str | None = None
+
+            with bridge.lease_scope(
+                agent_id="mcp-capture-frame",
+                session_id=pinned,
+                ttl_seconds=120.0,
+            ):
+                try:
+                    shot = capture_native_viewpoint(
+                        bridge,
+                        world_only=world_only,
+                        include_ui=bool(arguments.get("includeUi", True)),
+                        target=arguments.get("target", ""),
+                        output=output_path,
+                        viewpoint=viewpoint,
+                        expected_place=arguments.get("expectedPlace", ""),
+                        expected_session=pinned,
+                    )
+                    if not shot.trustworthy and allow_legacy:
+                        native_failure = "; ".join(shot.integrity_issues) or "native capture was untrustworthy"
+                        shot = capture_viewpoint(
+                            bridge,
+                            world_only=world_only,
+                            target=arguments.get("target", ""),
+                            output=output_path,
+                            viewpoint=viewpoint,
+                            expected_place=arguments.get("expectedPlace", ""),
+                            expected_session=pinned,
+                        )
+                except Exception as native_exc:  # noqa: BLE001
+                    native_failure = f"{type(native_exc).__name__}: {native_exc}"
+                    if not allow_legacy:
+                        raise ToolError(
+                            "native StudioCaptureService capture failed and legacy "
+                            f"foreground/window capture is disabled: {native_failure}"
+                        ) from native_exc
+                    shot = capture_viewpoint(
+                        bridge,
+                        world_only=world_only,
+                        target=arguments.get("target", ""),
+                        output=output_path,
+                        viewpoint=viewpoint,
+                        expected_place=arguments.get("expectedPlace", ""),
+                        expected_session=pinned,
+                    )
+
+            if native_failure and allow_legacy:
+                shot.metadata["legacyFallbackReason"] = native_failure
+                shot.metadata["captureBackend"] = "Win32CaptureBackend"
         except Exception as exc:  # noqa: BLE001 - every failure is a named refusal
             raise ToolError(f"capture failed: {type(exc).__name__}: {exc}") from exc
 
@@ -277,9 +320,9 @@ def register_factory_tools(server: EngineMcpServer) -> EngineMcpServer:
     server.register(Tool(
         name="capture_frame",
         description=(
-            "Capture one Studio frame with the full integrity chain: window, PID, "
-            "session, place, build, camera pose and occlusion. An untrustworthy frame is "
-            "labelled rather than returned as evidence."
+            "Capture one Studio frame native-first through StudioCaptureService, "
+            "preserving session/place/camera provenance without foreground focus. "
+            "Legacy Win32 window capture requires explicit opt-in."
         ),
         input_schema={
             "type": "object",
@@ -293,6 +336,14 @@ def register_factory_tools(server: EngineMcpServer) -> EngineMcpServer:
                 "worldOnly": {
                     "type": "boolean",
                     "description": "photograph the built world in the editor; labelled as evidence about geometry and lighting, not gameplay",
+                },
+                "includeUi": {
+                    "type": "boolean",
+                    "description": "include game/UI layers supported by StudioCaptureService",
+                },
+                "allowLegacyWindowCapture": {
+                    "type": "boolean",
+                    "description": "explicit opt-in to foreground Win32 capture when native capture is unavailable; false by default",
                 },
                 "hub": {"type": "string"},
             },
@@ -309,11 +360,8 @@ def register_factory_tools(server: EngineMcpServer) -> EngineMcpServer:
 
         from ..visual_compare import compare_images
 
-        before = _inside(root, arguments["before"], "before")
-        after = _inside(root, arguments["after"], "after")
-        for path in (before, after):
-            if not path.is_file():
-                raise ToolError(f"image not found: {path}")
+        before = _inside(root, arguments["before"], "before", must_exist=True, file_only=True, suffixes=(".png", ".jpg", ".jpeg"))
+        after = _inside(root, arguments["after"], "after", must_exist=True, file_only=True, suffixes=(".png", ".jpg", ".jpeg"))
         return compare_images(before, after, threshold=float(arguments.get("threshold", 0.02)))
 
     server.register(Tool(
@@ -346,8 +394,8 @@ def register_factory_tools(server: EngineMcpServer) -> EngineMcpServer:
 
         from ..scenario_compare import ScenarioCompareError, compare_files
 
-        before = _inside(root, arguments["before"], "before")
-        after = _inside(root, arguments["after"], "after")
+        before = _inside(root, arguments["before"], "before", must_exist=True, file_only=True, suffixes=(".json",))
+        after = _inside(root, arguments["after"], "after", must_exist=True, file_only=True, suffixes=(".json",))
         try:
             return compare_files(before, after)
         except ScenarioCompareError as exc:
@@ -386,25 +434,38 @@ def register_factory_tools(server: EngineMcpServer) -> EngineMcpServer:
         output_dir = _inside(root, arguments.get("outputDir", ".tmp/captures"), "outputDir")
         output_dir.mkdir(parents=True, exist_ok=True)
         bridge = StudioBridge(
-            arguments.get("hub") or os.environ.get("RQE_HUB_URL", "http://127.0.0.1:8790"),
+            arguments.get("hub") or hub_url(),
             token=os.environ.get("RQE_BRIDGE_TOKEN"),
         )
 
+        try:
+            pinned = bridge.pin_to_running()
+        except Exception as exc:  # noqa: BLE001
+            raise ToolError(f"capture sequence needs a running Studio session: {exc}") from exc
+
         shots: list[dict[str, Any]] = []
         failures: list[dict[str, Any]] = []
-        for viewpoint in viewpoints:
-            try:
-                shot = capture_viewpoint(
-                    bridge,
-                    target=arguments.get("target", "Workspace"),
-                    output=output_dir / f"{viewpoint}.png",
-                    viewpoint=viewpoint,
-                    expected_place=arguments.get("expectedPlace", ""),
-                )
-            except Exception as exc:  # noqa: BLE001
-                failures.append({"viewpoint": viewpoint, "error": f"{type(exc).__name__}: {exc}"})
-                continue
-            shots.append(shot.to_dict() if hasattr(shot, "to_dict") else {"viewpoint": viewpoint})
+        with bridge.lease_scope(
+            agent_id="mcp-capture-sequence",
+            session_id=pinned,
+            ttl_seconds=300.0,
+        ):
+            for viewpoint in viewpoints:
+                try:
+                    bridge.renew_active_lease()
+                    safe_viewpoint = validate_path_component(viewpoint, label="viewpoint")
+                    shot = capture_viewpoint(
+                        bridge,
+                        target=arguments.get("target", "Workspace"),
+                        output=resolve_inside(output_dir, f"{safe_viewpoint}.png", label="capture output", suffixes=(".png",)),
+                        viewpoint=safe_viewpoint,
+                        expected_place=arguments.get("expectedPlace", ""),
+                        expected_session=pinned,
+                    )
+                except Exception as exc:  # noqa: BLE001
+                    failures.append({"viewpoint": viewpoint, "error": f"{type(exc).__name__}: {exc}"})
+                    continue
+                shots.append(shot.to_dict() if hasattr(shot, "to_dict") else {"viewpoint": viewpoint})
 
         untrustworthy = [item for item in shots if not item.get("trustworthy", False)]
         return {
@@ -446,9 +507,7 @@ def register_factory_tools(server: EngineMcpServer) -> EngineMcpServer:
     def scenario_compile(arguments: dict[str, Any]) -> dict[str, Any]:
         from ..scenario import load_scenario, scenario_document_issues
 
-        path = _inside(root, arguments["scenario"], "scenario")
-        if not path.is_file():
-            raise ToolError(f"scenario not found: {path}")
+        path = _inside(root, arguments["scenario"], "scenario", must_exist=True, file_only=True, suffixes=(".json",))
         try:
             document = load_scenario(path)
         except Exception as exc:  # noqa: BLE001
@@ -490,13 +549,11 @@ def register_factory_tools(server: EngineMcpServer) -> EngineMcpServer:
         from ..hub.client import StudioBridge
         from ..scenario import ScenarioRunner, load_scenario
 
-        scenario_path = _inside(root, arguments["scenario"], "scenario")
-        if not scenario_path.is_file():
-            raise ToolError(f"scenario not found: {scenario_path}")
+        scenario_path = _inside(root, arguments["scenario"], "scenario", must_exist=True, file_only=True, suffixes=(".json",))
         document = load_scenario(scenario_path)
 
         bridge = StudioBridge(
-            arguments.get("hub") or os.environ.get("RQE_HUB_URL", "http://127.0.0.1:8790"),
+            arguments.get("hub") or hub_url(),
             token=os.environ.get("RQE_BRIDGE_TOKEN"),
         )
         if arguments.get("pinToRunning", True):
@@ -565,9 +622,7 @@ def register_factory_tools(server: EngineMcpServer) -> EngineMcpServer:
         from ..hub.client import StudioBridge
         from ..scenario import ScenarioRunner, load_scenario
 
-        scenario_path = _inside(root, arguments["scenario"], "scenario")
-        if not scenario_path.is_file():
-            raise ToolError(f"scenario not found: {scenario_path}")
+        scenario_path = _inside(root, arguments["scenario"], "scenario", must_exist=True, file_only=True, suffixes=(".json",))
         document = load_scenario(scenario_path)
         steps = document.get("steps") or []
 
@@ -578,7 +633,7 @@ def register_factory_tools(server: EngineMcpServer) -> EngineMcpServer:
             )
 
         bridge = StudioBridge(
-            arguments.get("hub") or os.environ.get("RQE_HUB_URL", "http://127.0.0.1:8790"),
+            arguments.get("hub") or hub_url(),
             token=os.environ.get("RQE_BRIDGE_TOKEN"),
         )
         try:
@@ -640,9 +695,7 @@ def register_factory_tools(server: EngineMcpServer) -> EngineMcpServer:
 
         from ..scenario_compare import compare_results
 
-        stored_path = _inside(root, arguments["result"], "result")
-        if not stored_path.is_file():
-            raise ToolError(f"stored result not found: {stored_path}")
+        stored_path = _inside(root, arguments["result"], "result", must_exist=True, file_only=True, suffixes=(".json",))
         stored = json.loads(stored_path.read_text(encoding="utf-8"))
 
         scenario_relative = arguments.get("scenario") or stored.get("scenarioPath")
@@ -687,9 +740,7 @@ def register_factory_tools(server: EngineMcpServer) -> EngineMcpServer:
     def factory_inspect(arguments: dict[str, Any]) -> dict[str, Any]:
         from ..orchestrator.blueprint import compile_production_blueprint
 
-        path = _inside(root, arguments["project"], "project")
-        if not path.is_file():
-            raise ToolError(f"project definition not found: {path}")
+        path = _inside(root, arguments["project"], "project", must_exist=True, file_only=True, suffixes=(".json",))
         try:
             # The compiler takes the document, not the path. Handing it a Path
             # fails with "'WindowsPath' object is not iterable", which reads as
@@ -731,13 +782,12 @@ def register_factory_tools(server: EngineMcpServer) -> EngineMcpServer:
 
         from .factory_execution import FactoryExecutionError, execute_factory_action
 
-        source = _inside(root, arguments["source"], "source")
-        if not source.is_file():
-            raise ToolError(f"factory execution source not found: {source}")
+        source = _inside(root, arguments["source"], "source", must_exist=True, file_only=True, suffixes=(".json",))
         journal = _inside(
             root,
             arguments.get("journal", ".tmp/factory-executor.sqlite3"),
             "journal",
+            suffixes=(".sqlite", ".sqlite3", ".db"),
         )
         journal.parent.mkdir(parents=True, exist_ok=True)
         try:

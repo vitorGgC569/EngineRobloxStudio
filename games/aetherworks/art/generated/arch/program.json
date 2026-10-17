@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "id": "arch",
+  "result": "outer",
+  "units": "studs",
+  "steps": [
+    {
+      "op": "box",
+      "name": "outer",
+      "size": [
+        8,
+        3,
+        9
+      ],
+      "location": [
+        0,
+        0,
+        0
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "outer",
+      "width": 0.45,
+      "segments": 2
+    },
+    {
+      "op": "box",
+      "name": "cut",
+      "size": [
+        5.2,
+        5,
+        5.2
+      ],
+      "location": [
+        0,
+        0,
+        -0.9
+      ]
+    },
+    {
+      "op": "bevel",
+      "target": "cut",
+      "width": 0.6,
+      "segments": 2
+    },
+    {
+      "op": "boolean",
+      "target": "outer",
+      "tool": "cut",
+      "operation": "difference"
+    },
+    {
+      "op": "uv_unwrap",
+      "target": "outer",
+      "method": "smart"
+    },
+    {
+      "op": "triangulate",
+      "target": "outer"
+    }
+  ],
+  "metadata": {
+    "author": "Aetherworks",
+    "license": "project-original",
+    "purpose": "finished modular industrial art"
+  }
+}

@@ -13,12 +13,17 @@ from __future__ import annotations
 
 import io
 import json
+import queue
+import threading
+import time
 import unittest
 from pathlib import Path
+from unittest.mock import patch
 
 from rqe.mcp import protocol
 from rqe.mcp.client import (
     ADOPTED_TOOLS,
+    CircuitBreaker,
     FEDERATED_SOURCE,
     McpClientError,
     StdioPeer,
@@ -165,7 +170,20 @@ class TestEngineServer(unittest.TestCase):
             {"jsonrpc": "2.0", "id": 2, "method": "ping"},
         ])
         self.assertTrue(replies[0]["result"]["isError"])
+        self.assertNotIn("oops", json.dumps(replies[0]))
+        self.assertNotIn("Traceback", json.dumps(replies[0]))
         self.assertEqual(replies[1]["id"], 2)
+
+    def test_an_oversized_stdio_frame_is_rejected_and_the_next_frame_survives(self):
+        from rqe.mcp.server import MAX_MCP_REQUEST_BYTES
+
+        oversized = b"{" + (b"x" * MAX_MCP_REQUEST_BYTES) + b"}\n"
+        valid = protocol.encode({"jsonrpc": "2.0", "id": 7, "method": "ping"})
+        sink = io.BytesIO()
+        EngineMcpServer(root=REPO).serve(io.BytesIO(oversized + valid), sink)
+        replies = [json.loads(line) for line in sink.getvalue().splitlines()]
+        self.assertEqual(replies[0]["error"]["code"], protocol.INVALID_REQUEST)
+        self.assertEqual(replies[1]["id"], 7)
 
     def test_a_malformed_line_produces_a_parse_error_not_a_hang(self):
         sink = io.BytesIO()
@@ -182,6 +200,7 @@ class TestEngineServer(unittest.TestCase):
             for tool in _drive(self.server, [{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}])[0]["result"]["tools"]
         }
         self.assertIn("bridge_call", names)
+        self.assertIn("bridge_lease", names)
         for leaked in ("instance_create", "world_raycast", "actor_spawn", "dm_find"):
             self.assertNotIn(leaked, names)
 
@@ -191,6 +210,18 @@ class TestEngineServer(unittest.TestCase):
         offline = build(REPO, include_bridge=False)
         self.assertNotIn("bridge_call", offline.tools)
         self.assertIn("tokens_inspect", offline.tools)
+
+    def test_agent_tools_never_accept_a_credential_file_path(self):
+        descriptors = {
+            tool["name"]: tool
+            for tool in _drive(
+                self.server,
+                [{"jsonrpc": "2.0", "id": 1, "method": "tools/list"}],
+            )[0]["result"]["tools"]
+        }
+        for name in ("sourcing_publish", "sourcing_operation", "place_publish"):
+            properties = descriptors[name]["inputSchema"].get("properties", {})
+            self.assertNotIn("keyPath", properties)
 
 
 class TestEngineToolsDoRealWork(unittest.TestCase):
@@ -241,6 +272,27 @@ class TestEngineToolsDoRealWork(unittest.TestCase):
         data = result["structuredContent"]["data"]
         self.assertTrue(data["clean"], data["failures"])
         self.assertGreater(data["sources"], 30)
+
+    def test_place_publish_refuses_paths_outside_the_workspace(self):
+        result = self._call("place_publish", {
+            "universeId": "1",
+            "placeId": "2",
+            "placeFile": "../outside.rbxlx",
+        })
+        self.assertTrue(result["isError"])
+        self.assertIn("escapes", result["structuredContent"]["error"])
+
+    def test_sourcing_adopt_needs_an_operator_approved_import_root(self):
+        with patch.dict("os.environ", {"RQE_IMPORT_ROOTS": ""}):
+            result = self._call("sourcing_adopt", {
+                "path": str(REPO.parent),
+                "source": "manual",
+                "pack": "outside",
+                "kind": "audio",
+                "licence": "CC0",
+            })
+        self.assertTrue(result["isError"])
+        self.assertIn("outside the workspace", result["structuredContent"]["error"])
 
 
 # ------------------------------------------------------------------ client
@@ -407,6 +459,91 @@ class TestFederation(unittest.TestCase):
             StdioPeer(noisy, noisy).call("tools/list")
         self.assertIn("non-JSON-RPC", str(caught.exception))
 
+    def test_stdio_peer_enforces_a_real_deadline(self):
+        release = threading.Event()
+
+        class Blocking:
+            def write(self, payload):
+                return None
+
+            def flush(self):
+                return None
+
+            def readline(self, size=-1):
+                release.wait(2)
+                return b""
+
+        stream = Blocking()
+        peer = StdioPeer(stream, stream, on_close=release.set)
+        started = time.monotonic()
+        try:
+            with self.assertRaises(McpClientError) as caught:
+                peer.call("tools/list", timeout=0.05)
+            self.assertIn("timed out", str(caught.exception))
+            self.assertLess(time.monotonic() - started, 0.5)
+        finally:
+            peer.close()
+
+    def test_dedicated_reader_correlates_concurrent_out_of_order_responses(self):
+        class Multiplexed:
+            def __init__(self):
+                self.requests: list[dict] = []
+                self.responses: queue.Queue[bytes] = queue.Queue()
+                self.lock = threading.Lock()
+
+            def write(self, payload):
+                request = protocol.decode(payload)
+                with self.lock:
+                    self.requests.append(request)
+                    if len(self.requests) == 2:
+                        for item in reversed(self.requests):
+                            self.responses.put(protocol.encode({
+                                "jsonrpc": "2.0",
+                                "id": item["id"],
+                                "result": {"method": item["method"]},
+                            }))
+
+            def flush(self):
+                return None
+
+            def readline(self, size=-1):
+                return self.responses.get(timeout=2)
+
+        stream = Multiplexed()
+        peer = StdioPeer(stream, stream)
+        answers: dict[str, str] = {}
+
+        def invoke(method: str) -> None:
+            answers[method] = peer.call(method, timeout=2).result["method"]
+
+        threads = [threading.Thread(target=invoke, args=(name,)) for name in ("first", "second")]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=3)
+            self.assertFalse(thread.is_alive())
+        self.assertEqual(answers, {"first": "first", "second": "second"})
+
+    def test_circuit_breaker_allows_only_one_half_open_probe(self):
+        now = [0.0]
+        breaker = CircuitBreaker(threshold=1, cooldown_seconds=10, clock=lambda: now[0])
+        self.assertTrue(breaker.record_failure())
+        now[0] = 11.0
+        decisions: list[bool] = []
+        barrier = threading.Barrier(8)
+
+        def ask() -> None:
+            barrier.wait()
+            decisions.append(breaker.allow()[0])
+
+        threads = [threading.Thread(target=ask) for _ in range(8)]
+        for thread in threads:
+            thread.start()
+        for thread in threads:
+            thread.join(timeout=2)
+        self.assertEqual(decisions.count(True), 1)
+        self.assertTrue(breaker.state()["probeInFlight"])
+
 
 class TestBridgeTools(unittest.TestCase):
     """The live-Studio surface, exercised without a live Studio.
@@ -445,6 +582,7 @@ class TestBridgeTools(unittest.TestCase):
             for command in family:
                 self.assertIn(command["effect"], {"read", "mutation", "context-transition", "transient", "arbitrary"})
                 self.assertIn(command["idempotency"], {"safe-retry", "at-most-once", "naturally-idempotent"})
+                self.assertEqual(set(command["selector"]), {"session", "build", "player"})
 
     def test_an_unknown_family_names_the_real_ones(self):
         result = self._call("bridge_commands", {"family": "nope"})
@@ -471,12 +609,33 @@ class TestBridgeTools(unittest.TestCase):
         self.assertTrue(result["isError"])
         self.assertIn("unsupported", result["structuredContent"]["error"])
 
+    def test_arbitrary_bridge_execution_requires_operator_capability(self):
+        with patch.dict("os.environ", {"RQE_MCP_ALLOW_ARBITRARY_CODE": ""}):
+            result = self._call(
+                "bridge_call",
+                {"method": "bridge.exec", "params": {"source": "return true"}},
+            )
+        self.assertTrue(result["isError"])
+        self.assertIn("operator", result["structuredContent"]["error"])
+        self.assertIn("RQE_MCP_ALLOW_ARBITRARY_CODE", result["structuredContent"]["error"])
+
+    def test_programming_run_escape_hatch_uses_the_same_capability_gate(self):
+        with patch.dict("os.environ", {"RQE_MCP_ALLOW_ARBITRARY_CODE": ""}):
+            result = self._call("run", {"source": "return true"})
+        self.assertTrue(result["isError"])
+        self.assertIn("RQE_MCP_ALLOW_ARBITRARY_CODE", result["structuredContent"]["error"])
+
     def test_a_dead_hub_produces_an_error_not_an_empty_result(self):
         result = self._call("bridge_call", {
             "method": "bridge.ping", "params": {}, "hub": "http://127.0.0.1:9",
             "timeoutSeconds": 1,
         })
         self.assertTrue(result["isError"])
+
+    def test_lease_lifecycle_is_exposed_and_refuses_incomplete_identity(self):
+        result = self._call("bridge_lease", {"operation": "acquire"})
+        self.assertTrue(result["isError"])
+        self.assertIn("runId", result["structuredContent"]["error"])
 
 
 class TestInstancePrimitives(unittest.TestCase):

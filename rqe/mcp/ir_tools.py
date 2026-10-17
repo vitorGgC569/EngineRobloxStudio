@@ -22,6 +22,8 @@ import json
 from typing import Any
 
 from .server import EngineMcpServer, Tool, ToolError
+from ..safe_io import SafeIoError, atomic_write_text
+from ..security import SecurityBoundaryError, resolve_inside
 
 
 GAME_MODEL_SCHEMA = {
@@ -204,17 +206,17 @@ def register_ir_tools(server: EngineMcpServer) -> EngineMcpServer:
             payload["blueprint"] = result["blueprint"]
 
         if arguments.get("write"):
-            output = (root / arguments["write"]).resolve()
             try:
-                output.relative_to(root.resolve())
-            except ValueError as exc:
-                raise ToolError("write path must stay inside the project root") from exc
-            output.parent.mkdir(parents=True, exist_ok=True)
-            output.write_text(
-                json.dumps(result["blueprint"], indent=2, ensure_ascii=False) + "\n",
-                encoding="utf-8",
-            )
+                output = resolve_inside(root, arguments["write"], label="write path", suffixes=(".json",))
+                status = atomic_write_text(
+                    output,
+                    json.dumps(result["blueprint"], indent=2, ensure_ascii=False) + "\n",
+                    overwrite=bool(arguments.get("overwrite")),
+                )
+            except (SecurityBoundaryError, SafeIoError) as exc:
+                raise ToolError(str(exc)) from exc
             payload["written"] = str(output.relative_to(root))
+            payload["writeStatus"] = status
         return payload
 
     server.register(Tool(
@@ -236,6 +238,7 @@ def register_ir_tools(server: EngineMcpServer) -> EngineMcpServer:
                     "type": "string",
                     "description": "path to write the derived blueprint to",
                 },
+                "overwrite": {"type": "boolean"},
             },
         },
         handler=game_compile,

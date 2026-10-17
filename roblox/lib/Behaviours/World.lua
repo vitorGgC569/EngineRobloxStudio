@@ -41,7 +41,23 @@ function World.door(leaf: BasePart, options: { [string]: any }?)
 				* CFrame.new(leaf.Size.X * 0.5, 0, 0)
 
 	local seconds = tonumber(opts.seconds) or 0.6
-	local machine = StateMachine.new({
+	--[[
+		Forward-declared, because the states below refer to it.
+
+		`local machine = StateMachine.new({ ... machine:to("open") ... })` reads as
+		if it works and does not: in Lua a `local` enters scope *after* its own
+		statement, so every `machine` inside the table constructor resolved to a
+		global, which is nil. The door opened, the tween finished, and the call
+		that should have moved it to `open` was an index of nil -- so a door could
+		be opened once and then never closed or reopened, and nothing in the
+		transition table was ever reached.
+
+		`luau-analyze` names this in one second ("Unknown global 'machine'"), and
+		it went unseen because the authoring check was pointed at `games/` while
+		`roblox/lib` was never analysed by anything.
+	]]
+	local machine
+	machine = StateMachine.new({
 		closed = { to = { "opening" } },
 		opening = {
 			to = { "open" },

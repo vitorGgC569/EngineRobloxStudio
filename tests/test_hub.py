@@ -7,22 +7,34 @@ It does *not* mean Studio works: the peer is a simulator and is labeled as such.
 
 from __future__ import annotations
 
+import http.client
+import os
+import subprocess
+import tempfile
 import threading
 import time
 import unittest
 import json
 import urllib.error
 import urllib.request
+from pathlib import Path
 from typing import Any
+from unittest.mock import Mock, patch
 
+from rqe.hub import lifecycle
+from rqe.hub.auth import BridgeAuthError, derive_role_token
 from rqe.hub.client import PluginSimulator, StudioBridge
 from rqe.hub.protocol import PROTOCOL_VERSION, BridgeError, ErrorCode
-from rqe.hub.server import BridgeHub, serve
+from rqe.hub.server import MAX_HEADER_BYTES, MAX_REQUEST_BODY_BYTES, BridgeHub, serve
 
 
 class HubTestCase(unittest.TestCase):
     def setUp(self) -> None:
-        self.hub = BridgeHub(poll_hold_seconds=1.0)
+        self.hub = BridgeHub(
+            poll_hold_seconds=1.0,
+            allow_unauthenticated=True,
+            enforce_manifest_leases=False,
+        )
         self.server = serve(self.hub, host="127.0.0.1", port=0)
         self.port = self.server.server_address[1]
         self.thread = threading.Thread(target=self.server.serve_forever, daemon=True)
@@ -49,6 +61,7 @@ class HubTestCase(unittest.TestCase):
         return hub.register({
             "protocol": PROTOCOL_VERSION,
             "clientId": client_id,
+            "installationId": f"test-installation-{client_id}",
             "pluginVersion": "test",
             "studioVersion": "test",
             "placeName": f"{client_id}.rbxlx",
@@ -67,6 +80,31 @@ class HubTestCase(unittest.TestCase):
         with self.assertRaises(BridgeError) as caught:
             self.bridge.call("bridge.ping", timeout=2)
         self.assertEqual(caught.exception.code, ErrorCode.DISCONNECTED)
+
+    def test_short_operation_lease_scope_pins_fences_and_releases(self) -> None:
+        self.start_plugin({
+            "bridge.ping": lambda _params: {"pong": True},
+            "bridge.exec": lambda _params: {"returned": {"built": True}},
+        })
+        executor = StudioBridge(self.base_url, allow_arbitrary=True)
+        with executor.lease_scope(agent_id="test-builder", context="edit", ttl_seconds=5) as lease:
+            self.assertEqual(lease["session"], executor.pinned_session)
+            result = executor.call(
+                "bridge.exec",
+                {"source": "return { built = true }"},
+                timeout=3,
+            )
+            self.assertTrue(result["returned"]["built"])
+            self.assertEqual(len(self.hub.status()["leases"]), 1)
+        self.assertIsNone(executor.pinned_session)
+        self.assertEqual(self.hub.status()["leases"], [])
+
+    def test_short_operation_lease_scope_releases_after_body_failure(self) -> None:
+        self.start_plugin({"bridge.ping": lambda _params: {"pong": True}})
+        with self.assertRaisesRegex(RuntimeError, "body failed"):
+            with self.bridge.lease_scope(agent_id="test-builder", context="edit", ttl_seconds=5):
+                raise RuntimeError("body failed")
+        self.assertEqual(self.hub.status()["leases"], [])
 
     def test_round_trip_carries_params_and_studio_context(self) -> None:
         self.start_plugin({"dm.tree": lambda params: {"echo": params, "children": ["Workspace"]}})
@@ -189,6 +227,241 @@ class HubTestCase(unittest.TestCase):
         self.assertEqual(len(self.hub.events()), 3)
         self.assertEqual(len(self.hub.events(kind="log")), 2)
         self.assertEqual(self.hub.events(kind="heartbeat")[0]["fps"], 59.4)
+
+    def test_event_transport_owns_session_and_timestamp_envelope(self) -> None:
+        session = self.register_direct(self.hub, "event-owner")
+        result = self.hub.push_events(session, [{
+            "kind": "log",
+            "session": "attacker-selected-session",
+            "receivedAt": 9_999_999_999.0,
+        }])
+        self.assertEqual(result["accepted"], 1)
+        event = self.hub.events()[0]
+        self.assertEqual(event["session"], session)
+        self.assertLess(event["receivedAt"], 9_999_999_999.0)
+
+    def test_manifest_build_selector_requires_a_lease_by_default(self) -> None:
+        hub = BridgeHub(allow_unauthenticated=True, poll_hold_seconds=0.01)
+        session = self.register_direct(hub, "manifest-lease")
+        with self.assertRaises(BridgeError) as caught:
+            hub.call("run.start", {"settleSeconds": 0}, timeout=1, session_id=session)
+        self.assertEqual(caught.exception.code, ErrorCode.LEASE_REQUIRED)
+        self.assertEqual(caught.exception.details["manifestBuildSelector"], "required")
+
+    def test_session_queue_has_a_hard_capacity(self) -> None:
+        hub = BridgeHub(
+            allow_unauthenticated=True,
+            enforce_manifest_leases=False,
+            poll_hold_seconds=0.01,
+            max_queue_per_session=1,
+        )
+        session = self.register_direct(hub, "queue-capacity")
+        errors: list[BridgeError] = []
+
+        def queued_caller() -> None:
+            try:
+                hub.call("world.summary", {}, timeout=0.15, session_id=session)
+            except BridgeError as exc:
+                errors.append(exc)
+
+        thread = threading.Thread(target=queued_caller)
+        thread.start()
+        deadline = time.monotonic() + 1
+        while hub.status()["queuedCommands"] == 0 and time.monotonic() < deadline:
+            time.sleep(0.005)
+        with self.assertRaises(BridgeError) as caught:
+            hub.call("world.summary", {}, timeout=1, session_id=session)
+        self.assertEqual(caught.exception.code, ErrorCode.CAPACITY)
+        thread.join(timeout=1)
+        self.assertEqual([item.code for item in errors], [ErrorCode.TIMEOUT])
+
+    def test_oversized_http_body_is_rejected_before_it_is_read(self) -> None:
+        connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=2)
+        try:
+            connection.putrequest("POST", "/rpc")
+            connection.putheader("Content-Type", "application/json")
+            connection.putheader("Content-Length", str(MAX_REQUEST_BODY_BYTES + 1))
+            connection.endheaders()
+            response = connection.getresponse()
+            self.assertEqual(response.status, 413)
+            response.read()
+        finally:
+            connection.close()
+
+    def test_oversized_http_headers_are_rejected(self) -> None:
+        connection = http.client.HTTPConnection("127.0.0.1", self.port, timeout=2)
+        try:
+            connection.putrequest("POST", "/rpc")
+            connection.putheader("Content-Type", "application/json")
+            connection.putheader("Content-Length", "2")
+            connection.putheader("X-Fill", "x" * MAX_HEADER_BYTES)
+            connection.endheaders(b"{}")
+            response = connection.getresponse()
+            self.assertEqual(response.status, 431)
+            response.read()
+        finally:
+            connection.close()
+
+    def test_hub_defaults_to_machine_authentication_and_loopback_binding(self) -> None:
+        root = "machine-root-token-with-at-least-thirty-two-bytes-123456"
+        with patch("rqe.hub.server.load_bridge_token", return_value=root):
+            hub = BridgeHub()
+        self.assertTrue(hub.authentication_required)
+        reader = derive_role_token(root, "reader")
+        plugin = derive_role_token(root, "plugin")
+        self.assertTrue(hub.authorized(f"Bearer {reader}", "reader"))
+        self.assertFalse(hub.authorized(f"Bearer {reader}", "plugin"))
+        self.assertTrue(hub.authorized(f"Bearer {plugin}", "plugin"))
+        with self.assertRaises(BridgeAuthError):
+            serve(hub, host="0.0.0.0", port=0)
+
+    def test_rpc_capabilities_are_enforced_from_the_command_effect(self) -> None:
+        root = "capability-root-token-with-at-least-thirty-two-bytes-123456"
+        hub = BridgeHub(token=root, poll_hold_seconds=0.03, enforce_manifest_leases=False)
+        server = serve(hub, host="127.0.0.1", port=0)
+        port = server.server_address[1]
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+
+        def rpc(role: str, method: str, params: dict[str, Any] | None = None) -> dict[str, Any]:
+            request = urllib.request.Request(
+                f"http://127.0.0.1:{port}/rpc",
+                data=json.dumps({
+                    "jsonrpc": "2.0",
+                    "id": 1,
+                    "method": method,
+                    "params": params or {},
+                }).encode("utf-8"),
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {derive_role_token(root, role)}",
+                },
+                method="POST",
+            )
+            with urllib.request.urlopen(request, timeout=2) as response:
+                return json.loads(response.read().decode("utf-8"))
+
+        try:
+            denied_write = rpc("reader", "run.stop")
+            self.assertEqual(denied_write["error"]["data"]["code"], ErrorCode.UNAUTHORIZED)
+            self.assertEqual(denied_write["error"]["data"]["requiredCapability"], "mutator")
+
+            denied_read = rpc("mutator", "world.summary")
+            self.assertEqual(denied_read["error"]["data"]["code"], ErrorCode.UNAUTHORIZED)
+            self.assertEqual(denied_read["error"]["data"]["requiredCapability"], "reader")
+
+            denied_exec = rpc("reader", "bridge.exec", {"source": "return true"})
+            self.assertEqual(denied_exec["error"]["data"]["code"], ErrorCode.UNAUTHORIZED)
+            self.assertEqual(denied_exec["error"]["data"]["requiredCapability"], "executor")
+
+            admin_status = rpc("admin", "hub.status")
+            self.assertEqual(admin_status["result"]["credentialModel"], "derived-capability-v2")
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=3)
+
+    def test_live_client_identity_requires_the_previous_session_proof(self) -> None:
+        root = "continuity-root-token-with-at-least-thirty-two-bytes-123456"
+        hub = BridgeHub(token=root, poll_hold_seconds=0.03)
+        payload = {
+            "protocol": PROTOCOL_VERSION,
+            "clientId": "stable-studio-client",
+            "installationId": "installation-identity-0001",
+            "pluginVersion": "test",
+            "studioVersion": "test",
+            "placeName": "Place",
+            "placeId": 1,
+            "context": "edit",
+        }
+        first = hub.register(payload)
+        self.assertNotIn("sessionKey", hub.status()["sessions"][0])
+
+        with self.assertRaises(BridgeError) as collision:
+            hub.register(payload)
+        self.assertEqual(collision.exception.code, ErrorCode.SESSION_CONFLICT)
+
+        with self.assertRaises(BridgeError) as wrong_installation:
+            hub.register({
+                **payload,
+                "installationId": "installation-identity-9999",
+                "resumeSession": first["session"],
+                "resumeKey": first["sessionKey"],
+            })
+        self.assertEqual(wrong_installation.exception.code, ErrorCode.SESSION_CONFLICT)
+
+        second = hub.register({
+            **payload,
+            "context": "run",
+            "resumeSession": first["session"],
+            "resumeKey": first["sessionKey"],
+        })
+        self.assertNotEqual(first["session"], second["session"])
+        with self.assertRaises(BridgeError) as stale:
+            hub.require_session_proof(first["session"], first["sessionKey"])
+        self.assertEqual(stale.exception.code, ErrorCode.UNAUTHORIZED)
+        hub.require_session_proof(second["session"], second["sessionKey"])
+
+    def test_plugin_endpoints_require_the_ephemeral_session_proof(self) -> None:
+        token = "proof-root-token-with-at-least-thirty-two-bytes-123456"
+        hub = BridgeHub(token=token, poll_hold_seconds=0.03)
+        server = serve(hub, host="127.0.0.1", port=0)
+        port = server.server_address[1]
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        plugin = PluginSimulator(
+            f"http://127.0.0.1:{port}",
+            {},
+            token=token,
+        )
+        try:
+            plugin.connect()
+            with self.assertRaises(urllib.error.HTTPError) as denied:
+                plugin._post("/bridge/event", {
+                    "session": plugin.session,
+                    "sessionKey": "wrong-session-proof",
+                    "events": [],
+                })
+            self.assertEqual(denied.exception.code, 401)
+            self.assertEqual(len(hub.status()["sessions"]), 1)
+        finally:
+            plugin.stop()
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=3)
+
+    def test_rate_limit_is_bounded_per_authenticated_capability(self) -> None:
+        token = "rate-root-token-with-at-least-thirty-two-bytes-123456"
+        hub = BridgeHub(
+            token=token,
+            poll_hold_seconds=0.03,
+            rate_limit_per_second=0.01,
+            rate_limit_burst=1,
+        )
+        server = serve(hub, host="127.0.0.1", port=0)
+        port = server.server_address[1]
+        thread = threading.Thread(target=server.serve_forever, daemon=True)
+        thread.start()
+        request = urllib.request.Request(
+            f"http://127.0.0.1:{port}/health",
+            headers={"Authorization": f"Bearer {derive_role_token(token, 'reader')}"},
+        )
+        try:
+            with urllib.request.urlopen(request, timeout=2) as response:
+                self.assertEqual(response.status, 200)
+            with self.assertRaises(urllib.error.HTTPError) as limited:
+                urllib.request.urlopen(request, timeout=2)
+            self.assertEqual(limited.exception.code, 429)
+            self.assertEqual(limited.exception.headers.get("Retry-After"), "100")
+        finally:
+            server.shutdown()
+            server.server_close()
+            thread.join(timeout=3)
+
+    def test_unsupported_manifest_command_is_rejected_by_the_hub_itself(self) -> None:
+        with self.assertRaises(BridgeError) as caught:
+            self.hub.call("client.gui_click", {"path": "game.Players"}, timeout=1)
+        self.assertEqual(caught.exception.code, ErrorCode.UNAVAILABLE)
 
     def test_same_studio_switching_context_supersedes_its_old_session(self) -> None:
         """A Studio entering run mode re-registers; the edit session must retire.
@@ -432,7 +705,11 @@ class HubTestCase(unittest.TestCase):
         self.assertEqual([item["session"] for item in self.hub.status()["sessions"]], [successor])
 
     def test_a_command_that_timed_out_in_queue_is_never_dispatched(self) -> None:
-        hub = BridgeHub(poll_hold_seconds=0.02)
+        hub = BridgeHub(
+            poll_hold_seconds=0.02,
+            allow_unauthenticated=True,
+            enforce_manifest_leases=False,
+        )
         session = self.register_direct(hub, "deadline")
         errors: list[BridgeError] = []
 
@@ -451,7 +728,11 @@ class HubTestCase(unittest.TestCase):
         self.assertEqual(hub.status()["inflightCommands"], 0)
 
     def test_lease_fence_increases_and_rejects_another_owner(self) -> None:
-        hub = BridgeHub(poll_hold_seconds=0.02)
+        hub = BridgeHub(
+            poll_hold_seconds=0.02,
+            allow_unauthenticated=True,
+            enforce_manifest_leases=False,
+        )
         session = self.register_direct(hub, "lease-owner")
         first = hub.acquire_lease(
             run_id="run-a", agent_id="agent-a", build_id="build-a", session_id=session, ttl_seconds=30,
@@ -491,7 +772,12 @@ class HubTestCase(unittest.TestCase):
         self.assertTrue(released["released"])
 
     def test_mutation_requires_current_lease_and_is_checked_again_before_dispatch(self) -> None:
-        hub = BridgeHub(poll_hold_seconds=0.02, require_mutation_leases=True)
+        hub = BridgeHub(
+            poll_hold_seconds=0.02,
+            require_mutation_leases=True,
+            allow_unauthenticated=True,
+            enforce_manifest_leases=False,
+        )
         session = self.register_direct(hub, "leased-studio")
         with self.assertRaises(BridgeError) as caught:
             hub.call("camera.set", {"position": [0, 10, 0]}, timeout=1, session_id=session)
@@ -564,7 +850,11 @@ class HubTestCase(unittest.TestCase):
     def test_a_mutation_waits_for_all_parallel_reads_to_finish(self) -> None:
         """Safe reads share a batch; write-like work is an exclusive FIFO barrier."""
 
-        hub = BridgeHub(poll_hold_seconds=0.03)
+        hub = BridgeHub(
+            poll_hold_seconds=0.03,
+            allow_unauthenticated=True,
+            enforce_manifest_leases=False,
+        )
         session = self.register_direct(hub, "effect-scheduler")
         outcomes: dict[str, Any] = {}
 
@@ -615,7 +905,11 @@ class HubTestCase(unittest.TestCase):
     def test_a_timed_out_inflight_mutation_remains_uncertain_until_studio_answers(self) -> None:
         """A caller timeout cannot silently unlock overlapping Studio mutation."""
 
-        hub = BridgeHub(poll_hold_seconds=0.03)
+        hub = BridgeHub(
+            poll_hold_seconds=0.03,
+            allow_unauthenticated=True,
+            enforce_manifest_leases=False,
+        )
         session = self.register_direct(hub, "uncertain-mutation")
         errors: list[BridgeError] = []
 
@@ -675,12 +969,20 @@ class HubTestCase(unittest.TestCase):
         thread.start()
         base = f"http://127.0.0.1:{port}"
 
-        def expect_unauthorized(path: str, *, method: str = "POST") -> None:
+        def expect_unauthorized(
+            path: str,
+            *,
+            method: str = "POST",
+            credential: str | None = None,
+        ) -> None:
             data = json.dumps({}).encode("utf-8") if method == "POST" else None
+            headers = {"Content-Type": "application/json"}
+            if credential:
+                headers["Authorization"] = f"Bearer {credential}"
             request = urllib.request.Request(
                 base + path,
                 data=data,
-                headers={"Content-Type": "application/json"},
+                headers=headers,
                 method=method,
             )
             with self.assertRaises(urllib.error.HTTPError) as caught:
@@ -691,10 +993,34 @@ class HubTestCase(unittest.TestCase):
             expect_unauthorized("/health", method="GET")
             for endpoint in ("/bridge/hello", "/bridge/poll", "/bridge/result", "/bridge/event", "/rpc"):
                 expect_unauthorized(endpoint)
+            expect_unauthorized("/rpc", credential=token)
+            expect_unauthorized("/bridge/hello", credential=derive_role_token(token, "reader"))
+            expect_unauthorized("/rpc", credential=derive_role_token(token, "plugin"))
+
+            admin_attempt = urllib.request.Request(
+                base + "/rpc",
+                data=json.dumps({
+                    "jsonrpc": "2.0",
+                    "id": 99,
+                    "method": "hub.drop_sessions",
+                    "params": {"sessions": ["missing"]},
+                }).encode("utf-8"),
+                headers={
+                    "Content-Type": "application/json",
+                    "Authorization": f"Bearer {derive_role_token(token, 'reader')}",
+                },
+                method="POST",
+            )
+            with urllib.request.urlopen(admin_attempt, timeout=2) as response:
+                denied_admin = json.loads(response.read().decode("utf-8"))
+            self.assertEqual(denied_admin["error"]["data"]["code"], ErrorCode.UNAUTHORIZED)
 
             plugin = PluginSimulator(
                 base,
-                {"bridge.ping": lambda _params: {"authenticated": True}},
+                {
+                    "bridge.ping": lambda _params: {"authenticated": True},
+                    "bridge.exec": lambda _params: {"explicit": True},
+                },
                 token=token,
             )
             plugin.start()
@@ -703,13 +1029,446 @@ class HubTestCase(unittest.TestCase):
                 bridge.wait_for_plugin(timeout=3)
                 self.assertTrue(bridge.health()["ok"])
                 self.assertTrue(bridge.status()["authenticationRequired"])
+                self.assertEqual(bridge.status()["credentialModel"], "derived-capability-v2")
                 self.assertTrue(bridge.call("bridge.ping", timeout=3)["authenticated"])
+                with self.assertRaises(BridgeError) as denied:
+                    bridge.call("bridge.exec", {"source": "return true"}, timeout=3)
+                self.assertEqual(denied.exception.code, ErrorCode.UNAUTHORIZED)
+
+                executor = StudioBridge(base, token=token, allow_arbitrary=True)
+                lease = executor.acquire_lease(
+                    run_id="auth-test",
+                    agent_id="operator",
+                    build_id="build-1",
+                    session_id=plugin.session,
+                )
+                self.assertTrue(
+                    executor.call(
+                        "bridge.exec",
+                        {"source": "return true"},
+                        timeout=3,
+                        lease=lease,
+                    )["explicit"]
+                )
+                self.assertEqual(bridge.drop_sessions(["missing"]), [])
             finally:
                 plugin.stop()
         finally:
             server.shutdown()
             server.server_close()
             thread.join(timeout=3)
+
+
+class StudioPowerShellEnvironmentTests(unittest.TestCase):
+    """Windows PowerShell 5.1 treats an inherited PSModulePath as complete.
+
+    A parent pwsh session stores the variable as ``PSMODULEPATH`` and points it
+    at PowerShell 7 modules. ``powershell.exe`` then exits before
+    ``Get-AuthenticodeSignature`` can run, and Studio restart reports that no
+    signed executable exists. ``os.environ.copy()`` is a plain dict, so a later
+    assignment to ``PSModulePath`` does not replace ``PSMODULEPATH``. Both
+    verifier launches have to pass one Windows PowerShell system module path.
+    """
+
+    _PWSH_MODULES = r"C:\Program Files\PowerShell\7\Modules"
+    _SYSTEM_ROOT = r"C:\Windows"
+    _WINDOWS_MODULES = _SYSTEM_ROOT + r"\System32\WindowsPowerShell\v1.0\Modules"
+
+    def _patched_environment(self):
+        inherited = self._PWSH_MODULES + ";" + self._WINDOWS_MODULES
+        return patch.dict(
+            os.environ,
+            {
+                "PSMODULEPATH": inherited,
+                "SYSTEMROOT": self._SYSTEM_ROOT,
+                "PATH": self._SYSTEM_ROOT + r"\System32",
+            },
+            clear=False,
+        )
+
+    def _module_paths(self, env: dict[str, str]) -> list[str]:
+        return [value for key, value in env.items() if key.lower() == "psmodulepath"]
+
+    def test_signature_verifier_drops_inherited_powershell7_module_path(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            target = Path(directory) / "RobloxStudioBeta.exe"
+            target.write_bytes(b"MZ")
+            captured: dict[str, Any] = {}
+
+            def fake_run(command, **kwargs):
+                captured["command"] = command
+                captured["env"] = kwargs["env"]
+                payload = json.dumps({
+                    "status": "Valid",
+                    "signer": "CN=Roblox Corporation, O=Roblox Corporation",
+                    "version": "0.655.0.655",
+                })
+                return subprocess.CompletedProcess(command, 0, stdout=payload, stderr="")
+
+            with (
+                self._patched_environment(),
+                patch.object(lifecycle.os, "name", "nt"),
+                patch.object(lifecycle.subprocess, "run", side_effect=fake_run),
+            ):
+                metadata = lifecycle._studio_binary_metadata(target)
+
+        self.assertIn("powershell.exe", captured["command"][0].lower())
+        self.assertIn("-Command", captured["command"])
+        self.assertEqual(self._module_paths(captured["env"]), [self._WINDOWS_MODULES])
+        self.assertNotIn(self._PWSH_MODULES, "\n".join(self._module_paths(captured["env"])))
+        self.assertEqual(captured["env"]["RQE_VERIFY_EXECUTABLE"], str(target.resolve()))
+        self.assertEqual(metadata["signatureStatus"], "Valid")
+        self.assertIn("Roblox Corporation", metadata["signer"])
+
+    def test_process_identity_drops_inherited_powershell7_module_path(self) -> None:
+        captured: dict[str, Any] = {}
+
+        def fake_run(command, **kwargs):
+            captured["command"] = command
+            captured["env"] = kwargs["env"]
+            payload = json.dumps({
+                "pid": 4242,
+                "path": r"C:\Roblox\RobloxStudioBeta.exe",
+                "startedAt": "2026-01-01T00:00:00.0000000Z",
+            })
+            return subprocess.CompletedProcess(command, 0, stdout=payload, stderr="")
+
+        with (
+            self._patched_environment(),
+            patch.object(lifecycle.os, "name", "nt"),
+            patch.object(lifecycle.subprocess, "run", side_effect=fake_run),
+        ):
+            identity = lifecycle._process_identity(4242)
+
+        self.assertIn("powershell.exe", captured["command"][0].lower())
+        self.assertEqual(self._module_paths(captured["env"]), [self._WINDOWS_MODULES])
+        self.assertEqual(captured["env"]["RQE_PROCESS_ID"], "4242")
+        self.assertEqual(identity["pid"], 4242)
+        self.assertEqual(identity["startedAt"], "2026-01-01T00:00:00.0000000Z")
+
+
+class StudioRestartVerificationOrderTests(unittest.TestCase):
+    """Verifier failures name the PowerShell output and happen before stop."""
+
+    def _executable(self, directory: str) -> Path:
+        target = Path(directory) / "RobloxStudioBeta.exe"
+        target.write_bytes(b"MZ")
+        return target
+
+    def _run_verifier(self, completed: subprocess.CompletedProcess) -> RuntimeError:
+        with tempfile.TemporaryDirectory() as directory:
+            target = self._executable(directory)
+
+            def fake_run(command, **kwargs):
+                return completed
+
+            with (
+                patch.object(lifecycle.os, "name", "nt"),
+                patch.object(lifecycle.subprocess, "run", side_effect=fake_run),
+            ):
+                with self.assertRaises(RuntimeError) as caught:
+                    lifecycle._studio_binary_metadata(target)
+        return caught.exception
+
+    def test_nonzero_powershell_keeps_exit_code_and_stderr(self) -> None:
+        error = self._run_verifier(subprocess.CompletedProcess(
+            ["powershell.exe"],
+            4,
+            stdout="",
+            stderr="Import-Module : PowerShell 7 modules cannot load",
+        ))
+        message = str(error)
+        self.assertIn("exit=4", message)
+        self.assertIn("Import-Module : PowerShell 7 modules cannot load", message)
+        self.assertEqual(error.verifier["context"], "powershell-exit")
+        self.assertEqual(error.verifier["exitCode"], 4)
+        self.assertIn("PowerShell 7 modules", error.verifier["output"])
+
+    def test_empty_stderr_keeps_stdout_slice(self) -> None:
+        error = self._run_verifier(subprocess.CompletedProcess(
+            ["powershell.exe"],
+            3,
+            stdout="Get-AuthenticodeSignature is not recognized",
+            stderr="   ",
+        ))
+        self.assertIn("exit=3", str(error))
+        self.assertIn("Get-AuthenticodeSignature is not recognized", error.verifier["output"])
+
+    def test_stderr_slice_is_short(self) -> None:
+        noise = "A" * 80
+        stderr = noise + ("B" * 200) + "TAILMARKER" + ("C" * 1500)
+        error = self._run_verifier(subprocess.CompletedProcess(
+            ["powershell.exe"],
+            9,
+            stdout="",
+            stderr=stderr,
+        ))
+        self.assertLess(len(error.verifier["output"]), 500)
+        self.assertIn(noise, error.verifier["output"])
+        self.assertNotIn("TAILMARKER", error.verifier["output"])
+        self.assertIn("exit=9", str(error))
+
+    def test_invalid_json_keeps_verifier_output(self) -> None:
+        error = self._run_verifier(subprocess.CompletedProcess(
+            ["powershell.exe"],
+            0,
+            stdout="WARNING: not-json from the signature verifier",
+            stderr="",
+        ))
+        self.assertIn("not-json from the signature verifier", str(error))
+        self.assertEqual(error.verifier["context"], "invalid-json")
+        self.assertIn("not-json", error.verifier["output"])
+
+    def test_bad_signature_keeps_verifier_output(self) -> None:
+        payload = json.dumps({
+            "status": "NotSigned",
+            "signer": "CN=Other Publisher",
+            "version": "1.2.3",
+        })
+        error = self._run_verifier(subprocess.CompletedProcess(
+            ["powershell.exe"],
+            0,
+            stdout=payload,
+            stderr="",
+        ))
+        self.assertIn("NotSigned", str(error))
+        self.assertIn("Other Publisher", str(error))
+        self.assertEqual(error.verifier["context"], "bad-signature")
+        self.assertIn("NotSigned", error.verifier["output"])
+
+    def test_restart_does_not_stop_studio_when_verification_fails(self) -> None:
+        stopped: list[tuple[Any, ...]] = []
+
+        def stop_studio(*args, **kwargs):
+            stopped.append((args, kwargs))
+            return {"stopped": True, "wasRunning": True}
+
+        def fake_run(command, **kwargs):
+            return subprocess.CompletedProcess(
+                command,
+                4,
+                stdout="",
+                stderr="Import-Module : pwsh modules cannot load",
+            )
+
+        with tempfile.TemporaryDirectory() as directory:
+            versions = Path(directory) / "Roblox" / "Versions" / "version-test"
+            versions.mkdir(parents=True)
+            (versions / "RobloxStudioBeta.exe").write_bytes(b"MZ")
+            with (
+                patch.dict(os.environ, {"LOCALAPPDATA": directory}, clear=False),
+                patch.object(lifecycle.shutil, "which", return_value=None),
+                patch.object(lifecycle.os, "name", "nt"),
+                patch.object(lifecycle, "ensure_hub", return_value={"alive": True, "started": False}),
+                patch.object(lifecycle.subprocess, "run", side_effect=fake_run),
+                patch.object(lifecycle, "stop_studio", side_effect=stop_studio),
+                patch.object(lifecycle, "archive_recovery_files", side_effect=AssertionError("must not archive")),
+                patch.object(lifecycle, "launch_studio", side_effect=AssertionError("must not launch")),
+            ):
+                result = lifecycle.restart_for_bridge("place.rbxlx", "archive", bridge=None)
+
+        self.assertEqual(stopped, [])
+        self.assertTrue(result["blocked"])
+        self.assertEqual(result["handshake"], {"waited": False, "sessions": []})
+        self.assertEqual(result["verifier"]["context"], "powershell-exit")
+        self.assertEqual(result["verifier"]["exitCode"], 4)
+        self.assertIn("pwsh modules cannot load", result["verifier"]["output"])
+        self.assertIn("exit=4", result["reason"])
+        self.assertIn("pwsh modules cannot load", result["reason"])
+        self.assertNotIn("stop", result)
+
+    def test_restart_treats_stubbed_executable_failure_as_blocked(self) -> None:
+        stopped: list[int] = []
+
+        def stop_studio(*args, **kwargs):
+            stopped.append(1)
+            return {"stopped": True, "wasRunning": True}
+
+        def fail_executable():
+            error = FileNotFoundError(
+                "no valid Roblox-signed Studio executable was found "
+                "(context=powershell-exit, exit=4, output=Import-Module)"
+            )
+            setattr(error, "verifier", {
+                "context": "powershell-exit",
+                "exitCode": 4,
+                "output": "Import-Module",
+            })
+            raise error
+
+        with (
+            patch.object(lifecycle, "ensure_hub", return_value={"alive": True}),
+            patch.object(lifecycle, "studio_executable", side_effect=fail_executable),
+            patch.object(lifecycle, "stop_studio", side_effect=stop_studio),
+            patch.object(lifecycle, "archive_recovery_files", side_effect=AssertionError("must not archive")),
+            patch.object(lifecycle, "launch_studio", side_effect=AssertionError("must not launch")),
+        ):
+            result = lifecycle.restart_for_bridge("place.rbxlx", "archive", bridge=None)
+
+        self.assertEqual(stopped, [])
+        self.assertTrue(result["blocked"])
+        self.assertEqual(result["handshake"]["sessions"], [])
+        self.assertEqual(result["verifier"]["exitCode"], 4)
+        self.assertEqual(result["verifier"]["context"], "powershell-exit")
+        self.assertIn("Import-Module", result["verifier"]["output"])
+
+
+class StudioColdLaunchCapabilityTests(unittest.TestCase):
+    """A cold launch is ready only when the new session has the required methods."""
+
+    _REQUIRED = (
+        "test.start",
+        "test.status",
+        "test.finish",
+        "studio.capture_background",
+    )
+
+    def _ensure(
+        self,
+        restarted: dict[str, Any],
+        methods: list[str] | None,
+    ) -> tuple[Mock, Mock, dict[str, Any]]:
+        bridge = Mock()
+        bridge.status.return_value = {"sessions": []}
+        if methods is None:
+            bridge.call.side_effect = AssertionError("capabilities must not be called")
+        else:
+            bridge.call.return_value = {"methods": methods}
+        with (
+            patch.object(lifecycle, "_owned_studio_processes", return_value=([], [])),
+            patch(
+                "rqe.hub.install.plugin_build_identity",
+                return_value={"pluginVersion": "test", "pluginBuildId": "sha256:test"},
+            ),
+            patch.object(lifecycle, "restart_for_bridge", return_value=restarted) as restart,
+        ):
+            result = lifecycle.ensure_studio_session(
+                "place.rbxlx",
+                "archive",
+                bridge,
+                allow_cold_launch=True,
+            )
+        return bridge, restart, result
+
+    def test_handshake_missing_a_method_is_not_ready(self) -> None:
+        present = [method for method in self._REQUIRED if method != "test.start"]
+        bridge, restart, result = self._ensure(
+            {"handshake": {"sessions": [{"session": "sess-cold", "polls": 1}]}},
+            present,
+        )
+        restart.assert_called_once()
+        bridge.call.assert_called_once()
+        self.assertEqual(bridge.call.call_args.args[0], "bridge.capabilities")
+        self.assertEqual(bridge.pinned_session, "sess-cold")
+        self.assertFalse(result["ready"])
+        self.assertFalse(result["reused"])
+        self.assertTrue(result["coldLaunched"])
+        self.assertEqual(
+            result["reason"],
+            "connected plugin is missing native methods: test.start",
+        )
+
+    def test_handshake_with_every_required_method_is_ready(self) -> None:
+        bridge, restart, result = self._ensure(
+            {"handshake": {"sessions": [{"session": "sess-cold", "polls": 1}]}},
+            list(self._REQUIRED),
+        )
+        restart.assert_called_once()
+        bridge.call.assert_called_once()
+        self.assertEqual(bridge.pinned_session, "sess-cold")
+        self.assertTrue(result["ready"])
+        self.assertFalse(result["reused"])
+        self.assertTrue(result["coldLaunched"])
+        self.assertNotIn("missing native methods", result.get("reason", ""))
+
+    def test_handshake_without_a_session_does_not_ask_capabilities(self) -> None:
+        bridge, _restart, result = self._ensure(
+            {"handshake": {"waited": True, "sessions": []}},
+            None,
+        )
+        bridge.call.assert_not_called()
+        self.assertFalse(result["ready"])
+        self.assertFalse(result["reused"])
+        self.assertTrue(result["coldLaunched"])
+
+    def test_blocked_restart_stays_blocked_and_not_ready(self) -> None:
+        blocked = {
+            "blocked": True,
+            "reason": "could not verify Studio executable",
+            "verifier": {"context": "powershell-exit", "exitCode": 4, "output": "nope"},
+            "handshake": {"waited": False, "sessions": [{"session": "sess-cold"}]},
+        }
+        bridge, _restart, result = self._ensure(blocked, None)
+        bridge.call.assert_not_called()
+        self.assertIs(result, blocked)
+        self.assertTrue(result["blocked"])
+        self.assertNotEqual(result.get("ready"), True)
+        self.assertEqual(result["reason"], "could not verify Studio executable")
+
+
+class StudioLocalPlaceReuseTests(unittest.TestCase):
+    """A local file is always named Game. The process receipt identifies it."""
+
+    _METHODS = [
+        "test.start",
+        "test.status",
+        "test.finish",
+        "studio.capture_background",
+    ]
+
+    def _session(self, session_id: str, name: str, place_id: int = 0) -> dict[str, Any]:
+        return {
+            "session": session_id,
+            "context": "edit",
+            "polls": 4,
+            "pluginVersion": "2.0.0",
+            "pluginBuildId": "sha256:test",
+            "place": {"name": name, "id": place_id},
+        }
+
+    def _ensure(self, directory: str, sessions: list[dict[str, Any]]) -> dict[str, Any]:
+        place = (Path(directory) / "beaconmile.rbxlx").resolve()
+        owned = [{
+            "pid": 42,
+            "place": str(place),
+            "path": r"C:\Roblox\RobloxStudioBeta.exe",
+            "startedAt": "2026-01-01T00:00:00.0000000Z",
+        }]
+        bridge = Mock()
+        bridge.status.return_value = {"sessions": sessions}
+        bridge.call.return_value = {"methods": list(self._METHODS)}
+        with (
+            patch.object(lifecycle, "_owned_studio_processes", return_value=(owned, [])),
+            patch.object(lifecycle, "minimize_studio", return_value=0),
+            patch.object(lifecycle, "restart_for_bridge", side_effect=AssertionError("must not cold launch")),
+            patch(
+                "rqe.hub.install.plugin_build_identity",
+                return_value={"pluginVersion": "2.0.0", "pluginBuildId": "sha256:test"},
+            ),
+        ):
+            return lifecycle.ensure_studio_session(
+                place,
+                Path(directory) / "archive",
+                bridge,
+                allow_cold_launch=False,
+            )
+
+    def test_one_local_game_session_reuses_the_owned_process(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            result = self._ensure(directory, [self._session("sess-local", "Game")])
+        self.assertTrue(result["ready"])
+        self.assertTrue(result["reused"])
+        self.assertFalse(result["coldLaunched"])
+        self.assertEqual(result["session"], "sess-local")
+
+    def test_two_local_game_sessions_are_not_guessed(self) -> None:
+        with tempfile.TemporaryDirectory() as directory:
+            result = self._ensure(directory, [
+                self._session("sess-a", "Game"),
+                self._session("sess-b", "Game"),
+            ])
+        self.assertFalse(result["ready"])
+        self.assertTrue(result["needsColdLaunch"])
 
 
 if __name__ == "__main__":

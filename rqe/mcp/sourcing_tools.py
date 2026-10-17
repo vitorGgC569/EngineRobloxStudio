@@ -18,10 +18,12 @@ an irreversible act should never be a parameter on a reversible one.
 
 from __future__ import annotations
 
-from pathlib import Path
+import os
 from typing import Any
 
-from .server import Tool
+from .server import Tool, ToolError
+from ..assets import local_credentials
+from ..security import SecurityBoundaryError, resolve_import_source
 
 
 def register_sourcing_tools(server: Any) -> Any:
@@ -30,6 +32,15 @@ def register_sourcing_tools(server: Any) -> Any:
     root = server.root
 
     from ..sourcing import connectors, registry
+
+    def api_key() -> str:
+        local_credentials.load(root=root)
+        key = os.environ.get(local_credentials.ENV_VAR, "").strip()
+        if not key:
+            raise ToolError(
+                "ROBLOX_OPEN_CLOUD_KEY is unset and the canonical local credential file is absent"
+            )
+        return key
 
     def search(arguments: dict[str, Any]) -> dict[str, Any]:
         need = str(arguments.get("need") or "")
@@ -46,8 +57,12 @@ def register_sourcing_tools(server: Any) -> Any:
         }
 
     def adopt(arguments: dict[str, Any]) -> dict[str, Any]:
+        try:
+            source_path = resolve_import_source(root, str(arguments["path"]))
+        except SecurityBoundaryError as exc:
+            raise ToolError(str(exc)) from exc
         return connectors.adopt(
-            Path(str(arguments["path"])),
+            source_path,
             source=str(arguments["source"]),
             pack=str(arguments["pack"]),
             kind=str(arguments["kind"]),
@@ -82,7 +97,7 @@ def register_sourcing_tools(server: Any) -> Any:
             }
         started = connectors.publish(
             asset,
-            key_path=Path(str(arguments["keyPath"])),
+            api_key=api_key(),
             creator_user_id=str(arguments["creatorUserId"]),
             display_name=str(arguments.get("displayName") or ""),
         )
@@ -96,7 +111,7 @@ def register_sourcing_tools(server: Any) -> Any:
     def operation(arguments: dict[str, Any]) -> dict[str, Any]:
         return connectors.operation(
             str(arguments["operationId"]),
-            key_path=Path(str(arguments["keyPath"])),
+            api_key=api_key(),
         )
 
     def decide(arguments: dict[str, Any]) -> dict[str, Any]:
@@ -175,16 +190,11 @@ def register_sourcing_tools(server: Any) -> Any:
         ),
         input_schema={
             "type": "object",
-            "required": ["source", "pack", "asset", "keyPath", "creatorUserId"],
+            "required": ["source", "pack", "asset", "creatorUserId"],
             "properties": {
                 "source": {"type": "string"},
                 "pack": {"type": "string"},
                 "asset": {"type": "string"},
-                "keyPath": {
-                    "type": "string",
-                    "description": "path to the Open Cloud key file; the key is "
-                                   "read there and used only as a header",
-                },
                 "creatorUserId": {"type": "string"},
                 "displayName": {"type": "string"},
             },
@@ -197,10 +207,9 @@ def register_sourcing_tools(server: Any) -> Any:
         description="Poll an upload; carries the asset id once moderation answers.",
         input_schema={
             "type": "object",
-            "required": ["operationId", "keyPath"],
+            "required": ["operationId"],
             "properties": {
                 "operationId": {"type": "string"},
-                "keyPath": {"type": "string"},
             },
         },
         handler=operation,

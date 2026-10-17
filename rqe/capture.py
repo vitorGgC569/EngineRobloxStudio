@@ -8,7 +8,9 @@ set that flag through metadata.
 
 from __future__ import annotations
 
+import base64
 import ctypes
+import io
 import hashlib
 import json
 import math
@@ -362,59 +364,32 @@ def _camera_response(bridge: StudioBridge, method: str, params: dict[str, Any], 
     if not isinstance(result, dict):
         raise RuntimeError(f"{method} returned no structured camera state")
 
-    # [[
-    #     A viewport is a client fact.
-    #
-    #     `camera.get` reads `workspace.CurrentCamera.ViewportSize` in whatever
-    #     context answers, and on a server that is (1, 1) — there is no screen.
-    #     Every capture taken during a play session therefore measured a
-    #     one-pixel viewport, failed the resolution check, and produced a set
-    #     marked untrustworthy with a visual score of zero.
-    #
-    #     So when the answer is the server's placeholder, the real one is asked
-    #     of the client half. Best effort: a failure here leaves the
-    #     placeholder in place and the integrity check still refuses it, which
-    #     is the correct outcome when nobody could say what the viewport was.
-    # ]]
-    # [[
-    #     A (1, 1) viewport is never a real screen.
-    #
-    #     It is what `Camera.ViewportSize` returns where there is nothing to
-    #     draw on — a server. Every capture taken during a play session
-    #     therefore measured a one-pixel viewport and failed the resolution
-    #     check, so the real one is asked of the client half instead.
-    #
-    #     Applied to the pose nested under `camera.set`'s result as well as to
-    #     the top level. Fixing only one of them is worse than fixing neither:
-    #     `_same_pose` compares the viewport too, so a requested framing
-    #     carrying (1, 1) against a measured pose carrying the true size reads
-    #     as "the camera moved" when nothing moved at all.
-    # ]]
-    def _repair(pose: dict[str, Any]) -> None:
-        if pose.get("viewportSize") != [1, 1]:
-            return
-        pose["viewportAskedFrom"] = response.context
-        try:
-            viewport = bridge.call("client.viewport", {}, timeout=timeout)
-        except Exception as exc:  # noqa: BLE001
-            # Recorded rather than swallowed. A silent fallback leaves a
-            # one-pixel viewport in the evidence and no trace of why, which is
-            # the shape of failure this pipeline keeps producing.
-            pose["viewportError"] = f"{type(exc).__name__}: {exc}"[:200]
-            return
-        if isinstance(viewport, dict):
-            # `viewport`, which is what that command's own result schema calls
-            # it — not `viewportSize`, which is what `camera.get` calls it.
-            size = viewport.get("viewport")
-            if isinstance(size, list) and len(size) == 2:
-                pose["viewportSize"] = [int(size[0]), int(size[1])]
-                pose["viewportSource"] = "client"
-                pose["deviceClass"] = viewport.get("deviceClass")
-
-    _repair(result)
-    nested = result.get("camera")
-    if isinstance(nested, dict):
-        _repair(nested)
+    # The entire pose must come from the rendered client. Replacing only a
+    # server camera's 1x1 viewport made unrelated server coordinates look valid.
+    if response.context in {"run", "server"} and method.startswith("camera."):
+        client_params = {"player": params["player"]} if params.get("player") else {}
+        if method == "camera.get":
+            client_method = "client.camera_get"
+        else:
+            pose = result.get("camera", result)
+            position, look = pose.get("position"), pose.get("lookVector")
+            if not isinstance(position, list) or not isinstance(look, list) or len(position) != 3 or len(look) != 3:
+                raise RuntimeError(f"{method} returned no usable requested framing")
+            client_method = "client.camera_set"
+            client_params.update({"position": position,
+                                  "lookAt": [p + v for p, v in zip(position, look)],
+                                  "fieldOfView": pose["fieldOfView"]})
+        client_response = bridge.call_response(client_method, client_params, timeout=timeout)
+        client_pose = client_response.unwrap()
+        if client_response.session != response.session:
+            raise RuntimeError("camera relay changed the pinned Studio session")
+        if not isinstance(client_pose, dict) or client_pose.get("cameraSource") != "client":
+            raise RuntimeError("rendered client camera could not be measured")
+        if method == "camera.get":
+            result = client_pose
+        else:
+            result["camera"] = client_pose
+        response = client_response
     return result, response
 
 
@@ -433,6 +408,8 @@ def _same_pose(before: dict[str, Any], after: dict[str, Any]) -> bool:
         and math.isclose(float(before.get("fieldOfView", -1)), float(after.get("fieldOfView", -2)), abs_tol=0.01)
         and before.get("viewportSize") == after.get("viewportSize")
         and before.get("cameraType") == after.get("cameraType")
+        and before.get("cameraSource") == after.get("cameraSource")
+        and before.get("player") == after.get("player")
     )
 
 
@@ -705,6 +682,227 @@ def _frame_has_content(path: Path) -> tuple[bool, str]:
     return True, ""
 
 
+
+def capture_native_viewpoint(
+    bridge: StudioBridge,
+    target: str,
+    output: Path,
+    pitch_degrees: float = 35.0,
+    yaw_degrees: float = 45.0,
+    margin: float = 1.35,
+    metadata: dict[str, Any] | None = None,
+    settle_seconds: float = 0.8,
+    *,
+    expected_place: str = "",
+    expected_session: str = "",
+    run_id: str = "",
+    build_hash: str = "",
+    place_hash: str = "",
+    spec_hash: str = "",
+    viewpoint: str = "adhoc",
+    required: bool = True,
+    expected_device: str | None = None,
+    expected_resolution: tuple[int, int] | None = None,
+    world_only: bool = False,
+    include_ui: bool = True,
+) -> Shot:
+    """Capture Studio's rendered viewport through StudioCaptureService.
+
+    This backend never focuses, restores, raises, or screenshots a desktop
+    window. The bytes originate inside Studio and are normalised to PNG before
+    entering the same Shot integrity model used by the legacy window backend.
+    """
+
+    issues: list[str] = []
+
+    if not target:
+        framing, framing_response = _camera_response(bridge, "camera.get", {})
+    else:
+        framing, framing_response = _camera_response(
+            bridge,
+            "camera.focus",
+            {
+                "path": target,
+                "pitchDegrees": pitch_degrees,
+                "yawDegrees": yaw_degrees,
+                "margin": margin,
+            },
+        )
+
+    if framing_response.session != expected_session or not expected_session:
+        raise RuntimeError("camera framing did not run on the pinned session")
+    if framing_response.context not in _allowed_contexts(world_only):
+        raise RuntimeError(
+            "camera framing did not run in an allowed Studio context for this capture"
+        )
+    if (
+        expected_place
+        and Path(framing_response.place).name.lower()
+        != Path(expected_place).name.lower()
+    ):
+        raise RuntimeError("camera framing ran against a different place")
+
+    time.sleep(max(0.0, settle_seconds))
+
+    before_response: Response | None = None
+    after_response: Response | None = None
+    camera_before: dict[str, Any] = {}
+    camera_after: dict[str, Any] = {}
+
+    try:
+        camera_before, before_response = _camera_response(bridge, "camera.get", {})
+    except (BridgeError, RuntimeError, ValueError) as exc:
+        issues.append(f"camera.get before native capture failed: {exc}")
+
+    native_response: Response | None = None
+    native_result: dict[str, Any] = {}
+    try:
+        native_response = bridge.call_response(
+            "studio.capture_background",
+            {"includeUi": bool(include_ui)},
+            timeout=30,
+        )
+        result = native_response.unwrap()
+        if not isinstance(result, dict):
+            raise RuntimeError("studio.capture_background returned no structured result")
+        native_result = result
+    except (BridgeError, RuntimeError, ValueError) as exc:
+        issues.append(f"StudioCaptureService capture failed: {exc}")
+
+    output.parent.mkdir(parents=True, exist_ok=True)
+    width = 0
+    height = 0
+
+    if native_result:
+        if native_result.get("supported") is not True:
+            issues.append("StudioCaptureService backend is not supported")
+        if native_result.get("canCapture") is not True:
+            issues.append(
+                str(
+                    native_result.get("message")
+                    or "StudioCaptureService cannot capture in this context"
+                )
+            )
+
+        native_errors = native_result.get("errors") or []
+        if native_errors:
+            issues.extend(
+                f"StudioCaptureService: {item}" for item in native_errors
+            )
+
+        encoded = native_result.get("dataBase64")
+        if native_result.get("canCapture") is True and not isinstance(encoded, str):
+            issues.append("StudioCaptureService returned no base64 image buffer")
+        elif isinstance(encoded, str):
+            try:
+                raw = base64.b64decode(encoded, validate=True)
+                from PIL import Image
+
+                with Image.open(io.BytesIO(raw)) as image:
+                    width, height = image.size
+                    image.convert("RGB").save(output, "PNG", optimize=True)
+            except Exception as exc:  # noqa: BLE001
+                issues.append(f"native screenshot buffer could not be decoded: {exc}")
+
+    try:
+        camera_after, after_response = _camera_response(bridge, "camera.get", {})
+    except (BridgeError, RuntimeError, ValueError) as exc:
+        issues.append(f"camera.get after native capture failed: {exc}")
+
+    shot = Shot(
+        path=output,
+        width=width,
+        height=height,
+        occluded=False,
+        foreground_window="",
+        camera=dict(camera_before),
+        metadata={
+            **(metadata or {}),
+            "capturedAt": _timestamp(),
+            "captureBackend": "StudioCaptureService",
+            "nativeCapture": {
+                key: value
+                for key, value in native_result.items()
+                if key != "dataBase64"
+            },
+        },
+        viewpoint=viewpoint,
+        required=required,
+        camera_before=dict(camera_before),
+        camera_after=dict(camera_after),
+        framing=framing,
+        run_id=run_id,
+        build_hash=build_hash,
+        place_hash=place_hash,
+        spec_hash=spec_hash,
+        target=target,
+        expected_device=expected_device,
+        expected_resolution=expected_resolution,
+    )
+
+    responses = [
+        item
+        for item in (before_response, native_response, after_response)
+        if item is not None
+    ]
+    if responses:
+        shot.session_id = responses[0].session
+        shot.context = responses[0].context
+        shot.place = responses[0].place
+
+    if len(responses) != 3:
+        issues.append("native capture provenance is incomplete")
+    else:
+        if any(item.session != expected_session for item in responses):
+            issues.append("native capture responses did not come from the pinned session")
+        if len({item.session for item in responses}) != 1:
+            issues.append("native capture responses came from different sessions")
+        if len({item.context for item in responses}) != 1:
+            issues.append("Studio context changed during native capture")
+        if any(item.context not in _allowed_contexts(world_only) for item in responses):
+            issues.append("native capture ran in a disallowed Studio context")
+        if len({item.place for item in responses}) != 1:
+            issues.append("Studio place changed during native capture")
+        if (
+            expected_place
+            and any(
+                Path(item.place).name.lower() != Path(expected_place).name.lower()
+                for item in responses
+            )
+        ):
+            issues.append("native capture place differs from expected place")
+
+    requested_pose = framing.get("camera") if isinstance(framing, dict) else None
+    if isinstance(requested_pose, dict) and camera_before:
+        if not _same_pose(requested_pose, camera_before):
+            issues.append("camera pose differs from requested native capture framing")
+    if camera_before and camera_after and not _same_pose(camera_before, camera_after):
+        issues.append("camera pose changed during native capture")
+
+    if expected_resolution is not None:
+        measured = [width, height]
+        if measured != list(expected_resolution):
+            issues.append(
+                "native capture resolution does not match requested resolution "
+                f"{list(expected_resolution)} (measured {measured})"
+            )
+
+    if output.exists() and width > 0 and height > 0:
+        try:
+            shot.bytes, shot.sha256 = _validate_png(output, width, height)
+        except RuntimeError as exc:
+            issues.append(str(exc))
+        drawn, why = _frame_has_content(output)
+        if not drawn:
+            issues.append(why)
+    else:
+        issues.append("native captured PNG is missing")
+
+    shot.integrity_issues = issues
+    shot.trustworthy = not issues
+    return shot
+
+
 def capture_viewpoint(
     bridge: StudioBridge,
     target: str,
@@ -810,6 +1008,7 @@ def capture_configured_viewpoint(
     required: bool = True,
     expected_device: str | None = None,
     expected_resolution: tuple[int, int] | None = None,
+    native: bool = False,
 ) -> Shot:
     """Apply the exact declarative look-at camera rather than approximating it.
 
@@ -872,6 +1071,44 @@ def capture_configured_viewpoint(
         raise RuntimeError("camera.set did not return the applied camera pose")
 
     time.sleep(max(0.0, settle_seconds))
+    if native:
+        measured_camera, measured_response = _camera_response(bridge, "camera.get", {})
+        if measured_response.session != expected_session:
+            raise RuntimeError("camera.get after configured framing did not run on the pinned session")
+        if measured_response.context not in {"run", "server", "client"}:
+            raise RuntimeError("camera.get after configured framing did not run in a live game context")
+        if expected_place and Path(measured_response.place).name.lower() != Path(expected_place).name.lower():
+            raise RuntimeError("configured camera verification ran against a different place")
+        if not _same_pose(applied_camera, measured_camera):
+            raise RuntimeError("configured camera pose was not preserved before native capture")
+        shot = capture_native_viewpoint(
+            bridge,
+            "",
+            output,
+            metadata={
+                "settleSeconds": settle_seconds,
+                "configuredCamera": dict(camera_spec),
+                **(metadata or {}),
+            },
+            settle_seconds=0,
+            expected_place=expected_place,
+            expected_session=expected_session,
+            run_id=run_id,
+            build_hash=build_hash,
+            place_hash=place_hash,
+            spec_hash=spec_hash,
+            viewpoint=viewpoint,
+            required=required,
+            expected_device=expected_device,
+            expected_resolution=expected_resolution,
+        )
+        shot.target = target
+        shot.framing = {
+            "camera": applied_camera,
+            "request": dict(camera_spec),
+            "landmarkBounds": bounds,
+        }
+        return shot
     return capture(
         output,
         bridge=bridge,
@@ -964,6 +1201,7 @@ def capture_set(
     place = expected_place or (build_path.name if build_path is not None else "")
     selected: WindowIdentity | None = None
     capture_backend = backend
+    use_native_capture = backend is None
     try:
         pinned_session = bridge.pinned_session or bridge.pin_to_running(timeout=30)
         if expected_session is not None and pinned_session != expected_session:
@@ -984,17 +1222,18 @@ def capture_set(
         if place and Path(place).name.lower() != Path(live_place).name.lower():
             raise RuntimeError(f"requested place {place!r} differs from pinned place {live_place!r}")
         place = live_place
-        capture_backend = capture_backend or Win32CaptureBackend()
-        selected = _select_window(
-            capture_backend,
-            expected_place=place,
-            expected_hwnd=expected_hwnd,
-            expected_pid=expected_pid,
-        )
+        if not use_native_capture:
+            capture_backend = capture_backend or Win32CaptureBackend()
+            selected = _select_window(
+                capture_backend,
+                expected_place=place,
+                expected_hwnd=expected_hwnd,
+                expected_pid=expected_pid,
+            )
     except (BridgeError, OSError, RuntimeError, ValueError) as exc:
         failures.append({"scope": "identity", "error": str(exc)})
 
-    if selected is not None and capture_backend is not None and not failures:
+    if not failures and (use_native_capture or (selected is not None and capture_backend is not None)):
         valid_names = set(names)
         for index, viewpoint in enumerate(viewpoints, start=1):
             name = str(viewpoint.get("name") or "")
@@ -1009,8 +1248,6 @@ def capture_set(
                 common = {
                     "metadata": {"step": index},
                     "settle_seconds": float(viewpoint.get("settleSeconds", 0.8)),
-                    "backend": capture_backend,
-                    "window": selected,
                     "expected_place": place,
                     "expected_session": pinned_session,
                     "run_id": run_id,
@@ -1032,12 +1269,25 @@ def capture_set(
                     ),
                 }
                 camera_spec = viewpoint.get("camera")
+                legacy_window = {"backend": capture_backend, "window": selected} if not use_native_capture else {}
                 if isinstance(camera_spec, dict):
                     shot = capture_configured_viewpoint(
                         bridge,
                         target,
                         output,
                         camera_spec,
+                        native=use_native_capture,
+                        **legacy_window,
+                        **common,
+                    )
+                elif use_native_capture:
+                    shot = capture_native_viewpoint(
+                        bridge,
+                        target,
+                        output,
+                        float(viewpoint.get("pitchDegrees", 35)),
+                        float(viewpoint.get("yawDegrees", 45)),
+                        float(viewpoint.get("margin", 1.35)),
                         **common,
                     )
                 else:
@@ -1048,6 +1298,7 @@ def capture_set(
                         float(viewpoint.get("pitchDegrees", 35)),
                         float(viewpoint.get("yawDegrees", 45)),
                         float(viewpoint.get("margin", 1.35)),
+                        **legacy_window,
                         **common,
                     )
                 shots.append(shot.to_dict())
@@ -1072,7 +1323,7 @@ def capture_set(
         "sessionId": pinned_session,
         "place": place,
         "capturedAt": _timestamp(),
-        "captureType": "studio-window",
+        "captureType": "studio-native" if use_native_capture else "studio-window",
         "window": selected.to_dict() if selected else None,
         "requiredViewpoints": required_unique,
         "capturedRequiredViewpoints": captured_required,

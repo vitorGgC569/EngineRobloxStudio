@@ -8,6 +8,7 @@
 -- outside.
 
 local Errors = require(script.Parent.Parent.Errors)
+local Serialize = require(script.Parent.Parent.Serialize)
 local Runtime = require(script.Parent.Runtime)
 
 local InspectCommands = {}
@@ -101,8 +102,7 @@ function InspectCommands.inspect(params: { [string]: any }): any
 
 	local attributes = {}
 	for name, value in pairs(thing:GetAttributes()) do
-		attributes[name] = if typeof(value) == "Vector3"
-			then { value.X, value.Y, value.Z } else value
+		attributes[name] = Serialize.value(value)
 	end
 
 	local source: string? = nil
@@ -155,7 +155,7 @@ function InspectCommands.watchStart(params: { [string]: any }): any
 		local value = thing:GetAttribute(attribute)
 		table.insert(record.changes, {
 			at = os.clock() - record.started,
-			value = if typeof(value) == "Vector3" then { value.X, value.Y, value.Z } else value,
+			value = Serialize.value(value),
 		})
 		-- Bounded: a watch on something that ticks every frame must not grow
 		-- until the session dies.
@@ -165,7 +165,7 @@ function InspectCommands.watchStart(params: { [string]: any }): any
 	end)
 	watches[key] = record
 
-	return { watching = key, initial = thing:GetAttribute(attribute) }
+	return { watching = key, initial = Serialize.value(thing:GetAttribute(attribute)) }
 end
 
 --- watch.read: what has it done since the watch started.

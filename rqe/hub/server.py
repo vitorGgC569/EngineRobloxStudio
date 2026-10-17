@@ -13,7 +13,9 @@ transport that works from inside Studio without external dependencies.
 from __future__ import annotations
 
 import json
+import ipaddress
 import logging
+import math
 import secrets
 import threading
 import time
@@ -22,6 +24,13 @@ from dataclasses import dataclass
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from typing import Any
 
+from .auth import (
+    BridgeAuthError,
+    derive_role_tokens,
+    load_bridge_token,
+    role_for_command_effect,
+    validate_token,
+)
 from .commands import CommandRegistry, CommandRegistryError, CommandValidationError, load_default_registry
 from .protocol import (
     PROTOCOL_VERSION,
@@ -34,6 +43,7 @@ from .protocol import (
     rpc_error,
     rpc_result,
 )
+from ..workspace import hub_port
 
 LOGGER = logging.getLogger("rqe.hub")
 
@@ -65,6 +75,24 @@ DEFAULT_POLL_HOLD_SECONDS = 1.5
 SESSION_STALE_SECONDS = 75.0
 
 MAX_EVENTS = 2000
+MAX_REQUEST_BODY_BYTES = 4 * 1024 * 1024
+MAX_RESPONSE_BODY_BYTES = 8 * 1024 * 1024
+MAX_SESSIONS = 32
+MAX_QUEUE_PER_SESSION = 256
+MAX_INFLIGHT_PER_SESSION = 32
+MAX_EVENT_BATCH = 256
+MAX_RESULT_BATCH = 128
+MAX_EVENT_QUERY = 500
+MAX_COMMAND_TIMEOUT_SECONDS = 300.0
+MAX_REQUEST_LINE_BYTES = 8 * 1024
+MAX_HEADER_BYTES = 32 * 1024
+SOCKET_IO_TIMEOUT_SECONDS = 20.0
+DEFAULT_RATE_LIMIT_PER_SECOND = 120.0
+DEFAULT_RATE_LIMIT_BURST = 240
+
+
+class RequestBodyTooLarge(ValueError):
+    """Raised before an oversized HTTP body is read into memory."""
 
 
 @dataclass(frozen=True)
@@ -121,8 +149,20 @@ class BridgeHub:
         *,
         command_registry: CommandRegistry | None = None,
         require_mutation_leases: bool = False,
+        enforce_manifest_leases: bool = True,
+        allow_unauthenticated: bool = False,
+        max_sessions: int = MAX_SESSIONS,
+        max_queue_per_session: int = MAX_QUEUE_PER_SESSION,
+        max_inflight_per_session: int = MAX_INFLIGHT_PER_SESSION,
+        rate_limit_per_second: float = DEFAULT_RATE_LIMIT_PER_SECOND,
+        rate_limit_burst: int = DEFAULT_RATE_LIMIT_BURST,
     ) -> None:
-        self.token = token
+        if token is None and not allow_unauthenticated:
+            token = load_bridge_token()
+        root_token = validate_token(token) if token is not None else None
+        self._role_tokens = derive_role_tokens(root_token) if root_token else {}
+        self.authentication_required = bool(self._role_tokens)
+        self.allow_unauthenticated = allow_unauthenticated
         self.poll_hold_seconds = poll_hold_seconds
         self.command_registry = command_registry or load_default_registry()
         if self.command_registry.protocol != PROTOCOL_VERSION:
@@ -131,8 +171,33 @@ class BridgeHub:
                 f"hub speaks {PROTOCOL_VERSION!r}"
             )
         self.require_mutation_leases = require_mutation_leases
+        self.enforce_manifest_leases = enforce_manifest_leases
+        for label, value in (
+            ("max_sessions", max_sessions),
+            ("max_queue_per_session", max_queue_per_session),
+            ("max_inflight_per_session", max_inflight_per_session),
+        ):
+            if not isinstance(value, int) or isinstance(value, bool) or value < 1:
+                raise ValueError(f"{label} must be a positive integer")
+        self.max_sessions = max_sessions
+        self.max_queue_per_session = max_queue_per_session
+        self.max_inflight_per_session = max_inflight_per_session
+        if (
+            not isinstance(rate_limit_per_second, (int, float))
+            or isinstance(rate_limit_per_second, bool)
+            or not math.isfinite(float(rate_limit_per_second))
+            or rate_limit_per_second <= 0
+        ):
+            raise ValueError("rate_limit_per_second must be a positive finite number")
+        if not isinstance(rate_limit_burst, int) or isinstance(rate_limit_burst, bool) or rate_limit_burst < 1:
+            raise ValueError("rate_limit_burst must be a positive integer")
+        self.rate_limit_per_second = float(rate_limit_per_second)
+        self.rate_limit_burst = rate_limit_burst
         self._condition = threading.Condition()
         self._sessions: dict[str, SessionInfo] = {}
+        # Returned only to the plugin that completed hello. Status and logs
+        # never expose these ephemeral continuity proofs.
+        self._session_keys: dict[str, str] = {}
         self._queues: dict[str, deque[Command]] = {}
         self._inflight: dict[str, InflightAssignment] = {}
         # Callers may time out after Studio has already received a command.  In
@@ -146,7 +211,47 @@ class BridgeHub:
         self._leases: dict[str, SessionLease] = {}
         self._next_fence = 0
         self._events: deque[dict[str, Any]] = deque(maxlen=MAX_EVENTS)
+        self._rate_buckets: dict[str, tuple[float, float]] = {}
         self.started_at = time.time()
+
+    def authorized_role(self, authorization: str, *roles: str) -> str | None:
+        """Return the exact capability presented, without logging its token."""
+
+        if not self.authentication_required:
+            return "unauthenticated" if self.allow_unauthenticated else None
+        received = authorization or ""
+        for role in roles:
+            expected_token = self._role_tokens.get(role)
+            if expected_token is None:
+                continue
+            expected = f"Bearer {expected_token}"
+            if secrets.compare_digest(received.encode("utf-8"), expected.encode("utf-8")):
+                return role
+        return None
+
+    def authorized(self, authorization: str, *roles: str) -> bool:
+        """Check one purpose-bound bearer credential without exposing secrets."""
+
+        return self.authorized_role(authorization, *roles) is not None
+
+    def consume_request_budget(self, role: str) -> tuple[bool, float]:
+        """Token-bucket rate limit with a fixed, capability-sized key space."""
+
+        now = time.monotonic()
+        with self._condition:
+            tokens, last = self._rate_buckets.get(
+                role,
+                (float(self.rate_limit_burst), now),
+            )
+            tokens = min(
+                float(self.rate_limit_burst),
+                tokens + max(0.0, now - last) * self.rate_limit_per_second,
+            )
+            if tokens < 1.0:
+                self._rate_buckets[role] = (tokens, now)
+                return False, (1.0 - tokens) / self.rate_limit_per_second
+            self._rate_buckets[role] = (tokens - 1.0, now)
+            return True, 0.0
 
     # ---------------------------------------------------------------- sessions
 
@@ -158,18 +263,75 @@ class BridgeHub:
                 f"plugin speaks {protocol or 'an unknown protocol'}, hub speaks {PROTOCOL_VERSION}",
                 {"pluginProtocol": protocol, "hubProtocol": PROTOCOL_VERSION},
             )
+        client_id = str(payload.get("clientId") or "").strip()
+        installation_id = str(payload.get("installationId") or "").strip()
+        context = str(payload.get("context") or "edit")
+        if not client_id or len(client_id) > 128:
+            raise BridgeError(ErrorCode.BAD_PARAMS, "clientId must contain 1 to 128 characters")
+        if (
+            len(installation_id) < 16
+            or len(installation_id) > 128
+            or any(character in installation_id for character in "\r\n\0")
+        ):
+            raise BridgeError(
+                ErrorCode.BAD_PARAMS,
+                "installationId must contain 16 to 128 non-control characters",
+            )
+        if context not in {"edit", "run", "server", "client"}:
+            raise BridgeError(ErrorCode.BAD_PARAMS, f"unsupported plugin context: {context}")
         session = SessionInfo(
             id=new_session_id(),
-            plugin_version=str(payload.get("pluginVersion") or "unknown"),
-            studio_version=str(payload.get("studioVersion") or "unknown"),
-            place_name=str(payload.get("placeName") or ""),
+            plugin_version=str(payload.get("pluginVersion") or "unknown")[:128],
+            plugin_build_id=str(payload.get("pluginBuildId") or "unknown")[:128],
+            studio_version=str(payload.get("studioVersion") or "unknown")[:128],
+            place_name=str(payload.get("placeName") or "")[:512],
             place_id=int(payload.get("placeId") or 0),
-            context=str(payload.get("context") or "edit"),
-            client_id=str(payload.get("clientId") or ""),
+            context=context,
+            client_id=client_id,
+            installation_id=installation_id,
         )
+        session_key = secrets.token_urlsafe(32)
         with self._condition:
+            self._reap_locked()
+            collisions = [
+                existing
+                for existing in self._sessions.values()
+                if existing.client_id == session.client_id
+            ]
+            replacing = bool(collisions)
+            if collisions and self.authentication_required:
+                resume_session = str(payload.get("resumeSession") or "")
+                resume_key = str(payload.get("resumeKey") or "")
+                if len(collisions) != 1:
+                    raise BridgeError(
+                        ErrorCode.SESSION_CONFLICT,
+                        "multiple live sessions claim the same client identity",
+                    )
+                previous = collisions[0]
+                expected = self._session_keys.get(previous.id, "")
+                valid_resume = (
+                    previous.installation_id == installation_id
+                    and resume_session == previous.id
+                    and bool(expected)
+                    and secrets.compare_digest(
+                        resume_key.encode("utf-8"),
+                        expected.encode("utf-8"),
+                    )
+                )
+                if not valid_resume:
+                    raise BridgeError(
+                        ErrorCode.SESSION_CONFLICT,
+                        "a live session already owns this client identity",
+                        {"remedy": "resume with the previous session proof or wait for it to expire"},
+                    )
+            if not replacing and len(self._sessions) >= self.max_sessions:
+                raise BridgeError(
+                    ErrorCode.CAPACITY,
+                    f"hub session capacity reached ({self.max_sessions})",
+                )
             # Register first so the new queue exists to receive transferred work.
             self._sessions[session.id] = session
+            self._session_keys[session.id] = session_key
             self._queues[session.id] = deque()
             # The same Studio re-registers when it switches edit <-> run. Retire
             # the abandoned session now instead of waiting for it to go stale,
@@ -190,10 +352,30 @@ class BridgeHub:
         LOGGER.info("plugin connected: %s (%s, %s)", session.id, session.place_name, session.context)
         return {
             "session": session.id,
+            "sessionKey": session_key,
             "protocol": PROTOCOL_VERSION,
             "pollHoldSeconds": self.poll_hold_seconds,
             "heartbeatSeconds": self.poll_hold_seconds / 2,
         }
+
+    def require_session_proof(self, session_id: str, session_key: str) -> None:
+        """Authenticate one plugin transport request to its exact session."""
+
+        with self._condition:
+            expected = self._session_keys.get(session_id, "")
+            valid = (
+                bool(expected)
+                and isinstance(session_key, str)
+                and secrets.compare_digest(
+                    session_key.encode("utf-8"),
+                    expected.encode("utf-8"),
+                )
+            )
+        if not valid:
+            raise BridgeError(
+                ErrorCode.UNAUTHORIZED,
+                "valid session proof required; re-run the plugin handshake",
+            )
 
     def sessions(self) -> list[dict[str, Any]]:
         with self._condition:
@@ -367,6 +549,7 @@ class BridgeHub:
         reporting a failure.
         """
         self._sessions.pop(session_id, None)
+        self._session_keys.pop(session_id, None)
         for lease_id, lease in list(self._leases.items()):
             if lease.session_id == session_id:
                 self._leases.pop(lease_id, None)
@@ -513,13 +696,28 @@ class BridgeHub:
                 f"no such command: {method}",
                 {"available": list(self.command_registry.methods())},
             ) from exc
+        if spec.availability != "supported":
+            raise BridgeError(
+                ErrorCode.UNAVAILABLE,
+                f"{method} is declared {spec.availability} in the command manifest",
+                {"methodVersion": spec.method_version, "availability": spec.availability},
+            )
         command_params = {} if params is None else params
         try:
             spec.validate_params(command_params)
         except CommandValidationError as exc:
             raise BridgeError(ErrorCode.BAD_PARAMS, str(exc), {"issues": exc.issues, "methodVersion": spec.method_version}) from exc
-        if not isinstance(timeout, (int, float)) or isinstance(timeout, bool) or timeout <= 0:
-            raise BridgeError(ErrorCode.BAD_PARAMS, "command timeout must be a positive number")
+        if (
+            not isinstance(timeout, (int, float))
+            or isinstance(timeout, bool)
+            or not math.isfinite(float(timeout))
+            or timeout <= 0
+            or timeout > MAX_COMMAND_TIMEOUT_SECONDS
+        ):
+            raise BridgeError(
+                ErrorCode.BAD_PARAMS,
+                f"command timeout must be between 0 and {MAX_COMMAND_TIMEOUT_SECONDS:g} seconds",
+            )
 
         # Playing the game and inspecting the player only exist while the game
         # runs. Pinning them to a running session stops a stray edit-mode
@@ -538,11 +736,18 @@ class BridgeHub:
             lease_record: SessionLease | None = None
             if lease is not None:
                 lease_record = self._validate_lease_locked(lease, session.id)
-            elif self.require_mutation_leases and spec.mutates:
+            elif (
+                (self.enforce_manifest_leases and spec.lease_targeted)
+                or (self.require_mutation_leases and spec.mutates)
+            ):
                 raise BridgeError(
                     ErrorCode.LEASE_REQUIRED,
                     f"{method} requires an exclusive fenced lease",
-                    {"effect": spec.effect, "session": session.id},
+                    {
+                        "effect": spec.effect,
+                        "session": session.id,
+                        "manifestBuildSelector": spec.selector["build"],
+                    },
                 )
 
             command = Command(
@@ -559,7 +764,14 @@ class BridgeHub:
                 lease={"leaseId": lease_record.id, "fence": lease_record.fence} if lease_record else {},
                 deadline_ms=int(timeout * 1000),
             )
-            self._queues[session.id].append(command)
+            queue = self._queues[session.id]
+            if len(queue) >= self.max_queue_per_session:
+                raise BridgeError(
+                    ErrorCode.CAPACITY,
+                    f"session command queue capacity reached ({self.max_queue_per_session})",
+                    {"session": session.id},
+                )
+            queue.append(command)
             session.commands_dispatched += 1
             self._condition.notify_all()
             deadline = time.monotonic() + timeout
@@ -601,11 +813,14 @@ class BridgeHub:
             for assignment in self._inflight.values()
             if assignment.session_id == session_id
         ]
+        if len(active) >= self.max_inflight_per_session:
+            return []
         if any(assignment.effect != "read" for assignment in active):
             return []
 
         batch: list[Command] = []
-        while queue and len(batch) < max_batch:
+        available = self.max_inflight_per_session - len(active)
+        while queue and len(batch) < min(max_batch, available):
             command = queue[0]
             if command.expired():
                 queue.popleft()
@@ -727,6 +942,13 @@ class BridgeHub:
                 self._condition.notify_all()
 
     def complete(self, session_id: str, results: list[dict[str, Any]]) -> dict[str, Any]:
+        if not isinstance(results, list):
+            raise BridgeError(ErrorCode.BAD_PARAMS, "results must be an array")
+        if len(results) > MAX_RESULT_BATCH:
+            raise BridgeError(
+                ErrorCode.CAPACITY,
+                f"result batch exceeds {MAX_RESULT_BATCH} entries",
+            )
         accepted = 0
         rejected: list[dict[str, Any]] = []
         with self._condition:
@@ -802,17 +1024,30 @@ class BridgeHub:
     # ------------------------------------------------------------------ events
 
     def push_events(self, session_id: str, events: list[dict[str, Any]]) -> dict[str, Any]:
+        if not isinstance(events, list):
+            raise BridgeError(ErrorCode.BAD_PARAMS, "events must be an array")
+        if len(events) > MAX_EVENT_BATCH:
+            raise BridgeError(
+                ErrorCode.CAPACITY,
+                f"event batch exceeds {MAX_EVENT_BATCH} entries",
+            )
+        accepted = 0
         with self._condition:
             session = self._sessions.get(session_id)
-            if session is not None:
-                session.last_seen_monotonic = time.monotonic()
+            if session is None:
+                raise BridgeError(ErrorCode.NOT_FOUND, "unknown session; re-run the handshake", {"session": session_id})
+            session.last_seen_monotonic = time.monotonic()
             for event in events:
                 if isinstance(event, dict):
-                    self._events.append({"session": session_id, "receivedAt": time.time(), **event})
+                    self._events.append({**event, "session": session_id, "receivedAt": time.time()})
+                    accepted += 1
             self._condition.notify_all()
-        return {"accepted": len(events)}
+        return {"accepted": accepted}
 
     def events(self, since: float = 0.0, kind: str | None = None, limit: int = 200) -> list[dict[str, Any]]:
+        if not math.isfinite(float(since)):
+            raise BridgeError(ErrorCode.BAD_PARAMS, "event cursor must be finite")
+        limit = max(1, min(int(limit), MAX_EVENT_QUERY))
         with self._condition:
             items = [event for event in self._events if event.get("receivedAt", 0) > since]
         if kind:
@@ -828,8 +1063,10 @@ class BridgeHub:
                 "protocol": PROTOCOL_VERSION,
                 "commandSchemaVersion": self.command_registry.schema_version,
                 "commandCount": len(self.command_registry),
-                "authenticationRequired": bool(self.token),
+                "authenticationRequired": self.authentication_required,
+                "credentialModel": "derived-capability-v2" if self.authentication_required else "explicitly-disabled",
                 "mutationLeasesEnforced": self.require_mutation_leases,
+                "manifestLeasesEnforced": self.enforce_manifest_leases,
                 "uptimeSeconds": round(time.time() - self.started_at, 1),
                 "sessions": [session.to_dict() for session in self._sessions.values()],
                 "leases": [lease.to_dict() for lease in sorted(self._leases.values(), key=lambda item: item.fence)],
@@ -847,29 +1084,124 @@ def make_handler(hub: BridgeHub) -> type[BaseHTTPRequestHandler]:
 
         # ------------------------------------------------------------- helpers
 
-        def _authorized(self) -> bool:
-            if not hub.token:
-                return True
-            received = self.headers.get("Authorization") or ""
-            expected = f"Bearer {hub.token}"
-            return secrets.compare_digest(received.encode("utf-8"), expected.encode("utf-8"))
+        def setup(self) -> None:
+            super().setup()
+            self.connection.settimeout(SOCKET_IO_TIMEOUT_SECONDS)
+
+        def handle_one_request(self) -> None:
+            """Stdlib request dispatch with a smaller request-line budget."""
+
+            try:
+                self.raw_requestline = self.rfile.readline(MAX_REQUEST_LINE_BYTES + 1)
+                if len(self.raw_requestline) > MAX_REQUEST_LINE_BYTES:
+                    self.requestline = ""
+                    self.request_version = ""
+                    self.command = ""
+                    self.send_error(414, "request target is too long")
+                    self.close_connection = True
+                    return
+                if not self.raw_requestline:
+                    self.close_connection = True
+                    return
+                if not self.parse_request():
+                    return
+                method_name = "do_" + self.command
+                if not hasattr(self, method_name):
+                    self.send_error(501, f"unsupported method ({self.command!r})")
+                    return
+                getattr(self, method_name)()
+                self.wfile.flush()
+            except TimeoutError:
+                self.close_connection = True
+
+        def parse_request(self) -> bool:
+            if not super().parse_request():
+                return False
+            total = len(self.raw_requestline)
+            total += sum(
+                len(name.encode("utf-8")) + len(value.encode("utf-8")) + 4
+                for name, value in self.headers.raw_items()
+            )
+            if total > MAX_HEADER_BYTES:
+                self.close_connection = True
+                self._send(
+                    {"error": {"code": ErrorCode.CAPACITY, "message": "request headers exceed the hub byte limit"}},
+                    431,
+                )
+                return False
+            return True
+
+        def _authorized(self, *roles: str) -> bool:
+            return hub.authorized(self.headers.get("Authorization") or "", *roles)
+
+        def _authorize_and_budget(self, *roles: str) -> bool:
+            role = hub.authorized_role(self.headers.get("Authorization") or "", *roles)
+            if role is None:
+                self._reject_unauthorized()
+                return False
+            allowed, retry_after = hub.consume_request_budget(role)
+            if not allowed:
+                self._send(
+                    {"error": {"code": ErrorCode.RATE_LIMITED, "message": "bridge request rate exceeded"}},
+                    429,
+                    extra_headers={"Retry-After": str(max(1, math.ceil(retry_after)))},
+                )
+                return False
+            return True
 
         def _reject_unauthorized(self) -> None:
             self._send({"error": {"code": ErrorCode.UNAUTHORIZED, "message": "authenticated bridge token required"}}, 401)
 
-        def _send(self, payload: Any, status: int = 200) -> None:
+        def _send(
+            self,
+            payload: Any,
+            status: int = 200,
+            *,
+            extra_headers: dict[str, str] | None = None,
+        ) -> None:
             body = json.dumps(payload, ensure_ascii=False).encode("utf-8")
+            if len(body) > MAX_RESPONSE_BODY_BYTES:
+                status = 507
+                body = json.dumps({
+                    "error": {
+                        "code": ErrorCode.CAPACITY,
+                        "message": "response exceeds the hub byte limit",
+                    }
+                }).encode("utf-8")
             self.send_response(status)
             self.send_header("Content-Type", "application/json; charset=utf-8")
             self.send_header("Content-Length", str(len(body)))
+            self.send_header("Cache-Control", "no-store")
+            self.send_header("X-Content-Type-Options", "nosniff")
+            for name, value in (extra_headers or {}).items():
+                self.send_header(name, value)
             self.end_headers()
             self.wfile.write(body)
 
         def _read_json(self) -> dict[str, Any]:
-            length = int(self.headers.get("Content-Length", "0"))
+            if self.headers.get("Transfer-Encoding"):
+                raise ValueError("Transfer-Encoding is not supported; send Content-Length")
+            content_type = (self.headers.get("Content-Type") or "").split(";", 1)[0].strip().lower()
+            if content_type != "application/json":
+                raise ValueError("Content-Type must be application/json")
+            value = self.headers.get("Content-Length")
+            if value is None:
+                raise ValueError("Content-Length is required")
+            try:
+                length = int(value)
+            except ValueError as exc:
+                raise ValueError("Content-Length must be an integer") from exc
+            if length > MAX_REQUEST_BODY_BYTES:
+                self.close_connection = True
+                raise RequestBodyTooLarge(
+                    f"request body exceeds {MAX_REQUEST_BODY_BYTES} bytes"
+                )
             if length <= 0:
-                return {}
-            raw = self.rfile.read(length).decode("utf-8")
+                raise ValueError("request body must not be empty")
+            try:
+                raw = self.rfile.read(length).decode("utf-8")
+            except UnicodeDecodeError as exc:
+                raise ValueError("request body must be UTF-8") from exc
             payload = json.loads(raw)
             if not isinstance(payload, dict):
                 raise ValueError("request body must be a JSON object")
@@ -878,8 +1210,7 @@ def make_handler(hub: BridgeHub) -> type[BaseHTTPRequestHandler]:
         # --------------------------------------------------------------- verbs
 
         def do_GET(self) -> None:  # noqa: N802
-            if not self._authorized():
-                self._reject_unauthorized()
+            if not self._authorize_and_budget("reader", "admin"):
                 return
             if self.path == "/health":
                 self._send({"ok": True, "service": "rqe-bridge-hub", "protocol": PROTOCOL_VERSION})
@@ -891,12 +1222,19 @@ def make_handler(hub: BridgeHub) -> type[BaseHTTPRequestHandler]:
 
         def do_POST(self) -> None:  # noqa: N802
             # Authenticate before reading or parsing an attacker-controlled
-            # request body. Plugin and agent surfaces share the same secret.
-            if not self._authorized():
-                self._reject_unauthorized()
+            # request body. Plugin and command capabilities are purpose-bound.
+            required_roles = (
+                ("plugin",)
+                if self.path.startswith("/bridge/")
+                else ("reader", "mutator", "executor", "admin")
+            )
+            if not self._authorize_and_budget(*required_roles):
                 return
             try:
                 payload = self._read_json()
+            except RequestBodyTooLarge as exc:
+                self._send({"error": {"code": ErrorCode.CAPACITY, "message": str(exc)}}, 413)
+                return
             except (ValueError, json.JSONDecodeError) as exc:
                 self._send({"error": {"code": ErrorCode.PROTOCOL, "message": str(exc)}}, 400)
                 return
@@ -906,6 +1244,10 @@ def make_handler(hub: BridgeHub) -> type[BaseHTTPRequestHandler]:
                     self._send(hub.register(payload))
                 elif self.path == "/bridge/poll":
                     session_id = str(payload.get("session", ""))
+                    hub.require_session_proof(
+                        session_id,
+                        str(payload.get("sessionKey", "")),
+                    )
                     result = hub.poll(session_id, int(payload.get("maxBatch", 8)))
                     try:
                         self._send(result)
@@ -916,18 +1258,36 @@ def make_handler(hub: BridgeHub) -> type[BaseHTTPRequestHandler]:
                         hub.disconnected(session_id, f"socket closed while answering a poll: {exc}")
                         raise
                 elif self.path == "/bridge/result":
-                    self._send(hub.complete(str(payload.get("session", "")), list(payload.get("results", []))))
+                    session_id = str(payload.get("session", ""))
+                    hub.require_session_proof(
+                        session_id,
+                        str(payload.get("sessionKey", "")),
+                    )
+                    self._send(hub.complete(session_id, payload.get("results", [])))
                 elif self.path == "/bridge/event":
-                    self._send(hub.push_events(str(payload.get("session", "")), list(payload.get("events", []))))
+                    session_id = str(payload.get("session", ""))
+                    hub.require_session_proof(
+                        session_id,
+                        str(payload.get("sessionKey", "")),
+                    )
+                    self._send(hub.push_events(session_id, payload.get("events", [])))
                 elif self.path == "/rpc":
                     self._handle_rpc(payload)
                 else:
                     self._send({"error": {"code": ErrorCode.NOT_FOUND, "message": self.path}}, 404)
             except BridgeError as exc:
-                self._send({"error": exc.to_dict()}, 409)
+                status = 401 if exc.code == ErrorCode.UNAUTHORIZED else 409
+                self._send({"error": exc.to_dict()}, status)
             except Exception as exc:  # the hub must survive any single bad request
-                LOGGER.exception("hub request failed")
-                self._send({"error": {"code": ErrorCode.EXEC, "message": str(exc)}}, 500)
+                incident = secrets.token_hex(6)
+                LOGGER.exception("hub request failed (incident %s)", incident)
+                self._send({
+                    "error": {
+                        "code": ErrorCode.EXEC,
+                        "message": "internal hub error",
+                        "incident": incident,
+                    }
+                }, 500)
 
         def _handle_rpc(self, payload: dict[str, Any]) -> None:
             method = payload.get("method")
@@ -938,19 +1298,50 @@ def make_handler(hub: BridgeHub) -> type[BaseHTTPRequestHandler]:
             if not isinstance(params, dict):
                 self._send(rpc_error(payload.get("id"), -32602, "params must be an object"), 400)
                 return
+
+            def require_capability(role: str, label: str) -> bool:
+                if self._authorized(role, "admin"):
+                    return True
+                self._send(
+                    rpc_error(
+                        payload.get("id"),
+                        -32001,
+                        f"{label} capability required",
+                        {"code": ErrorCode.UNAUTHORIZED, "requiredCapability": role},
+                    ),
+                    200,
+                )
+                return False
             try:
                 if method == "hub.status":
+                    if not require_capability("reader", "read"):
+                        return
                     self._send(rpc_result(payload.get("id"), hub.status()))
                     return
                 if method == "hub.drop_sessions":
+                    if not self._authorized("admin"):
+                        self._send(
+                            rpc_error(
+                                payload.get("id"),
+                                -32001,
+                                "administrative credential required",
+                                {"code": ErrorCode.UNAUTHORIZED},
+                            ),
+                            200,
+                        )
+                        return
                     dropped = hub.drop_sessions(list(params.get("sessions", [])), str(params.get("reason", "retired by the caller")))
                     self._send(rpc_result(payload.get("id"), {"dropped": dropped}))
                     return
                 if method == "hub.events":
+                    if not require_capability("reader", "read"):
+                        return
                     result = hub.events(float(params.get("since", 0)), params.get("kind"), int(params.get("limit", 200)))
                     self._send(rpc_result(payload.get("id"), result))
                     return
                 if method == "hub.lease.acquire":
+                    if not require_capability("mutator", "mutation"):
+                        return
                     result = hub.acquire_lease(
                         run_id=params.get("runId"),
                         agent_id=params.get("agentId"),
@@ -961,6 +1352,8 @@ def make_handler(hub: BridgeHub) -> type[BaseHTTPRequestHandler]:
                     self._send(rpc_result(payload.get("id"), result))
                     return
                 if method == "hub.lease.renew":
+                    if not require_capability("mutator", "mutation"):
+                        return
                     result = hub.renew_lease(
                         lease_id=params.get("leaseId"),
                         fence=params.get("fence"),
@@ -973,6 +1366,8 @@ def make_handler(hub: BridgeHub) -> type[BaseHTTPRequestHandler]:
                     self._send(rpc_result(payload.get("id"), result))
                     return
                 if method == "hub.lease.release":
+                    if not require_capability("mutator", "mutation"):
+                        return
                     result = hub.release_lease(
                         lease_id=params.get("leaseId"),
                         fence=params.get("fence"),
@@ -983,6 +1378,14 @@ def make_handler(hub: BridgeHub) -> type[BaseHTTPRequestHandler]:
                     )
                     self._send(rpc_result(payload.get("id"), result))
                     return
+                try:
+                    command_spec = hub.command_registry.require(method)
+                except CommandRegistryError:
+                    command_spec = None
+                if command_spec is not None:
+                    role = role_for_command_effect(command_spec.effect)
+                    if not require_capability(role, command_spec.effect):
+                        return
                 timeout = float(params.pop("_timeout", 15.0))
                 session_id = params.pop("_session", None)
                 context = params.pop("_context", None)
@@ -998,14 +1401,42 @@ def make_handler(hub: BridgeHub) -> type[BaseHTTPRequestHandler]:
     return Handler
 
 
-def serve(hub: BridgeHub, host: str = "127.0.0.1", port: int = 8790) -> ThreadingHTTPServer:
+def _require_loopback_host(host: str) -> None:
+    candidate = str(host).strip().strip("[]").lower()
+    if candidate == "localhost":
+        return
+    try:
+        if ipaddress.ip_address(candidate).is_loopback:
+            return
+    except ValueError:
+        pass
+    raise BridgeAuthError(
+        f"bridge hub may bind only to loopback; refused host {host!r}"
+    )
+
+
+def serve(hub: BridgeHub, host: str = "127.0.0.1", port: int | None = None) -> ThreadingHTTPServer:
+    #: `None`, not `0`. Zero is already meaningful to the socket API -- it asks
+    #: the operating system for a free ephemeral port, which is how every test
+    #: in `test_hub.py` binds -- so overloading it to mean "the workspace's
+    #: port" made nine of them try to share the real hub's 8790.
+    #:
+    #: `None` means "wherever this workspace's hub lives", resolved now rather
+    #: than frozen into a default at import time: a second agent sets
+    #: RQE_HUB_PORT and its hub, its clients and its preflight all agree
+    #: without anyone editing twenty-six literals.
+    if port is None:
+        port = hub_port()
+    _require_loopback_host(host)
     """Start the hub. Returns the server so callers can shut it down."""
     server = ThreadingHTTPServer((host, port), make_handler(hub))
     server.daemon_threads = True
     return server
 
 
-def serve_forever(hub: BridgeHub, host: str = "127.0.0.1", port: int = 8790) -> None:
+def serve_forever(hub: BridgeHub, host: str = "127.0.0.1", port: int | None = None) -> None:
+    if port is None:
+        port = hub_port()
     server = serve(hub, host, port)
     LOGGER.info("RQE Bridge Hub listening on http://%s:%d (protocol %s)", host, port, PROTOCOL_VERSION)
     try:

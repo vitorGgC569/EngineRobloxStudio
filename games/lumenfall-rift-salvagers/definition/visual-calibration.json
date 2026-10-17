@@ -1,0 +1,20 @@
+{
+  "$schema": "../schemas/visual-calibration-receipt.v1.schema.json",
+  "schemaVersion": 1,
+  "calibrationId": "lumenfall-rift-salvagers.visual-calibration",
+  "revision": 1,
+  "productId": "lumenfall-rift-salvagers",
+  "status": "BLOCKED",
+  "benchmark": {
+    "benchmarkId": "lumenfall-rift-salvagers.reference-benchmark",
+    "sha256": "4d91edc217b7c7113230b5921f3f2d53be853514f1bfae62951c9f55d3af39ce"
+  },
+  "methodology": {
+    "calibratedAt": null,
+    "calibratedBy": null,
+    "freezeBeforeCandidateEvaluation": true,
+    "candidateInputsUsed": false,
+    "method": "PENDING_INDEPENDENT_REFERENCE_MEASUREMENT"
+  },
+  "thresholds": []
+}

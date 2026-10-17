@@ -51,13 +51,35 @@ type Self = {
 
 RoundMachine.__index = RoundMachine
 
+-- The caller can rewrite a phase after construction. Sharing that table
+-- makes remaining follow the new duration.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 function RoundMachine.new(config: Config): Self
 	assert(#config.phases > 0, "RoundMachine needs phases")
 	for _, phase in config.phases do
-		assert(phase.duration > 0, ("phase %q needs a positive duration"):format(phase.name))
+		local duration = phase.duration
+		-- math.huge is greater than 0, so the phase used to never end.
+		assert(
+			type(duration) == "number" and duration == duration and duration > 0 and duration < math.huge,
+			("phase %q needs a positive duration"):format(phase.name)
+		)
 	end
 	return setmetatable({
-		phases = config.phases,
+		phases = deepCopy(config.phases, {}),
 		totalRounds = config.rounds,
 		state = { index = 1, elapsed = 0, iteration = 1, entering = true },
 		finished = false,
@@ -88,6 +110,10 @@ function RoundMachine.tick(self: Self, dt: number): { Effect }
 		return effects
 	end
 	local st = self.state
+	-- A negative step used to rewind elapsed, so remaining grew past the phase.
+	if dt < 0 then
+		dt = 0
+	end
 	st.elapsed += dt
 
 	if st.entering then

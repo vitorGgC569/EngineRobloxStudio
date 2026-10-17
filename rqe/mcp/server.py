@@ -23,8 +23,8 @@ result. Absence of an answer is never an answer.
 
 from __future__ import annotations
 
+import logging
 import sys
-import traceback
 from dataclasses import dataclass, field
 from datetime import datetime, timezone
 from pathlib import Path
@@ -37,6 +37,10 @@ from ..schema_validation import SchemaDefinitionError, validate_schema_instance
 SERVER_NAME = "rqe-engine"
 SERVER_VERSION = "1.0.0"
 RESULT_SCHEMA_VERSION = 1
+MAX_MCP_REQUEST_BYTES = 4 * 1024 * 1024
+MAX_MCP_RESPONSE_BYTES = 8 * 1024 * 1024
+
+LOGGER = logging.getLogger("rqe.mcp.server")
 
 
 class ToolError(RuntimeError):
@@ -148,8 +152,10 @@ class EngineMcpServer:
         except ToolError as exc:
             return protocol.Response(id=request.id, result=_error_result(name, str(exc)))
         except Exception as exc:  # noqa: BLE001 - a handler bug must not kill the server
+            LOGGER.exception("unexpected failure in MCP tool %s", name)
             return protocol.Response(id=request.id, result=_error_result(
-                name, f"{type(exc).__name__}: {exc}", traceback.format_exc()
+                name,
+                f"internal error in {name}; inspect the protected server log",
             ))
 
         return protocol.Response(id=request.id, result=_ok_result(name, payload))
@@ -162,24 +168,56 @@ class EngineMcpServer:
         source = stdin if stdin is not None else sys.stdin.buffer
         sink = stdout if stdout is not None else sys.stdout.buffer
 
-        for raw in source:
+        while True:
+            raw = source.readline(MAX_MCP_REQUEST_BYTES + 1)
+            if not raw:
+                break
             if not raw.strip():
+                continue
+            if len(raw) > MAX_MCP_REQUEST_BYTES:
+                # Drain only to the next frame boundary. Keeping the oversized
+                # line would defeat the limit; leaving its tail would corrupt
+                # every later JSON-RPC frame on the stream.
+                while raw and not raw.endswith(b"\n"):
+                    raw = source.readline(64 * 1024)
+                self._write_response(
+                    sink,
+                    protocol.Response(
+                        id=None,
+                        error=protocol.error(
+                            protocol.INVALID_REQUEST,
+                            f"MCP request exceeds {MAX_MCP_REQUEST_BYTES} bytes",
+                        ),
+                    ),
+                )
                 continue
             try:
                 document = protocol.decode(raw)
                 request = protocol.parse_request(document)
-            except protocol.ProtocolError as exc:
-                sink.write(protocol.encode(protocol.Response(
-                    id=None, error=protocol.error(protocol.PARSE_ERROR, str(exc))
-                ).to_dict()))
-                sink.flush()
+            except (protocol.ProtocolError, UnicodeDecodeError, RecursionError) as exc:
+                self._write_response(sink, protocol.Response(
+                    id=None, error=protocol.error(protocol.PARSE_ERROR, str(exc)[:500])
+                ))
                 continue
 
             response = self.handle(request)
             if response is not None:
-                sink.write(protocol.encode(response.to_dict()))
-                sink.flush()
+                self._write_response(sink, response)
         return 0
+
+    @staticmethod
+    def _write_response(sink: BinaryIO, response: protocol.Response) -> None:
+        encoded = protocol.encode(response.to_dict())
+        if len(encoded) > MAX_MCP_RESPONSE_BYTES:
+            encoded = protocol.encode(protocol.Response(
+                id=response.id,
+                error=protocol.error(
+                    protocol.INTERNAL_ERROR,
+                    f"MCP response exceeds {MAX_MCP_RESPONSE_BYTES} bytes",
+                ),
+            ).to_dict())
+        sink.write(encoded)
+        sink.flush()
 
 
 def _stamp() -> dict[str, Any]:
@@ -201,10 +239,8 @@ def _ok_result(tool: str, payload: Any) -> dict[str, Any]:
     }
 
 
-def _error_result(tool: str, message: str, detail: str | None = None) -> dict[str, Any]:
+def _error_result(tool: str, message: str) -> dict[str, Any]:
     body = {"tool": tool, **_stamp(), "error": message}
-    if detail:
-        body["detail"] = detail
     return {
         "content": [{"type": "text", "text": f"{tool} failed: {message}"}],
         "structuredContent": body,

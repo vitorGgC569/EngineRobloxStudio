@@ -44,7 +44,13 @@ function ScreenStack.pop(self: Self): (string?, string?)
 end
 
 function ScreenStack.top(self: Self): Layer?
-	return self.layers[#self.layers]
+	local layer = self.layers[#self.layers]
+	if not layer then
+		return nil
+	end
+	-- The stored layer used to come back live. Clearing modal on that table
+	-- let a layer underneath receive input.
+	return table.clone(layer)
 end
 
 -- Only the focused layer may handle input; background layers cannot.

@@ -7,7 +7,7 @@ file starts emitting Luau, Forge has become the thing it was built to replace.
     python forge/forge.py new mygame
     python forge/forge.py doctor mygame
     python forge/forge.py build mygame
-    python forge/forge.py probe --hub http://127.0.0.1:8790
+    python forge/forge.py probe            # --hub, or RQE_HUB_PORT / RQE_HUB_URL
 """
 
 from __future__ import annotations
@@ -22,6 +22,7 @@ sys.path.insert(0, str(Path(__file__).resolve().parent.parent))
 
 from forge.cli import doctor as doctor_module  # noqa: E402
 from forge.cli import scaffold as scaffold_module  # noqa: E402
+from rqe.workspace import hub_url
 
 REPO_ROOT = Path(__file__).resolve().parent.parent
 
@@ -99,7 +100,10 @@ def cmd_build(args: argparse.Namespace) -> int:
     if not project_file.exists():
         raise SystemExit(f"forge: no default.project.json in {root}")
 
+    from rqe.ledger import record_artifact, record_build
+
     output = Path(args.output) if args.output else root / f"{root.name}.rbxlx"
+    record_build()
     command = ["rojo", "build", str(project_file), "--output", str(output)]
     print(" ".join(command))
     try:
@@ -114,6 +118,7 @@ def cmd_build(args: argparse.Namespace) -> int:
         return result.returncode
 
     size = output.stat().st_size if output.exists() else 0
+    record_artifact(str(output))
     print(f"built {output} ({size / 1024:.0f} KB)")
     return 0
 
@@ -125,8 +130,7 @@ def cmd_probe(args: argparse.Namespace) -> int:
     and asks it to invoke `ReplicatedStorage.ForgeDebug`, which the game
     published by calling `Debug.expose()`.
     """
-    import urllib.error
-    import urllib.request
+    from rqe.hub.client import StudioBridge
 
     # dm.properties, not a bindable invoke: a BindableFunction's OnInvoke lives
     # in one Lua VM, so a server-side handler is invisible to the client-side
@@ -137,21 +141,13 @@ def cmd_probe(args: argparse.Namespace) -> int:
     else:
         params = {"path": args.path + ".Result", "properties": ["Value"]}
 
-    payload = {"method": "dm.properties", "params": params, "id": 1}
-    request = urllib.request.Request(
-        args.hub.rstrip("/") + "/rpc",
-        data=json.dumps(payload).encode("utf-8"),
-        headers={"Content-Type": "application/json"},
-    )
     try:
-        with urllib.request.urlopen(request, timeout=args.timeout) as response:
-            body = json.loads(response.read().decode("utf-8"))
-    except urllib.error.URLError as exc:
-        print(f"forge: cannot reach the hub at {args.hub} ({exc.reason})", file=sys.stderr)
-        print("       start it with: python rqe.py studio serve", file=sys.stderr)
-        return 2
+        bridge = StudioBridge(args.hub)
+        bridge.pin_to_running(timeout=args.timeout)
+        body = bridge.call("dm.properties", params, timeout=args.timeout)
     except Exception as exc:  # noqa: BLE001
         print(f"forge: probe failed: {exc}", file=sys.stderr)
+        print("       ensure the authenticated hub and a running Studio session are available", file=sys.stderr)
         return 2
 
     # The hub nests: { result: { ok, result: { properties: { Value } } } }.
@@ -184,54 +180,60 @@ def cmd_bench(args: argparse.Namespace) -> int:
     Median and p95, not mean: the mean hides the frame that took 40ms, and that
     frame is the one a player felt.
     """
-    import urllib.error
-    import urllib.request
+    import time
+    import uuid
+
+    from rqe.hub.client import StudioBridge
 
     # Driven through the Debug command channel. `instance.update` runs in "run"
     # context, which is what `rqe studio call run.start` produces — and a
     # headless run is the right place to benchmark anyway, with no player
     # competing for the frame.
     command = {
-        "method": "instance.update",
-        "params": {
-            "path": "ReplicatedStorage.ForgeDebug.Command",
-            "properties": {"Value": json.dumps({"cmd": "bench", "entities": args.entities, "anchors": args.anchors})},
+        "path": "ReplicatedStorage.ForgeDebug.Command",
+        "properties": {
+            "Value": json.dumps({"cmd": "bench", "entities": args.entities, "anchors": args.anchors})
         },
-        "id": 1,
     }
-
-    def call(body: dict) -> dict:
-        request = urllib.request.Request(
-            args.hub.rstrip("/") + "/rpc",
-            data=json.dumps(body).encode("utf-8"),
-            headers={"Content-Type": "application/json"},
-        )
-        with urllib.request.urlopen(request, timeout=args.timeout) as response:
-            return json.loads(response.read().decode("utf-8"))
-
+    bridge = StudioBridge(args.hub)
+    lease: dict | None = None
     try:
-        call(command)
-    except urllib.error.URLError as exc:
-        print(f"forge: cannot reach the hub at {args.hub} ({exc.reason})", file=sys.stderr)
-        print("       start it with: python rqe.py studio serve", file=sys.stderr)
-        return 2
+        session = bridge.pin_to_running(timeout=args.timeout)
+        run_id = f"forge-bench-{uuid.uuid4().hex}"
+        lease = bridge.acquire_lease(
+            run_id=run_id,
+            agent_id="forge-bench",
+            build_id=run_id,
+            session_id=session,
+            ttl_seconds=max(30.0, min(float(args.timeout) + 15.0, 300.0)),
+        )
+        bridge.call("instance.update", command, timeout=args.timeout, lease=lease)
     except Exception as exc:  # noqa: BLE001
         print(f"forge: bench failed to start: {exc}", file=sys.stderr)
+        if lease is not None:
+            try:
+                bridge.release_lease(lease)
+            except Exception:
+                pass
         return 2
 
-    import time
-
     time.sleep(6)
-    read = {
-        "method": "dm.properties",
-        "params": {"path": "ReplicatedStorage.ForgeDebug.Result", "properties": ["Value"]},
-        "id": 2,
-    }
     try:
-        body = call(read)
+        body = bridge.call(
+            "dm.properties",
+            {"path": "ReplicatedStorage.ForgeDebug.Result", "properties": ["Value"]},
+            timeout=args.timeout,
+            lease=lease,
+        )
     except Exception as exc:  # noqa: BLE001
         print(f"forge: could not read the result: {exc}", file=sys.stderr)
         return 2
+    finally:
+        if lease is not None:
+            try:
+                bridge.release_lease(lease)
+            except Exception as exc:  # noqa: BLE001
+                print(f"forge: warning: could not release benchmark lease: {exc}", file=sys.stderr)
 
     result = body.get("result", body)
     for _ in range(3):
@@ -551,6 +553,7 @@ def cmd_watch(args: argparse.Namespace) -> int:
 
     _sys.path.insert(0, str(REPO_ROOT))
     from forge.cli import watch as watcher
+    from forge.cli import hot_reload
     from rqe.hub import lifecycle
     from rqe.hub.client import StudioBridge
 
@@ -558,15 +561,109 @@ def cmd_watch(args: argparse.Namespace) -> int:
     place = root / f"{root.name}.rbxlx"
     archive = REPO_ROOT / ".tmp" / "studio-recovery"
     archive.mkdir(parents=True, exist_ok=True)
-    bridge = StudioBridge("http://127.0.0.1:8790")
+    bridge = StudioBridge(hub_url())
 
     def rebuild() -> bool:
         build = argparse.Namespace(project=args.project, output=None)
         return cmd_build(build) == 0
 
-    def reload_studio() -> dict:
-        return lifecycle.restart_for_bridge(place, archive, bridge=bridge,
-                                            wait_seconds=args.timeout)
+    def reload_studio(changed: list[str]) -> dict:
+        project_file = root / "default.project.json"
+        try:
+            source_bindings = hot_reload.bindings(project_file)
+            hot, cold = hot_reload.classify(changed, source_bindings)
+        except Exception as exc:  # noqa: BLE001 - mapping failure is cold, never permissive
+            hot, cold = [], [Path(item).resolve() for item in changed]
+            mapping_error = f"{type(exc).__name__}: {exc}"
+        else:
+            mapping_error = ""
+
+        if cold:
+            if not args.allow_cold_reload:
+                return {
+                    "coldReloadRequired": True,
+                    "coldChanges": [str(item) for item in cold],
+                    "hotCandidates": [str(item.source) for item in hot],
+                    "reason": mapping_error or (
+                        "one or more changes cannot be represented safely by code.write/code.reload"
+                    ),
+                }
+            return lifecycle.restart_for_bridge(
+                place,
+                archive,
+                bridge=bridge,
+                wait_seconds=args.timeout,
+                background=True,
+            )
+
+        ensured = lifecycle.ensure_studio_session(
+            place,
+            archive,
+            bridge,
+            wait_seconds=min(args.timeout, 45),
+            background=True,
+            allow_cold_launch=False,
+        )
+        if not ensured.get("ready"):
+            return {
+                "skipped": True,
+                "reason": ensured.get("reason") or "no reusable background Studio session",
+            }
+
+        try:
+            sessions = bridge.status().get("sessions", [])
+        except Exception:  # noqa: BLE001
+            sessions = []
+        was_running = any(
+            item.get("context") in {"run", "server", "client"}
+            and int(item.get("polls") or 0) > 0
+            for item in sessions
+        )
+
+        stop_receipt = None
+        if was_running:
+            stop_receipt = lifecycle.stop_play_solo(
+                bridge,
+                wait_seconds=min(args.timeout, 30),
+                allow_foreground_fallback=False,
+            )
+            if not stop_receipt.get("stopped"):
+                return {
+                    "skipped": True,
+                    "reason": (
+                        "Play Solo could not be stopped through native lifecycle; "
+                        "foreground fallback is disabled"
+                    ),
+                    "stop": stop_receipt,
+                }
+
+        receipts = hot_reload.apply(bridge, hot)
+
+        start_receipt = None
+        if was_running:
+            bridge.unpin()
+            start_receipt = lifecycle.start_play_solo(
+                bridge=bridge,
+                wait_seconds=args.timeout,
+                allow_foreground_fallback=False,
+            )
+            if not start_receipt.get("started"):
+                return {
+                    "hotReloaded": len(receipts),
+                    "playRestarted": False,
+                    "receipts": receipts,
+                    "stop": stop_receipt,
+                    "start": start_receipt,
+                    "warning": "scripts were synchronized, but Play Solo did not restart",
+                }
+
+        return {
+            "hotReloaded": len(receipts),
+            "playRestarted": was_running,
+            "receipts": receipts,
+            "stop": stop_receipt,
+            "start": start_receipt,
+        }
 
     try:
         watcher.run(root, REPO_ROOT / "forge" / "luau", rebuild, reload_studio,
@@ -809,6 +906,63 @@ def cmd_gametest(args: argparse.Namespace) -> int:
 
 
 # ============================== finding things ==============================
+def cmd_cost(args: argparse.Namespace) -> int:
+    """What production has cost: round trips, seconds, restarts, failures."""
+    from rqe import ledger
+
+    rows = ledger.read(REPO_ROOT, game=args.game or "",
+                       command=args.command_filter or "", limit=args.limit)
+    if args.json:
+        print(json.dumps({
+            "summary": ledger.summarise(rows).to_dict(),
+            "runs": rows,
+        }, indent=2))
+    else:
+        print(ledger.render(rows, game=args.game or ""))
+    return 0
+
+
+def cmd_preflight(args: argparse.Namespace) -> int:
+    """Is this installation ready, and what exactly is missing if not."""
+    from forge.cli import preflight as pf
+
+    return pf.main(as_json=args.json)
+
+
+def cmd_inspect(args: argparse.Namespace) -> int:
+    """Read the live DataModel, from the side that actually has the thing.
+
+    `dm.*` for the server, `client.*` for a running client. The second pair
+    shipped with the plugin, the manifest, the client source and CLAUDE.md all
+    updated, and no caller anywhere -- so the only route to a capability this
+    repository had just declared essential was a hand-written HTTP POST.
+    """
+    from forge.cli import inspect as ins
+
+    try:
+        if args.props:
+            names = [n.strip() for n in args.props.split(",") if n.strip()]
+            result = ins.properties(args.path, names, client=args.client,
+                                    timeout=args.timeout)
+        else:
+            result = ins.tree(args.path, client=args.client, depth=args.depth,
+                              timeout=args.timeout)
+    except ins.InspectError as exc:
+        #: Classified rather than fixed at 2. "no Studio plugin is connected"
+        #: and "you passed a path that does not parse" need different next
+        #: actions, and a hard-coded code makes them the same answer -- which
+        #: the cost ledger caught the first time this command was run.
+        from rqe.exits import classify
+
+        raise classify(exc) from exc
+
+    if args.json:
+        print(json.dumps(result, indent=2))
+    else:
+        print(ins.render(result, client=args.client))
+    return 0
+
+
 def cmd_find(args: argparse.Namespace) -> int:
     """Answer "does this already exist" across the engine, the games and the kits."""
     from forge.cli import find
@@ -856,20 +1010,7 @@ def cmd_api(args: argparse.Namespace) -> int:
 
 # ================================ publishing ================================
 def cmd_publish(args: argparse.Namespace) -> int:
-    """Upload the built place as a new version of a Roblox experience.
-
-    Gated on a passing `forge playtest` for *this* build.
-
-    The gate is here rather than on `build` because publishing is the outward
-    step, and because a build that is never published costs nobody anything. It
-    is here at all because a tool nobody is obliged to run is not a standard:
-    `playtest` was written to catch the class of defect that keeps reaching
-    users, and it caught it, and then sat unreferenced by anything.
-
-    `--force` exists and prints what it is skipping. A gate with no override
-    gets removed the first time it is inconvenient.
-    """
-    from forge.cli import playtest as pt
+    """Upload only bytes approved by a finalized immutable release run."""
     from forge.cli import publish as pub
 
     try:
@@ -879,21 +1020,32 @@ def cmd_publish(args: argparse.Namespace) -> int:
                   f"(HTTP {result['status']}) -- {result['meaning']}")
             return 0 if result["ok"] else 1
 
-        place = REPO_ROOT / "games" / args.game / f"{args.game}.rbxlx"
-        if place.exists():
-            passed, why = pt.read_receipt(args.game, place)
-            if not passed and not args.force:
-                print(f"publish: refused -- {why}")
-                print()
-                print(f"    python forge/forge.py playtest {args.game}")
-                print()
-                print("  or --force, which publishes a build nobody has looked at.")
-                return 1
-            if not passed:
-                print(f"publish: forced past the gate -- {why}")
+        if args.force and not args.list:
+            print("publish: --force cannot bypass immutable release authority; supply --run")
+            return 1
+
+        from forge.cli import rollback as rb
+        if args.list:
+            print(rb.render(args.game))
+            return 0
+
+        rolled_back_from = None
+        source = None
+        if args.rollback is not False:
+            #: `--rollback` with no value means "the one before the current".
+            wanted = None if args.rollback is None else args.rollback
+            receipt = rb.target(args.game, wanted)
+            source = receipt.kept_path()
+            rolled_back_from = receipt.version_number
+            print(f"rolling back to v{receipt.version_number} "
+                  f"({receipt.published_at}, {receipt.bytes / 1024:.0f} KB)")
+            print("  Roblox has no restore endpoint: this publishes those bytes")
+            print("  as a new version whose content is the old one.")
 
         result = pub.publish(args.game, release=args.release,
-                             universe_id=args.universe, place_id=args.place)
+                             universe_id=args.universe, place_id=args.place,
+                             source=source, rolled_back_from=rolled_back_from,
+                             run_directory=Path(args.run) if args.run else None)
     except pub.PublishError as exc:
         print(f"publish: {exc}")
         return 1
@@ -1011,7 +1163,12 @@ def cmd_analytics(args: argparse.Namespace) -> int:
     try:
         fetched = analytics.fetch(args.game, days=args.days)
     except (analytics.AnalyticsError, pub.PublishError) as exc:
-        raise SystemExit(f"forge: {exc}")
+        #: Classified: a key without the datastore-api scope is `no-credential`
+        #: and a game that was never published is `usage`. Both used to be
+        #: `SystemExit(1)`, which reads as "the game has findings".
+        from rqe.exits import classify
+
+        raise classify(exc) from exc
 
     if args.raw:
         print(json.dumps(fetched["events"], indent=2, ensure_ascii=False))
@@ -1233,7 +1390,7 @@ def main(argv: list[str] | None = None) -> int:
     p_build.set_defaults(func=cmd_build)
 
     p_probe = sub.add_parser("probe", help="ask a running game to describe itself")
-    p_probe.add_argument("--hub", default="http://127.0.0.1:8790")
+    p_probe.add_argument("--hub", default=hub_url())
     p_probe.add_argument("--path", default="ReplicatedStorage.ForgeDebug")
     p_probe.add_argument("--command", default="snapshot")
     p_probe.add_argument("--argument")
@@ -1241,7 +1398,7 @@ def main(argv: list[str] | None = None) -> int:
     p_probe.set_defaults(func=cmd_probe)
 
     p_bench = sub.add_parser("bench", help="run the load suite inside a live session and print the numbers")
-    p_bench.add_argument("--hub", default="http://127.0.0.1:8790")
+    p_bench.add_argument("--hub", default=hub_url())
     p_bench.add_argument("--entities", type=int, default=2000)
     p_bench.add_argument("--anchors", type=int, default=30)
     p_bench.add_argument("--timeout", type=float, default=120)
@@ -1297,8 +1454,16 @@ def main(argv: list[str] | None = None) -> int:
     p_cat.add_argument("--show", type=int, default=20)
     p_cat.set_defaults(func=cmd_catalogue)
 
-    p_watch = sub.add_parser("watch", help="rebuild and reload Studio on every source change")
+    p_watch = sub.add_parser(
+        "watch",
+        help="rebuild on source changes; Studio cold reload is explicit opt-in",
+    )
     p_watch.add_argument("project")
+    p_watch.add_argument(
+        "--allow-cold-reload",
+        action="store_true",
+        help="explicitly permit restarting Studio after each successful build",
+    )
     p_watch.add_argument("--poll", type=float, default=1.0,
                          help="seconds between checks (default 1)")
     p_watch.add_argument("--timeout", type=float, default=240.0,
@@ -1355,6 +1520,39 @@ def main(argv: list[str] | None = None) -> int:
     p_gt.add_argument("--filter", default=None, help="only scenarios whose name contains this")
     p_gt.set_defaults(func=cmd_gametest)
 
+    p_cost = sub.add_parser(
+        "cost",
+        help="what production has cost: round trips to Studio, seconds, restarts")
+    p_cost.add_argument("game", nargs="?", default=None)
+    p_cost.add_argument("--command", dest="command_filter", default=None,
+                        help="only runs of this command, e.g. 'forge playtest'")
+    p_cost.add_argument("--limit", type=int, default=0,
+                        help="only the last N runs")
+    p_cost.add_argument("--json", action="store_true")
+    p_cost.set_defaults(func=cmd_cost)
+
+    p_pre = sub.add_parser(
+        "preflight",
+        help="is this installation ready; names what is missing and how to get it")
+    p_pre.add_argument("--json", action="store_true")
+    p_pre.set_defaults(func=cmd_preflight)
+
+    p_ins = sub.add_parser(
+        "inspect",
+        help="read the live DataModel; --client asks the running client instead")
+    p_ins.add_argument("path", help="e.g. Workspace or Players.me.PlayerGui")
+    p_ins.add_argument(
+        "--client", action="store_true",
+        help="ask the running client. A viewmodel, a LocalTransparencyModifier "
+             "or anything built in a LocalScript exists ONLY there -- the "
+             "server's answer for those is E_NOT_FOUND, which reads exactly "
+             "like the thing being broken")
+    p_ins.add_argument("--props", help="comma-separated property names to read")
+    p_ins.add_argument("--depth", type=int, default=3)
+    p_ins.add_argument("--timeout", type=int, default=60)
+    p_ins.add_argument("--json", action="store_true")
+    p_ins.set_defaults(func=cmd_inspect)
+
     p_find = sub.add_parser(
         "find",
         help="what already does this? searches the engine, the games and the kits")
@@ -1379,11 +1577,19 @@ def main(argv: list[str] | None = None) -> int:
     p_pub.add_argument("game", nargs="?", default="provingground")
     p_pub.add_argument("--universe", default=None)
     p_pub.add_argument("--place", default=None)
+    p_pub.add_argument(
+        "--rollback", nargs="?", const=None, default=False, metavar="VERSION",
+        help="re-publish a previously published build. With no version, the one "
+             "before the current. Roblox has no restore endpoint, so this "
+             "uploads kept bytes as a new version")
+    p_pub.add_argument("--list", action="store_true",
+                       help="what can be rolled back to, and what cannot")
     p_pub.add_argument("--release", action="store_true",
                        help="push live to running servers instead of saving privately")
     p_pub.add_argument("--check", action="store_true", help="only test the credential")
     p_pub.add_argument("--force", action="store_true",
-                       help="publish without a passing playtest for this build")
+                       help="deprecated; cannot bypass the immutable release gate")
+    p_pub.add_argument("--run", default=None, help="finalized release run directory authorizing these exact bytes")
     p_pub.set_defaults(func=cmd_publish)
 
     p_ex = sub.add_parser("example", help="run the engine's runnable examples")
@@ -1466,7 +1672,63 @@ def main(argv: list[str] | None = None) -> int:
     p_traps.set_defaults(func=cmd_traps)
 
     args = parser.parse_args(argv)
-    return args.func(args)
+
+    #[[
+    #   One place decides what a failure means.
+    #
+    #   Every command in this file used to end in `return 1` or `return 2`, and
+    #   those two numbers carried every outcome there is: a game with findings,
+    #   a Studio that is not running, a missing credential, a viewport the
+    #   instrument could not locate. Four situations with four different next
+    #   actions, and a caller could only tell them apart by reading English on
+    #   stderr.
+    #
+    #   `rqe.exits` names them. Commands raise `Problem`; this classifies
+    #   anything that gets out unclassified, so an unhandled exception exits as
+    #   its own kind rather than as "the game has findings".
+    #]]
+    from rqe import ledger
+    from rqe.exits import Problem, classify, report
+
+    as_json = bool(getattr(args, "json", False))
+    #: `game` where the command has one, so a line can be attributed. Several
+    #: commands call the project `project` and several take none at all; a
+    #: missing attribution is an empty string rather than a guess.
+    game = str(getattr(args, "game", "") or getattr(args, "project", "") or "")
+
+    #[[
+    #   Every command writes one line saying what it cost.
+    #
+    #   This repository measures the product exhaustively and the *production*
+    #   not at all: nothing answered how many round trips to Studio a game
+    #   took, how long, or how many of them failed. For a platform whose
+    #   customer is an agent, that is the product metric -- an agent that needs
+    #   four hundred bridge calls and one that needs forty are different
+    #   products, and they were indistinguishable.
+    #
+    #   Opened here rather than per command so it cannot be forgotten, and
+    #   closed in a `finally` so a crashed run is still costed.
+    #]]
+    with ledger.run(f"forge {args.command}", game=game) as costed:
+        try:
+            code = args.func(args)
+            costed.exit_code = int(code or 0)
+            return code
+        except Problem as problem:
+            costed.exit_code = problem.code
+            return report(problem, command=f"forge {args.command}", as_json=as_json)
+        except KeyboardInterrupt:
+            costed.exit_code = 130
+            print("forge: interrupted", file=sys.stderr)
+            return 130
+        except SystemExit as stop:
+            costed.exit_code = int(stop.code or 0) if isinstance(stop.code, int) else 0
+            raise
+        except Exception as error:  # noqa: BLE001 - classified rather than dumped
+            problem = classify(error)
+            costed.exit_code = problem.code
+            return report(problem, command=f"forge {args.command}",
+                          as_json=as_json)
 
 
 if __name__ == "__main__":

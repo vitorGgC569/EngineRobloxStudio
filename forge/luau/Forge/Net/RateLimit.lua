@@ -18,6 +18,7 @@
 ]]
 
 local RateLimit = {}
+RateLimit.__index = RateLimit
 
 export type Clock = () -> number
 
@@ -36,11 +37,25 @@ export type Self = {
 }
 
 function RateLimit.new(options: Options): Self
-	assert(typeof(options.rate) == "number" and options.rate > 0, "rate must be a positive number")
-	assert(options.burst == nil or options.burst >= 1, "burst must be at least 1")
+	-- math.huge is greater than 0, and elapsed * math.huge refills the burst
+	-- on any positive step, so the limit never holds once time moves.
+	assert(
+		typeof(options.rate) == "number" and options.rate > 0 and options.rate < math.huge,
+		"rate must be a positive number"
+	)
+	-- nil is the rate. math.huge is at least 1, and subtracting 1 from it
+	-- still leaves math.huge, so every try would succeed.
+	local burst = options.rate
+	if options.burst ~= nil then
+		assert(
+			typeof(options.burst) == "number" and options.burst >= 1 and options.burst < math.huge,
+			"burst must be at least 1"
+		)
+		burst = options.burst
+	end
 	local self: Self = {
 		rate = options.rate,
-		burst = options.burst or options.rate,
+		burst = burst,
 		now = options.now or os.clock,
 		buckets = {},
 		violationLog = {},
@@ -53,6 +68,11 @@ function RateLimit.try(self: Self, key: string, now: number?): (boolean, number?
 	assert(type(key) == "string" and #key > 0, "key must be a non-empty string")
 
 	local at = now or self.now()
+	-- NaN is not a time. Writing it into last makes the next elapsed NaN,
+	-- and a bucket that should have refilled stays closed.
+	if type(at) ~= "number" or at ~= at or not (at > -math.huge and at < math.huge) then
+		return false, nil
+	end
 	local bucket = self.buckets[key]
 	if bucket == nil then
 		bucket = { tokens = self.burst, last = at }

@@ -40,6 +40,7 @@ import time
 import sys
 from pathlib import Path
 from typing import Any
+from rqe.workspace import hub_url
 
 REPO = Path(__file__).resolve().parents[2]
 
@@ -93,13 +94,32 @@ def boot(game: str, wait_seconds: int = 240) -> None:
     if not place.exists():
         raise BridgeError(f"no built place at {place}; run `forge build {game}`")
 
-    bridge = StudioBridge("http://127.0.0.1:8790")
-    lifecycle.restart_for_bridge(place, REPO / ".tmp" / "studio-recovery",
-                                 bridge=bridge, wait_seconds=wait_seconds)
+    bridge = StudioBridge(hub_url())
+    ensured = lifecycle.ensure_studio_session(
+        place,
+        REPO / ".tmp" / "studio-recovery",
+        bridge,
+        wait_seconds=min(wait_seconds, 45),
+        background=True,
+        allow_cold_launch=False,
+    )
+    if not ensured.get("ready"):
+        raise BridgeError(
+            "background Studio session unavailable: "
+            + str(ensured.get("reason") or "open the built place once explicitly")
+        )
+
     bridge.unpin()
-    started = lifecycle.start_play_solo(bridge=bridge, wait_seconds=120)
+    started = lifecycle.start_play_solo(
+        bridge=bridge,
+        wait_seconds=120,
+        allow_foreground_fallback=False,
+    )
     if not started.get("started"):
-        raise BridgeError("the game would not start")
+        raise BridgeError(
+            "native StudioTestService did not start the game: "
+            + str(started.get("reason") or started.get("nativeAttempt") or "")
+        )
 
 
 def run(filter_text: str | None = None, timeout: int = 240) -> dict:
@@ -161,11 +181,22 @@ def run(filter_text: str | None = None, timeout: int = 240) -> dict:
 
 
 def _call(method: str, params: dict, timeout: int = 120):
+    #: Counted here as well as inside `StudioBridge`, because this path spawns
+    #: a *subprocess* to reach the bridge -- the in-process counter lives in the
+    #: child and its ledger run does not exist. Without this the two chattiest
+    #: commands in the repository would report zero round trips, which is the
+    #: shape of under-reporting this ledger exists to prevent.
+    from rqe.ledger import record_bridge_call
+    import time as _time
+
+    _started = _time.perf_counter()
     proc = subprocess.run(
         [sys.executable, str(REPO / "rqe.py"), "studio", "call", method,
          "--params", json.dumps(params), "--timeout", str(timeout)],
         capture_output=True, text=True, timeout=timeout + 30, cwd=str(REPO),
     )
+    record_bridge_call(method, _time.perf_counter() - _started,
+                       ok=proc.returncode == 0)
     raw = proc.stdout.strip() or proc.stderr.strip()
     try:
         envelope = json.loads(raw)

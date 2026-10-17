@@ -1,13 +1,12 @@
 # ================================ secrets ===================================
-# `docs/goal/key.txt` holds a real Roblox account key. Rather than name one
-# file, every .txt is excluded: the loose notes in this project are where
-# credentials get pasted, and a rule that only covers the leak you already know
-# about does not cover the next one.
+# Historical loose text notes may contain credentials. Canonical operator
+# credentials live under `.secrets/`, never under documentation.
 #
 # A .txt that genuinely belongs in the repository can be added with
 # `git add -f`, which forces the decision to be deliberate.
 *.txt
 docs/goal/
+.secrets/
 
 # ============================== build outputs ===============================
 # Place files are produced by `rojo build` / `forge build` from the project

@@ -22,12 +22,29 @@ export type LedgerState = { [string]: any }
 local Ledger = {}
 Ledger.__index = Ledger
 
+-- A shallow clone shares the payload table with the caller. Editing the
+-- sword after the grant then rewrites the receipt the store already holds.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 function Ledger.new(initial: LedgerState?)
 	local self: { state: LedgerState } = { state = {} }
 	if typeof(initial) == "table" then
 		for receiptId, payload in initial :: { [string]: any } do
 			if type(receiptId) == "string" and payload ~= nil then
-				self.state[receiptId] = payload
+				self.state[receiptId] = deepCopy(payload, {})
 			end
 		end
 	end
@@ -47,8 +64,11 @@ function Ledger:grant(state: LedgerState?, receiptId: string, payload: any): (Le
 		return current, false
 	end
 
-	local updated: LedgerState = table.clone(current)
-	updated[receiptId] = if payload ~= nil then payload else true
+	local updated: LedgerState = {}
+	for key, value in current do
+		updated[key] = deepCopy(value, {})
+	end
+	updated[receiptId] = if payload ~= nil then deepCopy(payload, {}) else true
 	if state == nil then
 		(self :: any).state = updated
 	end

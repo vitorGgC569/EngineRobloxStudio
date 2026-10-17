@@ -110,12 +110,21 @@ def register_world_tools(server: Any) -> Any:
         from ..hub.client import StudioBridge
 
         program = plan_program(spec, str(arguments.get("tokens") or "tokens/brickfarm.json"))
-        bridge = StudioBridge()
+        # plan_program is engine-generated after schema validation; callers do
+        # not supply a raw Luau chunk through this surface.
+        bridge = StudioBridge(allow_arbitrary=True)
         try:
-            bridge.pin_to_any()
-            answer = bridge.call("bridge.exec", {"source": program,
-                                                 "chunkName": "rqe.blockout"},
-                                 timeout=float(arguments.get("timeout") or 180.0))
+            timeout = float(arguments.get("timeout") or 180.0)
+            with bridge.lease_scope(
+                agent_id="mcp-world-blockout",
+                context="edit",
+                ttl_seconds=max(30.0, min(timeout + 30.0, 300.0)),
+            ):
+                answer = bridge.call(
+                    "bridge.exec",
+                    {"source": program, "chunkName": "rqe.blockout"},
+                    timeout=timeout,
+                )
         except Exception as error:  # noqa: BLE001
             return {"built": False, "error": str(error),
                     "remedy": "blockout builds into the open place and needs edit context"}
@@ -342,7 +351,7 @@ def register_federated_input(server: Any) -> Any:
     privilege level a third-party plugin does not get.
     """
 
-    from .client import ADOPTED_TOOLS, FEDERATED_SOURCE, StudioMcpClient
+    from .client import ADOPTED_TOOLS, FEDERATED_SOURCE, StudioMcpClient, studio_mcp_command
 
     def federated_catalogue(_arguments: dict[str, Any]) -> dict[str, Any]:
         return {
@@ -368,21 +377,32 @@ def register_federated_input(server: Any) -> Any:
                     "the measurement surface"
                 ),
             }
-        client = StudioMcpClient()
+        client = None
         try:
-            client.spawn()
+            client = StudioMcpClient.spawn(studio_mcp_command())
             client.initialize()
-            result = client.call_tool(name, arguments.get("arguments") or {})
+            descriptors = {tool.name: tool for tool in client.tools()}
+            if name not in descriptors:
+                return {"ok": False, "error": f"upstream tool {name} is unavailable", "source": FEDERATED_SOURCE}
+            params = arguments.get("arguments") or {}
+            missing = [key for key in descriptors[name].input_schema.get("required", []) if key not in params]
+            if name != "list_roblox_studios" and not params.get("studio_id"):
+                missing.append("studio_id")
+            if missing:
+                return {"ok": False, "error": "missing upstream arguments: " + ", ".join(sorted(set(missing))),
+                        "source": FEDERATED_SOURCE, "inputSchema": dict(descriptors[name].input_schema)}
+            result = client.call_tool(name, params)
         except Exception as error:  # noqa: BLE001
             return {"ok": False, "error": str(error), "source": FEDERATED_SOURCE}
         finally:
             try:
-                client.close()
+                if client is not None:
+                    client.close()
             except Exception:  # noqa: BLE001
                 pass
 
-        payload = result.to_dict() if hasattr(result, "to_dict") else {"result": str(result)}
-        payload["source"] = FEDERATED_SOURCE
+        payload = result.to_evidence_detail()
+        payload.update({"text": result.text, "structured": result.structured})
         return payload
 
     server.register(Tool(

@@ -1,0 +1,182 @@
+{
+  "name": "meteor-rush",
+  "tree": {
+    "$className": "DataModel",
+    "ReplicatedStorage": {
+      "$className": "ReplicatedStorage",
+      "Forge": {
+        "$path": "../../forge/luau/Forge"
+      },
+      "Shared": {
+        "$path": "src/shared"
+      }
+    },
+    "ServerScriptService": {
+      "$className": "ServerScriptService",
+      "Server": {
+        "$path": "src/server"
+      }
+    },
+    "StarterPlayer": {
+      "$className": "StarterPlayer",
+      "$properties": {
+        "CameraMaxZoomDistance": 140,
+        "CameraMinZoomDistance": 7,
+        "HealthDisplayDistance": 0,
+        "NameDisplayDistance": 45
+      },
+      "StarterPlayerScripts": {
+        "$className": "StarterPlayerScripts",
+        "Client": {
+          "$path": "src/client"
+        }
+      }
+    },
+    "Workspace": {
+      "$className": "Workspace",
+      "$properties": {
+        "StreamingEnabled": true,
+        "StreamingMinRadius": 160,
+        "StreamingTargetRadius": 720,
+        "FallenPartsDestroyHeight": -100,
+        "Gravity": 178
+      }
+    },
+    "Lighting": {
+      "$className": "Lighting",
+      "$properties": {
+        "Technology": "Future",
+        "ClockTime": 14.2,
+        "Brightness": 3.2,
+        "Ambient": [
+          0.56,
+          0.5,
+          0.43
+        ],
+        "OutdoorAmbient": [
+          0.78,
+          0.72,
+          0.62
+        ],
+        "ExposureCompensation": 0.2,
+        "GeographicLatitude": 32,
+        "FogColor": [
+          0.84,
+          0.78,
+          0.66
+        ],
+        "FogStart": 500,
+        "FogEnd": 2200,
+        "GlobalShadows": true,
+        "EnvironmentDiffuseScale": 0.85,
+        "EnvironmentSpecularScale": 0.28,
+        "ColorShift_Top": [
+          0.08,
+          0.035,
+          0
+        ]
+      },
+      "Bloom": {
+        "$className": "BloomEffect",
+        "$properties": {
+          "Intensity": 0.18,
+          "Size": 18,
+          "Threshold": 1.15
+        }
+      },
+      "Grade": {
+        "$className": "ColorCorrectionEffect",
+        "$properties": {
+          "Brightness": 0.025,
+          "Contrast": 0.035,
+          "Saturation": 0.08,
+          "TintColor": [
+            1,
+            0.96,
+            0.88
+          ]
+        }
+      },
+      "Sky": {
+        "$className": "Sky",
+        "$properties": {
+          "StarCount": 0,
+          "SunAngularSize": 18
+        }
+      }
+    },
+    "Players": {
+      "$className": "Players",
+      "$properties": {
+        "MaxPlayers": 6,
+        "RespawnTime": 3
+      }
+    },
+    "MaterialService": {
+      "$className": "MaterialService",
+      "MeadowGrass": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Grass",
+          "StudsPerTile": 5,
+          "ColorMap": "rbxassetid://98584017569493",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "DryGround": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Ground",
+          "StudsPerTile": 6,
+          "ColorMap": "rbxassetid://102397297645525",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "WarmStone": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Slate",
+          "StudsPerTile": 8,
+          "ColorMap": "rbxassetid://139079590378305",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "PlankFloor": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "WoodPlanks",
+          "StudsPerTile": 3,
+          "ColorMap": "rbxassetid://99874005373896",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "BareWood": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Wood",
+          "StudsPerTile": 3,
+          "ColorMap": "rbxassetid://136522653239094",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "RustPlate": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Metal",
+          "StudsPerTile": 4,
+          "ColorMap": "rbxassetid://86881408240446",
+          "MaterialPattern": "Regular"
+        }
+      },
+      "PlasterWall": {
+        "$className": "MaterialVariant",
+        "$properties": {
+          "BaseMaterial": "Plaster",
+          "StudsPerTile": 5,
+          "ColorMap": "rbxassetid://127529642092753",
+          "MaterialPattern": "Regular"
+        }
+      }
+    }
+  }
+}

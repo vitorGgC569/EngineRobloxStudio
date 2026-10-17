@@ -69,7 +69,21 @@ end
 function CardCycle.new(config: { cards: { string }, handSize: number?, seed: number? }): Self
 	assert(#config.cards > 0, "CardCycle needs cards")
 	local handSize = config.handSize or 4
-	assert(handSize >= 1 and handSize <= #config.cards, "handSize must fit inside the deck")
+	-- The hand is dealt first, then one more card is drawn for the preview.
+	assert(handSize >= 1 and handSize < #config.cards, "handSize must leave one card for the preview")
+	-- An empty id used to be shuffled in and dealt into the hand.
+	for _, cardId in config.cards do
+		assert(type(cardId) == "string" and cardId ~= "", "card id must be a non-empty string")
+	end
+	-- math.huge is truthy, so it used to reach the rng and the modulo became NaN.
+	-- A missing seed still uses the rng default.
+	if config.seed ~= nil then
+		local seed = config.seed
+		assert(
+			type(seed) == "number" and seed == seed and seed > -math.huge and seed < math.huge,
+			"seed must be a finite number"
+		)
+	end
 	local self: Self = setmetatable({
 		handSize = handSize,
 		rng = Rng.xorshift(config.seed),

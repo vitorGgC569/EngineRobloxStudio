@@ -31,6 +31,23 @@ type Self = {
 
 Perception.__index = Perception
 
+-- known() used to hand back the stored memory. Editing pos on that table
+-- rewrote the position the next known() reported.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 function Perception.new(config: { fovDeg: number?, hearingRange: number?, memorySeconds: number?, clock: (() -> number)? }): Self
 	return setmetatable({
 		fovDeg = config.fovDeg or 180,
@@ -89,7 +106,7 @@ function Perception.known(self: Self): { Memory }
 			self.memories[key] = nil
 			continue
 		end
-		table.insert(out, memory)
+		table.insert(out, deepCopy(memory, {}))
 	end
 	return out
 end

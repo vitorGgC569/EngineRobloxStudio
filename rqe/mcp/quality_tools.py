@@ -23,6 +23,7 @@ from pathlib import Path
 from typing import Any
 
 from .server import EngineMcpServer, Tool, ToolError
+from ..workspace import hub_url
 
 
 #: Which probe prefixes belong to which family, so a caller can ask one question
@@ -41,7 +42,7 @@ def _bridge(arguments: dict[str, Any]):
     from ..hub.client import StudioBridge
 
     return StudioBridge(
-        arguments.get("hub") or os.environ.get("RQE_HUB_URL", "http://127.0.0.1:8790"),
+        arguments.get("hub") or hub_url(),
         token=os.environ.get("RQE_BRIDGE_TOKEN"),
     )
 
@@ -69,7 +70,13 @@ def _snapshot(root: Path, arguments: dict[str, Any]) -> tuple[dict[str, Any], An
     # against different selectors than the rules expect measures a different
     # world and grades it anyway.
     try:
-        snapshot = bridge.call("quality.snapshot", _selector(spec), timeout=120)
+        with bridge.lease_scope(
+            agent_id="mcp-quality-snapshot",
+            session_id=bridge.pinned_session,
+            context="any",
+            ttl_seconds=150.0,
+        ):
+            snapshot = bridge.call("quality.snapshot", _selector(spec), timeout=120)
     except Exception as exc:  # noqa: BLE001
         raise ToolError(
             f"could not take a quality snapshot: {type(exc).__name__}: {exc}. "

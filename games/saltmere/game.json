@@ -1,0 +1,39 @@
+{
+  "schemaVersion": 1,
+  "id": "saltmere",
+  "genre": "tycoon",
+  "theme": "coastal saltworks",
+  "pitch": "A tidal saltworks where brine, crystal and spoil follow one clock. Players claim pans on their own plot, refine what they rake, sell into a quay whose prices sag as they flood it, hire a crew, and keep only the lighthouse when the spring tide resets the marsh.",
+  "coreLoop": ["collect", "process", "sell", "upgrade", "unlock", "buy", "prestige"],
+  "world": {
+    "topology": "hub_and_zones",
+    "zones": [
+      { "id": "quay", "theme": "tarred timber market", "difficulty": 1, "unlockedAtTier": 0 },
+      { "id": "pans", "theme": "brine pans", "difficulty": 1, "unlockedAtTier": 0 },
+      { "id": "cooperage", "theme": "grading and smoke", "difficulty": 2, "unlockedAtTier": 2 },
+      { "id": "lighthouse", "theme": "spring tide", "difficulty": 3, "unlockedAtTier": 4 }
+    ]
+  },
+  "progression": {
+    "kind": "tiered",
+    "tiers": 6,
+    "firstTierSeconds": 70,
+    "sessionMinutes": 18
+  },
+  "economy": {
+    "currencies": [
+      {
+        "id": "cash",
+        "displayName": "Coin",
+        "earnedBy": ["sell"],
+        "spentOn": ["unlock", "upgrade", "buy"],
+        "premium": false
+      }
+    ]
+  },
+  "systems": ["economy", "progression", "save", "inventory", "shop", "analytics", "quests"],
+  "monetization": ["cosmetics"],
+  "tokenSet": "games/saltmere/tokens/saltmere.json",
+  "concurrentPlayers": 6,
+  "privateSpace": false
+}

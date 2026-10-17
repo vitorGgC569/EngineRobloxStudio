@@ -28,8 +28,6 @@ def register_ui_tools(server: EngineMcpServer) -> EngineMcpServer:
         from ..tokens import TokenError, load_token_set
 
         relative = arguments.get("tokens", "tokens/brickfarm.json")
-        if not (root / relative).is_file():
-            raise ToolError(f"no token set at {relative}")
         try:
             return load_token_set(root, relative).data
         except TokenError as exc:

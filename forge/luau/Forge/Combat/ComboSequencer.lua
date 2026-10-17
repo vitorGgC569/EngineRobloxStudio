@@ -17,6 +17,23 @@
 local ComboSequencer = {}
 ComboSequencer.__index = ComboSequencer
 
+-- `new` already stores its own step tables, but `advance` handed that stored
+-- table back. Writing damage on it rewrote the next link of the same chain.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 export type Step = {
 	name: string,
 	damage: number,
@@ -63,11 +80,26 @@ function ComboSequencer.new(config: Config)
 		}
 	end
 
+	-- nil is the default. 0 is a real window. A negative window is already
+	-- elapsed, so the chain times out on the first advance.
+	local resetTimeout = config.resetTimeout
+	if resetTimeout == nil then
+		resetTimeout = DEFAULT_RESET_TIMEOUT
+	end
+	assert(type(resetTimeout) == "number" and resetTimeout >= 0, "resetTimeout must be >= 0")
+	-- nil is the default. 0 means the press and the advance share a timestamp.
+	-- A negative window is never >= the gap, so a press never links.
+	local bufferWindow = config.bufferWindow
+	if bufferWindow == nil then
+		bufferWindow = DEFAULT_BUFFER_WINDOW
+	end
+	assert(type(bufferWindow) == "number" and bufferWindow >= 0, "bufferWindow must be >= 0")
+
 	return setmetatable({
 		_steps = steps,
 		_indexByName = indexByName,
-		_resetTimeout = config.resetTimeout or DEFAULT_RESET_TIMEOUT,
-		_bufferWindow = config.bufferWindow or DEFAULT_BUFFER_WINDOW,
+		_resetTimeout = resetTimeout,
+		_bufferWindow = bufferWindow,
 		_loop = config.loop ~= false,
 		_pendingAt = nil :: number?,
 		_lastAdvance = nil :: number?,
@@ -87,7 +119,12 @@ function ComboSequencer:indexOf(currentStep: string | number): number
 end
 
 function ComboSequencer:press(inputAt: number)
-	assert(type(inputAt) == "number", "ComboSequencer.press: inputAt must be a number")
+	-- NaN is a number. Storing it makes every later comparison false, so the
+	-- press never links.
+	assert(
+		type(inputAt) == "number" and inputAt == inputAt and inputAt > -math.huge and inputAt < math.huge,
+		"ComboSequencer.press: inputAt must be a number"
+	)
 	self._pendingAt = inputAt
 end
 
@@ -104,7 +141,12 @@ end
 -- the press sits outside the buffer window, or the chain timed out — in which
 -- case the stale press is dropped too.
 function ComboSequencer:advance(currentStep: string | number, now: number): Step?
-	assert(type(now) == "number", "ComboSequencer.advance: now must be a number")
+	-- NaN is a number. The comparisons then fail, so a real press is dropped
+	-- or ignored without saying the clock was bad.
+	assert(
+		type(now) == "number" and now == now and now > -math.huge and now < math.huge,
+		"ComboSequencer.advance: now must be a number"
+	)
 
 	local anchor = self._lastAdvance
 	if anchor ~= nil and now - anchor > self._resetTimeout then
@@ -130,7 +172,7 @@ function ComboSequencer:advance(currentStep: string | number, now: number): Step
 
 	self._pendingAt = nil
 	self._lastAdvance = now
-	return self._steps[nextIndex]
+	return deepCopy(self._steps[nextIndex], {}) :: Step
 end
 
 function ComboSequencer:reset()

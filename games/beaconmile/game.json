@@ -1,0 +1,29 @@
+{
+  "schemaVersion": 1,
+  "id": "beaconmile",
+  "genre": "simulation",
+  "theme": "night road of signal beacons",
+  "pitch": "A shift on a dark road. Carry one coal from the yard and feed the beacons before they go out. The shift is won only if every beacon is still burning when the clock ends.",
+  "coreLoop": ["collect", "deliver", "survive"],
+  "world": {
+    "topology": "path",
+    "zones": [
+      { "id": "yard", "theme": "coal yard", "difficulty": 1, "unlockedAtTier": 0 },
+      { "id": "bend", "theme": "road bend", "difficulty": 1, "unlockedAtTier": 0 },
+      { "id": "ridge", "theme": "ridge beacon", "difficulty": 2, "unlockedAtTier": 0 }
+    ]
+  },
+  "progression": {
+    "kind": "session",
+    "tiers": 1,
+    "firstTierSeconds": 90,
+    "sessionMinutes": 3
+  },
+  "economy": {
+    "currencies": []
+  },
+  "systems": ["save"],
+  "monetization": [],
+  "concurrentPlayers": 6,
+  "privateSpace": false
+}

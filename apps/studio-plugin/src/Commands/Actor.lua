@@ -88,12 +88,27 @@ end
 
 local function describe(id: string, model: Model, humanoid: Humanoid, root: BasePart): { [string]: any }
 	local owner = ownerOf(model)
+	-- No owner stays nil. A real player's Vector3 or Color3 attributes are not
+	-- JSON, so each value is encoded the same way dm.tree's attributesOf does.
+	local playerAttributes: { [string]: any }? = nil
+	if owner ~= nil then
+		local encoded: { [string]: any } = {}
+		local ok, raw = pcall(function()
+			return owner:GetAttributes()
+		end)
+		if ok then
+			for key, value in pairs(raw) do
+				encoded[key] = Serialize.value(value)
+			end
+		end
+		playerAttributes = encoded
+	end
 	return {
 		actor = id,
 		name = model.Name,
 		player = if owner then owner.Name else nil,
 		userId = if owner then owner.UserId else nil,
-		playerAttributes = if owner then owner:GetAttributes() else nil,
+		playerAttributes = playerAttributes,
 		ref = Refs.of(model),
 		position = Serialize.roundVector(root.Position, 3),
 		velocity = Serialize.roundVector(root.AssemblyLinearVelocity, 3),

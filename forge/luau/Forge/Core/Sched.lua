@@ -153,7 +153,9 @@ end
 -- Token bucket: allows short bursts, caps sustained rate. What every
 -- client->server action should sit behind.
 function Sched.bucket(ratePerSecond: number, burst: number?): (any?) -> boolean
-	local capacity = burst or ratePerSecond
+    -- A fractional refill rate still needs room for one whole request.
+    -- Otherwise 0.5 requests/s can never accumulate the token it consumes.
+    local capacity = math.max(1, burst or ratePerSecond)
 	local state: { [any]: { tokens: number, last: number } } = {}
 	return function(key: any?): boolean
 		local k = key == nil and "__default" or key

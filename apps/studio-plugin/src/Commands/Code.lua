@@ -23,8 +23,34 @@
 
 local Errors = require(script.Parent.Parent.Errors)
 local Runtime = require(script.Parent.Runtime)
+local ScriptEditorService = game:GetService("ScriptEditorService")
+local History = require(script.Parent.Parent.History)
 
 local CodeCommands = {}
+
+local function editorSource(container: LuaSourceContainer): string
+	local ok, value = pcall(function()
+		return ScriptEditorService:GetEditorSource(container)
+	end)
+	if ok and type(value) == "string" then
+		return value
+	end
+	return (container :: any).Source or ""
+end
+
+local function updateSource(container: LuaSourceContainer, source: string)
+	local ok, err = pcall(function()
+		ScriptEditorService:UpdateSourceAsync(container, function(_old)
+			return source
+		end)
+	end)
+	if not ok then
+		Errors.raise(
+			Errors.EXEC,
+			"ScriptEditorService:UpdateSourceAsync failed: " .. tostring(err)
+		)
+	end
+end
 
 local ROOTS: { [string]: string } = {
 	replicated = "ReplicatedStorage",
@@ -90,7 +116,7 @@ end
 ---
 --- `kind` decides what is made: "module" for something required, "server" for a
 --- Script that runs, "client" for a LocalScript.
-function CodeCommands.write(params: { [string]: any }): any
+local function writeImpl(params: { [string]: any }): any
 	local path = Errors.expect(params, "path", "string")
 	local source = Errors.expect(params, "source", "string")
 	local kind = params.kind or "module"
@@ -121,8 +147,7 @@ function CodeCommands.write(params: { [string]: any }): any
 		else
 			-- Same class: rewrite in place. Cheapest path, and enough when the
 			-- module has not been required yet.
-			local script_ = existing :: any
-			script_.Source = source
+			updateSource(existing :: LuaSourceContainer, source)
 			replaced = true
 			return {
 				written = existing:GetFullName(),
@@ -137,9 +162,8 @@ function CodeCommands.write(params: { [string]: any }): any
 
 	local made = Instance.new(className :: any)
 	made.Name = name
-	local body = made :: any
-	body.Source = source
 	made.Parent = parent
+	updateSource(made :: LuaSourceContainer, source)
 
 	return {
 		written = made:GetFullName(),
@@ -151,7 +175,7 @@ function CodeCommands.write(params: { [string]: any }): any
 end
 
 --- code.reload: give a module a new identity so `require` re-runs it.
-function CodeCommands.reload(params: { [string]: any }): any
+local function reloadImpl(params: { [string]: any }): any
 	local path = Errors.expect(params, "path", "string")
 	local target = resolve(path, false)
 	if target == nil then
@@ -164,9 +188,9 @@ function CodeCommands.reload(params: { [string]: any }): any
 
 	local source = params.source
 	if type(source) == "string" then
-		local body = target :: any
-		body.Source = source
+		updateSource(target :: LuaSourceContainer, source)
 	end
+	local currentSource = editorSource(target :: LuaSourceContainer)
 
 	local parent = target.Parent
 	local name = target.Name
@@ -180,6 +204,7 @@ function CodeCommands.reload(params: { [string]: any }): any
 	target:Destroy()
 	fresh.Name = name
 	fresh.Parent = parent
+	updateSource(fresh :: LuaSourceContainer, currentSource)
 
 	-- Prove it loads now, rather than at whatever later moment somebody
 	-- requires it. A module that fails here says so with a line number; the
@@ -196,7 +221,7 @@ function CodeCommands.reload(params: { [string]: any }): any
 
 	return {
 		reloaded = fresh:GetFullName(),
-		bytes = #((fresh :: any).Source or ""),
+		bytes = #editorSource(fresh :: LuaSourceContainer),
 		loads = loaded,
 		error = err,
 		note = "anything that already required the old module still holds it",
@@ -218,7 +243,7 @@ function CodeCommands.list(params: { [string]: any }): any
 				path = item:GetFullName(),
 				name = item.Name,
 				className = item.ClassName,
-				bytes = #((item :: any).Source or ""),
+				bytes = #editorSource(item :: LuaSourceContainer),
 			})
 		end
 	end
@@ -235,7 +260,7 @@ function CodeCommands.read(params: { [string]: any }): any
 	if target == nil or not target:IsA("LuaSourceContainer") then
 		Errors.raise(Errors.NOT_FOUND, ("no script at %s"):format(path))
 	end
-	local source = (target :: any).Source or ""
+	local source = editorSource(target :: LuaSourceContainer)
 	return {
 		path = target:GetFullName(),
 		className = target.ClassName,
@@ -249,7 +274,7 @@ end
 --- The difference from `bridge.exec` is lifetime. Exec runs now and its
 --- connections die with the session; this becomes a Script in the place, so it
 --- comes up with every Play Solo and survives a restart.
-function CodeCommands.atStart(params: { [string]: any }): any
+local function atStartImpl(params: { [string]: any }): any
 	local source = Errors.expect(params, "source", "string")
 	local name = params.name or "RQEStartup"
 	local client = params.client == true
@@ -266,9 +291,8 @@ function CodeCommands.atStart(params: { [string]: any }): any
 
 	local made = Instance.new(if client then "LocalScript" else "Script")
 	made.Name = name
-	local body = made :: any
-	body.Source = source
 	made.Parent = parent
+	updateSource(made :: LuaSourceContainer, source)
 
 	return {
 		installed = made:GetFullName(),
@@ -295,6 +319,25 @@ function CodeCommands.compile(params: { [string]: any }): any
 		}
 	end
 	return { compiles = true, context = Runtime.context() }
+end
+
+
+CodeCommands.write = function(params: { [string]: any }): any
+	return History.record("RQE code.write", function()
+		return writeImpl(params)
+	end)
+end
+
+CodeCommands.reload = function(params: { [string]: any }): any
+	return History.record("RQE code.reload", function()
+		return reloadImpl(params)
+	end)
+end
+
+CodeCommands.atStart = function(params: { [string]: any }): any
+	return History.record("RQE code.at_start", function()
+		return atStartImpl(params)
+	end)
 end
 
 return CodeCommands

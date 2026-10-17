@@ -10,6 +10,24 @@
 
 local ObjectiveTracker = {}
 
+-- `table.clone` copied the array and left each marker table shared, and
+-- `activeMarker` handed that same table back. Editing `text` on the caller's
+-- marker, or on the one just returned, rewrote the plan later reads used.
+local function deepCopy(value: any, seen: { [any]: any }): any
+	if type(value) ~= "table" then
+		return value
+	end
+	if seen[value] then
+		return seen[value]
+	end
+	local copy = {}
+	seen[value] = copy
+	for key, item in value :: { [any]: any } do
+		copy[key] = deepCopy(item, seen)
+	end
+	return copy
+end
+
 export type Marker = {
 	targetName: string,
 	targetTag: string?,
@@ -35,7 +53,7 @@ function ObjectiveTracker.setObjective(self: Self, text: string): ()
 end
 
 function ObjectiveTracker.setMarkers(self: Self, markers: { Marker }): ()
-	self.markers = table.clone(markers)
+	self.markers = deepCopy(markers, {}) :: { Marker }
 	self.activeMarkerIndex = if #markers > 0 then 1 else 0
 end
 
@@ -49,7 +67,11 @@ function ObjectiveTracker.advance(self: Self): boolean
 end
 
 function ObjectiveTracker.activeMarker(self: Self): Marker?
-	return self.markers[self.activeMarkerIndex]
+	local marker = self.markers[self.activeMarkerIndex]
+	if marker == nil then
+		return nil
+	end
+	return deepCopy(marker, {}) :: Marker
 end
 
 return ObjectiveTracker

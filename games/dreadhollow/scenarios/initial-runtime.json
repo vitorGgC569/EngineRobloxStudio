@@ -1,0 +1,25 @@
+{
+  "id": "dreadhollow-first-night",
+  "description": "Smoke: attach a real player, settle, capture the HUD tree. Proves session availability only; makes no claim about pages, gate, Hollow, chapel or HUD correctness — those need RUNTIME_VALIDATED evidence via the Studio Bridge. Never E2E: no navigation, interaction, prompt or assertion steps.",
+  "validationLevel": "NOT_VALIDATED",
+  "requires": {
+    "playSession": true,
+    "clientBridge": true
+  },
+  "steps": [
+    {
+      "attach": {},
+      "fatal": true,
+      "comment": "proceed only attached to a real player; attach is a race, not a claim"
+    },
+    {
+      "wait": {"seconds": 6},
+      "comment": "settle window: lantern/fear tick and first-wave timer start, without asserting anything"
+    },
+    {
+      "gui": {"includeHidden": false},
+      "comment": "observe-only capture of the visible HUD tree; no visibleText assertion, no loop claim"
+    }
+  ],
+  "releaseEvidence": []
+}
